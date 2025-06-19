@@ -8,9 +8,19 @@
             <img src="../assets/IMAGOTIPO-02.svg" />
           </q-avatar>
         </q-toolbar-title>
+        <q-toolbar-title class="q-gutter-sm flex justify-end items-center">
+          <q-btn
+            flat
+            dense
+            icon="exit_to_app"
+            text-color="white"
+            label="Cerrar Sesión"
+            @click="irdashboard"
+          />
+        </q-toolbar-title>
       </q-toolbar>
 
-      <q-tabs align="left" v-model="currentTab" dense>
+      <q-tabs align="left" v-model="currentTab">
         <q-tab
           v-for="tab in activeTabs"
           :key="tab.codigo + '-' + tab.permiso"
@@ -23,45 +33,54 @@
       </q-tabs>
     </q-header>
 
-    <q-drawer v-model="leftDrawerOpen" show-if-above bordered class="bg-grey-2">
+    <q-drawer v-model="leftDrawerOpen" show-if-above bordered>
       <q-scroll-area
         style="height: calc(100% - 150px); margin-top: 150px; border-right: 1px solid #ddd"
       >
+        <q-btn
+          label="Inicio"
+          icon="home"
+          to="/"
+          flat
+          unelevated
+          color="primary"
+          class="menu-header"
+          expand-icon-class="text-grey-6"
+          header-class="text-weight-medium text-grey-9"
+        />
+
         <q-list padding>
-          <q-item v-for="menu in items" :key="menu.codigo" class="q-pa-none menu-item">
+          <q-item
+            v-for="menu in items.filter((i) => i.codigo !== 'opcionesocultas')"
+            :key="menu.codigo"
+            class="q-pa-none menu-item"
+          >
             <q-expansion-item
               :label="menu.titulo"
               :icon="iconos[menu.codigo] || 'help_outline'"
-              header-class="text-weight-medium text-grey-9"
+              header-class="text-weight-bold text-grey-9"
               expand-icon-class="text-grey-6"
-              class="menu-header"
+              class="menu-header bg-grey-1"
+              v-model="expandedMenu[menu.codigo]"
+              @update:model-value="updateExpandedMenu(menu.codigo, $event)"
             >
-              <q-list class="submenu-list">
+              <q-list class="submenu-list q-pl-lg">
                 <q-item
                   v-for="submenu in menu.submenu"
                   :key="submenu.codigo + '_' + submenu.permiso"
                   clickable
                   v-ripple
-                  :to="
-                    '/' +
-                    submenu.codigo.split('-')[0] +
-                    '?key=' +
-                    submenu.codigo +
-                    '_' +
-                    submenu.permiso
-                  "
+                  :to="'/' + submenu.codigo.split('-')[0] + '?key=' + submenu.permiso"
                   class="submenu-item"
                   active-class="my-menu-link"
                   @click="loadTabsForSubmenu(submenu.codigo.split('-')[0])"
                 >
                   <q-item-section avatar>
-                    <q-icon
-                      color="primary"
-                      :name="iconos[submenu.codigo.split('-')[0]]"
-                      size="sm"
-                    />
+                    <q-icon color="blue" :name="iconos[submenu.codigo.split('-')[0]]" size="sm" />
                   </q-item-section>
-                  <q-item-section class="text-grey-8">{{ submenu.titulo }}</q-item-section>
+                  <q-item-section class="text-grey-8 text-body2">
+                    {{ submenu.titulo }}
+                  </q-item-section>
                 </q-item>
               </q-list>
             </q-expansion-item>
@@ -89,14 +108,38 @@
 </template>
 
 <script setup>
-import { ref, onMounted, watch } from 'vue'
+import { ref, onMounted, watch, reactive } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { PAGINAS, PAGINAS_ICONS } from './paginas'
 import { useMenuStore } from './permitidos'
 
+const expandedMenu = reactive({})
+
+const updateExpandedMenu = (currentMenuCode, isExpanded) => {
+  // Close all other menus
+  for (const menuCode in expandedMenu) {
+    if (menuCode !== currentMenuCode) {
+      expandedMenu[menuCode] = false
+    }
+  }
+  // Set the current menu's state
+  expandedMenu[currentMenuCode] = isExpanded
+}
+
+// Initialize expandedMenu on component mount
+onMounted(() => {
+  items.value.forEach((item) => {
+    if (item.codigo !== 'opcionesocultas') {
+      expandedMenu[item.codigo] = false
+    }
+  })
+})
+
 // Verificar permisos
 // Obtener datos de página
-
+const irdashboard = () => {
+  window.location.href = '/app/dashboard'
+}
 const route = useRoute()
 const router = useRouter()
 const menuStore = useMenuStore()

@@ -1,0 +1,135 @@
+<template>
+  <q-card-section>
+    <q-form @submit.prevent="onSubmit" class="q-gutter-x-md q-ma-lg">
+      <div class="row q-col-gutter-md">
+        <!-- Nombre de la divisa -->
+        <div class="col-md-4">
+          <q-input
+            v-model="localData.nombre"
+            label="Nombre de divisa*"
+            :rules="[(val) => !!val || 'El nombre de la divisa es obligatorio']"
+          />
+        </div>
+
+        <!-- Símbolo de la divisa -->
+        <div class="col-md-4">
+          <q-input
+            v-model="localData.tipo"
+            label="Símbolo de la divisa*"
+            :rules="[(val) => !!val || 'El símbolo de la divisa es obligatorio']"
+          />
+        </div>
+
+        <!-- Moneda SIN (Dropdown) -->
+        <div class="col-md-4" v-if="estadoFactura">
+          <q-select
+            use-input
+            fill-input
+            hide-dropdown-icon
+            v-model="localData.monedasin"
+            :options="opcionesMoneda"
+            @filter="filtrarMonedas"
+            label="Moneda (SIN)*"
+            emit-value
+            map-options
+            option-label="label"
+            option-value="value"
+            clearable
+            :q-rules="[(val) => !!val || 'Debe seleccionar una moneda (SIN)']"
+          />
+        </div>
+      </div>
+
+      <q-card-actions align="right">
+        <q-btn label="Cancelar" flat color="negative" @click="$emit('cancel')" />
+        <q-btn label="Guardar" type="submit" color="primary" />
+      </q-card-actions>
+    </q-form>
+  </q-card-section>
+</template>
+
+<script setup>
+import { ref, onMounted, watch } from 'vue'
+import { useFacturaStore } from 'src/stores/factura'
+import { validarUsuario } from 'src/composables/FuncionesG'
+import { api } from 'src/boot/axios'
+import { useQuasar } from 'quasar'
+const props = defineProps({
+  editing: Boolean,
+  modalValue: Object,
+})
+const $q = useQuasar()
+const facturaStore = useFacturaStore()
+facturaStore.cargarUsuario()
+
+const estadoFactura = facturaStore.obtenerEstadoFactura()
+
+const localData = ref({ ...props.modalValue })
+
+const opcionesMoneda = ref([])
+const emit = defineEmits(['submit', 'cancel'])
+
+const inicio = () => {
+  if (estadoFactura) {
+    getDivisasSIN()
+  }
+}
+const getDivisasSIN = async () => {
+  try {
+    const contenidousuario = validarUsuario()
+    const token = contenidousuario[0]?.factura?.access_token
+    const tipo = contenidousuario[0]?.factura?.tipo
+
+    if (!token || !tipo) {
+      throw new Error('Token o tipo de usuario no válidos.')
+    }
+
+    const response = await api.get(`listaLeyendaSIN/monedas/${token}/${tipo}`)
+    console.log('Respuesta API:', response)
+
+    if (
+      !response.data ||
+      response.data.status !== 'success' ||
+      !Array.isArray(response.data.data)
+    ) {
+      throw new Error('La respuesta del servidor no tiene el formato esperado.')
+    }
+
+    opcionesMoneda.value = response.data.data.map((item) => ({
+      label: item.descripcion,
+      value: item.codigo,
+    }))
+  } catch (error) {
+    console.error('Error al cargar monedas SIN:', error)
+
+    let mensaje = 'Ocurrió un error al cargar las monedas SIN.'
+
+    // Errores personalizados
+    if (error.response) {
+      // Error del servidor (status 4xx, 5xx)
+      mensaje += ` Servidor respondió con status ${error.response.status}.`
+      if (error.response.data?.message) {
+        mensaje += ` ${error.response.data.message}`
+      }
+    } else if (error.message) {
+      // Error lanzado manualmente
+      mensaje += ` ${error.message}`
+    }
+
+    $q.notify({ type: 'negative', message: mensaje })
+  }
+}
+
+watch(
+  () => props.modalValue,
+  (nuevoValor) => {
+    localData.value = { ...nuevoValor }
+  },
+)
+async function onSubmit() {
+  emit('submit', localData.value)
+}
+onMounted(() => {
+  inicio()
+})
+</script>

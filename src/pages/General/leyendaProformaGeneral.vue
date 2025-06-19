@@ -1,100 +1,156 @@
 <template>
-  <q-card class="q-pa-md">
-    <!-- Formulario -->
-    <div v-show="mostrarFormulario">
-      <q-form @submit="registrarLeyenda">
-        <div class="q-mb-md">
-          <q-input v-model="leyenda" label="Leyenda de la cotización *" outlined dense required />
-        </div>
-        <div class="q-my-md text-center">
-          <q-btn type="submit" color="primary" label="Registrar" />
-        </div>
-      </q-form>
-    </div>
-
-    <!-- Controles superiores -->
-    <div class="row items-center q-my-sm">
-      <q-btn flat color="primary" label="Cancelar Registro" @click="toggleFormulario" />
-      <q-space />
-      <q-input
-        dense
-        outlined
-        debounce="300"
-        v-model="busqueda"
-        placeholder="Buscar"
-        class="q-ml-sm"
-      >
-        <template #append>
-          <q-icon name="search" />
-        </template>
-      </q-input>
-    </div>
-
+  <div class="q-pa-md">
+    <q-dialog v-model="showForm" persistent>
+      <q-card style="min-width: 400px; max-width: 600px">
+        <q-card-section class="q-pa-none">
+          <FormLeyenda
+            :model-value="formData"
+            :is-editing="isEditing"
+            @submit="handleSubmit"
+            @cancel="toggleForm"
+          />
+        </q-card-section>
+      </q-card>
+    </q-dialog>
     <!-- Tabla -->
-    <q-table :rows="filtrarLeyendas" :columns="columnas" row-key="id" flat bordered class="q-mt-md">
-      <template #body-cell-opciones="props">
-        <q-td align="center">
-          <q-btn icon="edit" color="info" dense flat @click="editar(props.row)" />
-          <q-btn icon="delete" color="negative" dense flat @click="eliminar(props.row)" />
-        </q-td>
-      </template>
+    <TableLeyendas
+      :leyendas="rows"
+      @add="toggleForm"
+      @edit="editItem"
+      @delete="deleteItem"
+      @toggle-status="changeStatus"
+    />
+  </div>
 
-      <template #body-cell-estado="props">
-        <q-td align="center">
-          <q-btn icon="thumb_up" color="primary" dense flat @click="cambiarEstado(props.row)" />
-        </q-td>
-      </template>
-    </q-table>
-  </q-card>
+  <!-- Formulario -->
 </template>
+
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, onMounted } from 'vue'
+import { useQuasar } from 'quasar'
+import FormLeyenda from 'components/general/Leyenda/FormLeyenda.vue'
+import TableLeyendas from 'components/general/Leyenda/TableLeyenda.vue'
+import { idempresa_md5 } from 'src/composables/FuncionesGenerales'
+import { api } from 'boot/axios' // Asegúrate de tener esto configurado
+import { objectToFormData } from 'src/composables/FuncionesGenerales'
+const idempresa = idempresa_md5()
+const $q = useQuasar()
+const showForm = ref(false)
+const isEditing = ref(false)
+const rows = ref([])
 
-const mostrarFormulario = ref(true)
-const leyenda = ref('')
-const busqueda = ref('')
-const leyendas = ref([
-  {
-    id: 11,
-    texto: 'Solo será válida durante 10 días a partir de la fecha de entrega.',
-    estado: 'activo',
-  },
-])
+const formData = ref({
+  ver: 'registrarLeyendaCotizacion',
+  idempresa: idempresa,
+  texto: '',
+})
+async function loadRows() {
+  try {
+    const response = await api.get(`listaLeyendaCotizacion/${idempresa}`) // Cambia a tu ruta real
+    rows.value = response.data // Asume que la API devuelve un array
+  } catch (error) {
+    console.error('Error al cargar datos:', error)
+    $q.notify({
+      type: 'negative',
+      message: 'No se pudieron cargar los datos',
+    })
+  }
+}
+function toggleForm() {
+  showForm.value = !showForm.value
+  if (!showForm.value) resetForm()
+}
 
-const columnas = [
-  { name: 'id', label: 'N°', field: 'id', align: 'center' },
-  { name: 'texto', label: 'Leyenda', field: 'texto', align: 'left' },
-  { name: 'estado', label: 'Estado', field: 'estado', align: 'center' },
-  { name: 'opciones', label: 'Opciones', field: 'opciones', align: 'center' },
-]
+function resetForm() {
+  isEditing.value = false
+  formData.value = {
+    ver: 'registrarLeyendaCotizacion',
+    idempresa: idempresa,
+    texto: '',
+  }
+}
 
-const registrarLeyenda = () => {
-  leyendas.value.push({
-    id: Date.now(),
-    texto: leyenda.value,
-    estado: 'activo',
+async function handleSubmit(data) {
+  const formData = objectToFormData(data)
+  for (let [k, v] of formData.entries()) {
+    console.log(`${k}: ${v}`)
+  }
+  try {
+    if (isEditing.value) {
+      const response = await api.post(``, formData)
+      console.log(response)
+    } else {
+      const response = await api.post(``, formData)
+      console.log(response)
+    }
+    $q.notify({
+      type: 'positive',
+      message: isEditing.value ? 'Editado correctamente' : 'Registrado correctamente',
+    })
+    loadRows()
+  } catch (error) {
+    console.error('Error al guardar:', error)
+    $q.notify({
+      type: 'negative',
+      message: 'Ocurrió un error al guardar' + error,
+    })
+  }
+  toggleForm()
+}
+
+function editItem(item) {
+  formData.value = {
+    ver: 'editarLeyendaCotizacion',
+    idempresa: idempresa,
+    texto: item.texto,
+    id: item.id,
+  }
+  isEditing.value = true
+  showForm.value = true
+}
+
+async function deleteItem(item) {
+  $q.dialog({
+    title: 'Confirmar',
+    message: `¿Eliminar Leyenda "${item.texto}"?`,
+    cancel: true,
+    persistent: true,
+  }).onOk(async () => {
+    try {
+      const response = await api.get(`eliminarLeyendaCotizacion/${item.id}/`) // Cambia a tu ruta real
+      console.log(response)
+      if (response.data.estado === 'exito') {
+        loadRows()
+        $q.notify({
+          type: 'positive',
+          message: response.data.mensaje,
+        })
+      }
+    } catch (error) {
+      console.error('Error al cargar datos:', error)
+      $q.notify({
+        type: 'negative',
+        message: 'No se pudieron cargar los datos',
+      })
+    }
   })
-  leyenda.value = ''
-  mostrarFormulario.value = false
 }
 
-const editar = (row) => {
-  console.log('Editar', row)
+async function changeStatus(item) {
+  const nuevoEstado = Number(item.estado) === 2 ? 1 : 2
+  try {
+    const response = await api.get(`actualizarEstadoLeyendaCotizacion/${item.id}/${nuevoEstado}`) // Cambia a tu ruta real
+    console.log(response)
+    loadRows()
+  } catch (error) {
+    console.error('Error al cargar datos:', error)
+    $q.notify({
+      type: 'negative',
+      message: 'No se pudieron cargar los datos',
+    })
+  }
 }
-
-const eliminar = (row) => {
-  leyendas.value = leyendas.value.filter((l) => l.id !== row.id)
-}
-
-const cambiarEstado = (row) => {
-  row.estado = row.estado === 'activo' ? 'inactivo' : 'activo'
-}
-
-const toggleFormulario = () => {
-  mostrarFormulario.value = !mostrarFormulario.value
-}
-
-const filtrarLeyendas = computed(() =>
-  leyendas.value.filter((l) => l.texto.toLowerCase().includes(busqueda.value.toLowerCase())),
-)
+onMounted(() => {
+  loadRows()
+})
 </script>

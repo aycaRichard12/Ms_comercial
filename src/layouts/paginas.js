@@ -18,7 +18,13 @@ export const PAGINAS = Object.freeze({
     'asignarpuntodeventa',
     'asignarproductos',
   ]),
-  administracionprecios: Object.freeze(['costounitario', 'categoriasdeprecio', 'preciossugeridos']),
+  administracionprecios: Object.freeze([
+    'costounitario',
+    'categoriasdeprecio',
+    'preciossugeridos',
+    'reportedepreciosbase',
+    'reportedecategoriasdeprecio',
+  ]),
   registrarventa: Object.freeze([
     'registrarventaoculto',
     'registrarcotizacionoculto',
@@ -28,7 +34,12 @@ export const PAGINAS = Object.freeze({
     'kardex',
   ]),
   contingencias: Object.freeze(['registraranulaciones', 'registrodeextravios', 'registrodemermas']),
-  cuentasporcobrar: Object.freeze(['reportecuentasporcobrarocultas', 'cuentasporcobrarocultas']),
+  cuentasporcobrar: Object.freeze([
+    'cuentasporcobrarocultas',
+    'reportecuentasporcobrarocultas',
+
+    'reportecuentasxpagarxperiodo',
+  ]),
   reportedeindicederotacion: Object.freeze([
     'reportedeindicederotacionporalmacen',
     'reportedeindicederotacionglobal',

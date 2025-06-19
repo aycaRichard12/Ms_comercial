@@ -1,40 +1,38 @@
 <template>
-  <q-page class="q-pa-md">
-    <div class="container">
-      <h2>Bienvenido a Configuracion Cliente</h2>
-      <p>Este es un ejemplo básico de una página en Quasar.</p>
+  <q-page>
+    <q-btn label="Iniciar Tour" @click="iniciarTour" id="some-element" />
 
-      <!-- Botón que muestra una alerta al hacer clic -->
-      <q-btn label="Haz clic" color="primary" @click="mostrarAlerta" />
-    </div>
+    <div id="tour-elemento-1" class="q-mt-md">Elemento 1</div>
+    <q-input id="tour-elemento-2" v-model="texto" label="Ejemplo" />
   </q-page>
 </template>
 
 <script setup>
-import {} from 'vue'
+import { driver } from 'driver.js'
+import 'driver.js/dist/driver.css'
 
-const mostrarAlerta = () => {
-  alert('¡Botón clickeado!')
+const driverObj = driver()
+const iniciarTour = () => {
+  driverObj.highlight({
+    element: '#some-element',
+    popover: {
+      title: 'Title',
+      description: 'Description',
+    },
+  })
 }
 </script>
 
-<style scoped>
-.container {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
+<style>
+/* Estilos para el tour que coincidan con Quasar */
+.driver-popover {
+  background-color: var(--q-primary) !important;
+  color: white !important;
+  border-radius: 8px !important;
 }
 
-h2 {
-  color: #42b983;
-}
-
-p {
-  font-size: 18px;
-}
-
-.q-btn {
-  margin-top: 20px;
+.driver-popover-title {
+  font-size: 1.2rem !important;
+  color: white !important;
 }
 </style>

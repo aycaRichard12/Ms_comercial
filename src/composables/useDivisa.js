@@ -25,12 +25,8 @@ export function useDivisa() {
       const contenidousuario = validarUsuario()
       const empresa = contenidousuario[0]?.empresa
       const factura = contenidousuario[0]?.factura
-
-      if (!empresa?.idempresa || !factura?.access_token || !factura?.tipo) {
-        throw new Error('Datos de usuario incompletos')
-      }
-
       const endpoint = `listaDivisa/${empresa.idempresa}/${factura.access_token}/${factura.tipo}`
+      console.log(endpoint)
       const response = await api.get(endpoint)
 
       // Procesamiento completo como en tu versión original

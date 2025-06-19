@@ -3,12 +3,15 @@
     <!-- Encabezado -->
     <div class="row items-center q-mb-md">
       <div class="col-12 col-md-8 text-center">
-        <h4 class="text-h4">Carga de productos</h4>
+        <h5 class="text-h4 text-primary">
+          <q-icon name="shopping_cart" color="primary" size="40px" class="q-mr-sm" />
+          Venta de Productos
+        </h5>
       </div>
       <div class="col-12 col-md-4 text-end">
         <q-btn
           label="Continuar"
-          icon-right="arrow_right_alt"
+          icon-right="arrow_forward"
           color="primary"
           @click="handleBack"
           :disable="carritoPrueba.length === 0"
@@ -24,12 +27,14 @@
           v-model="almacenSeleccionado"
           :options="almacenes"
           label="Origen de venta*"
-          outlined
-          emit-value
           map-options
           :loading="cargandoAlmacenes"
           @update:model-value="cargarCategoriasPrecio"
-        />
+        >
+          <template v-slot:prepend>
+            <q-icon name="store" color="blue" />
+          </template>
+        </q-select>
       </div>
 
       <!-- Categorías de Precio -->
@@ -38,13 +43,16 @@
           v-model="categoriaPrecioSeleccionada"
           :options="categoriasPrecio"
           label="Categoría de precio"
-          outlined
           emit-value
           map-options
           :loading="cargandoCategorias"
           :disable="!almacenSeleccionado"
           @update:model-value="cargarProductosDisponibles"
-        />
+        >
+          <template v-slot:prepend>
+            <q-icon name="category" color="blue" />
+          </template>
+        </q-select>
       </div>
 
       <!-- Categorías con Campaña (condicional) -->
@@ -57,18 +65,33 @@
           emit-value
           map-options
           :disable="!categoriaPrecioSeleccionada"
-        />
+        >
+          <template v-slot:prepend>
+            <q-icon name="campaign" color="orange" />
+          </template>
+        </q-select>
       </div>
 
       <!-- Checkbox para mostrar categorías con campaña -->
       <div class="col-12 col-md-3 flex items-center">
-        <q-checkbox v-model="mostrarCategoriasCampania" label="Mostrar Categorías con Campaña" />
+        <q-checkbox
+          v-model="mostrarCategoriasCampania"
+          label="Mostrar Categorías con Campaña"
+          color="orange"
+        >
+          <template v-slot:default>
+            <div class="flex items-center">
+              <q-icon name="campaign" color="orange" class="q-mr-sm" />
+              <span>Mostrar Categorías con Campaña</span>
+            </div>
+          </template>
+        </q-checkbox>
       </div>
     </div>
 
     <!-- Selector de Producto -->
     <div class="row q-col-gutter-md q-mb-md">
-      <div class="col-12">
+      <div class="col-10">
         <q-select
           v-model="productoSeleccionado"
           :options="productosFiltrados"
@@ -76,7 +99,6 @@
           input-debounce="300"
           @filter="filtrarProductos"
           label="Buscar producto (código o descripción)"
-          outlined
           option-label="label"
           option-value="value"
           @update:model-value="seleccionarProducto"
@@ -84,6 +106,9 @@
           :disable="!categoriaPrecioSeleccionada"
           clearable
         >
+          <template v-slot:prepend>
+            <q-icon name="search" color="blue" />
+          </template>
           <template v-slot:no-option>
             <q-item>
               <q-item-section class="text-grey">
@@ -97,6 +122,15 @@
           </template>
         </q-select>
       </div>
+      <div class="col-2 q-mt-lg">
+        <q-btn
+          icon="refresh"
+          color="primary"
+          :disable="!almacenSeleccionado"
+          title="Refrescar Productos"
+          @click="cargarProductosDisponibles"
+        />
+      </div>
     </div>
 
     <!-- Detalles del Producto -->
@@ -105,38 +139,48 @@
         <q-input
           v-model="productoSeleccionado.originalData.stock"
           label="Stock disponible"
-          outlined
           readonly
-        />
+        >
+          <template v-slot:prepend>
+            <q-icon name="inventory" color="green" />
+          </template>
+        </q-input>
       </div>
 
       <div class="col-12 col-sm-3">
         <q-input
           v-model.number="cantidad"
           label="Cantidad"
-          outlined
           type="number"
           :rules="[
             (val) => val > 0 || 'Ingrese cantidad válida',
             (val) => val <= productoSeleccionado.originalData.stock || 'Supera el stock',
           ]"
-        />
+        >
+          <template v-slot:prepend>
+            <q-icon name="numbers" color="blue" />
+          </template>
+        </q-input>
       </div>
 
       <div class="col-12 col-sm-3">
         <q-input
-          v-model.number="precioUnitario"
+          v-model="precioUnitario"
           label="Precio unitario"
-          outlined
           :prefix="currencyStore.simbolo"
           :rules="[(val) => val > 0 || 'Ingrese precio válido']"
-        />
+        >
+          <template v-slot:prepend>
+            <q-icon name="paid" color="green" />
+          </template>
+        </q-input>
       </div>
 
       <div class="col-12 col-sm-3 flex items-center">
         <q-btn
-          label="Añadir al carritoPrueba"
+          label="Añadir al carrito"
           color="primary"
+          icon="add_shopping_cart"
           @click="agregarAlCarrito"
           :disable="!puedeAgregarProducto"
           class="full-width"
@@ -145,9 +189,12 @@
     </div>
 
     <!-- Tabla del Carrito -->
-    <q-card class="q-mt-lg">
+    <div class="q-mt-lg">
       <q-card-section>
-        <div class="text-h6">Productos seleccionados</div>
+        <div class="text-h6">
+          <q-icon name="shopping_basket" color="primary" class="q-mr-sm" />
+          Productos seleccionados
+        </div>
       </q-card-section>
 
       <q-separator />
@@ -158,7 +205,6 @@
           :columns="columnasCarrito"
           row-key="id"
           flat
-          bordered
           hide-pagination
           :pagination="{ rowsPerPage: 0 }"
         >
@@ -176,12 +222,18 @@
 
           <template v-slot:bottom-row>
             <q-tr>
-              <q-td colspan="5" class="text-right text-weight-bold">Sub Total:</q-td>
-              <q-td class="text-center">{{ currencyStore.simbolo }}{{ subTotal.toFixed(2) }}</q-td>
+              <q-td colspan="5" class="text-right text-weight-bold">
+                <q-icon name="receipt" color="blue" class="q-mr-sm" />
+                Sub Total:
+              </q-td>
+              <q-td class="text-center">{{ currencyStore.simbolo }}{{ subTotal }}</q-td>
               <q-td></q-td>
             </q-tr>
             <q-tr>
-              <q-td colspan="5" class="text-right text-weight-bold">Descuento:</q-td>
+              <q-td colspan="5" class="text-right text-weight-bold">
+                <q-icon name="discount" color="orange" class="q-mr-sm" />
+                Descuento:
+              </q-td>
               <q-td class="text-center">
                 <q-input
                   v-model.number="descuento"
@@ -190,24 +242,54 @@
                   style="max-width: 100px"
                   :prefix="currencyStore.simbolo"
                   @update:model-value="calcularTotal"
-                />
+                  color="orange"
+                >
+                </q-input>
               </q-td>
               <q-td></q-td>
             </q-tr>
             <q-tr>
-              <q-td colspan="5" class="text-right text-weight-bold">Total:</q-td>
-              <q-td class="text-center">{{ currencyStore.simbolo }}{{ total.toFixed(2) }}</q-td>
+              <q-td colspan="5" class="text-right text-weight-bold">
+                <q-icon name="payments" color="green" class="q-mr-sm" />
+                Total:
+              </q-td>
+              <q-td class="text-center">{{ currencyStore.simbolo }}{{ total }}</q-td>
               <q-td></q-td>
             </q-tr>
           </template>
         </q-table>
       </q-card-section>
-    </q-card>
+    </div>
   </div>
 </template>
 
+<style scoped>
+.q-table {
+  border-radius: 8px;
+  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.1);
+}
+
+.q-card-section {
+  padding: 16px;
+}
+
+.text-h4 {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.q-btn {
+  transition: all 0.2s ease;
+}
+
+.q-btn:hover {
+  transform: translateY(-2px);
+}
+</style>
+
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, defineExpose } from 'vue'
 import { useQuasar } from 'quasar'
 import { api } from 'boot/axios'
 import { idempresa_md5, idusuario_md5 } from 'src/composables/FuncionesGenerales'
@@ -217,7 +299,16 @@ const currencyStore = useCurrencyStore()
 const idempresa = idempresa_md5()
 const idusuario = idusuario_md5()
 const $q = useQuasar()
+const emit = defineEmits(['reiniciar', 'volver'])
 
+const limpiarCarrito = async () => {
+  // Limpiar arrays y objetos
+  emit('reiniciar')
+}
+
+defineExpose({
+  limpiarCarrito,
+})
 // Datos del usuario y empresa (simulados)
 const usuario = ref({
   idusuario: idusuario,
@@ -226,7 +317,6 @@ const usuario = ref({
     nombre: 'Mi Empresa SA',
   },
 })
-const emit = defineEmits(['volver'])
 
 const handleBack = () => {
   continuarVenta()
@@ -255,7 +345,7 @@ const categoriasCampania = ref([])
 const productos = ref([])
 const productosFiltrados = ref([])
 
-// Columnas para la tabla del carritoPrueba
+// Columnas para la tabla del carritoPrueba sucursal
 const columnasCarrito = [
   { name: 'codigo', label: 'Código', field: 'codigo', align: 'left' },
   { name: 'descripcion', label: 'Descripción', field: 'descripcion', align: 'left' },
@@ -265,14 +355,14 @@ const columnasCarrito = [
     label: 'Precio Unit.',
     field: 'precio',
     align: 'right',
-    format: (val) => `${currencyStore.simbolo}${val.toFixed(2)}`,
+    format: (val) => ` ${currencyStore.simbolo} ${Number(val).toFixed(2)}`, //${val.toFixed(2)}
   },
   {
     name: 'subtotal',
     label: 'Subtotal',
     field: 'subtotal',
     align: 'right',
-    format: (val) => `${currencyStore.simbolo}${val.toFixed(2)}`,
+    format: (val) => `${currencyStore.simbolo} ${val.toFixed(2)}`,
   },
   { name: 'acciones', label: 'Acciones', field: 'acciones', align: 'center' },
 ]
@@ -324,6 +414,12 @@ async function cargarAlmacenes() {
 }
 
 async function cargarCategoriasPrecio() {
+  const datos = JSON.parse(localStorage.getItem('carrito'))
+  datos.idalmacen = almacenSeleccionado.value?.value
+  datos.codigosinsucursal = almacenSeleccionado.value?.codigosin
+  localStorage.setItem('carrito', JSON.stringify(datos))
+
+  console.log(almacenSeleccionado.value?.codigosin)
   try {
     cargandoCategorias.value = true
     categoriaPrecioSeleccionada.value = null
@@ -335,7 +431,7 @@ async function cargarCategoriasPrecio() {
     if (data[0] === 'error') throw new Error(data.error || 'Error al cargar categorías')
 
     categoriasPrecio.value = data
-      .filter((item) => item.estado == 1 && item.idalmacen == almacenSeleccionado.value)
+      .filter((item) => item.estado == 1 && item.idalmacen == almacenSeleccionado.value?.value)
       .map((item) => ({
         label: item.nombre,
         value: item.id,
@@ -440,9 +536,13 @@ function redondear(num) {
 }
 function agregarAlCarrito() {
   const datos = JSON.parse(localStorage.getItem('carrito'))
+  datos.idalmacen = almacenSeleccionado.value?.value
+
   const producto = productoSeleccionado.value.originalData
+  console.log(producto)
+  console.log(precioUnitario.value)
   const nuevoProducto = {
-    idproductoalmacen: producto.idalmacen,
+    idproductoalmacen: producto.id,
     cantidad: cantidad.value,
     precio: precioUnitario.value,
     idstock: producto.idstock,
@@ -531,21 +631,12 @@ function continuarVenta() {
 
   // Aquí iría la lógica para continuar con el proceso de venta
   console.log('Datos para la venta:', {
-    almacen: almacenSeleccionado.value,
+    almacen: almacenSeleccionado.value?.value,
     categoriaPrecio: categoriaPrecioSeleccionada.value,
     productos: carritoPrueba.value,
     descuento: descuento.value,
     total: total.value,
   })
-}
-function limpiarCarrito() {
-  localStorage.setItem(
-    'carritoPrueba',
-    JSON.stringify({
-      listaProductos: [],
-    }),
-  )
-  localStorage.removeItem('carrito')
 }
 
 function validarUsuario() {
@@ -556,7 +647,7 @@ function validarUsuario() {
     alert('Hubo un problema con la sesion, Por favor vuelva a iniciar sesion.')
     console.log('Los elementos no existen en localStorage')
     localStorage.clear()
-    window.location.assign('../../vapp/')
+    window.location.assign('../../app/')
   }
 }
 
@@ -581,7 +672,7 @@ async function crearCarritoVenta() {
 
     const datos = {
       ...carritoExistente,
-      idalmacen: almacenSeleccionado.value || 0,
+      idalmacen: almacenSeleccionado.value?.value || 0,
       codigosinsucursal: null,
       token,
       tipo,
@@ -594,6 +685,8 @@ async function crearCarritoVenta() {
       valorpagos: 0,
       dias: 0,
       fechalimite: 0,
+      pagosDivididos: [],
+      variablePago: 'directo',
     }
 
     console.log('Guardando carritoDos:', datos)
@@ -608,21 +701,33 @@ async function crearCarritoVenta() {
     return false
   }
 }
-// Inicialización $
+function eliminarCarrito() {
+  // Elimina del localStorage
+  localStorage.removeItem('carrito')
+
+  // Limpia la lista reactiva en la interfaz
+  carritoPrueba.value = []
+
+  // Notifica al usuario
+  $q.notify({
+    type: 'warning',
+    message: 'Carrito eliminado',
+  })
+}
+
+// Inicialización $ currencyStore
 onMounted(async () => {
   try {
-    // Primero cargar la divisa y esperar a que termine
+    // Cargar divisa
     await currencyStore.cargarDivisaActiva()
 
-    // Verificar que se cargó correctamente
     if (!currencyStore.divisa) {
       console.error('No se pudo cargar la divisa')
       return
     }
 
-    // Luego cargar el resto de los datos
-    await limpiarCarrito()
-
+    // Limpiar y cargar todo
+    eliminarCarrito()
     await cargarAlmacenes()
     await crearCarritoVenta()
   } catch (error) {
@@ -634,15 +739,3 @@ onMounted(async () => {
   }
 })
 </script>
-
-<style scoped>
-.q-card {
-  border-radius: 8px;
-  margin-top: 20px;
-}
-
-.q-table__bottom-row td {
-  font-weight: bold;
-  background-color: #f5f5f5;
-}
-</style>

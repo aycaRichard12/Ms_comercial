@@ -1,31 +1,47 @@
 <template>
-  <div class="q-pa-md container">
-    <div class="q-pa-md">
+  <div class="">
+    <div class="options-header">
       <q-btn
         color="primary"
         size="sm"
         label="Volver"
         @click="handleContinue"
         icon="arrow_back"
-        class="q-mb-md"
+        class="back-button"
+        unelevated
       />
     </div>
-    <div
-      class="item"
-      v-for="opcion in opciones"
-      :key="opcion.codigo"
-      @click="$emit('seleccionar', opcion.codigo)"
-    >
-      <q-card class="q-hoverable" flat bordered>
-        <q-card-section class="text-center">
-          <q-icon name="account_balance" color="primary" size="40px" />
-          <div class="text-h6 q-mt-sm">{{ opcion.nombre }}</div>
+
+    <div class="options-grid">
+      <q-card
+        v-for="opcion in opciones"
+        :key="opcion.codigo"
+        class="option-card"
+        @click="$emit('seleccionar', opcion.codigo)"
+        hoverable
+      >
+        <q-card-section class="card-content">
+          <q-icon
+            :name="opcion.icono || 'account_balance'"
+            :color="opcion.color || 'primary'"
+            size="48px"
+          />
+          <div class="text-h6 q-mt-md">{{ opcion.nombre }}</div>
+          <div class="text-caption q-mt-sm text-grey-7" v-if="opcion.descripcion">
+            {{ opcion.descripcion }}
+          </div>
         </q-card-section>
 
         <q-separator />
 
-        <q-card-actions align="center">
-          <q-btn label="Ingresar" color="primary" flat class="q-mt-sm" />
+        <q-card-actions align="center" class="card-actions">
+          <q-btn
+            label="Seleccionar"
+            color="primary"
+            outline
+            class="action-button"
+            icon-right="arrow_forward"
+          />
         </q-card-actions>
       </q-card>
     </div>
@@ -33,34 +49,106 @@
 </template>
 
 <script setup>
-const emit = defineEmits(['continuar'])
+const emit = defineEmits(['continuar', 'seleccionar'])
 
 const handleContinue = () => {
-  emit('continuar') // Esto activará el toggle en el padre
+  emit('continuar')
 }
+
 const opciones = [
-  { codigo: 'preforma', nombre: 'VENTA PERFORMA' },
-  { codigo: 'facturaCV', nombre: 'FACTURA COMPRA-VENTA' },
-  { codigo: 'facturaCMEX', nombre: 'FACTURA COMERCIAL DE EXPORTACIÓN' },
-  { codigo: 'facturaABYM', nombre: 'FACTURA DE ALQUILER DE BIENES INMUEBLES' },
-  { codigo: 'prueba', nombre: 'prueba' },
-  { codigo: 'PruebaD', nombre: 'pruebaD' },
+  {
+    codigo: 'preforma',
+    nombre: 'VENTA PROFORMA',
+    descripcion: 'Documento previo a la factura formal',
+    icono: 'description',
+    color: 'blue',
+  },
+  {
+    codigo: 'facturaCV',
+    nombre: 'FACTURA COMPRA-VENTA',
+    descripcion: 'Para transacciones comerciales locales',
+    icono: 'receipt',
+    color: 'green',
+  },
+  {
+    codigo: 'facturaCMEX',
+    nombre: 'FACTURA COMERCIAL DE EXPORTACIÓN',
+    descripcion: 'Documentación para comercio exterior',
+    icono: 'flight_takeoff',
+    color: 'orange',
+  },
+  {
+    codigo: 'facturaABYM',
+    nombre: 'FACTURA DE ALQUILER',
+    descripcion: 'Para arrendamiento de bienes inmuebles',
+    icono: 'home_work',
+    color: 'purple',
+  },
 ]
 </script>
 
 <style scoped>
-.container {
+.options-container {
+  padding: 16px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.options-header {
+  margin-bottom: 24px;
+}
+
+.back-button {
+  font-weight: 500;
+}
+
+.options-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 16px;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 24px;
 }
 
-.item {
+.option-card {
   cursor: pointer;
-  transition: transform 0.2s;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+  border-radius: 8px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
 }
 
-.item:hover {
-  transform: scale(1.02);
+.option-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+}
+
+.card-content {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 24px 16px;
+}
+
+.card-actions {
+  padding: 12px;
+}
+
+.action-button {
+  transition: all 0.2s ease;
+}
+
+.option-card:hover .action-button {
+  background-color: var(--q-primary);
+  color: white;
+}
+
+@media (max-width: 600px) {
+  .options-grid {
+    grid-template-columns: 1fr;
+  }
 }
 </style>

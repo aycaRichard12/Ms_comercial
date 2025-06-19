@@ -1,106 +1,160 @@
 <template>
   <div class="q-pa-md">
-    <product-state-form
-      v-if="showForm"
-      :editing="editing"
-      :current-item="currentItem"
-      @submit="handleSubmit"
-      @cancel="toggleForm"
-    />
-
-    <product-state-table
-      v-else
-      :rows="productStates"
-      @new-item="toggleForm"
-      @edit-item="editState"
-      @delete-item="confirmDelete"
-      @status-change="toggleStatus"
-    />
-
-    <q-dialog v-model="confirmDialog" persistent>
-      <q-card>
-        <q-card-section class="row items-center">
-          <q-avatar icon="delete" color="negative" text-color="white" />
-          <span class="q-ml-sm">¿Está seguro de eliminar este estado?</span>
+    <q-dialog v-model="showForm" persistent>
+      <q-card style="min-width: 400px; max-width: 600px">
+        <q-card-section class="q-pa-none">
+          <ProductStateForm
+            :isEditing="isEditing"
+            :model-value="formData"
+            @submit="handleSubmit"
+            @cancel="toggleForm"
+          />
         </q-card-section>
-
-        <q-card-actions align="right">
-          <q-btn flat label="Cancelar" color="primary" v-close-popup />
-          <q-btn flat label="Eliminar" color="negative" @click="deleteState" v-close-popup />
-        </q-card-actions>
       </q-card>
     </q-dialog>
+
+    <ProductStateTable
+      :rows="productStates"
+      @add="toggleForm"
+      @edit-item="editState"
+      @delete-item="confirmDelete"
+      @toggle-status="toggleStatus"
+    />
   </div>
 </template>
 
 <script setup>
-import { ref } from 'vue'
-import ProductStateForm from 'src/components/productoConf/estadoForm.vue'
-import ProductStateTable from 'src/components/productoConf/estadoTable.vue'
+import { ref, onMounted } from 'vue'
+import { useQuasar } from 'quasar'
+import ProductStateForm from 'src/components/productoConf/estadoProducto/estadoForm.vue'
+import ProductStateTable from 'src/components/productoConf/estadoProducto/estadoTable.vue'
+import { idempresa_md5 } from 'src/composables/FuncionesGenerales'
+import { api } from 'boot/axios' // Asegúrate de tener esto configurado
+import { objectToFormData } from 'src/composables/FuncionesGenerales'
+
+const idempresa = idempresa_md5()
+const $q = useQuasar()
 
 const showForm = ref(false)
-const editing = ref(false)
-const currentItem = ref(null)
-const confirmDialog = ref(false)
-const itemToDelete = ref(null)
+const isEditing = ref(false)
 
-const productStates = ref([
-  { id: 68, numero: 1, estado: 'Prueba', descripcion: 'sad', activo: true },
-  { id: 20, numero: 2, estado: 'Usado', descripcion: 'Productos seminuevos', activo: true },
-  // ... otros estados
-])
-
+const productStates = ref([])
+const formData = ref({
+  ver: 'registrarEstadoProducto',
+  idempresa: idempresa,
+})
+async function loadRows() {
+  try {
+    const response = await api.get(`listaEstadoProducto/${idempresa}`) // Cambia a tu ruta real
+    productStates.value = response.data // Asume que la API devuelve un array
+  } catch (error) {
+    console.error('Error al cargar datos:', error)
+    $q.notify({
+      type: 'negative',
+      message: 'No se pudieron cargar los datos',
+    })
+  }
+}
 const toggleForm = () => {
   showForm.value = !showForm.value
   if (!showForm.value) {
-    editing.value = false
-    currentItem.value = null
+    isEditing.value = false
+    resetForm()
   }
 }
-
+function resetForm() {
+  isEditing.value = false
+  formData.value = {
+    ver: 'registrarEstadoProducto',
+    idempresa: idempresa,
+    nombre: '',
+    descripcion: '',
+  }
+}
 const editState = (item) => {
-  currentItem.value = item
-  editing.value = true
+  formData.value = {
+    ver: 'editarEstadoProducto',
+    idempresa: idempresa,
+    nombre: item.nombre,
+    descripcion: item.descripcion,
+    id: item.id,
+  }
+
+  isEditing.value = true
   showForm.value = true
 }
 
 const confirmDelete = (item) => {
-  itemToDelete.value = item
-  confirmDialog.value = true
-}
-
-const deleteState = () => {
-  productStates.value = productStates.value.filter((state) => state.id !== itemToDelete.value.id)
-  // Aquí iría la llamada API para eliminar
-}
-
-const toggleStatus = (item) => {
-  item.activo = !item.activo
-  // Aquí iría la llamada API para actualizar el estado
-}
-
-const handleSubmit = (formData) => {
-  if (editing.value) {
-    // Lógica para actualizar
-    const index = productStates.value.findIndex((s) => s.id === formData.id)
-    if (index !== -1) {
-      productStates.value[index] = {
-        ...productStates.value[index],
-        estado: formData.nombre,
-        descripcion: formData.descripcion,
+  $q.dialog({
+    title: 'Confirmar',
+    message: `¿Eliminar Estado "${item.nombre}"?`,
+    cancel: true,
+    persistent: true,
+  }).onOk(async () => {
+    try {
+      const response = await api.get(`eliminarEstadoProducto/${item.id}/`) // Cambia a tu ruta real
+      console.log(response)
+      if (response.data.estado === 'exito') {
+        loadRows()
+        $q.notify({
+          type: 'positive',
+          message: response.data.mensaje,
+        })
       }
+    } catch (error) {
+      console.error('Error al cargar datos:', error)
+      $q.notify({
+        type: 'negative',
+        message: 'No se pudieron cargar los datos',
+      })
     }
-  } else {
-    // Lógica para crear nuevo
-    const newId = Math.max(...productStates.value.map((s) => s.id)) + 1
-    productStates.value.unshift({
-      id: newId,
-      numero: productStates.value.length + 1,
-      estado: formData.nombre,
-      descripcion: formData.descripcion,
-      activo: true,
+  })
+}
+
+const toggleStatus = async (item) => {
+  const nuevoEstado = Number(item.estado) === 2 ? 1 : 2
+  try {
+    const response = await api.get(`actualizarEstadoEstadoProducto/${item.id}/${nuevoEstado}`) // Cambia a tu ruta real
+    console.log(response)
+    loadRows()
+  } catch (error) {
+    console.error('Error al cargar datos:', error)
+    $q.notify({
+      type: 'negative',
+      message: 'No se pudieron cargar los datos',
+    })
+  }
+}
+
+const handleSubmit = async (data) => {
+  const formData = objectToFormData(data)
+  for (let [k, v] of formData.entries()) {
+    console.log(`${k}: ${v}`)
+  }
+  try {
+    if (isEditing.value) {
+      const response = await api.post(``, formData)
+      console.log(response)
+    } else {
+      const response = await api.post(``, formData)
+      console.log(response)
+    }
+    $q.notify({
+      type: 'positive',
+      message: isEditing.value ? 'Editado correctamente' : 'Registrado correctamente',
+    })
+    loadRows()
+  } catch (error) {
+    console.error('Error al guardar:', error)
+    $q.notify({
+      type: 'negative',
+      message: 'Ocurrió un error al guardar' + error,
     })
   }
   toggleForm()
 }
+
+onMounted(() => {
+  loadRows()
+})
 </script>

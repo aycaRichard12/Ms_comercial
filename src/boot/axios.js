@@ -8,7 +8,7 @@ import axios from 'axios'
 // "export default () => {}" function below (which runs individually
 // for each client)
 const api = axios.create({
-  baseURL: 'https://vivasoft.link/app/cm/api/',
+  baseURL: 'https://mistersofts.com/app/cmv1/api/',
   timeout: 10000,
 })
 

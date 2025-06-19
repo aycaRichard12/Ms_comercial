@@ -1,213 +1,157 @@
 <template>
   <div class="q-pa-md">
-    <!-- Form Section -->
-    <q-card class="q-mb-md" v-if="showForm">
-      <q-card-section>
-        <div class="text-h6">Nuevo Registro</div>
-      </q-card-section>
+    <q-dialog v-model="showForm" persistent>
+      <q-card style="min-width: 400px; max-width: 600px">
+        <q-card-section class="q-pa-none">
+          <TipoAlmacenForm
+            :model-value="formData"
+            :is-editing="isEditing"
+            @submit="handleSubmit"
+            @cancel="toggleForm"
+          />
+        </q-card-section>
+      </q-card>
+    </q-dialog>
 
-      <q-card-section>
-        <q-form @submit.prevent="submitForm">
-          <div class="row q-col-gutter-md">
-            <!-- Hidden fields -->
-            <input type="hidden" name="ver" v-model="formData.ver" />
-            <input type="hidden" name="idempresa" v-model="formData.idempresa" />
-
-            <!-- Visible fields -->
-            <div class="col-12">
-              <q-input
-                v-model="formData.nombre"
-                label="Tipo de almacén*"
-                outlined
-                dense
-                :rules="[(val) => !!val || 'Campo requerido']"
-              />
-            </div>
-
-            <div class="col-12">
-              <q-input
-                v-model="formData.descripcion"
-                label="Descripción del tipo de almacén*"
-                outlined
-                dense
-                :rules="[(val) => !!val || 'Campo requerido']"
-              />
-            </div>
-
-            <div class="col-12 text-center">
-              <q-btn label="Registrar" type="submit" color="primary" class="q-mt-md" />
-            </div>
-          </div>
-        </q-form>
-      </q-card-section>
-
-      <q-card-actions align="right">
-        <q-btn label="Cancelar Registro" color="negative" @click="toggleForm" flat />
-      </q-card-actions>
-    </q-card>
-
-    <!-- Table Section -->
-    <div class="row table-topper q-mb-md">
-      <div class="col flex items-center">
-        <q-btn v-if="!showForm" label="Nuevo Registro" color="primary" @click="toggleForm" />
-      </div>
-
-      <div class="col flex items-center justify-end">
-        <q-input v-model="search" placeholder="Buscar" dense outlined class="q-ml-md">
-          <template v-slot:append>
-            <q-icon name="search" />
-          </template>
-        </q-input>
-      </div>
-    </div>
-
-    <q-table
-      :rows="filteredRows"
-      :columns="columns"
-      row-key="id"
-      :pagination="pagination"
-      :filter="search"
-      class="my-sticky-header-table"
-    >
-      <template v-slot:body-cell-estado="props">
-        <q-td :props="props">
-          <q-btn icon="thumb_up" color="primary" dense @click="changeStatus(props.row)" />
-        </q-td>
-      </template>
-
-      <template v-slot:body-cell-opciones="props">
-        <q-td :props="props" class="text-nowrap">
-          <q-btn icon="edit" color="info" dense class="q-mr-sm" @click="editItem(props.row)" />
-          <q-btn icon="delete" color="negative" dense @click="deleteItem(props.row)" />
-        </q-td>
-      </template>
-    </q-table>
+    <TipoAlmacenTable
+      :rows="rows"
+      @add="toggleForm"
+      @edit="editItem"
+      @delete="deleteItem"
+      @toggle-status="changeStatus"
+    />
   </div>
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useQuasar } from 'quasar'
-import { useRoute } from 'vue-router'
-
+import TipoAlmacenForm from 'components/general/tipoAlmacen/FormTipoAlmacen.vue'
+import TipoAlmacenTable from 'components/general/tipoAlmacen/TableTipoAlmacen.vue'
+import { idempresa_md5 } from 'src/composables/FuncionesGenerales'
+import { api } from 'boot/axios' // Asegúrate de tener esto configurado
+import { objectToFormData } from 'src/composables/FuncionesGenerales'
+const idempresa = idempresa_md5()
 const $q = useQuasar()
-
 const showForm = ref(false)
-const search = ref('')
+const isEditing = ref(false)
+const rows = ref([])
 
 const formData = ref({
   ver: 'registrarTipoAlmacen',
-  idempresa: 'c0c7c76d30bd3dcaefc96f40275bdc0a',
+  idempresa: idempresa,
   nombre: '',
   descripcion: '',
 })
-const getCurrentKey = () => {
-  const route = useRoute() // Accede a la ruta actual
-  const key = route.query.key || null // Obtiene el parámetro `key`
-  return key
+async function loadRows() {
+  try {
+    const response = await api.get(`listaTipoAlmacen/${idempresa}`) // Cambia a tu ruta real
+    rows.value = response.data // Asume que la API devuelve un array
+  } catch (error) {
+    console.error('Error al cargar datos:', error)
+    $q.notify({
+      type: 'negative',
+      message: 'No se pudieron cargar los datos',
+    })
+  }
 }
-
-const currentKey = getCurrentKey()
-console.log(currentKey) // Verifica el valor
-
-const rows = ref([
-  { id: 83, numero: 1, tipo: 'Generals', descripcion: 'SD', estado: 2 },
-  { id: 82, numero: 2, tipo: 'General', descripcion: '12', estado: 2 },
-  { id: 80, numero: 3, tipo: 'consumo1', descripcion: '12', estado: 2 },
-  { id: 78, numero: 4, tipo: 'eliminar', descripcion: 'weqw', estado: 2 },
-  {
-    id: 34,
-    numero: 5,
-    tipo: 'Consumo',
-    descripcion: 'Productos o insumos existentes en la fábrica central para industrializacion.',
-    estado: 2,
-  },
-])
-
-const columns = [
-  { name: 'numero', label: 'N°', field: 'numero', align: 'center' },
-  { name: 'tipo', label: 'Tipos', field: 'tipo', align: 'center' },
-  { name: 'descripcion', label: 'Descripción', field: 'descripcion', align: 'center' },
-  { name: 'estado', label: 'Estado', field: 'estado', align: 'center' },
-  { name: 'opciones', label: 'Opciones', field: 'opciones', align: 'center' },
-]
-
-const pagination = ref({
-  rowsPerPage: 10,
-})
-
-const filteredRows = computed(() => {
-  return rows.value.map((row) => ({
-    ...row,
-    estadoText: row.estado === 2 ? 'Activo' : 'Inactivo',
-  }))
-})
-
 function toggleForm() {
   showForm.value = !showForm.value
-  if (!showForm.value) {
-    resetForm()
-  }
+  if (!showForm.value) resetForm()
 }
 
 function resetForm() {
+  isEditing.value = false
   formData.value = {
     ver: 'registrarTipoAlmacen',
-    idempresa: 'c0c7c76d30bd3dcaefc96f40275bdc0a',
+    idempresa: idempresa,
     nombre: '',
     descripcion: '',
   }
 }
 
-function submitForm() {
-  const newId = Math.max(...rows.value.map((r) => r.id)) + 1
-  rows.value.unshift({
-    id: newId,
-    numero: rows.value.length + 1,
-    tipo: formData.value.nombre,
-    descripcion: formData.value.descripcion,
-    estado: 2,
-  })
+async function handleSubmit(data) {
+  const formData = objectToFormData(data)
+  for (let [k, v] of formData.entries()) {
+    console.log(`${k}: ${v}`)
+  }
+  try {
+    if (isEditing.value) {
+      const response = await api.post(``, formData)
+      console.log(response)
+    } else {
+      const response = await api.post(``, formData)
+      console.log(response)
+    }
+    $q.notify({
+      type: 'positive',
+      message: isEditing.value ? 'Editado correctamente' : 'Registrado correctamente',
+    })
+    loadRows()
+  } catch (error) {
+    console.error('Error al guardar:', error)
+    $q.notify({
+      type: 'negative',
+      message: 'Ocurrió un error al guardar' + error,
+    })
+  }
   toggleForm()
 }
 
 function editItem(item) {
-  showForm.value = true
   formData.value = {
-    ver: 'actualizarTipoAlmacen',
-    idempresa: 'c0c7c76d30bd3dcaefc96f40275bdc0a',
-    nombre: item.tipo,
+    ver: 'editarTipoAlmacen',
+    idempresa: idempresa,
+    nombre: item.tipoalmacen,
     descripcion: item.descripcion,
     id: item.id,
   }
+  isEditing.value = true
+  showForm.value = true
 }
 
-function deleteItem(item) {
-  confirmDelete(item)
-}
-
-function confirmDelete(item) {
+async function deleteItem(item) {
   $q.dialog({
     title: 'Confirmar',
-    message: `¿Estás seguro de eliminar el tipo de almacén "${item.tipo}"?`,
+    message: `¿Eliminar el tipo de almacén "${item.tipoalmacen}"?`,
     cancel: true,
     persistent: true,
-  }).onOk(() => {
-    rows.value = rows.value.filter((r) => r.id !== item.id)
+  }).onOk(async () => {
+    try {
+      const response = await api.get(`eliminarTipoAlmacen/${item.id}/`) // Cambia a tu ruta real
+      console.log(response)
+      if (response.data.estado === 'exito') {
+        loadRows()
+        $q.notify({
+          type: 'positive',
+          message: response.data.mensaje,
+        })
+      }
+    } catch (error) {
+      console.error('Error al cargar datos:', error)
+      $q.notify({
+        type: 'negative',
+        message: 'No se pudieron cargar los datos',
+      })
+    }
   })
 }
 
-function changeStatus(item) {
-  item.estado = item.estado === 2 ? 0 : 2
+async function changeStatus(item) {
+  const nuevoEstado = Number(item.estado) === 2 ? 1 : 2
+  try {
+    const response = await api.get(`actualizarEstadoTipoAlmacen/${item.id}/${nuevoEstado}`) // Cambia a tu ruta real
+    console.log(response)
+    loadRows()
+  } catch (error) {
+    console.error('Error al cargar datos:', error)
+    $q.notify({
+      type: 'negative',
+      message: 'No se pudieron cargar los datos',
+    })
+  }
 }
+onMounted(() => {
+  loadRows()
+})
 </script>
-
-<style>
-.my-sticky-header-table {
-  height: calc(100vh - 300px);
-}
-
-.table-topper {
-  margin-bottom: 16px;
-}
-</style>

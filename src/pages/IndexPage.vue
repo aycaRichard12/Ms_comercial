@@ -16,11 +16,11 @@
         </q-item>
         <q-item>
           <q-item-section> </q-item-section>
-          <q-item-section>
+          <q-item-section id="venta-card">
             <q-btn
               flat
-              style="color: green"
-              label="ok"
+              style="color: black"
+              label="Ir"
               @click="cambiarComponente(VentaComponent)"
             />
           </q-item-section>
@@ -37,19 +37,47 @@
           </q-item-section>
 
           <q-item-section>
-            <q-item-label>Pedido</q-item-label>
+            <q-item-label>Compras</q-item-label>
             <q-item-label caption>{{ compra.titulo || 'Compras' }}</q-item-label>
           </q-item-section>
         </q-item>
         <q-item>
           <q-item-section> </q-item-section>
 
-          <q-item-section>
+          <q-item-section id="compra-card">
             <q-btn
               flat
-              style="color: yellow"
-              label="ok"
+              style="color: black"
+              label="Ir"
               @click="cambiarComponente(PedidoComponent)"
+            />
+          </q-item-section>
+        </q-item>
+      </q-card>
+    </div>
+    <div class="box coffee">
+      <q-card v-if="compra" flat bordered class="col">
+        <q-item>
+          <q-item-section avatar>
+            <q-avatar>
+              <img src="../assets/PEDIDOS.svg" />
+            </q-avatar>
+          </q-item-section>
+
+          <q-item-section>
+            <q-item-label>Productos</q-item-label>
+            <q-item-label caption>{{ producto.titulo || 'Compras' }}</q-item-label>
+          </q-item-section>
+        </q-item>
+        <q-item>
+          <q-item-section> </q-item-section>
+
+          <q-item-section id="producto-card">
+            <q-btn
+              flat
+              style="color: black"
+              label="Ir"
+              @click="cambiarComponente(CrearProductos)"
             />
           </q-item-section>
         </q-item>
@@ -72,39 +100,251 @@
         <q-item>
           <q-item-section> </q-item-section>
 
-          <q-item-section>
+          <q-item-section id="reportes-card">
             <q-btn
               flat
-              style="color: red"
-              label="ok"
+              style="color: black"
+              label="ir"
               @click="cambiarComponente(ReporteComponent)"
             />
           </q-item-section>
         </q-item>
       </q-card>
     </div>
-    <div class="box blue">
+    <div class="box blue" id="venta">
+      <div style="display: flex; justify-content: end">
+        <q-btn icon="help_outline" color="blue" flat @click="iniciarGuia" />
+      </div>
       <component :is="componenteActivo" />
     </div>
-    <div class="box purple">
-      <div class="q-pa-md">
-        <q-card class="my-card">
-          <q-video src="https://www.youtube.com/embed/k3_tw44QsZQ?rel=0" />
-
-          <q-card-section>
-            <div class="text-h6">Our Changing Planet</div>
-            <div class="text-subtitle2">by John Doe</div>
-          </q-card-section>
-
-          <q-card-section class="q-pt-none">
-            Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor
-            incididunt ut labore et dolore magna aliqua.
-          </q-card-section>
-        </q-card>
-      </div>
+    <div class="box purple" id="reportes-hoy">
+      <ReporteVentaInicio />
     </div>
   </q-page>
 </template>
+
+<script setup>
+import { ref, onMounted, shallowRef, markRaw, defineAsyncComponent } from 'vue'
+import { useQuasar } from 'quasar'
+import ReporteVentaInicio from 'src/components/reporteVentas/ReporteVentaInicio.vue'
+import { driver } from 'driver.js'
+import 'driver.js/dist/driver.css'
+//import { iniciarTourInicio } from 'src/utils/tourGLobal'
+const $q = useQuasar()
+console.log('Quasar in App.vue:', $q)
+// Carga asíncrona de componentes con manejo de errores
+const PedidoComponent = defineAsyncComponent({
+  loader: () => import('pages/compra/RcompraPage.vue'),
+  loadingComponent: { template: '<div>Cargando pedidos...</div>' },
+  errorComponent: { template: '<div>Error al cargar pedidos</div>' },
+})
+const CrearProductos = defineAsyncComponent({
+  loader: () => import('pages/producto/CproductoPage.vue'),
+  loadingComponent: { template: '<div>Cargando Productos...</div>' },
+  errorComponent: { template: '<div>Error al cargar Productos</div>' },
+})
+const VentaComponent = defineAsyncComponent({
+  loader: () => import('src/components/venta/ventaComponent.vue'),
+  loadingComponent: { template: '<div>Cargando ventas...</div>' },
+})
+
+const ReporteComponent = defineAsyncComponent({
+  loader: () => import('src/components/reporte/reporteComponent.vue'),
+  loadingComponent: { template: '<div>Cargando reportes...</div>' },
+})
+
+const componenteActivo = shallowRef(markRaw(VentaComponent))
+
+const cambiarComponente = (componente) => {
+  try {
+    componenteActivo.value = markRaw(componente)
+  } catch (error) {
+    console.error('Error al cambiar componente:', error)
+    // Opcional: Mostrar notificación de error al usuario
+  }
+}
+const nombreUsuario = ref('') // Variable reactiva
+const venta = ref({})
+const compra = ref({})
+const dashboard = ref({})
+const producto = ref({})
+// inicialconst expanded = ref(false)
+
+const contenidoUsuario = localStorage.getItem('yofinanciero')
+const contenidoMenus = JSON.parse(localStorage.getItem('yofinancieromenu'))
+
+onMounted(() => {
+  if (contenidoUsuario && contenidoMenus) {
+    try {
+      const parsedData = JSON.parse(contenidoUsuario)
+      nombreUsuario.value = parsedData[0]?.nombre || 'Usuario desconocido'
+
+      venta.value = verificar_permiso_venta()
+      compra.value = verificar_permiso_compra()
+      dashboard.value = verificar_permiso_dashboard()
+      producto.value = verificar_permiso_producto()
+      console.log(venta.value) // Devuelve el objeto del submenú o null
+      console.log(compra.value) // Devuelve el objeto del submenú o null
+      console.log(dashboard.value) // Devuelve el objeto del submenú o null
+
+      // Establecer componente inicial basado en permisos
+      if (venta.value) componenteActivo.value = VentaComponent
+      else if (compra.value) componenteActivo.value = PedidoComponent
+      else if (dashboard.value) componenteActivo.value = ReporteComponent
+    } catch (error) {
+      console.error('Error al parsear los datos de localStorage:', error)
+    }
+  } else {
+    console.warn('No hay datos en localStorage para "yofinanciero"')
+  }
+})
+
+const verificar_permiso_compra = () => {
+  for (const modulo of contenidoMenus) {
+    for (const menu of modulo.menu) {
+      const sub = menu.submenu.find((sub) => sub.codigo === 'registrarcompra-' + menu.usuario)
+      if (sub) return sub
+    }
+  }
+  return null
+}
+const verificar_permiso_venta = () => {
+  for (const modulo of contenidoMenus) {
+    for (const menu of modulo.menu) {
+      const sub = menu.submenu.find((sub) => sub.codigo === 'registrarventa-' + menu.usuario)
+      if (sub) return sub
+    }
+  }
+  return null
+}
+const verificar_permiso_dashboard = () => {
+  for (const modulo of contenidoMenus) {
+    for (const menu of modulo.menu) {
+      const sub = menu.submenu.find((sub) => sub.codigo === 'dashboard-' + menu.usuario)
+      if (sub) return sub
+    }
+  }
+  return null
+}
+const verificar_permiso_producto = () => {
+  for (const modulo of contenidoMenus) {
+    for (const menu of modulo.menu) {
+      const sub = menu.submenu.find((sub) => sub.codigo === 'registrarproductos-' + menu.usuario)
+      if (sub) return sub
+    }
+  }
+  return null
+}
+const driverObj = driver()
+
+const iniciarGuia = () => {
+  driverObj.setSteps([
+    {
+      element: '#venta-card',
+      popover: {
+        title: 'Módulo de Ventas',
+        description:
+          'Aquí puedes gestionar tus ventas y realizar nuevas transacciones. Haz clic para acceder.',
+        side: 'left',
+        align: 'start',
+      },
+    },
+    {
+      element: '#compra-card',
+      popover: {
+        title: 'Módulo de Compras',
+        description:
+          'Consulta y administra todas tus compras de manera sencilla. Presiona el botón para ingresar.',
+        side: 'bottom',
+        align: 'start',
+      },
+    },
+    {
+      element: '#reportes-card',
+      popover: {
+        title: 'Reportes y Estadísticas',
+        description: 'Accede a análisis detallados y estadísticas de rendimiento en tu negocio.',
+        side: 'bottom',
+        align: 'start',
+      },
+    },
+    {
+      element: '#producto-card',
+      popover: {
+        title: 'Gestión de Productos',
+        description: 'Agrega, edita y organiza tus productos. ¡Optimiza tu catálogo aquí!',
+        side: 'bottom',
+        align: 'start',
+      },
+    },
+
+    {
+      element: '#venta',
+      popover: {
+        title: 'Carrito de Ventas',
+        description: 'Realiza la venta de tus productos fácilmente desde esta sección.',
+        side: 'bottom',
+        align: 'start',
+      },
+    },
+    {
+      element: '#reportes-hoy',
+      popover: {
+        title: 'Resumen de Reportes',
+        description:
+          'Visualiza rápidamente los reportes y métricas del día para mantener el control de tu negocio.',
+        side: 'bottom',
+        align: 'start',
+      },
+    },
+  ])
+  driverObj.drive()
+
+  // {
+  //   element: 'code .line:nth-child(2)',
+  //   popover: {
+  //     title: 'Importing CSS',
+  //     description:
+  //       'Import the CSS which gives you the default styling for popover and overlay.',
+  //     side: 'bottom',
+  //     align: 'start',
+  //   },
+  // },
+  // {
+  //   element: 'code .line:nth-child(4) span:nth-child(7)',
+  //   popover: {
+  //     title: 'Create Driver',
+  //     description: 'Simply call the driver function to create a driver.js instance',
+  //     side: 'left',
+  //     align: 'start',
+  //   },
+  // },
+  // {
+  //   element: 'code .line:nth-child(18)',
+  //   popover: {
+  //     title: 'Start Tour',
+  //     description: 'Call the drive method to start the tour and your tour will be started.',
+  //     side: 'top',
+  //     align: 'start',
+  //   },
+  // },
+  // {
+  //   element: 'a[href="/docs/configuration"]',
+  //   popover: {
+  //     title: 'More Configuration',
+  //     description: 'Look at this page for all the configuration options you can pass.',
+  //     side: 'right',
+  //     align: 'start',
+  //   },
+  // },
+  // {
+  //   popover: {
+  //     title: 'Happy Coding',
+  //     description: 'And that is all, go ahead and start adding tours to your applications.',
+  //   },
+  // },
+}
+</script>
 
 <style scoped>
 /* ======= ESTILOS GENERALES ======= */
@@ -122,35 +362,34 @@
 }
 
 .q-card {
-  flex-grow: 1;
+  flex-grow: 2;
   display: flex;
   flex-direction: column;
 }
 
 /* ======= COLORES Y POSICIONAMIENTO ======= */
 .green {
-  background: green;
   grid-column: 1 / 3;
   grid-row: 1 / 2;
 }
 .yellow {
-  background: gold;
   grid-column: 3 / 5;
   grid-row: 1 / 2;
 }
 .red {
-  background: red;
   grid-column: 5 / 7;
   grid-row: 1 / 2;
 }
+.coffee {
+  grid-column: 7/9;
+  grid-row: 1/2;
+}
 .purple {
-  background: purple;
-  grid-column: 7 / 11;
+  grid-column: 10 / 11;
   grid-row: 1 / 9;
 }
 .blue {
-  background: rgb(210, 210, 210);
-  grid-column: 1 / 7;
+  grid-column: 1 / 9;
   grid-row: 2 / 9;
 }
 
@@ -178,106 +417,10 @@
   .yellow,
   .red,
   .blue,
+  .coffee,
   .purple {
     grid-column: 1 / 2; /* Todas las cajas en una sola columna */
     grid-row: auto;
   }
 }
 </style>
-
-<script setup>
-import { ref, onMounted, shallowRef, markRaw, defineAsyncComponent } from 'vue'
-import { useQuasar } from 'quasar'
-
-const $q = useQuasar()
-console.log('Quasar in App.vue:', $q)
-// Carga asíncrona de componentes con manejo de errores
-const PedidoComponent = defineAsyncComponent({
-  loader: () => import('src/components/pedido/pedidoComponent.vue'),
-  loadingComponent: { template: '<div>Cargando pedidos...</div>' },
-  errorComponent: { template: '<div>Error al cargar pedidos</div>' },
-})
-
-const VentaComponent = defineAsyncComponent({
-  loader: () => import('src/components/venta/ventaComponent.vue'),
-  loadingComponent: { template: '<div>Cargando ventas...</div>' },
-})
-
-const ReporteComponent = defineAsyncComponent({
-  loader: () => import('src/components/reporte/reporteComponent.vue'),
-  loadingComponent: { template: '<div>Cargando reportes...</div>' },
-})
-
-const componenteActivo = shallowRef(markRaw(VentaComponent))
-
-const cambiarComponente = (componente) => {
-  try {
-    componenteActivo.value = markRaw(componente)
-  } catch (error) {
-    console.error('Error al cambiar componente:', error)
-    // Opcional: Mostrar notificación de error al usuario
-  }
-}
-const nombreUsuario = ref('') // Variable reactiva
-const venta = ref({})
-const compra = ref({})
-const dashboard = ref({})
-
-// inicialconst expanded = ref(false)
-
-const contenidoUsuario = localStorage.getItem('yofinanciero')
-const contenidoMenus = JSON.parse(localStorage.getItem('yofinancieromenu'))
-
-onMounted(() => {
-  if (contenidoUsuario && contenidoMenus) {
-    try {
-      const parsedData = JSON.parse(contenidoUsuario)
-      nombreUsuario.value = parsedData[0]?.nombre || 'Usuario desconocido'
-
-      venta.value = verificar_permiso_venta()
-      compra.value = verificar_permiso_pedido()
-      dashboard.value = verificar_permiso_dashboard()
-      console.log(venta.value) // Devuelve el objeto del submenú o null
-      console.log(compra.value) // Devuelve el objeto del submenú o null
-      console.log(dashboard.value) // Devuelve el objeto del submenú o null
-
-      // Establecer componente inicial basado en permisos
-      if (venta.value) componenteActivo.value = VentaComponent
-      else if (compra.value) componenteActivo.value = PedidoComponent
-      else if (dashboard.value) componenteActivo.value = ReporteComponent
-    } catch (error) {
-      console.error('Error al parsear los datos de localStorage:', error)
-    }
-  } else {
-    console.warn('No hay datos en localStorage para "yofinanciero"')
-  }
-})
-
-const verificar_permiso_pedido = () => {
-  for (const modulo of contenidoMenus) {
-    for (const menu of modulo.menu) {
-      const sub = menu.submenu.find((sub) => sub.codigo === 'generarpedido-' + menu.usuario)
-      if (sub) return sub
-    }
-  }
-  return null
-}
-const verificar_permiso_venta = () => {
-  for (const modulo of contenidoMenus) {
-    for (const menu of modulo.menu) {
-      const sub = menu.submenu.find((sub) => sub.codigo === 'registrarventa-' + menu.usuario)
-      if (sub) return sub
-    }
-  }
-  return null
-}
-const verificar_permiso_dashboard = () => {
-  for (const modulo of contenidoMenus) {
-    for (const menu of modulo.menu) {
-      const sub = menu.submenu.find((sub) => sub.codigo === 'dashboard-' + menu.usuario)
-      if (sub) return sub
-    }
-  }
-  return null
-}
-</script>

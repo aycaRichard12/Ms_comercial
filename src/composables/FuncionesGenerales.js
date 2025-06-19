@@ -1,5 +1,5 @@
 import { useFetchList } from 'src/composables/useFetchList'
-
+//vapp
 export function idempresa_md5() {
   const contenidousuario = JSON.parse(localStorage.getItem('yofinanciero'))
   if (contenidousuario) {
@@ -20,7 +20,7 @@ export function idusuario_md5() {
     localStorage.clear()
   }
 }
-function validarUsuario() {
+export function validarUsuario() {
   const contenidousuario = JSON.parse(localStorage.getItem('yofinanciero'))
   if (contenidousuario) {
     return contenidousuario
@@ -28,7 +28,7 @@ function validarUsuario() {
     alert('Hubo un problema con la sesion, Por favor vuelva a iniciar sesion.')
     console.log('Los elementos no existen en localStorage')
     localStorage.clear()
-    window.location.assign('../../vapp/')
+    window.location.assign('../../app/')
   }
 }
 
@@ -66,4 +66,16 @@ export async function divisaEmonedaActiva() {
     console.error(error)
     throw error
   }
+}
+
+export function objectToFormData(obj) {
+  const formData = new FormData()
+  for (const key in obj) {
+    if (obj[key] !== null && obj[key] !== undefined) {
+      formData.append(key, obj[key])
+    } else {
+      formData.append(key, 0)
+    }
+  }
+  return formData
 }

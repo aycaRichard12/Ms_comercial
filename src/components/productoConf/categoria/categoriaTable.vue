@@ -1,0 +1,95 @@
+<template>
+  <div>
+    <div class="row table-topper q-mb-md">
+      <div class="col flex items-center">
+        <q-btn label="Nuevo Registro" color="primary" @click="$emit('new-item')" />
+      </div>
+
+      <div class="col flex items-center justify-end">
+        <q-input v-model="search" placeholder="Buscar" dense outlined class="q-ml-md">
+          <template v-slot:append>
+            <q-icon name="search" />
+          </template>
+        </q-input>
+      </div>
+    </div>
+
+    <q-table
+      :rows="processedRows"
+      :columns="columns"
+      row-key="id"
+      :pagination="pagination"
+      :filter="search"
+      class="my-sticky-header-table"
+    >
+      <template v-slot:body-cell-estado="props">
+        <q-td align="center">
+          <q-badge color="green" v-if="Number(props.row.estado) === 1" label="Activo" outline />
+          <q-badge color="red" v-else label="Inactivo" outline />
+        </q-td>
+      </template>
+
+      <template v-slot:body-cell-opciones="props">
+        <q-td :props="props" class="text-nowrap">
+          <q-btn
+            icon="edit"
+            color="info"
+            dense
+            class="q-mr-sm"
+            @click="$emit('edit-item', props.row)"
+          />
+          <q-btn icon="delete" color="negative" dense @click="$emit('delete-item', props.row)" />
+          <q-btn
+            :icon="Number(props.row.estado) === 1 ? 'toggle_on' : 'toggle_off'"
+            dense
+            flat
+            :color="Number(props.row.estado) === 1 ? 'green' : 'grey'"
+            @click="$emit('toggle-status', props.row)"
+          />
+        </q-td>
+      </template>
+    </q-table>
+  </div>
+</template>
+
+<script setup>
+import { ref, computed } from 'vue'
+const props = defineProps({
+  rows: {
+    type: Array,
+    required: true,
+    default: () => [],
+  },
+})
+
+defineEmits(['new-item', 'edit-item', 'delete-item', 'status-change'])
+
+const columns = [
+  { name: 'numero', label: 'N°', field: 'numero', align: 'center' },
+  { name: 'categoria', label: 'Categorías', field: 'categoria', align: 'left' },
+  { name: 'subcategoria', label: 'Sub Categorías', field: 'subcategoria', align: 'left' },
+  { name: 'descripcion', label: 'Descripción', field: 'descripcion', align: 'left' },
+  { name: 'estado', label: 'Estado', field: 'estado', align: 'center' },
+  { name: 'opciones', label: 'Opciones', field: 'opciones', align: 'center' },
+]
+
+const search = ref('')
+const pagination = ref({
+  rowsPerPage: 9,
+})
+
+// Procesamos las filas para adaptarlas a la estructura que necesitamos
+const processedRows = computed(() => {
+  return props.rows.map((item, index) => ({
+    id: item.id,
+    numero: index + 1,
+    categoria: item.idp == 0 ? item.nombre : '', // Mostrar en categoría solo si es padre
+    subcategoria: item.idp != 0 ? item.nombre : '', // Mostrar en subcategoría solo si es hijo
+    descripcion: item.descripcion,
+    estado: item.estado,
+    originalData: item, // Mantenemos los datos originales por si los necesitamos
+  }))
+})
+</script>
+
+<style scoped></style>

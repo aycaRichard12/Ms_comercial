@@ -1,6 +1,6 @@
 import { URL_APICM } from './services'
 export function generarCabeceraHTML(datos) {
-  //const tableHeader = datos.tableHeader;
+  //const tableHeader = datos.tableHeader; vapp
   const columns = datos
 
   // Generar la fila de encabezado (thead)
@@ -21,7 +21,7 @@ export function validarUsuario() {
     alert('Hubo un problema con la sesion, Por favor vuelva a iniciar sesion.')
     console.log('Los elementos no existen en localStorage')
     localStorage.clear()
-    window.location.assign('../../vapp/')
+    window.location.assign('../../app/')
   }
 }
 
@@ -413,7 +413,7 @@ export function numeroALetras(n, divisa) {
 
 // imageUtils.js validarUsuario
 
-export function convertirImagen(inputFileElement, width = 500, calidad = 40) {
+export function convertirImagenUtil(inputFileElement, width = 500, calidad = 40) {
   return new Promise((resolve, reject) => {
     const imagen_file = inputFileElement.files[0]
 

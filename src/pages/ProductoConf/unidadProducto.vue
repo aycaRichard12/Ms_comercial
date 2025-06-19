@@ -1,107 +1,156 @@
 <template>
   <div class="q-pa-md">
-    <product-unit-form
-      v-if="showForm"
-      :editing="editing"
-      :current-item="currentItem"
-      @submit="handleSubmit"
-      @cancel="toggleForm"
-    />
-
-    <product-unit-table
-      v-else
-      :rows="productUnits"
-      @new-item="toggleForm"
-      @edit-item="editUnit"
-      @delete-item="confirmDelete"
-      @status-change="toggleStatus"
-    />
-
-    <q-dialog v-model="confirmDialog" persistent>
-      <q-card>
-        <q-card-section class="row items-center">
-          <q-avatar icon="delete" color="negative" text-color="white" />
-          <span class="q-ml-sm">¿Está seguro de eliminar esta unidad?</span>
+    <q-dialog v-model="showForm" persistent>
+      <q-card style="min-width: 400px; max-width: 600px">
+        <q-card-section class="q-pa-none">
+          <product-unit-form
+            :isEditing="isEditing"
+            :model-value="formData"
+            @submit="handleSubmit"
+            @cancel="toggleForm"
+          />
         </q-card-section>
-
-        <q-card-actions align="right">
-          <q-btn flat label="Cancelar" color="primary" v-close-popup />
-          <q-btn flat label="Eliminar" color="negative" @click="deleteUnit" v-close-popup />
-        </q-card-actions>
       </q-card>
     </q-dialog>
+
+    <product-unit-table
+      :rows="productUnits"
+      @add="toggleForm"
+      @edit-item="editUnit"
+      @delete-item="confirmDelete"
+      @toggle-status="toggleStatus"
+    />
   </div>
 </template>
 
 <script setup>
-import { ref } from 'vue'
-import ProductUnitForm from 'src/components/productoConf/unidadForm.vue'
-import ProductUnitTable from 'src/components/productoConf/unidadTable.vue'
+import { ref, onMounted } from 'vue'
+import ProductUnitForm from 'src/components/productoConf/unidadProducto/unidadForm.vue'
+import ProductUnitTable from 'src/components/productoConf/unidadProducto/unidadTable.vue'
+import { idempresa_md5 } from 'src/composables/FuncionesGenerales'
+import { useQuasar } from 'quasar'
+import { api } from 'boot/axios' // Asegúrate de tener esto configurado
+import { objectToFormData } from 'src/composables/FuncionesGenerales'
 
+const idempresa = idempresa_md5()
+const $q = useQuasar()
 const showForm = ref(false)
-const editing = ref(false)
-const currentItem = ref(null)
-const confirmDialog = ref(false)
-const itemToDelete = ref(null)
+const isEditing = ref(false)
+const productUnits = ref([])
 
-const productUnits = ref([
-  { id: 70, numero: 1, unidad: 'onz', descripcion: 'detalle', activo: true },
-  { id: 68, numero: 2, unidad: 'eliminar', descripcion: 'qq', activo: true },
-  { id: 21, numero: 3, unidad: 'm', descripcion: 'Metros', activo: true },
-  // ... otras unidades
-])
-
+const formData = ref({
+  ver: 'registrarUnidadProducto',
+  idempresa: idempresa,
+})
+async function loadRows() {
+  try {
+    const response = await api.get(`listaUnidadProducto/${idempresa}`) // Cambia a tu ruta real
+    productUnits.value = response.data // Asume que la API devuelve un array
+  } catch (error) {
+    console.error('Error al cargar datos:', error)
+    $q.notify({
+      type: 'negative',
+      message: 'No se pudieron cargar los datos',
+    })
+  }
+}
 const toggleForm = () => {
   showForm.value = !showForm.value
   if (!showForm.value) {
-    editing.value = false
-    currentItem.value = null
+    isEditing.value = false
+    resetForm()
   }
 }
-
+function resetForm() {
+  isEditing.value = false
+  formData.value = {
+    ver: 'registrarUnidadProducto',
+    idempresa: idempresa,
+  }
+}
 const editUnit = (item) => {
-  currentItem.value = item
-  editing.value = true
+  formData.value = {
+    ver: 'editarUnidadProducto',
+    idempresa: idempresa,
+    nombre: item.nombre,
+    descripcion: item.descripcion,
+    id: item.id,
+  }
+
+  isEditing.value = true
   showForm.value = true
 }
 
 const confirmDelete = (item) => {
-  itemToDelete.value = item
-  confirmDialog.value = true
-}
-
-const deleteUnit = () => {
-  productUnits.value = productUnits.value.filter((unit) => unit.id !== itemToDelete.value.id)
-  // Aquí iría la llamada API para eliminar
-}
-
-const toggleStatus = (item) => {
-  item.activo = !item.activo
-  // Aquí iría la llamada API para actualizar el estado
-}
-
-const handleSubmit = (formData) => {
-  if (editing.value) {
-    // Actualizar unidad existente
-    const index = productUnits.value.findIndex((u) => u.id === formData.id)
-    if (index !== -1) {
-      productUnits.value[index] = {
-        ...productUnits.value[index],
-        unidad: formData.nombre,
-        descripcion: formData.descripcion,
+  $q.dialog({
+    title: 'Confirmar',
+    message: `¿Eliminar Estado "${item.nombre}"?`,
+    cancel: true,
+    persistent: true,
+  }).onOk(async () => {
+    try {
+      const response = await api.get(`eliminarUnidadProducto/${item.id}/`) // Cambia a tu ruta real
+      console.log(response)
+      if (response.data.estado === 'exito') {
+        loadRows()
+        $q.notify({
+          type: 'positive',
+          message: response.data.mensaje,
+        })
       }
+    } catch (error) {
+      console.error('Error al cargar datos:', error)
+      $q.notify({
+        type: 'negative',
+        message: 'No se pudieron cargar los datos',
+      })
     }
-  } else {
-    // Crear nueva unidad
-    const newId = Math.max(...productUnits.value.map((u) => u.id)) + 1
-    productUnits.value.unshift({
-      id: newId,
-      numero: productUnits.value.length + 1,
-      unidad: formData.nombre,
-      descripcion: formData.descripcion,
-      activo: true,
+  })
+}
+
+const toggleStatus = async (item) => {
+  const nuevoEstado = Number(item.estado) === 2 ? 1 : 2
+  try {
+    const response = await api.get(`actualizarEstadoUnidadProducto/${item.id}/${nuevoEstado}`) // Cambia a tu ruta real
+    console.log(response)
+    loadRows()
+  } catch (error) {
+    console.error('Error al cargar datos:', error)
+    $q.notify({
+      type: 'negative',
+      message: 'No se pudieron cargar los datos',
+    })
+  }
+}
+
+const handleSubmit = async (data) => {
+  const formData = objectToFormData(data)
+  for (let [k, v] of formData.entries()) {
+    console.log(`${k}: ${v}`)
+  }
+  try {
+    if (isEditing.value) {
+      const response = await api.post(``, formData)
+      console.log(response)
+    } else {
+      const response = await api.post(``, formData)
+      console.log(response)
+    }
+    $q.notify({
+      type: 'positive',
+      message: isEditing.value ? 'Editado correctamente' : 'Registrado correctamente',
+    })
+    loadRows()
+  } catch (error) {
+    console.error('Error al guardar:', error)
+    $q.notify({
+      type: 'negative',
+      message: 'Ocurrió un error al guardar' + error,
     })
   }
   toggleForm()
 }
+onMounted(() => {
+  loadRows()
+})
 </script>
