@@ -1,98 +1,104 @@
 <template>
-  <q-form @submit.prevent="onSubmit">
-    <div class="q-pa-md">
-      <q-card>
-        <q-card-section>
-          <div class="text-h6">{{ editing ? 'Editar' : 'Nuevo' }} Pedido</div>
-        </q-card-section>
-
-        <q-card-section class="row q-col-gutter-md">
-          <!-- Fecha -->
-          <div class="col-md-3 col-sm-6 col-xs-12">
-            <q-input
-              v-model="localData.fecha"
-              type="date"
-              label="Fecha*"
-              :rules="[(val) => !!val || 'La fecha es requerida']"
-              lazy-rules
-            />
-          </div>
-
-          <!-- Tipo de Pedido -->
-          <div class="col-md-3 col-sm-6 col-xs-12">
-            <q-select
-              v-model="localData.tipo"
-              :options="tiposPedido"
-              label="Tipo de Pedido*"
-              option-label="label"
-              option-value="value"
-              emit-value
-              map-options
-              :rules="[(val) => !!val || 'Seleccione un tipo de pedido']"
-              lazy-rules
-              @update:model-value="handleTipoChange"
-            />
-          </div>
-
-          <!-- Almacén Destino (visible siempre) -->
-          <div class="col-md-3 col-sm-6 col-xs-12">
-            <q-select
-              v-model="localData.almacendestino"
-              :options="almacenes"
-              label="Almacén Destino*"
-              option-label="label"
-              option-value="value"
-              emit-value
-              map-options
-              :rules="[(val) => !!val || 'Seleccione el almacén destino']"
-              lazy-rules
-              @update:model-value="updateFiltrado"
-            />
-          </div>
-
-          <!-- Almacén Origen (solo para movimientos) -->
-          <div
-            class="col-md-3 col-sm-6 col-xs-12"
-            v-if="localData.tipo === TIPOS_PEDIDO.MOVIMIENTO"
-          >
-            <q-select
-              v-model="localData.almacenorigen"
-              :options="filtrado"
-              label="Almacén Origen*"
-              option-label="label"
-              option-value="value"
-              emit-value
-              map-options
-              :rules="[(val) => !!val || 'Seleccione el almacén origen']"
-              lazy-rules
-              :loading="loadingAlmacenes"
-            />
-          </div>
-
-          <!-- Observación -->
-          <div class="col-md-3 col-sm-6 col-xs-12">
-            <q-input
-              v-model="localData.observacion"
-              label="Observación*"
-              :rules="[(val) => !!val || 'La observación es requerida']"
-              lazy-rules
-            />
-          </div>
-        </q-card-section>
-
-        <q-card-actions align="right">
-          <q-btn
-            label="Cancelar"
-            flat
-            color="negative"
-            @click="$emit('cancel')"
-            :disable="submitting"
+  <q-card>
+    <q-form @submit.prevent="onSubmit">
+      <q-card-section class="row q-col-gutter-x-md">
+        <!-- Fecha -->
+        <div class="col-12 col-md-3">
+          <label for="fecha">Fecha*</label>
+          <q-input
+            v-model="localData.fecha"
+            type="date"
+            id="fecha"
+            dense
+            outlined
+            :rules="[(val) => !!val || 'La fecha es requerida']"
+            lazy-rules
           />
-          <q-btn label="Guardar" type="submit" color="primary" :loading="submitting" />
-        </q-card-actions>
-      </q-card>
-    </div>
-  </q-form>
+        </div>
+
+        <!-- Tipo de Pedido -->
+        <div class="col-12 col-md-3">
+          <label for="tipopedido">Tipo de Pedido*</label>
+          <q-select
+            v-model="localData.tipo"
+            :options="tiposPedido"
+            id="tipopedido"
+            option-label="label"
+            option-value="value"
+            emit-value
+            map-options
+            :rules="[(val) => !!val || 'Seleccione un tipo de pedido']"
+            lazy-rules
+            dense
+            outlined
+            @update:model-value="handleTipoChange"
+          />
+        </div>
+
+        <!-- Almacén Destino (visible siempre) -->
+        <div class="col-12 col-md-3">
+          <label for="destino">Almacén Destino*</label>
+          <q-select
+            v-model="localData.almacendestino"
+            :options="almacenes"
+            id="destino"
+            dense
+            outlined
+            option-label="label"
+            option-value="value"
+            emit-value
+            map-options
+            :rules="[(val) => !!val || 'Seleccione el almacén destino']"
+            lazy-rules
+            @update:model-value="updateFiltrado"
+          />
+        </div>
+
+        <!-- Almacén Origen (solo para movimientos) -->
+        <div class="col-12 col-md-3" v-if="localData.tipo === TIPOS_PEDIDO.MOVIMIENTO">
+          <label for="almacenorigen">Almacén Origen*</label>
+          <q-select
+            v-model="localData.almacenorigen"
+            :options="filtrado"
+            id="almacenorigen"
+            dense
+            outlined
+            option-label="label"
+            option-value="value"
+            emit-value
+            map-options
+            :rules="[(val) => !!val || 'Seleccione el almacén origen']"
+            lazy-rules
+            :loading="loadingAlmacenes"
+          />
+        </div>
+
+        <!-- Observación -->
+        <div class="col-12 col-md-3">
+          <label for="observacion">Observación*</label>
+          <q-input
+            v-model="localData.observacion"
+            id="observacion"
+            :rules="[(val) => !!val || 'La observación es requerida']"
+            lazy-rules
+            dense
+            outlined
+          />
+        </div>
+      </q-card-section>
+
+      <q-card-actions class="flex justify-end">
+        <q-btn
+          label="Cancelar"
+          flat
+          color="negative"
+          @click="$emit('cancel')"
+          :disable="submitting"
+        />
+        <q-btn label="Guardar" type="submit" color="primary" :loading="submitting" />
+      </q-card-actions>
+    </q-form>
+  </q-card>
 </template>
 
 <script setup>

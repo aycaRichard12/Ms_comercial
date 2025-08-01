@@ -1,64 +1,65 @@
 <template>
-  <div class="q-pa-md">
-    <div style="display: flex; justify-content: space-between; align-items: center">
-      <!-- Botón Agregar -->
-
-      <!-- Filtro por Almacén -->
+  <q-card-section class="row flex justify-between">
+    <!-- Filtro por almacén -->
+    <div class="col-6">
+      <label for="almacen">Almacén</label>
       <q-select
         v-model="filtroAlmacen"
         :options="almacenes"
-        label="Almacén"
-        placeholder="Seleccione una opción"
-        style="min-width: 200px"
-      />
-
-      <!-- Botón Imprimir -->
-      <q-btn
-        flat
-        icon="print"
-        label="Imprimir"
-        color="info"
-        @click="onPrintReport"
-        title="Imprimir listado"
+        id="almacen"
+        emit-value
+        map-options
+        dense
+        outlined
       />
     </div>
 
-    <!-- Tabla de productos -->
-    <q-table
-      :columns="columnas"
-      :rows="filtrados"
-      row-key="id"
-      flat
-      bordered
-      :filter="filter"
-      :loading="loading"
-      v-model:pagination="pagination"
-    >
-      <template v-slot:top-right>
-        <q-input
-          dense
-          debounce="300"
-          v-model="filter"
-          placeholder="Buscar..."
-          title="Buscar por código o descripción"
-        />
-      </template>
+    <!-- Botón imprimir -->
 
-      <!-- Botones de opciones -->
-      <template #body-cell-opciones="props">
-        <q-td :props="props" class="text-nowrap">
-          <q-btn
-            flat
-            dense
-            icon="edit"
-            color="info"
-            @click="editarProducto(props.row)"
-            title="Editar producto"
-          />
-        </q-td>
-      </template>
-    </q-table>
+    <q-btn outline="" color="info" @click="onPrintReport" class="btn-res q-mt-lg" dense>
+      <q-icon name="picture_as_pdf" class="icono" />
+
+      <span class="texto">Vista previa PDF</span>
+    </q-btn>
+  </q-card-section>
+  <div class="row flex justify-end">
+    <div class="">
+      <label for="buscar">Buscar...</label>
+      <q-input v-model="filter" dense outlined debounce="300" id="buscar">
+        <template v-slot:append>
+          <q-icon name="search" />
+        </template>
+      </q-input>
+    </div>
   </div>
+
+  <!-- Tabla de productos -->
+  <q-table
+    title="Costo Unitario"
+    :columns="columnas"
+    :rows="filtrados"
+    row-key="id"
+    flat
+    bordered
+    :filter="filter"
+    :loading="loading"
+    v-model:pagination="pagination"
+  >
+    <template v-slot:top-right> </template>
+    <!-- Botones de opciones -->
+    <template #body-cell-opciones="props">
+      <q-td :props="props" class="text-nowrap">
+        <q-btn
+          flat
+          dense
+          icon="edit"
+          color="info"
+          @click="editarProducto(props.row)"
+          title="Editar producto"
+        />
+      </q-td>
+    </template>
+  </q-table>
   <q-dialog v-model="mostrarModal" persistent full-width full-height>
     <q-card class="q-pa-md" style="height: 100%; max-width: 100%">
       <q-card-section class="row items-center q-pb-none">
@@ -144,8 +145,7 @@ const filtrados = computed(() => {
   const res = props.rows.filter((p) => {
     console.log(filtroAlmacen.value)
     const matchesAlmacen =
-      (!filtroAlmacen.value || p.idalmacen === filtroAlmacen.value?.value) &&
-      filtroAlmacen.value !== null
+      (!filtroAlmacen.value || p.idalmacen === filtroAlmacen.value) && filtroAlmacen.value !== null
     const matchesCodigo =
       !filter.value ||
       p.codigo.toLowerCase().includes(filter.value.toLowerCase()) ||

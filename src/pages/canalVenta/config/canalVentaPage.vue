@@ -1,14 +1,17 @@
 <template>
   <q-page>
     <q-dialog v-model="showForm" persistent>
-      <q-card style="min-width: 400px; max-width: 600px">
+      <q-card class="responsive-dialog">
+        <q-card-section class="bg-primary text-h6 text-white flex justify-between">
+          <div>Registrar Canal Venta</div>
+          <q-btn color="" icon="close" @click="showForm = false" dense round flat />
+        </q-card-section>
         <q-card-section class="q-pa-none">
           <canal-venta-form
             :isEditing="isEditing"
             :model-value="formData"
             @submit="handleSubmit"
             @cancel="toggleForm"
-            class="q-mb-md"
           />
         </q-card-section>
       </q-card>

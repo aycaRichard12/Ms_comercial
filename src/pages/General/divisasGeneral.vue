@@ -1,13 +1,18 @@
 <template>
-  <q-page class="q-pa-md">
-    <q-dialog v-model="showForm" persistent>
-      <q-card style="min-width: 1000px; max-width: 800px">
+  <q-page class="q-pa-md q-pa-md-md q-pa-lg-lg">
+    <q-dialog v-model="showForm" persistent class="responsive-dialog">
+      <q-card class="responsive-dialog">
+        <q-card-section class="bg-primary text-white text-h6 flex justify-between">
+          <div>Registrar Divisa</div>
+          <q-btn icon="close" @click="showForm = false" flat dense round />
+        </q-card-section>
         <q-card-section class="q-pa-none">
           <form-divisa
             :modalValue="formData"
             :editing="estaEditando"
             @submit="guardarDivisa"
             @cancel="toggleForm"
+            class="q-px-md q-px-md-lg q-pb-md"
           />
         </q-card-section>
       </q-card>
@@ -19,6 +24,7 @@
       @edit="editUnit"
       @delete="confirmDelete"
       @toggle-status="changeStatus"
+      class="responsive-table"
     ></table-divisa>
   </q-page>
 </template>
@@ -83,7 +89,7 @@ async function loadRows() {
     const idempresa = contenidousuario[0]?.empresa?.idempresa
     const token = contenidousuario[0]?.factura?.access_token
     const tipo = contenidousuario[0]?.factura?.tipo
-
+    console.log(idempresa, token, tipo)
     const response = await api.get(`listaDivisa/${idempresa}/${token}/${tipo}`)
     console.log(response.data)
     listaDivisas.value = response.data
@@ -173,3 +179,48 @@ onMounted(() => {
   loadRows()
 })
 </script>
+
+<style lang="scss">
+// Estilos para el q-dialog
+.responsive-dialog {
+  .q-dialog__inner--minimized {
+    padding: 0; // Elimina el padding predeterminado en pantallas pequeñas
+  }
+
+  .dialog-card {
+    width: 95vw; // Ancho del 95% del viewport en pantallas pequeñas
+    max-width: 800px; // Ancho máximo para pantallas grandes
+    margin: 16px; // Margen alrededor de la tarjeta
+    @media (min-width: $breakpoint-md-min) {
+      width: auto; // Ancho automático para pantallas medianas y grandes
+    }
+  }
+}
+
+// Estilos para el formulario interno (asumiendo que FormDivisa.vue tiene un q-form con q-input dentro)
+.form-divisa-cols {
+  display: flex; // Usa flexbox para el diseño de columnas
+  flex-wrap: wrap; // Permite que los elementos se envuelvan a la siguiente línea
+  gap: 16px; // Espacio entre los elementos del formulario
+
+  .form-field {
+    flex: 1 1 100%; // Cada campo ocupa el 100% del ancho en móviles
+    @media (min-width: $breakpoint-md-min) {
+      flex: 1 1 calc(50% - 8px); // Dos columnas en pantallas medianas y grandes (considerando el gap)
+    }
+    @media (min-width: $breakpoint-lg-min) {
+      flex: 1 1 calc(33.33% - 10.67px); // Tres columnas en pantallas grandes (ajuste de gap)
+    }
+  }
+}
+
+// Estilos para la tabla
+.responsive-table {
+  .q-table__container {
+    overflow-x: auto; // Habilita el scroll horizontal en la tabla para pantallas pequeñas
+  }
+}
+
+// Puedes añadir más estilos específicos para los componentes internos de FormDivisa y TableDivisa
+// si es necesario, definiéndolos en sus respectivos archivos .vue o importándolos aquí.
+</style>

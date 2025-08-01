@@ -1,49 +1,58 @@
 <template>
-  <div v-if="showForm" class="q-mx-auto q-mt-md">
-    <form-compra
-      :modalValue="registroActual"
-      :almacenes="almacenes"
-      :proveedores="proveedores"
-      @submit="guardarRegistro"
-      @cancel="cerrarFormulario"
-    />
-  </div>
-  <table-compra
-    :rows="compras"
-    :almacenes="almacenes"
-    @detalleCompra="verDetalle"
-    @add="toggleForm"
-    @edit="editarCompra"
-    @delete="eliminarCompra"
-    @repDesglosado="generarReporteDesglosado"
-    @repCompras="generarReporteGeneral"
-    @toggle-status="autorizarCompra"
-  />
+  <q-page padding>
+    <q-dialog v-model="showForm" persistent>
+      <q-card class="responsive-dialog">
+        <q-card-section class="bg-primary flex justify-between text-h6 text-white">
+          <div>Registrar Compra</div>
+          <q-btn color="white" icon="close" @click="showForm = false" flat round dense />
+        </q-card-section>
+        <q-card-section>
+          <form-compra
+            :modalValue="registroActual"
+            :almacenes="almacenes"
+            :proveedores="proveedores"
+            @submit="guardarRegistro"
+            @cancel="cerrarFormulario"
+          />
+        </q-card-section>
+      </q-card>
+    </q-dialog>
 
-  <q-dialog v-model="mostrarDetalleCompra" persistent>
-    <q-card class="q-pa-md" style="width: 1200px; max-width: 90vw">
-      <DetalleCompra
-        :model-value="formularioDetalleCompra"
-        :rows="detalleCompra"
-        :product="productosDisponibles"
-        @submit="agregarDetalle"
-        @close="cancelarDetalle"
-        @editarDetalle="editarDetalle"
-        @eliminarDetalle="eliminarDetalle"
-      />
-    </q-card>
-  </q-dialog>
-  <q-dialog v-model="showFormEdit" persistent>
-    <q-card class="q-pa-md" style="width: 1200px; max-width: 90vw">
-      <FormCompraEditar
-        :modalValue="registroActual"
-        :proveedores="proveedores"
-        :editing="isEditing"
-        @submit="guardarRegistro"
-        @cancel="cerrarFormulario"
-      />
-    </q-card>
-  </q-dialog>
+    <table-compra
+      :rows="compras"
+      :almacenes="almacenes"
+      @detalleCompra="verDetalle"
+      @add="toggleForm"
+      @edit="editarCompra"
+      @delete="eliminarCompra"
+      @repDesglosado="generarReporteDesglosado"
+      @repCompras="generarReporteGeneral"
+      @toggle-status="autorizarCompra"
+    />
+
+    <q-dialog v-model="mostrarDetalleCompra" persistent>
+      <q-card class="responsive-dialog">
+        <q-card-section class="bg-primary text-h6 text-white flex justify-between">
+          <div>Detalle Compra</div>
+          <q-btn icon="close" @click="mostrarDetalleCompra = false" flat dense round />
+        </q-card-section>
+        <q-card-section>
+          <DetalleCompra :compra="formularioDetalleCompra" @close="cancelarDetalle" />
+        </q-card-section>
+      </q-card>
+    </q-dialog>
+    <q-dialog v-model="showFormEdit" persistent>
+      <q-card class="q-pa-md" style="width: 1200px; max-width: 90vw">
+        <FormCompraEditar
+          :modalValue="registroActual"
+          :proveedores="proveedores"
+          :editing="isEditing"
+          @submit="guardarRegistro"
+          @cancel="cerrarFormulario"
+        />
+      </q-card>
+    </q-dialog>
+  </q-page>
 </template>
 
 <script setup>
@@ -66,7 +75,11 @@ const almacenes = ref([])
 const proveedores = ref([])
 const compras = ref([])
 const mostrarDetalleCompra = ref(false)
-const registroActual = ref({ ver: 'registrarCompra', idusuario })
+const registroActual = ref({
+  ver: 'registrarCompra',
+  idusuario: idusuario,
+  factura: compras.value.length,
+})
 const showFormEdit = ref(false)
 const formularioDetalleCompra = ref({ ver: 'registrarDetalleCompra' })
 const detalleCompra = ref([])
@@ -217,6 +230,7 @@ async function verDetalle(compra) {
     await getDetalleCompra(compra)
     mostrarDetalleCompra.value = true
     formularioDetalleCompra.value = {
+      ...compra,
       autorizacion: compra.autorizacion,
       ver: 'registrarDetalleCompra',
       idingreso: compra.id,
@@ -258,78 +272,12 @@ async function getDetalleCompra(compra) {
   }
 }
 
-async function agregarDetalle(item) {
-  const response = await enviarFormData(
-    'agregarDetalleCompra',
-    item,
-    'Detalle guardado correctamente',
-    'Hubo un problema al guardar el detalle',
-  )
-  if (response?.data?.estado === 'exito') {
-    await getDetalleCompra({ id: item.idingreso })
-    await listaProductosDisponibles({ id: item.idingreso, idalmacen: item.idalmacen })
-    formularioDetalleCompra.value = {
-      autorizacion: item.autorizacion,
-      ver: 'registrarDetalleCompra',
-      idingreso: item.id,
-    }
-  }
-}
-
 function cancelarDetalle() {
   mostrarDetalleCompra.value = false
-  formularioDetalleCompra.value = { ver: 'registrarDetalleCompra' }
-}
-
-function editarDetalle(row) {
-  console.log(row)
-  formularioDetalleCompra.value = {
-    ver: 'editarDetalleCompra',
-    idproductoalmacen: row.idproductoalmacen,
-    id: row.id,
-    precio: row.precio,
-    cantidad: row.cantidad,
-    stock: row.stock,
-    codigo: row.codigo,
-    descripcion: row.descripcion,
-    autorizacion: 2,
-  }
-}
-
-function eliminarDetalle(row) {
-  $q.dialog({
-    title: 'Confirmar',
-    message: `¿Eliminar?`,
-    cancel: true,
-    persistent: true,
-  }).onOk(async () => {
-    try {
-      const response = await api.get(`eliminarDetalleCompra/${row.id}`) // Cambia a tu ruta real
-      console.log(response)
-      if (response.data.estado === 'exito') {
-        await getDetalleCompra({ id: row.idingreso })
-
-        $q.notify({
-          type: 'positive',
-          message: response.data.mensaje,
-        })
-      } else {
-        $q.notify({
-          type: 'negative',
-          message: response.data.mensaje,
-        })
-      }
-    } catch (error) {
-      console.error('Error al cargar datos:', error)
-      $q.notify({
-        type: 'negative',
-        message: 'No se pudieron cargar los datos',
-      })
-    }
-  })
 }
 
 async function autorizarCompra(compra) {
+  console.log(compra)
   $q.dialog({
     title: 'Confirmar',
     message: `¿Confirmar Compra?`,
@@ -337,10 +285,14 @@ async function autorizarCompra(compra) {
     persistent: true,
   }).onOk(async () => {
     try {
-      const response = await api.get(`actualizarEstadoCompra/${compra.id}/1`)
+      const point = `actualizarEstadoCompra/${compra.id}/1/${compra.idpedido}/${compra.idalmacen}`
+      const response = await api.get(point)
+      console.log(response)
       if (response.data.estado === 'error') {
         $q.notify({ type: 'negative', message: response.data.mensaje })
       } else {
+        $q.notify({ type: 'positive', message: response.data.mensaje })
+
         loadRows()
       }
     } catch (error) {
@@ -350,9 +302,28 @@ async function autorizarCompra(compra) {
   })
 }
 
+function generarCodigo() {
+  const now = new Date()
+
+  const anio = now.getFullYear()
+  const mes = String(now.getMonth() + 1).padStart(2, '0')
+  const dia = String(now.getDate()).padStart(2, '0')
+  const hora = String(now.getHours()).padStart(2, '0')
+  const minutos = String(now.getMinutes()).padStart(2, '0')
+
+  return `${dia}${mes}${anio}F${hora}${minutos}H${compras.value.length}`
+}
+
 onMounted(async () => {
   await cargarAlmacenes()
   await cargarProveedores()
   await loadRows()
+  registroActual.value = {
+    ver: 'registrarCompra',
+    idusuario: idusuario,
+    factura: compras.value.length,
+    codigo: generarCodigo(),
+    nombre: 'CMP-',
+  }
 })
 </script>

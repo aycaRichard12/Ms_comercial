@@ -1,138 +1,80 @@
 <template>
-  <q-page class="grid-container">
-    <div class="box green">
-      <q-card v-if="venta" flat bordered class="col">
-        <q-item>
-          <q-item-section avatar>
-            <q-avatar>
-              <img src="../assets/VENTAS.svg" />
-            </q-avatar>
-          </q-item-section>
+  <q-page class="q-pa-md">
+    <div class="row q-col-gutter-md q-mb-md">
+      <template v-for="box in orderedTopBoxes" :key="box.id">
+        <div class="col-xs-12 col-sm-6 col-md-3" :class="box.colorClass">
+          <q-card
+            flat
+            dense
+            bordered
+            class="full-height"
+            style="background: linear-gradient(to right, #219286, #044e49)"
+            :style="{ color: 'white' }"
+          >
+            <q-item>
+              <!-- Eliminamos la prop :avatar ya que no estamos usando q-avatar directamente aquí -->
+              <q-item-section>
+                <template v-if="typeof box.iconComponent === 'string'">
+                  <div class="svg-icon-wrapper">
+                    <img :src="box.iconComponent" alt="icon" class="svg-icon" />
+                  </div>
+                </template>
+              </q-item-section>
 
-          <q-item-section>
-            <q-item-label>Venta</q-item-label>
-            <q-item-label caption>{{ venta.titulo || 'Ventas' }}</q-item-label>
-          </q-item-section>
-        </q-item>
-        <q-item>
-          <q-item-section> </q-item-section>
-          <q-item-section id="venta-card">
-            <q-btn
-              flat
-              style="color: black"
-              label="Ir"
-              @click="cambiarComponente(VentaComponent)"
-            />
-          </q-item-section>
-        </q-item>
-      </q-card>
+              <q-item-section>
+                <q-item-label style="font-size: 10px">{{ box.title }}</q-item-label>
+                <q-item-label
+                  caption
+                  style="font-family: Arial, Helvetica, sans-serif; color: white; font-size: 12px"
+                  >{{ box.subtitle }}</q-item-label
+                >
+              </q-item-section>
+            </q-item>
+            <q-item class="q-pt-none">
+              <q-item-section> </q-item-section>
+              <q-item-section :id="box.cardId">
+                <q-btn
+                  flat
+                  :style="{ color: componenteActivo === box.component ? '#f2c037' : 'white' }"
+                  label="Ir"
+                  @click="cambiarComponente(box.component)"
+                />
+              </q-item-section>
+            </q-item>
+          </q-card>
+        </div>
+      </template>
     </div>
-    <div class="box yellow">
-      <q-card v-if="compra" flat bordered class="col">
-        <q-item>
-          <q-item-section avatar>
-            <q-avatar>
-              <img src="../assets/PEDIDOS.svg" />
-            </q-avatar>
-          </q-item-section>
-
-          <q-item-section>
-            <q-item-label>Compras</q-item-label>
-            <q-item-label caption>{{ compra.titulo || 'Compras' }}</q-item-label>
-          </q-item-section>
-        </q-item>
-        <q-item>
-          <q-item-section> </q-item-section>
-
-          <q-item-section id="compra-card">
-            <q-btn
-              flat
-              style="color: black"
-              label="Ir"
-              @click="cambiarComponente(PedidoComponent)"
-            />
-          </q-item-section>
-        </q-item>
-      </q-card>
+    <div class="row flex justify-start">
+      <q-btn icon="help_outline" color="blue" flat @click="iniciarGuia" />
     </div>
-    <div class="box coffee">
-      <q-card v-if="compra" flat bordered class="col">
-        <q-item>
-          <q-item-section avatar>
-            <q-avatar>
-              <img src="../assets/PEDIDOS.svg" />
-            </q-avatar>
-          </q-item-section>
-
-          <q-item-section>
-            <q-item-label>Productos</q-item-label>
-            <q-item-label caption>{{ producto.titulo || 'Compras' }}</q-item-label>
-          </q-item-section>
-        </q-item>
-        <q-item>
-          <q-item-section> </q-item-section>
-
-          <q-item-section id="producto-card">
-            <q-btn
-              flat
-              style="color: black"
-              label="Ir"
-              @click="cambiarComponente(CrearProductos)"
-            />
-          </q-item-section>
-        </q-item>
-      </q-card>
-    </div>
-    <div class="box red">
-      <q-card v-if="dashboard" flat bordered class="col">
-        <q-item>
-          <q-item-section avatar>
-            <q-avatar>
-              <img src="../assets/REPORTES.svg" />
-            </q-avatar>
-          </q-item-section>
-
-          <q-item-section>
-            <q-item-label>Reportes</q-item-label>
-            <q-item-label caption>{{ dashboard.titulo || 'Reportes' }}</q-item-label>
-          </q-item-section>
-        </q-item>
-        <q-item>
-          <q-item-section> </q-item-section>
-
-          <q-item-section id="reportes-card">
-            <q-btn
-              flat
-              style="color: black"
-              label="ir"
-              @click="cambiarComponente(ReporteComponent)"
-            />
-          </q-item-section>
-        </q-item>
-      </q-card>
-    </div>
-    <div class="box blue" id="venta">
-      <div style="display: flex; justify-content: end">
-        <q-btn icon="help_outline" color="blue" flat @click="iniciarGuia" />
+    <div class="row q-col-gutter-x-md">
+      <div class="col-xs-12 col-md-8" id="venta">
+        <component :is="componenteActivo" />
       </div>
-      <component :is="componenteActivo" />
-    </div>
-    <div class="box purple" id="reportes-hoy">
-      <ReporteVentaInicio />
+      <div class="col-xs-12 col-md-4" id="reportes-hoy">
+        <div class="full-height"><ReporteVentaInicio /></div>
+      </div>
     </div>
   </q-page>
 </template>
 
 <script setup>
-import { ref, onMounted, shallowRef, markRaw, defineAsyncComponent } from 'vue'
+import { ref, onMounted, shallowRef, markRaw, defineAsyncComponent, computed } from 'vue'
 import { useQuasar } from 'quasar'
 import ReporteVentaInicio from 'src/components/reporteVentas/ReporteVentaInicio.vue'
 import { driver } from 'driver.js'
 import 'driver.js/dist/driver.css'
-//import { iniciarTourInicio } from 'src/utils/tourGLobal'
+// Importar los SVGs directamente. Con vite-svg-loader, se importan como componentes Vue.
+import IconVentas from 'src/assets/Ventas.png'
+import IconPedidos from 'src/assets/Compras.png'
+import IconAdmin from 'src/assets/Productos.png'
+import IconReportes from 'src/assets/Reportes.png'
+import { verificarexistenciapagina } from 'src/composables/FuncionesG'
+
 const $q = useQuasar()
 console.log('Quasar in App.vue:', $q)
-// Carga asíncrona de componentes con manejo de errores
+
 const PedidoComponent = defineAsyncComponent({
   loader: () => import('pages/compra/RcompraPage.vue'),
   loadingComponent: { template: '<div>Cargando pedidos...</div>' },
@@ -147,7 +89,6 @@ const VentaComponent = defineAsyncComponent({
   loader: () => import('src/components/venta/ventaComponent.vue'),
   loadingComponent: { template: '<div>Cargando ventas...</div>' },
 })
-
 const ReporteComponent = defineAsyncComponent({
   loader: () => import('src/components/reporte/reporteComponent.vue'),
   loadingComponent: { template: '<div>Cargando reportes...</div>' },
@@ -160,15 +101,14 @@ const cambiarComponente = (componente) => {
     componenteActivo.value = markRaw(componente)
   } catch (error) {
     console.error('Error al cambiar componente:', error)
-    // Opcional: Mostrar notificación de error al usuario
   }
 }
-const nombreUsuario = ref('') // Variable reactiva
-const venta = ref({})
-const compra = ref({})
-const dashboard = ref({})
-const producto = ref({})
-// inicialconst expanded = ref(false)
+
+const nombreUsuario = ref('')
+const venta = ref(null)
+const compra = ref(null)
+const dashboard = ref(null)
+const producto = ref(null)
 
 const contenidoUsuario = localStorage.getItem('yofinanciero')
 const contenidoMenus = JSON.parse(localStorage.getItem('yofinancieromenu'))
@@ -180,17 +120,16 @@ onMounted(() => {
       nombreUsuario.value = parsedData[0]?.nombre || 'Usuario desconocido'
 
       venta.value = verificar_permiso_venta()
+      console.log(venta.value)
       compra.value = verificar_permiso_compra()
       dashboard.value = verificar_permiso_dashboard()
       producto.value = verificar_permiso_producto()
-      console.log(venta.value) // Devuelve el objeto del submenú o null
-      console.log(compra.value) // Devuelve el objeto del submenú o null
-      console.log(dashboard.value) // Devuelve el objeto del submenú o null
 
-      // Establecer componente inicial basado en permisos
+      // Set initial component based on permissions
       if (venta.value) componenteActivo.value = VentaComponent
       else if (compra.value) componenteActivo.value = PedidoComponent
       else if (dashboard.value) componenteActivo.value = ReporteComponent
+      else if (producto.value) componenteActivo.value = CrearProductos
     } catch (error) {
       console.error('Error al parsear los datos de localStorage:', error)
     }
@@ -200,46 +139,76 @@ onMounted(() => {
 })
 
 const verificar_permiso_compra = () => {
-  for (const modulo of contenidoMenus) {
-    for (const menu of modulo.menu) {
-      const sub = menu.submenu.find((sub) => sub.codigo === 'registrarcompra-' + menu.usuario)
-      if (sub) return sub
-    }
-  }
-  return null
+  const res = verificarexistenciapagina('registrarcompra')
+
+  return res || null
 }
 const verificar_permiso_venta = () => {
-  for (const modulo of contenidoMenus) {
-    for (const menu of modulo.menu) {
-      const sub = menu.submenu.find((sub) => sub.codigo === 'registrarventa-' + menu.usuario)
-      if (sub) return sub
-    }
-  }
-  return null
+  const res = verificarexistenciapagina('registrarventaoculto')
+
+  return res || null
 }
 const verificar_permiso_dashboard = () => {
-  for (const modulo of contenidoMenus) {
-    for (const menu of modulo.menu) {
-      const sub = menu.submenu.find((sub) => sub.codigo === 'dashboard-' + menu.usuario)
-      if (sub) return sub
-    }
-  }
-  return null
+  const res = verificarexistenciapagina('dashboard')
+
+  return res || null
 }
 const verificar_permiso_producto = () => {
-  for (const modulo of contenidoMenus) {
-    for (const menu of modulo.menu) {
-      const sub = menu.submenu.find((sub) => sub.codigo === 'registrarproductos-' + menu.usuario)
-      if (sub) return sub
-    }
-  }
-  return null
+  const res = verificarexistenciapagina('registrarproductos')
+  return res || null
 }
+
+const orderedTopBoxes = computed(() => {
+  const boxes = []
+  if (venta.value)
+    boxes.push({
+      id: 'venta',
+      component: VentaComponent,
+      data: venta.value,
+      iconComponent: IconVentas,
+      title: 'VENTAS',
+      subtitle: venta.value.titulo || 'Generar venta',
+      cardId: 'venta-card',
+    })
+  if (compra.value)
+    boxes.push({
+      id: 'compra',
+      component: PedidoComponent,
+      data: compra.value,
+      iconComponent: IconPedidos,
+      title: 'COMPRAS',
+      subtitle: 'Compras o Producción',
+      cardId: 'compra-card',
+    })
+  if (producto.value)
+    boxes.push({
+      id: 'producto',
+      component: CrearProductos,
+      data: producto.value,
+      iconComponent: IconAdmin,
+      title: 'PRODUCTOS',
+      subtitle: 'Administración Productos',
+      cardId: 'producto-card',
+    })
+  if (dashboard.value)
+    boxes.push({
+      id: 'dashboard',
+      component: ReporteComponent,
+      data: dashboard.value,
+      iconComponent: IconReportes,
+      title: 'REPORTES',
+      subtitle: dashboard.value.titulo || 'Reportes',
+      cardId: 'reportes-card',
+    })
+  return boxes
+})
+
 const driverObj = driver()
 
 const iniciarGuia = () => {
-  driverObj.setSteps([
-    {
+  const steps = []
+  if (venta.value) {
+    steps.push({
       element: '#venta-card',
       popover: {
         title: 'Módulo de Ventas',
@@ -248,8 +217,10 @@ const iniciarGuia = () => {
         side: 'left',
         align: 'start',
       },
-    },
-    {
+    })
+  }
+  if (compra.value) {
+    steps.push({
       element: '#compra-card',
       popover: {
         title: 'Módulo de Compras',
@@ -258,8 +229,10 @@ const iniciarGuia = () => {
         side: 'bottom',
         align: 'start',
       },
-    },
-    {
+    })
+  }
+  if (dashboard.value) {
+    steps.push({
       element: '#reportes-card',
       popover: {
         title: 'Reportes y Estadísticas',
@@ -267,8 +240,10 @@ const iniciarGuia = () => {
         side: 'bottom',
         align: 'start',
       },
-    },
-    {
+    })
+  }
+  if (producto.value) {
+    steps.push({
       element: '#producto-card',
       popover: {
         title: 'Gestión de Productos',
@@ -276,82 +251,38 @@ const iniciarGuia = () => {
         side: 'bottom',
         align: 'start',
       },
-    },
+    })
+  }
 
-    {
-      element: '#venta',
-      popover: {
-        title: 'Carrito de Ventas',
-        description: 'Realiza la venta de tus productos fácilmente desde esta sección.',
-        side: 'bottom',
-        align: 'start',
-      },
+  steps.push({
+    element: '#venta',
+    popover: {
+      title: 'Carrito de Ventas',
+      description: 'Realiza la venta de tus productos fácilmente desde esta sección.',
+      side: 'bottom',
+      align: 'start',
     },
-    {
-      element: '#reportes-hoy',
-      popover: {
-        title: 'Resumen de Reportes',
-        description:
-          'Visualiza rápidamente los reportes y métricas del día para mantener el control de tu negocio.',
-        side: 'bottom',
-        align: 'start',
-      },
+  })
+  steps.push({
+    element: '#reportes-hoy',
+    popover: {
+      title: 'Resumen de Reportes',
+      description:
+        'Visualiza rápidamente los reportes y métricas del día para mantener el control de tu negocio.',
+      side: 'bottom',
+      align: 'start',
     },
-  ])
+  })
+
+  driverObj.setSteps(steps)
   driverObj.drive()
-
-  // {
-  //   element: 'code .line:nth-child(2)',
-  //   popover: {
-  //     title: 'Importing CSS',
-  //     description:
-  //       'Import the CSS which gives you the default styling for popover and overlay.',
-  //     side: 'bottom',
-  //     align: 'start',
-  //   },
-  // },
-  // {
-  //   element: 'code .line:nth-child(4) span:nth-child(7)',
-  //   popover: {
-  //     title: 'Create Driver',
-  //     description: 'Simply call the driver function to create a driver.js instance',
-  //     side: 'left',
-  //     align: 'start',
-  //   },
-  // },
-  // {
-  //   element: 'code .line:nth-child(18)',
-  //   popover: {
-  //     title: 'Start Tour',
-  //     description: 'Call the drive method to start the tour and your tour will be started.',
-  //     side: 'top',
-  //     align: 'start',
-  //   },
-  // },
-  // {
-  //   element: 'a[href="/docs/configuration"]',
-  //   popover: {
-  //     title: 'More Configuration',
-  //     description: 'Look at this page for all the configuration options you can pass.',
-  //     side: 'right',
-  //     align: 'start',
-  //   },
-  // },
-  // {
-  //   popover: {
-  //     title: 'Happy Coding',
-  //     description: 'And that is all, go ahead and start adding tours to your applications.',
-  //   },
-  // },
 }
 </script>
 
 <style scoped>
-/* ======= ESTILOS GENERALES ======= */
-.grid-container {
-  display: grid;
-  gap: 10px;
-  padding: 10px;
+/* ======= ESTILOS GENERALES (Flexbox-friendly) ======= */
+.q-page {
+  overflow-x: hidden;
 }
 
 .box {
@@ -359,68 +290,49 @@ const iniciarGuia = () => {
   flex-direction: column;
   justify-content: stretch;
   align-items: stretch;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .q-card {
-  flex-grow: 2;
+  flex-grow: 1;
   display: flex;
   flex-direction: column;
+  min-width: 0;
+  overflow: hidden;
 }
 
-/* ======= COLORES Y POSICIONAMIENTO ======= */
-.green {
-  grid-column: 1 / 3;
-  grid-row: 1 / 2;
-}
-.yellow {
-  grid-column: 3 / 5;
-  grid-row: 1 / 2;
-}
-.red {
-  grid-column: 5 / 7;
-  grid-row: 1 / 2;
-}
-.coffee {
-  grid-column: 7/9;
-  grid-row: 1/2;
-}
-.purple {
-  grid-column: 10 / 11;
-  grid-row: 1 / 9;
-}
-.blue {
-  grid-column: 1 / 9;
-  grid-row: 2 / 9;
+/* MODIFICACIÓN AQUÍ: Nuevos estilos para el contenedor del SVG */
+.svg-icon-wrapper {
+  width: 90px; /* Ancho deseado para el contenedor del SVG */
+  height: 60px; /* Alto deseado para el contenedor del SVG */
+  display: flex; /* Usar flexbox para centrar el SVG */
+  justify-content: center; /* Centrar horizontalmente */
+  align-items: center; /* Centrar verticalmente */
+  overflow: hidden; /* Asegurar que el SVG no se desborde del contenedor */
+  flex-shrink: 0; /* Evita que el contenedor se encoja */
 }
 
-/* ======= ESTILOS PARA ESCRITORIO ======= */
-@media (min-width: 1024px) {
-  .grid-container {
-    grid-template-columns: repeat(8, 1fr);
-    grid-template-rows: auto auto auto auto auto auto auto auto;
-
-    grid-template-rows: auto auto auto auto auto auto auto auto;
-  }
+/* Estilos para el SVG real dentro del contenedor */
+.svg-icon {
+  max-width: 100% !important; /* Forzar al SVG a ocupar el 100% del ancho del contenedor */
+  max-height: 100% !important; /* Forzar al SVG a ocupar el 100% del alto del contenedor */
+  display: block; /* Eliminar espacio extra debajo del SVG */
+  color: white;
+  /* El color se aplica a través de la prop `style` en el template,
+     pero si el SVG usa `currentColor`, este estilo lo afectará. */
 }
 
-/* ======= ESTILOS PARA ANDROID (MÓVILES) ======= */
-@media (max-width: 768px) {
-  .grid-container {
-    grid-template-columns: 1fr; /* Una sola columna */
-    grid-template-rows: auto;
-  }
+/* Asegurar imágenes escalan (si aún se usan img dentro de q-avatar en otros lugares) */
+.q-avatar img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
 
-  .box {
-    height: auto; /* Ajustar altura automáticamente */
-  }
-  .green,
-  .yellow,
-  .red,
-  .blue,
-  .coffee,
-  .purple {
-    grid-column: 1 / 2; /* Todas las cajas en una sola columna */
-    grid-row: auto;
-  }
+.q-item-label {
+  word-break: break-word;
+  overflow-wrap: break-word;
+  white-space: normal;
 }
 </style>

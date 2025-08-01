@@ -1,25 +1,39 @@
 <template>
-  <q-form @submit.prevent="handleSubmit">
-    <q-card-section class="q-gutter-sm row items-center">
-      <q-select
-        v-model="formData.usuario"
-        :options="usuarios"
-        label="Usuario*"
-        dense
-        emit-value
-        map-options
-        style="flex: 1; max-width: 25%"
-      />
-      <q-input v-model="nombre" label="Nombre" dense disable style="flex: 1; max-width: 25%" />
-      <q-input v-model="apellido" label="Apellido" dense disable style="flex: 1; max-width: 25%" />
-      <q-input v-model="cargo" label="Cargo" dense disable style="flex: 1; max-width: 25%" />
-    </q-card-section>
+  <q-card>
+    <q-form @submit.prevent="handleSubmit">
+      <q-card-section class="row q-col-gutter-x-md">
+        <div class="col-12 col-md-4">
+          <label for="usuario">Usuario*</label>
+          <q-select
+            v-model="formData.usuario"
+            :options="usuarios"
+            dense
+            outlined
+            emit-value
+            map-options
+            id="usuario"
+          />
+        </div>
+        <div class="col-12 col-md-4">
+          <label for="nombre">Nombre</label>
+          <q-input v-model="nombre" outlined disable dense id="nombre" />
+        </div>
+        <div class="col-12 col-md-4">
+          <label for="apellido">Apellido</label>
+          <q-input v-model="apellido" id="apellido" dense outlined disable />
+        </div>
+        <div class="col-12 col-md-4">
+          <label for="cargo">Cargo</label>
+          <q-input v-model="cargo" id="cargo" dense outlined disable />
+        </div>
+      </q-card-section>
 
-    <q-card-actions align="right">
-      <q-btn label="Cancelar" flat color="negative" @click="$emit('cancel')" />
-      <q-btn label="Guardar" type="submit" color="primary" />
-    </q-card-actions>
-  </q-form>
+      <q-card-actions class="flex justify-end">
+        <q-btn label="Cancelar" flat color="negative" @click="$emit('cancel')" />
+        <q-btn label="Guardar" type="submit" color="primary" />
+      </q-card-actions>
+    </q-form>
+  </q-card>
 </template>
 
 <script setup>

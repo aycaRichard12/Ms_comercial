@@ -1,19 +1,21 @@
 <template>
-  <div v-if="showForm" class="q-mx-auto q-mt-md">
-    <form-costo-unitario
-      :isEditing="isEditing"
-      :modalValue="ProductoSeleccionado"
-      @submit="guardarPrecioBase"
-      @cancel="toggleForm"
-    />
-  </div>
+  <q-page class="q-pa-md q-pa-md-md q-pa-lg-lg">
+    <div v-if="showForm" class="q-mx-auto q-mt-md">
+      <form-costo-unitario
+        :isEditing="isEditing"
+        :modalValue="ProductoSeleccionado"
+        @submit="guardarPrecioBase"
+        @cancel="toggleForm"
+      />
+    </div>
 
-  <table-costo-unitario
-    :rows="productos"
-    :almacenes="listaAlmacenes"
-    :loading="cargando"
-    @edit="abrirFormularioEditar"
-  />
+    <table-costo-unitario
+      :rows="productos"
+      :almacenes="listaAlmacenes"
+      :loading="cargando"
+      @edit="abrirFormularioEditar"
+    />
+  </q-page>
 </template>
 <script setup>
 import { ref, onMounted } from 'vue'

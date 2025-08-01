@@ -1,62 +1,64 @@
 <template>
-  <div class="q-pa-md">
-    <!-- Fila superior: Botón agregar, filtro por almacén y búsqueda -->
-    <div style="display: flex; justify-content: space-between">
-      <!-- Botón Agregar productos -->
-      <q-btn
-        label="Agregar productos al almacén"
-        color="primary"
-        @click="$emit('add')"
-        unelevated
-      />
+  <div class="row flex justify-between">
+    <q-btn color="primary" @click="$emit('add')" unelevated class="btn-res q-mt-lg">
+      <q-icon name="inventory_2" class="icono" />
+      <span class="texto">productos</span>
+    </q-btn>
 
-      <!-- Filtro por almacén -->
+    <!-- Filtro por almacén -->
+    <div class="col-2">
+      <label for="almacen">Almacén</label>
       <q-select
         v-model="filtro"
         :options="opciones"
-        placeholder="Seleccione una opción"
-        label="Almacén"
+        id="almacen"
         emit-value
         map-options
         dense
         outlined
-        style="min-width: 200px"
+        clearable
       />
-
-      <!-- Botón imprimir -->
-      <q-btn flat icon="print" label="Imprimir" color="info" @click="onPrintReport" />
     </div>
 
-    <!-- Tabla con asignaciones filtradas -->
-    <q-table
-      v-if="filtro"
-      :rows="rows"
-      :columns="columns"
-      :pagination="pagination"
-      row-key="id"
-      :filter="filter"
-      flat
-      bordered
-      class="my-sticky-header-table q-mt-md"
-    >
-      <!-- Buscador -->
-      <template v-slot:top-right>
-        <q-input dense debounce="300" v-model="filter" placeholder="Buscar..." filled>
-          <template v-slot:append>
-            <q-icon name="search" />
-          </template>
-        </q-input>
-      </template>
+    <!-- Botón imprimir -->
 
-      <!-- Acciones -->
-      <template v-slot:body-cell-opciones="props">
-        <q-td :props="props" class="text-nowrap">
-          <q-btn dense round flat icon="edit" color="info" @click="$emit('edit-item', props.row)" />
-          <q-btn icon="delete" color="negative" dense @click="$emit('delete-item', props.row)" />
-        </q-td>
-      </template>
-    </q-table>
+    <q-btn outline="" color="info" @click="onPrintReport" class="btn-res q-mt-lg">
+      <q-icon name="picture_as_pdf" class="icono" />
+
+      <span class="texto">Vista previa PDF</span>
+    </q-btn>
   </div>
+  <div class="flex justify-end q-mb-md">
+    <div>
+      <label for="buscar">Buscar...</label>
+      <q-input outlined dense debounce="300" v-model="filter" placeholder="Buscar...">
+        <template v-slot:append>
+          <q-icon name="search" />
+        </template>
+      </q-input>
+    </div>
+  </div>
+
+  <q-table
+    title="Productos Asignados"
+    :rows="rows"
+    :columns="columns"
+    :pagination="pagination"
+    row-key="id"
+    :filter="filter"
+    flat
+    bordered
+  >
+    <!-- Buscador -->
+
+    <!-- Acciones -->
+    <template v-slot:body-cell-opciones="props">
+      <q-td :props="props" class="text-nowrap">
+        <q-btn dense round flat icon="edit" color="info" @click="$emit('edit-item', props.row)" />
+        <q-btn icon="delete" color="negative" dense @click="$emit('delete-item', props.row)" />
+      </q-td>
+    </template>
+  </q-table>
   <q-dialog v-model="mostrarModal" persistent full-width full-height>
     <q-card class="q-pa-md" style="height: 100%; max-width: 100%">
       <q-card-section class="row items-center q-pb-none">

@@ -3,42 +3,47 @@
     <!-- Pantallas medianas en adelante -->
 
     <!-- Pantallas pequeñas -->
-    <div style="display: flex; justify-content: space-between">
-      <q-btn
-        label="Volver"
-        icon="arrow_back"
-        color="primary"
-        size="sm"
-        class="q-mr-sm"
-        @click="$emit('atras')"
-      />
-      <div class="text-h4">Lista de Productos Disponibles:</div>
-      <q-btn
-        label="Continuar"
-        icon-right="arrow_forward"
-        color="primary"
-        size="sm"
-        @click="$emit('continuar')"
-      />
+    <div class="row flex justify-between">
+      <q-btn color="primary" @click="$emit('atras')" class="btn-res" dense>
+        <q-icon name="arrow_back" class="icono" style="" />
+        <span class="texto"> Volver</span>
+      </q-btn>
+
+      <div class="title-p1">
+        <div class="title">Productos Disponibles:</div>
+        <div></div>
+      </div>
+
+      <q-btn color="primary" @click="$emit('continuar')" class="btn-res" dense>
+        <q-icon name="arrow_forward" class="icono" />
+        <span class="texto">Continuar</span>
+      </q-btn>
     </div>
 
     <!-- Filtros -->
-    <div style="display: flex; justify-content: center">
-      <q-select
-        v-model="filtro"
-        :options="opciones"
-        label="Seleccione un Almacén"
-        placeholder="Seleccione una opción"
-        dense
-        outlined
-        style="min-width: 200px"
-        emit-value
-        map-options
-      />
+    <div class="row q-col-gutter-x-md flex justify-between">
+      <div class="col-12 col-md-4">
+        <label for="almacen">Almacén</label>
+        <q-select
+          v-model="filtro"
+          :options="opciones"
+          id="almacen"
+          dense
+          outlined
+          emit-value
+          map-options
+          clearable
+        />
+      </div>
+      <div class="col-12 col-md-2">
+        <label for="buscar">Buscar...</label>
+        <q-input dense debounce="300" v-model="filter" id="buscar" outlined />
+      </div>
     </div>
 
     <!-- Tabla de productos -->
     <q-table
+      title="productos"
       v-if="filtro"
       :rows="rows"
       :columns="columns"
@@ -50,9 +55,7 @@
       :filter="filter"
       class="my-sticky-header-table q-mt-md"
     >
-      <template v-slot:top-right>
-        <q-input dense debounce="300" v-model="filter" placeholder="Buscar..." />
-      </template>
+      <template v-slot:top-right> </template>
       <template #body-cell-imagen="props">
         <q-td :props="props">
           <img :src="props.value" alt="img" width="50" height="50" style="object-fit: cover" />

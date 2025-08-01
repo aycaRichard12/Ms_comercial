@@ -1,16 +1,24 @@
 <template>
-  <div class="q-pa-md">
-    <div v-if="showForm" class="q-mx-auto q-mt-md">
-      <registro-cliente
-        :isEditing="isEditing"
-        :modalValue="clienteSeleccionado"
-        :tipoClienteOptions="opcionesTipoCliente"
-        :canalVentaOptions="opcionesCanalVenta"
-        :tipoDocumetosOptions="tipoDocumetosOptions"
-        @submit="guardarCliente"
-        @cancel="toggleForm"
-      ></registro-cliente>
-    </div>
+  <q-page class="q-pa-md q-pa-md-md q-pa-lg-lg">
+    <q-dialog v-model="showForm">
+      <q-card class="responsive-dialog">
+        <q-card-section class="bg-primary text-h6 text-white flex justify-between">
+          <div>Registrar Cliente</div>
+          <q-btn color="" icon="close" @click="showForm = false" flat dense round />
+        </q-card-section>
+        <q-card-section class="q-pa-none">
+          <registro-cliente
+            :isEditing="isEditing"
+            :modalValue="clienteSeleccionado"
+            :tipoClienteOptions="opcionesTipoCliente"
+            :canalVentaOptions="opcionesCanalVenta"
+            :tipoDocumetosOptions="tipoDocumetosOptions"
+            @submit="guardarCliente"
+            @cancel="toggleForm"
+          ></registro-cliente
+        ></q-card-section>
+      </q-card>
+    </q-dialog>
     <table-cliente
       :isEditing="isEditing"
       :rows="clientes"
@@ -23,19 +31,19 @@
       @delete="eliminarCliente"
       @addToList="abrirModal"
     ></table-cliente>
-  </div>
-  <div>
-    <q-dialog v-model="mostrarModalSucursal" persistent>
-      <sucursal-form
-        v-model="sucursalSeleccionada"
-        :rows="listaSucursales"
-        @submit="guardarSucursal"
-        @cancel="cerrarModal"
-        @edit="editSucursal"
-        @delete="eliminarSucursal"
-      />
-    </q-dialog>
-  </div>
+    <div>
+      <q-dialog v-model="mostrarModalSucursal" persistent>
+        <sucursal-form
+          v-model="sucursalSeleccionada"
+          :rows="listaSucursales"
+          @submit="guardarSucursal"
+          @cancel="cerrarModal"
+          @edit="editSucursal"
+          @delete="eliminarSucursal"
+        />
+      </q-dialog>
+    </div>
+  </q-page>
 </template>
 <script setup>
 import { ref, onMounted } from 'vue'

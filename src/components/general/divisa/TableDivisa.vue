@@ -14,6 +14,7 @@
       :pagination="{ rowsPerPage: 10 }"
       class="sticky-header-table"
       bordered
+      title="Divisas"
     >
       <template v-slot:body-cell-monedaSin="props" v-if="estadoFactura">
         <q-td :props="props">

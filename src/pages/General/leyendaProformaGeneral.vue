@@ -1,7 +1,11 @@
 <template>
-  <div class="q-pa-md">
+  <q-page class="q-pa-md q-pa-md-md q-pa-lg-lg">
     <q-dialog v-model="showForm" persistent>
-      <q-card style="min-width: 400px; max-width: 600px">
+      <q-card class="responsive-dialog">
+        <q-card-section class="bg-primary text-white text-h6 flex justify-between">
+          <div>Registrar Leyenda</div>
+          <q-btn icon="close" @click="showForm = false" flat dense round />
+        </q-card-section>
         <q-card-section class="q-pa-none">
           <FormLeyenda
             :model-value="formData"
@@ -20,7 +24,7 @@
       @delete="deleteItem"
       @toggle-status="changeStatus"
     />
-  </div>
+  </q-page>
 
   <!-- Formulario -->
 </template>

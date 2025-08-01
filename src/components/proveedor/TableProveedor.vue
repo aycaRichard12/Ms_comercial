@@ -1,32 +1,41 @@
 <template>
   <div class="q-pa-md">
-    <div class="row items-center justify-between q-mb-md">
-      <div>
-        <q-btn icon="add" label="Agregar" color="primary" @click="$emit('add')" />
-        <q-btn
-          color="primary"
-          icon="upload"
-          label="Importar de Excel"
-          class="q-ml-md"
-          @click="$emit('importFromExcel')"
-        />
+    <div class="row q-col-gutter-x-md q-mb-md">
+      <div class="col-3 col-md-3 flex justify-start">
+        <q-btn color="primary" @click="$emit('add')" class="btn-res">
+          <q-icon name="add" class="icono" />
+          <span class="texto">Agregar</span>
+        </q-btn>
       </div>
-      <div>
-        <q-btn
-          color="info"
-          icon="picture_as_pdf"
-          label="Imprimir"
-          @click="exportarProveedoresPDF"
-        />
-        <q-btn
-          label="Exportar a Excel"
-          color="info"
-          class="q-ml-md"
-          @click="exportarClientesFiltrados"
-        />
+
+      <div class="col-3 col-md-3 flex justify-center">
+        <q-btn color="info" @click="$emit('importFromExcel')" class="btn-res" outline>
+          <q-icon name="upload" class="icono" />
+          <span class="texto">Importar Excel</span>
+        </q-btn>
+      </div>
+      <div class="col-3 col-md-3 flex justify-center">
+        <q-btn color="info" outline @click="exportarProveedoresPDF" class="btn-res">
+          <q-icon name="picture_as_pdf" class="icono" />
+          <span class="texto">Vista Previa PDF</span>
+        </q-btn>
+      </div>
+      <div class="col-3 col-md-3 flex justify-end">
+        <q-btn color="info" @click="exportarClientesFiltrados" class="btn-res" outline>
+          <q-icon name="file_download" class="icono" />
+          <span class="texto">Exportar Excel</span>
+        </q-btn>
       </div>
     </div>
 
+    <div class="row q-col-gutter-x-md flex justify-end q-mb-md">
+      <div class="col-12 col-md-3">
+        <label for="buscar">Buscar...</label>
+        <q-input dense debounce="300" v-model="filtro" id="buscar">
+          <template v-slot:append> <q-icon name="search" /> </template>
+        </q-input>
+      </div>
+    </div>
     <q-table
       flat
       bordered
@@ -37,11 +46,7 @@
       :pagination="{ rowsPerPage: 10 }"
       class="sticky-header-table"
     >
-      <template v-slot:top-right>
-        <q-input dense debounce="300" v-model="filtro" placeholder="Buscar...">
-          <template v-slot:append> <q-icon name="search" /> </template>
-        </q-input>
-      </template>
+      <template v-slot:top-right> </template>
       <!-- Personalización de celdas para truncar texto -->
       <template v-slot:body-cell="props">
         <q-td :props="props">

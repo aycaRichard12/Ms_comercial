@@ -1,11 +1,27 @@
 <template>
-  <div class="row table-topper q-mb-md">
-    <div class="col flex items-center">
-      <q-btn label="Agregar" icon="add" color="primary" @click="$emit('add')" class="q-mb-md" />
-    </div>
-
-    <div class="col flex items-center justify-end">
+  <div class="flex justify-between">
+    <q-btn color="primary" @click="$emit('add')" unelevated class="btn-res q-mt-lg">
+      <q-icon name="add" class="icono" />
+      <span class="texto">Agregar</span>
+    </q-btn>
+    <!-- <div class="col flex items-center justify-end">
       <q-input v-model="search" placeholder="Buscar" dense outlined class="q-ml-md">
+        <template v-slot:append>
+          <q-icon name="search" />
+        </template>
+      </q-input>
+    </div> -->
+    <div>
+      <label for="buscar">Buscar...</label>
+      <q-input
+        v-model="search"
+        id="buscar"
+        dense
+        outlined
+        debounce="300"
+        class="q-mb-md"
+        style="background-color: white"
+      >
         <template v-slot:append>
           <q-icon name="search" />
         </template>
@@ -13,15 +29,7 @@
     </div>
   </div>
 
-  <q-table
-    title="Unidades"
-    :rows="ordenados"
-    :columns="columns"
-    row-key="id"
-    :pagination="pagination"
-    :filter="search"
-    class="my-sticky-header-table q-mt-md"
-  >
+  <q-table title="Unidades" :rows="ordenados" :columns="columns" row-key="id" :filter="search">
     <template v-slot:body-cell-estado="props">
       <q-td :props="props">
         <q-badge color="green" v-if="Number(props.row.estado) === 1" label="Activo" outline />
@@ -78,9 +86,6 @@ const ordenados = computed(() =>
   })),
 )
 const search = ref('')
-const pagination = ref({
-  rowsPerPage: 10,
-})
 </script>
 
 <style scoped>

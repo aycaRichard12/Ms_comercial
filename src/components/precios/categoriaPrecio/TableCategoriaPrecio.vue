@@ -1,66 +1,85 @@
 <template>
-  <div class="q-pa-md">
-    <!-- Encabezado de acciones -->
-    <div style="display: flex; justify-content: space-between" class="q-mb-sm">
-      <q-btn icon="add" label="Agregar" color="primary" @click="$emit('add')" />
+  <!-- Encabezado de acciones -->
+  <div class="row flex justify-between q-mb-sm">
+    <q-btn color="primary" @click="$emit('add')" class="btn-res q-mt-lg">
+      <q-icon name="add" class="icono" />
+      <span class="texto">Agregar</span>
+    </q-btn>
 
-      <!-- Filtros -->
+    <!-- Filtros -->
+    <div>
+      <label for="almacen">Seleccione un Almacén</label>
       <q-select
         v-model="filtroAlmacen"
         :options="almacenes"
-        label="Seleccione un Almacén"
         dense
         outlined
         map-options
-        style="min-width: 200px"
+        id="almacen"
       />
-      <q-btn label="Imprimir" color="info" icon="picture_as_pdf" @click="imprimir" />
     </div>
 
-    <!-- Tabla -->
-    <q-table
-      flat
-      :rows="filtradas"
-      :filter="search"
-      :columns="columnas"
-      row-key="id"
-      :pagination="{ rowsPerPage: 5 }"
-    >
-      <template v-slot:top-right>
-        <q-input dense debounce="300" v-model="search" placeholder="Buscar...">
-          <template v-slot:append>
-            <q-icon name="search" />
-          </template>
-        </q-input>
-      </template>
-      <template v-slot:body-cell-estado="props">
-        <q-td :props="props">
-          <q-badge color="green" v-if="Number(props.row.estado) === 1" label="Activo" outline />
-          <q-badge color="red" v-else label="Inactivo" outline />
-        </q-td>
-      </template>
-
-      <template v-slot:body-cell-opciones="props">
-        <q-td :props="props" class="text-nowrap">
-          <q-btn
-            icon="edit"
-            color="primary"
-            dense
-            class="q-mr-sm"
-            @click="$emit('edit-item', props.row)"
-          />
-          <q-btn icon="delete" color="negative" dense @click="$emit('delete-item', props.row)" />
-          <q-btn
-            :icon="Number(props.row.estado) === 1 ? 'toggle_on' : 'toggle_off'"
-            dense
-            flat
-            :color="Number(props.row.estado) === 1 ? 'green' : 'grey'"
-            @click="$emit('toggle-status', props.row)"
-          />
-        </q-td>
-      </template>
-    </q-table>
+    <q-btn color="info" @click="imprimir" outline class="btn-res q-mt-lg">
+      <q-icon name="picture_as_pdf" class="icono" />
+      <span class="texto">Vista Previa PDF</span>
+    </q-btn>
   </div>
+  <div class="row flex justify-end">
+    <div class="">
+      <label for="buscar"> Buscar...</label>
+      <q-input
+        v-model="search"
+        id="buscar"
+        dense
+        outlined
+        debounce="300"
+        class="q-mb-md"
+        style="background-color: white"
+      >
+        <template v-slot:append>
+          <q-icon name="search" />
+        </template>
+      </q-input>
+    </div>
+  </div>
+  <!-- Tabla -->
+  <q-table
+    flat
+    :rows="filtradas"
+    :filter="search"
+    :columns="columnas"
+    row-key="id"
+    :pagination="{ rowsPerPage: 5 }"
+  >
+    <template v-slot:top-right> </template>
+    <template v-slot:body-cell-estado="props">
+      <q-td :props="props">
+        <q-badge color="green" v-if="Number(props.row.estado) === 1" label="Activo" outline />
+        <q-badge color="red" v-else label="Inactivo" outline />
+      </q-td>
+    </template>
+
+    <template v-slot:body-cell-opciones="props">
+      <q-td :props="props" class="text-nowrap">
+        <q-btn
+          icon="edit"
+          color="primary"
+          dense
+          class="q-mr-sm"
+          @click="$emit('edit-item', props.row)"
+        />
+        <q-btn icon="delete" color="negative" dense @click="$emit('delete-item', props.row)" />
+        <q-btn
+          :icon="Number(props.row.estado) === 1 ? 'toggle_on' : 'toggle_off'"
+          dense
+          flat
+          :color="Number(props.row.estado) === 1 ? 'green' : 'grey'"
+          @click="$emit('toggle-status', props.row)"
+        />
+      </q-td>
+    </template>
+  </q-table>
+
   <q-dialog v-model="mostrarModal" persistent full-width full-height>
     <q-card class="q-pa-md" style="height: 100%; max-width: 100%">
       <q-card-section class="row items-center q-pb-none">

@@ -1,86 +1,117 @@
 <template>
-  <q-card class="q-pa-md full-height">
-    <q-card-section>
-      <q-form @submit.prevent>
-        <div class="row q-col-gutter-md" style="display: flex; justify-content: center">
-          <div class="col-md-3">
-            <q-select
-              v-model="form.almacen"
-              label="Almacén*"
-              :options="almacenes"
-              option-label="label"
-              option-value="value"
-              emit-value
-              map-options
-            />
-          </div>
+  <q-card-section>
+    <q-form @submit.prevent>
+      <div class="q-gutter-md">
+        <div class="row q-col-gutter-md justify-center">
+          <q-select
+            v-model="form.almacen"
+            label="Almacén*"
+            :options="almacenes"
+            option-label="label"
+            option-value="value"
+            emit-value
+            map-options
+            dense
+            outlined
+            clearable
+            class="col-md-4"
+            :input-style="{ paddingLeft: '10px', paddingRight: '10px' }"
+            @update:model-value="generarReporte"
+          />
         </div>
+      </div>
 
-        <div class="row q-gutter-sm justify-center q-mt-lg">
-          <q-btn color="primary" label="Generar reporte" @click="generarReporte" />
-          <q-btn color="primary" label="Vista previa del Reporte" @click="vistaPrevia" />
-          <q-btn color="primary" label="Reporte Con imagen" @click="reporteImage" />
-          <q-btn color="primary" label="Catalogo" @click="vistaCatalogo" />
+      <div class="row q-gutter-sm justify-center q-mt-lg">
+        <q-btn color="primary" label="Generar reporte" @click="generarReporte" />
+        <q-btn color="primary" label="Vista previa del Reporte" @click="vistaPrevia" />
+        <q-btn color="primary" label="Reporte Con imagen" @click="reporteImage" />
+        <q-btn color="primary" label="Catalogo" @click="vistaCatalogo" />
+      </div>
+    </q-form>
+
+    <q-form class="q-my-md">
+      <div class="row q-col-gutter-md">
+        <div class="col-12 col-md-6">
+          <q-select
+            v-model="filtroEstado"
+            label="Filtrar por estado del producto"
+            :options="estados"
+            dense
+            outlined
+          />
         </div>
-      </q-form>
-
-      <q-form class="q-my-md">
-        <div class="row q-col-gutter-md">
-          <div class="col-12 col-md-6">
-            <q-select
-              v-model="filtroEstado"
-              label="Filtrar por estado del producto"
-              :options="estados"
-            />
-          </div>
-          <div class="col-12 col-md-6">
-            <q-select
-              v-model="filtroOrden"
-              label="Ordenar por stock de manera"
-              :options="ordenes"
-            />
-          </div>
+        <div class="col-12 col-md-6">
+          <q-select
+            v-model="filtroOrden"
+            label="Ordenar por stock de manera"
+            :options="ordenes"
+            dense
+            outlined
+          />
         </div>
-      </q-form>
+      </div>
+    </q-form>
 
-      <q-table :rows="processedRows" :columns="columnas" flat row-key="id" separator="horizontal">
-        <template v-slot:body-cell-estado="props">
-          <q-td :props="props">
-            {{ Number(props.row.estado) === 1 ? 'Activo' : 'No Activo' }}
-          </q-td>
-        </template>
-        <template v-slot:bottom-row>
-          <q-tr>
-            <q-td colspan="11" class="text-right text-bold">Sumatorias</q-td>
-            <q-td class="text-right text-bold">{{ sumatoriaStock }}</q-td>
-            <q-td class="text-right text-bold">{{ sumatoriaCosto }}</q-td>
-          </q-tr>
-        </template>
-      </q-table>
-    </q-card-section>
+    <q-table
+      title="Productos"
+      :rows="processedRows"
+      :columns="columnas"
+      flat
+      row-key="id"
+      separator="horizontal"
+      :filter="search"
+    >
+      <template v-slot:top-right>
+        <q-input
+          v-model="search"
+          placeholder="Buscar..."
+          dense
+          outlined
+          debounce="300"
+          class="q-mb-md"
+          style="background-color: white"
+        >
+          <template v-slot:append>
+            <q-icon name="search" />
+          </template>
+        </q-input>
+      </template>
+      <template v-slot:body-cell-estado="props">
+        <q-td :props="props">
+          {{ Number(props.row.estado) === 1 ? 'Activo' : 'No Activo' }}
+        </q-td>
+      </template>
+      <template v-slot:bottom-row>
+        <q-tr>
+          <q-td colspan="11" class="text-right text-bold">Sumatorias</q-td>
+          <q-td class="text-right text-bold">{{ sumatoriaStock }}</q-td>
+          <q-td class="text-right text-bold">{{ sumatoriaCosto }}</q-td>
+        </q-tr>
+      </template>
+    </q-table>
+  </q-card-section>
 
-    <q-card-section>
-      <q-dialog v-model="mostrarModal" persistent full-width full-height>
-        <q-card class="q-pa-md" style="height: 100%; max-width: 100%">
-          <q-card-section class="row items-center q-pb-none">
-            <div class="text-h6">Vista previa de PDF</div>
-            <q-space />
-            <q-btn flat round icon="close" @click="mostrarModal = false" />
-          </q-card-section>
+  <q-card-section>
+    <q-dialog v-model="mostrarModal" persistent full-width full-height>
+      <q-card class="q-pa-md" style="height: 100%; max-width: 100%">
+        <q-card-section class="row items-center q-pb-none">
+          <div class="text-h6">Vista previa de PDF</div>
+          <q-space />
+          <q-btn flat round icon="close" @click="mostrarModal = false" />
+        </q-card-section>
 
-          <q-separator />
+        <q-separator />
 
-          <q-card-section class="q-pa-none" style="height: calc(100% - 60px)">
-            <iframe
-              v-if="pdfData"
-              :src="pdfData"
-              style="width: 100%; height: 100%; border: none"
-            ></iframe>
-          </q-card-section>
-        </q-card>
-      </q-dialog>
-    </q-card-section>
-  </q-card>
+        <q-card-section class="q-pa-none" style="height: calc(100% - 60px)">
+          <iframe
+            v-if="pdfData"
+            :src="pdfData"
+            style="width: 100%; height: 100%; border: none"
+          ></iframe>
+        </q-card-section>
+      </q-card>
+    </q-dialog>
+  </q-card-section>
 </template>
 
 <script setup>
@@ -104,6 +135,7 @@ const form = ref({})
 const filtroEstado = ref(null)
 const filtroOrden = ref(null)
 const almacenes = ref([])
+const search = ref('')
 
 const filtros = ref({
   estado: '0',
@@ -319,3 +351,4 @@ const vistaCatalogo = async () => {
   mostrarModal.value = true
 }
 </script>
+<style></style>

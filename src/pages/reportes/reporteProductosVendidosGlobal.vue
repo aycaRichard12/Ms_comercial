@@ -1,15 +1,17 @@
 <template>
-  <q-card>
-    <q-card-section>
+  <q-page>
+    <q-card-section class="q-pa-md">
+      <div class="titulo">Reporte de Productos Vendidos</div>
       <!-- Formulario de parámetros -->
       <q-form @submit.prevent="generarReporte">
-        <div class="row justify-center q-col-gutter-md">
-          <div class="col-md-4">
+        <div class="row flex justify-center q-col-gutter-x-md">
+          <div class="col-12 col-md-4">
+            <label for="fechaini">Fecha Inicial*</label>
             <q-input
               outlined
               dense
               v-model="fechaInicial"
-              label="Fecha Inicial*"
+              id="fechaini"
               :rules="[(val) => !!val || 'Campo obligatorio']"
             >
               <template v-slot:append>
@@ -22,12 +24,13 @@
             </q-input>
           </div>
 
-          <div class="col-md-4">
+          <div class="col-12 col-md-4">
+            <label for="fechafin">Fecha Final*</label>
             <q-input
               outlined
               dense
               v-model="fechaFinal"
-              label="Fecha Final*"
+              id="fechafin"
               :rules="[
                 (val) => !!val || 'Campo obligatorio',
                 (val) => validarFechas(val) || 'Fecha final debe ser mayor o igual a la inicial',
@@ -56,22 +59,23 @@
       </q-form>
 
       <!-- Filtros -->
-      <div class="row justify-center q-col-gutter-md q-mt-md">
-        <div class="col-md-3">
+      <div class="row justify-center q-col-gutter-x-md q-mt-md">
+        <div class="col-12 col-md-3">
+          <label for="almacen">Filtrar por almacén</label>
           <q-select
-            label="Filtrar por almacén"
+            id="almacen"
             v-model="almacenSeleccionado"
             :options="almacenesOptions"
             outlined
             dense
             emit-value
             map-options
-            :disable="!datosOriginales || datosOriginales.length === 0"
           />
         </div>
-        <div class="col-md-3">
+        <div class="col-12 col-md-3">
+          <label for="cliente">Filtrar por razón social</label>
           <q-select
-            label="Filtrar por razón social"
+            id="cliente"
             v-model="clienteSeleccionado"
             :options="clientesOptions"
             option-label="label"
@@ -81,8 +85,8 @@
             dense
             emit-value
             map-options
+            clearable
             @filter="filtrarClientes"
-            :disable="!datosOriginales || datosOriginales.length === 0"
           >
             <template v-slot:no-option>
               <q-item>
@@ -91,9 +95,10 @@
             </template>
           </q-select>
         </div>
-        <div class="col-md-3">
+        <div class="col-12 col-md-3">
+          <label for="sucursal">Filtrar por sucursal</label>
           <q-select
-            label="Filtrar por sucursal"
+            id="sucursal"
             v-model="sucursalSeleccionada"
             :options="sucursalesOptions"
             option-label="label"
@@ -104,7 +109,8 @@
             emit-value
             map-options
             @filter="filtrarSucursales"
-            :disable="!clienteSeleccionado || !datosOriginales || datosOriginales.length === 0"
+            clearable
+            :disable="!clienteSeleccionado"
           >
             <template v-slot:no-option>
               <q-item>
@@ -120,13 +126,14 @@
         <q-table
           flat
           bordered
+          title="Productos Vendidos"
           :rows="datosFiltrados"
           :columns="columnas"
           row-key="id"
           virtual-scroll
-          :rows-per-page-options="[0]"
           style="max-height: calc(100vh - 265px)"
           :loading="cargando"
+          no-data-label="No se Genero el Reporte"
         >
           <template v-slot:body="props">
             <q-tr :props="props">
@@ -185,20 +192,21 @@
         </q-table>
       </div>
     </q-card-section>
-  </q-card>
+  </q-page>
 </template>
 
 <script>
 import { ref, computed, onMounted, watch } from 'vue'
 import { useQuasar } from 'quasar'
 import { api } from 'src/boot/axios'
-import { exportFile } from 'quasar'
 import { date } from 'quasar'
 import { validarUsuario } from 'src/composables/FuncionesGenerales'
+import { exportToXLSX_Reporte_Productos } from 'src/utils/XCLReportImport'
 export default {
   setup() {
     const $q = useQuasar()
     const tipoVenta = {
+      4: 'Cotización',
       0: 'Comprobante Venta',
       1: 'Factura Compra-Venta',
       2: 'Factura Alquileres',
@@ -299,6 +307,7 @@ export default {
         const idempresa = contenidousuario[0]?.empresa?.idempresa
 
         const response = await api.get(`listaAlmacen/${idempresa}`)
+        console.log(response)
         if (response.data && Array.isArray(response.data)) {
           almacenesOptions.value = [
             { label: 'Todos los almacenes', value: 0 },
@@ -465,42 +474,17 @@ export default {
     }
 
     const exportarTablaAExcel = () => {
-      try {
-        if (!formularioExcel.value || formularioExcel.value.length === 0) {
-          $q.notify({
-            type: 'warning',
-            message: 'No hay datos para exportar',
-          })
-          return
-        }
-
-        const fileName = `REPORTE DE PRODUCTOS VENDIDOS ${date.formatDate(Date.now(), 'DD-MM-YYYY')}.xlsx`
-
-        // Usando la función de exportación de Quasar
-        const content = [
-          Object.keys(formularioExcel.value[0]).join('\t'),
-          ...formularioExcel.value.map((item) =>
-            Object.values(item)
-              .map((val) => (typeof val === 'string' ? val.replace(/\t/g, ' ') : val))
-              .join('\t'),
-          ),
-        ].join('\n')
-
-        const status = exportFile(fileName, content, 'text/tsv')
-
-        if (status !== true) {
-          $q.notify({
-            type: 'negative',
-            message: 'Navegador denegó la descarga del archivo',
-          })
-        }
-      } catch (error) {
-        console.error('Error al exportar a Excel:', error)
-        $q.notify({
-          type: 'negative',
-          message: 'Error al exportar el reporte a Excel',
-        })
-      }
+      exportToXLSX_Reporte_Productos(
+        datosFiltrados.value,
+        fechaInicial.value,
+        fechaFinal.value,
+        almacenSeleccionado,
+        clienteSeleccionado,
+        sucursalSeleccionada,
+        almacenesOptions,
+        clientesOptions,
+        sucursalesOptions,
+      )
     }
 
     const filtrarYOrdenarDatos = () => {

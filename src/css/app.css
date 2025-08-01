@@ -1,1 +1,9 @@
 /*# sourceMappingURL=app.css.map */
+.responsive-dialog {
+  background-color: aqua;
+}
+@media (min-width: 1000px) {
+  .responsive-dialog {
+    background-color: brown;
+  }
+}

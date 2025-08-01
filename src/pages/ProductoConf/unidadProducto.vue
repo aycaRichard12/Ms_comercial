@@ -1,7 +1,11 @@
 <template>
-  <div class="q-pa-md">
+  <q-page class="q-pa-md q-pa-md-md q-pa-lg-lg">
     <q-dialog v-model="showForm" persistent>
-      <q-card style="min-width: 400px; max-width: 600px">
+      <q-card class="responsive-dialog">
+        <q-card-section class="bg-primary text-h6 text-white flex justify-between">
+          <div>Unidades para Productos</div>
+          <q-btn icon="close" @click="showForm = false" flat dense round />
+        </q-card-section>
         <q-card-section class="q-pa-none">
           <product-unit-form
             :isEditing="isEditing"
@@ -20,7 +24,7 @@
       @delete-item="confirmDelete"
       @toggle-status="toggleStatus"
     />
-  </div>
+  </q-page>
 </template>
 
 <script setup>

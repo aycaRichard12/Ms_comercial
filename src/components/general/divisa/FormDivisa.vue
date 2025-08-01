@@ -1,40 +1,49 @@
 <template>
   <q-card-section>
-    <q-form @submit.prevent="onSubmit" class="q-gutter-x-md q-ma-lg">
+    <q-form @submit.prevent="onSubmit">
       <div class="row q-col-gutter-md">
         <!-- Nombre de la divisa -->
-        <div class="col-md-4">
+        <div class="col-12 col-md-4">
+          <label for="nombre">Nombre de divisa*</label>
           <q-input
             v-model="localData.nombre"
-            label="Nombre de divisa*"
+            outlined
+            dense
+            id="nombre"
             :rules="[(val) => !!val || 'El nombre de la divisa es obligatorio']"
           />
         </div>
 
         <!-- Símbolo de la divisa -->
-        <div class="col-md-4">
+        <div class="col-12 col-md-4">
+          <label for="simbolo">Símbolo de la divisa*</label>
+
           <q-input
             v-model="localData.tipo"
-            label="Símbolo de la divisa*"
+            id="simbolo"
+            outlined
+            dense
             :rules="[(val) => !!val || 'El símbolo de la divisa es obligatorio']"
           />
         </div>
 
         <!-- Moneda SIN (Dropdown) -->
-        <div class="col-md-4" v-if="estadoFactura">
+        <div class="col-12 col-md-4" v-if="estadoFactura">
+          <label for="monedasin">Moneda (SIN)*</label>
           <q-select
             use-input
             fill-input
-            hide-dropdown-icon
             v-model="localData.monedasin"
             :options="opcionesMoneda"
             @filter="filtrarMonedas"
-            label="Moneda (SIN)*"
+            id="monedasin"
             emit-value
             map-options
             option-label="label"
             option-value="value"
             clearable
+            outlined=""
+            dense=""
             :q-rules="[(val) => !!val || 'Debe seleccionar una moneda (SIN)']"
           />
         </div>
@@ -54,6 +63,7 @@ import { useFacturaStore } from 'src/stores/factura'
 import { validarUsuario } from 'src/composables/FuncionesG'
 import { api } from 'src/boot/axios'
 import { useQuasar } from 'quasar'
+
 const props = defineProps({
   editing: Boolean,
   modalValue: Object,
@@ -63,6 +73,7 @@ const facturaStore = useFacturaStore()
 facturaStore.cargarUsuario()
 
 const estadoFactura = facturaStore.obtenerEstadoFactura()
+console.log(estadoFactura)
 
 const localData = ref({ ...props.modalValue })
 

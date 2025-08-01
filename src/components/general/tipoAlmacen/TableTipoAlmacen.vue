@@ -1,7 +1,6 @@
 <template>
   <div>
-    <q-btn label="Agregar" icon="add" color="primary" @click="$emit('add')" class="q-mb-md" />
-    <div class="column" style="height: 50px">
+    <!-- <div class="column" style="height: 50px">
       <q-input
         v-model="search"
         debounce="300"
@@ -15,6 +14,30 @@
           <q-icon name="search" />
         </template>
       </q-input>
+    </div> -->
+    <div class="flex justify-between">
+      <q-btn color="primary" @click="$emit('add')" class="btn-res q-mt-lg">
+        <q-icon name="add" class="icono" />
+
+        <span class="texto">Agregar</span>
+      </q-btn>
+
+      <div>
+        <label for="buscar">Buscar...</label>
+        <q-input
+          v-model="search"
+          dense
+          id="buscar"
+          outlined
+          debounce="300"
+          class="q-mb-md"
+          style="background-color: white"
+        >
+          <template v-slot:append>
+            <q-icon name="search" />
+          </template>
+        </q-input>
+      </div>
     </div>
 
     <q-table
@@ -24,6 +47,7 @@
       row-key="id"
       flat
       bordered
+      :filter="search"
     >
       <template v-slot:body-cell-estado="props">
         <q-td align="center">

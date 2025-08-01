@@ -1,32 +1,30 @@
 <template>
-  <q-page class="q-pa-md">
-    <q-card>
-      <q-card-section>
-        <UserTable
-          v-if="showFirstView"
-          :users="users"
-          :columns="userColumns"
-          @asignar="showAssignForm"
+  <q-page class="q-pa-md q-pa-md-md q-pa-lg-lg">
+    <q-card-section>
+      <UserTable
+        v-if="showFirstView"
+        :users="users"
+        :columns="userColumns"
+        @asignar="showAssignForm"
+      />
+      <div v-else>
+        <AsignacionForm
+          :user="selectedUser"
+          :warehouses="warehouses"
+          :pointsOfSale="pointsOfSale"
+          @submit="submitAssignment"
+          @volver="showFirstView = true"
+          @load="loadPointsOfSale"
         />
-        <div v-else>
-          <AsignacionForm
-            :user="selectedUser"
-            :warehouses="warehouses"
-            :pointsOfSale="pointsOfSale"
-            @submit="submitAssignment"
-            @volver="showFirstView = true"
-            @load="loadPointsOfSale"
-          />
-          <AsignacionTable
-            :assignments="assignments"
-            :columns="assignmentColumns"
-            :warehouses="warehouses"
-            @delete="deleteAssignment"
-            @loadAssignments="cargarAsignaciones"
-          />
-        </div>
-      </q-card-section>
-    </q-card>
+        <AsignacionTable
+          :assignments="assignments"
+          :columns="assignmentColumns"
+          :warehouses="warehouses"
+          @delete="deleteAssignment"
+          @loadAssignments="cargarAsignaciones"
+        />
+      </div>
+    </q-card-section>
   </q-page>
 </template>
 

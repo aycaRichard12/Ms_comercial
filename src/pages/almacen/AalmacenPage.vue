@@ -1,34 +1,40 @@
 <template>
   <q-page padding>
-    <q-card>
-      <q-card-section v-if="!asignando">
-        <div v-if="showForm" class="q-mx-auto q-mt-md">
-          <ResponsableForm @registroExitoso="cargarTabla" @cancel="toggleForm" />
-        </div>
+    <q-card-section v-if="!asignando">
+      <q-dialog v-model="showForm" persistent>
+        <q-card class="responsive-dialog">
+          <q-card-section class="bg-primary text-h6 text-white flex justify-between">
+            <div>Registrar Usuario</div>
+            <q-btn color="" icon="close" @click="showForm = false" flat dense round />
+          </q-card-section>
+          <q-card-section class="q-pa-none">
+            <ResponsableForm @registroExitoso="cargarTabla" @cancel="toggleForm" />
+          </q-card-section>
+        </q-card>
+      </q-dialog>
 
-        <ResponsableTable
-          :rows="responsables"
-          @add="toggleForm"
-          @eliminar="eliminarResponsable"
-          @asignar="iniciarAsignacion"
-        />
-      </q-card-section>
+      <ResponsableTable
+        :rows="responsables"
+        @add="toggleForm"
+        @eliminar="eliminarResponsable"
+        @asignar="iniciarAsignacion"
+      />
+    </q-card-section>
 
-      <q-card-section v-else>
-        <AsignarAlmacenes
-          :responsable-id="responsableSeleccionado.id"
-          :responsable-nombre="responsableSeleccionado.nombre"
-          :almacenes="almacenes"
-          :model-value="formData"
-          @submit="handleSubmit"
-          @volver="cancelarAsignacion"
-        />
+    <q-card-section v-else>
+      <AsignarAlmacenes
+        :responsableId="responsableSeleccionado"
+        :responsable-nombre="responsableSeleccionado"
+        :almacenes="almacenes"
+        :model-value="formData"
+        @submit="handleSubmit"
+        @volver="cancelarAsignacion"
+      />
 
-        <q-separator class="q-my-md" />
+      <q-separator class="q-my-md" />
 
-        <AlmacenTable :rows="almacenesAsignados" @eliminar="eliminarAlmacen" />
-      </q-card-section>
-    </q-card>
+      <AlmacenTable :rows="almacenesAsignados" @eliminar="eliminarAlmacen" />
+    </q-card-section>
   </q-page>
 </template>
 
@@ -42,7 +48,9 @@ import { validarUsuario } from 'src/composables/FuncionesG'
 import { api } from 'boot/axios'
 import { useQuasar } from 'quasar'
 import { objectToFormData } from 'src/composables/FuncionesGenerales'
-
+import { obtenerPermisosPagina } from 'src/composables/FuncionesG'
+const [lectura, escritura, editar, eliminar] = obtenerPermisosPagina()
+console.log(lectura, escritura, editar, eliminar)
 const $q = useQuasar()
 const contenidousuario = validarUsuario()
 const idempresa = contenidousuario[0]?.empresa?.idempresa
@@ -74,7 +82,6 @@ function cargarTabla() {
   loadUsuarios()
 }
 function eliminarResponsable(id) {
-  responsables.value = responsables.value.filter((r) => r.id !== id)
   $q.dialog({
     title: 'Confirmar',
     message: `¿Eliminar Usuario ?`,
@@ -103,7 +110,7 @@ function eliminarResponsable(id) {
 const cargarAlmacen = async () => {
   try {
     const response = await api.get(`listaAlmacen/${idempresa}`) // ejemplo
-    
+
     const filtrado = response.data.filter(
       (obj) => obj.estado == 1 && !almacenesAsignados.value.some((v) => v.idalmacen === obj.id),
     )

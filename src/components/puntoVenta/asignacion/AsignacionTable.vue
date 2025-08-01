@@ -1,12 +1,12 @@
 <template>
   <div>
-    <div class="row q-mt-md">
-      <div class="col-md-4"></div>
-      <div class="col-md-4">
+    <div class="flex justify-center">
+      <div style="width: 400px">
+        <label for="alamacen">Almacén</label>
         <q-select
           v-model="filterWarehouse"
           :options="warehouses"
-          label="Filtrar por almacén"
+          id="alamacen"
           outlined
           dense
           emit-value

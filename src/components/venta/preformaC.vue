@@ -1,269 +1,3 @@
-<!-- <template>
-  <q-page class="q-ma-lg">
-    <div class="forms">
-      <div style="display: flex; justify-content: space-between">
-        <div class="col-12 col-sm-4">
-          <q-btn
-            label="Volver"
-            icon="arrow_back"
-            color="primary"
-            size="sm"
-            @click="$emit('volver')"
-            class="q-mr-sm"
-          />
-          <q-btn label="Inicio" icon="home" color="primary" size="sm" @click="handleContinue" />
-        </div>
-        <div class="col-12 col-sm-8 text-center">
-          <h4 class="q-ma-none" style="font-size: 20px">COMPROBANTE DE VENTA</h4>
-        </div>
-        <div></div>
-      </div>
-
-      <q-form @submit="onSubmit" class="q-gutter-md">
-        <q-card class="q-mb-md">
-          <q-card-section>
-            <h5 class="q-my-sm text-primary" style="font-size: 15px">Datos del Cliente y Fecha</h5>
-            <div class="row q-col-gutter-md">
-              <div class="col-12 col-md-4">
-                <q-select
-                  v-model="formData.cliente"
-                  label="Cliente*"
-                  :options="filteredClients"
-                  option-label="label"
-                  option-value="value"
-                  use-input
-                  emit-value
-                  map-options
-                  @filter="filterClientes"
-                  @update:model-value="actualizarSucursales"
-                  :rules="[(val) => !!val || 'Seleccione un cliente']"
-                  clearable
-                >
-                  <template v-slot:no-option>
-                    <q-item>
-                      <q-item-section class="text-grey"> No hay resultados </q-item-section>
-                    </q-item>
-                  </template>
-                </q-select>
-              </div>
-
-              <div class="col-12 col-md-4">
-                <q-select
-                  v-model="formData.sucursal"
-                  label="Sucursal*"
-                  :options="branchOptions"
-                  option-label="label"
-                  option-value="value"
-                  :disable="!formData.cliente"
-                  required
-                />
-              </div>
-
-              <div class="col-12 col-md-4">
-                <q-input v-model="formData.fecha" label="Fecha*" type="date" required />
-              </div>
-              <div class="col-12 col-md-4">
-                <q-btn color="blue" @click="RegistrarCliente">+ cliente</q-btn>
-              </div>
-            </div>
-          </q-card-section>
-        </q-card>
-
-        <q-card class="q-mb-md">
-          <q-card-section>
-            <h5 class="q-my-sm text-primary" style="font-size: 15px">Método de Pago</h5>
-            <div class="q-gutter-sm q-mb-md">
-              <q-radio v-model="formData.variablePago" val="directo" label="Pago Único" />
-              <q-radio
-                v-model="formData.variablePago"
-                val="dividido"
-                label="Método de Pago Dividido"
-              />
-            </div>
-
-            <q-separator spaced="md" />
-
-            <div v-if="formData.variablePago === 'directo'" class="row q-col-gutter-md q-pt-md">
-              <div class="col-12 col-md-4">
-                <q-select
-                  v-model="formData.canal"
-                  label="Canal de venta*"
-                  :options="salesChannels"
-                  option-label="label"
-                  option-value="value"
-                  required
-                  :rules="[(val) => !!val || 'Seleccione un canal']"
-                />
-              </div>
-            </div>
-
-            <div v-else-if="formData.variablePago === 'dividido'" class="q-pt-md">
-              <div
-                v-for="(payment, index) in formData.pagosDivididos"
-                :key="index"
-                class="row q-col-gutter-md q-mb-sm items-center"
-              >
-                <div class="col-12 col-md-4">
-                  <q-select
-                    v-model="payment.canal"
-                    label="Canal de venta"
-                    :options="salesChannels"
-                    option-label="label"
-                    option-value="value"
-                    :rules="[(val) => !!val || 'Seleccione un canal']"
-                  />
-                </div>
-                <div class="col-12 col-md-3">
-                  <q-input
-                    v-model="payment.monto"
-                    :label="'Monto' + ' (' + currencyStore.simbolo + ')'"
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    required
-                    @update:model-value="calculateRemainingAmount(index)"
-                    :rules="[(val) => !!val || 'Campo Obligatorio']"
-                  />
-                </div>
-                <div class="col-12 col-md-3">
-                  <q-input
-                    v-model="payment.porcentaje"
-                    label="Porcentaje (%)"
-                    type="number"
-                    min="0"
-                    max="100"
-                    step="0.01"
-                    @update:model-value="calculateAmountFromPercentage(index)"
-                    :rules="[(val) => !!val || 'Campo Obligatorio']"
-                  />
-                </div>
-                <div class="col-12 col-md-2 text-right">
-                  <q-btn
-                    v-if="formData.pagosDivididos.length > 1"
-                    icon="delete"
-                    color="negative"
-                    flat
-                    round
-                    @click="removePaymentMethod(index)"
-                  />
-                </div>
-              </div>
-              <q-btn
-                label="Agregar Método de Pago"
-                icon="add"
-                color="secondary"
-                @click="addPaymentMethod"
-                class="q-mt-md"
-              />
-              <div class="q-mt-lg">
-                <p class="text-subtitle1">
-                  **Total Pagado:** {{ totalPaidAmount.toFixed(2) }} {{ currencyStore.simbolo }}
-                </p>
-                <p class="text-subtitle1">
-                  **Restante por Pagar:** {{ remainingAmount.toFixed(2) }}
-                  {{ currencyStore.simbolo }}
-                </p>
-                <q-banner
-                  v-if="remainingAmount !== 0"
-                  dense
-                  rounded
-                  class="bg-warning text-white q-mt-sm"
-                >
-                  El monto total pagado no coincide con la venta total.
-                </q-banner>
-              </div>
-            </div>
-          </q-card-section>
-        </q-card>
-
-        <q-card class="q-mb-md">
-          <q-card-section>
-            <h5 class="q-my-sm text-primary" style="font-size: 15px">Condiciones de Crédito</h5>
-            <div class="col-12 q-mb-md">
-              <q-toggle
-                v-model="formData.credito"
-                label="¿A crédito?"
-                left-label
-                @update:model-value="toggleCredit"
-              />
-            </div>
-
-            <div v-if="formData.credito" class="row q-col-gutter-md q-pt-md">
-              <div class="col-12 col-md-4">
-                <q-input
-                  v-model="formData.cantidadPagos"
-                  label="Cantidad de pagos*"
-                  type="number"
-                  min="0"
-                  required
-                  @update:model-value="calculatePayments"
-                  :rules="[(val) => !!val || 'Campo Obligatorio']"
-                />
-              </div>
-
-              <div class="col-12 col-md-4">
-                <q-input
-                  v-model="formData.montoPagos"
-                  label="Monto de pagos*"
-                  :disable="!formData.credito"
-                >
-                  <template v-slot:append>
-                    <q-btn flat :label="currencyStore.simbolo" />
-                  </template>
-                </q-input>
-              </div>
-
-              <div class="col-12 col-md-4">
-                <q-select
-                  v-model="formData.periodo"
-                  label="Período establecido*"
-                  :options="periodOptions"
-                  option-label="label"
-                  option-value="value"
-                  emit-value
-                  map-options
-                  required
-                  @update:model-value="calculateDueDate"
-                  :rules="[(val) => !!val || 'Campo Obligatorio']"
-                />
-              </div>
-
-              <div v-if="formData.periodo === 0" class="col-12 col-md-4">
-                <q-input
-                  v-model="formData.plazoPersonalizado"
-                  label="Plazo total (días)*"
-                  type="number"
-                  min="0"
-                  required
-                  @update:model-value="calculateDueDate"
-                  :rules="[(val) => !!val || 'Campo Obligatorio']"
-                />
-              </div>
-
-              <div class="col-12 col-md-4">
-                <q-input
-                  v-model="formData.fechaLimite"
-                  label="Fecha límite*"
-                  type="date"
-                  :disable="true"
-                />
-              </div>
-            </div>
-          </q-card-section>
-        </q-card>
-
-        <div class="row q-col-gutter-md">
-          <div class="col-12 text-right">
-            <q-btn label="Registrar" type="submit" color="primary" />
-          </div>
-        </div>
-      </q-form>
-    </div>
-  </q-page>
-  <q-dialog v-model="showAddModal">
-    <MyRegistrationForm @recordCreated="handleRecordCreated" />
-  </q-dialog>
-</template> -->
 <template>
   <q-page class="q-ma-lg">
     <div class="forms">
@@ -616,45 +350,46 @@
     <q-dialog v-model="showAddModal">
       <MyRegistrationForm @recordCreated="handleRecordCreated" />
     </q-dialog>
+
+    <modal-r v-model="mostrar" title="Factura Venta" @close="cerrarModal">
+      <iframe
+        v-if="pdfData"
+        :src="pdfData"
+        style="width: 100%; height: 100%; border: none"
+      ></iframe>
+    </modal-r>
   </q-page>
+  <div class="q-pa-md q-gutter-sm">
+    <q-dialog v-model="dialog" :position="position" :id="idcliente" :data="detalleVenta">
+      <q-card class="dialog-card">
+        <q-card-section class="header-gradient q-pa-md text-white flex items-center">
+          <q-icon name="check_circle" size="md" class="q-mr-sm" />
+          <div class="text-h6 text-weight-bold">Confirmación de Envío</div>
+        </q-card-section>
+
+        <q-card-section class="q-pt-lg q-pb-md">
+          <div class="text-body1 text-grey-8 q-mb-sm">
+            La Factura ha sido generado correctamente.
+          </div>
+          <div class="text-body1 text-grey-8">
+            ¿Desea enviarlo al correo electrónico del cliente?
+          </div>
+        </q-card-section>
+
+        <q-card-actions align="right" class="q-px-md q-pb-md">
+          <q-btn flat label="Cancelar" color="grey-7" @click="cancelar()" class="q-px-md" />
+          <q-btn
+            unelevated
+            label="Enviar Comprobante"
+            class="button-primary q-px-md"
+            @click="confirmar(idcliente, detalleVenta)"
+          />
+        </q-card-actions>
+      </q-card>
+    </q-dialog>
+  </div>
 </template>
 
-<style scoped>
-.section-header {
-  display: flex;
-  align-items: center;
-  margin-bottom: 16px;
-}
-
-.radio-with-icon {
-  display: flex;
-  align-items: center;
-}
-
-.toggle-with-icon {
-  display: flex;
-  align-items: center;
-}
-
-.payment-summary p {
-  display: flex;
-  align-items: center;
-}
-
-.forms {
-  margin: 0 auto;
-}
-
-.q-card {
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-.q-input,
-.q-select {
-  margin-bottom: 8px;
-}
-</style>
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
 import { useQuasar } from 'quasar'
@@ -664,6 +399,15 @@ import { defineEmits } from 'vue'
 import { useCurrencyStore } from 'src/stores/currencyStore'
 import MyRegistrationForm from '../clientes/admin/modalClienteForm.vue'
 import { objectToFormData } from 'src/composables/FuncionesGenerales'
+import ModalR from 'src/components/ModalR.vue'
+import { PDFdetalleVentaInicio } from 'src/utils/pdfReportGenerator'
+import { PDFenviarFacturaCorreoAlInicio } from 'src/utils/pdfReportGenerator'
+const dialog = ref(false)
+const position = ref('top')
+const idcliente = ref('')
+let resolver = null
+const pdfData = ref(null)
+const detalleVenta = ref([])
 const currencyStore = useCurrencyStore()
 // ====================== CONSTANTES Y UTILIDADES ======================
 const ERROR_TYPES = {
@@ -725,6 +469,7 @@ const periodOptions = [
   { label: '90 días', value: 90 },
 ]
 const filteredClients = ref([]) // This will hold the clients currently displayed in the q-select (this is the one that gets updated by filterClientes)
+const mostrar = ref(false)
 
 // ====================== COMPUTED ======================
 const filterClientes = (val, update) => {
@@ -784,30 +529,7 @@ const remainingAmount = computed(() => {
 })
 
 // ====================== FUNCIONES ======================
-// const filterClientes = (val, update) => {
-//   // <--- Crucial: update is the second argument!
-//   // console.log('Input value:', val);
-//   // console.log('Update function:', update);
 
-//   // You almost always call `update` here
-//   update(() => {
-//     // Convert input value to lowercase and trim spaces
-//     const needle = val ? val.toLowerCase().trim() : ''
-
-//     if (val === '') {
-//       // If input is empty, show all clients
-//       filteredClients.value = clients.value
-//     } else {
-//       // Filter the original `clients.value` array
-//       filteredClients.value = clients.value.filter((client) => {
-//         const clientLabel = (client.label ?? '').toLowerCase().trim()
-//         const clientNombreComercial = (client.nombrecomercial ?? '').toLowerCase().trim()
-
-//         return clientLabel.includes(needle) || clientNombreComercial.includes(needle)
-//       })
-//     }
-//   })
-// }
 const validarUsuario = () => {
   const user = JSON.parse(localStorage.getItem('yofinanciero'))
   return user || (window.location.href = '/login')
@@ -1039,17 +761,33 @@ const onSubmit = async () => {
         'Content-Type': 'multipart/form-data',
       },
     })
-
     console.log('Respuesta de la API:', response)
+    const data = response.data
 
-    if (!response.data || response.data.estado !== 'exito') {
-      throw { message: response.data?.mensaje || 'Error al procesar la venta', response }
+    if (data.estado === 'exito') {
+      $q.notify({
+        type: 'positive',
+        message: 'Venta realizada exitosamente.',
+      })
+      resetForm()
+      $q.dialog({
+        title: 'Venta Exitosa',
+        message: 'Su comprobante está listo. ¿Desea verlo?',
+        cancel: true,
+        persistent: true,
+      })
+        .onOk(() => {
+          generarFactura(data.idcliente, data.idventa)
+        })
+        .onCancel(() => {
+          emit('venta-registrada')
+        })
+    } else {
+      $q.notify({
+        type: 'negative',
+        message: data.mensaje || 'Error al registrar la cotización.',
+      })
     }
-
-    //  Éxito
-    $q.notify({ type: 'positive', message: 'Venta registrada con éxito' })
-    emit('venta-registrada')
-    resetForm()
   } catch (error) {
     // 🧠 Registro de errores
     const errorType = error.type || ERROR_TYPES.API
@@ -1077,6 +815,54 @@ const onSubmit = async () => {
   } finally {
     if (loadingShown) $q.loading.hide()
   }
+}
+
+const generarFactura = async (idcliente, idventa) => {
+  mostrar.value = true
+  try {
+    const response = await api.get(`detallesVenta/${idventa}/${CONSTANTES.idempresa}`) // Cambia a tu ruta real
+    console.log(response.data)
+    detalleVenta.value = response.data
+    const doc = await PDFdetalleVentaInicio(detalleVenta.value)
+    // doc.save('proveedores.pdf') ← comenta o elimina esta línea
+    //doc.output('dataurlnewwindow') // ← muestra el PDF en una nueva ventana del navegador
+    pdfData.value = doc.output('dataurlstring') // muestra el pdf en un modal
+    open('right', idcliente, detalleVenta.value)
+  } catch (error) {
+    console.error('Error al cargar datos:', error)
+    $q.notify({
+      type: 'negative',
+      message: 'No se pudieron cargar los datos',
+    })
+  }
+  console.log(idcliente, idventa)
+}
+const cerrarModal = () => {
+  emit('venta-registrada')
+}
+function open(pos, idcot, data) {
+  position.value = pos
+  dialog.value = true
+  idcliente.value = idcot
+  detalleVenta.value = data
+  console.log(idcliente.value, detalleVenta.value)
+
+  return new Promise((resolve) => {
+    resolver = resolve
+  })
+}
+const confirmar = (idcliente, data) => {
+  resolver?.(true)
+  //JSON.parse(JSON.stringify(detalleVenta.value))
+  console.log(idcliente, data)
+  PDFenviarFacturaCorreoAlInicio(idcliente, data, $q)
+  dialog.value = false
+}
+
+const cancelar = () => {
+  resolver?.(false)
+  dialog.value = false
+  console.log('Cancelado')
 }
 // ====================== MANEJO DE ERRORES ======================
 const getEnhancedErrorMessage = (error) => {
@@ -1207,3 +993,83 @@ onMounted(() => {
   cargarCanales()
 })
 </script>
+<style scoped>
+.section-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.radio-with-icon {
+  display: flex;
+  align-items: center;
+}
+
+.toggle-with-icon {
+  display: flex;
+  align-items: center;
+}
+
+.payment-summary p {
+  display: flex;
+  align-items: center;
+}
+
+.forms {
+  margin: 0 auto;
+}
+
+.q-card {
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.q-input,
+.q-select {
+  margin-bottom: 8px;
+}
+</style>
+<style scoped>
+.dialog-card {
+  width: 400px; /* Un poco más de ancho para mejor legibilidad */
+  border-radius: 8px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  overflow: hidden; /* Asegura que el gradiente se vea bien en los bordes */
+}
+
+.header-gradient {
+  background: linear-gradient(to right, #219286, #044e49);
+}
+
+.text-h6 {
+  font-family: 'Roboto', sans-serif;
+  letter-spacing: 0.5px;
+}
+
+.text-body1 {
+  font-family: 'Open Sans', sans-serif;
+  line-height: 1.6;
+}
+
+.button-primary {
+  background: linear-gradient(to right, #219286, #044e49);
+  color: white;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+  padding: 8px 20px;
+  border-radius: 6px;
+}
+
+.q-btn:hover:not(.disabled) {
+  opacity: 0.9;
+  transition: opacity 0.3s ease;
+}
+
+/* Color de acento para el icono de confirmación */
+.q-icon[name='check_circle'] {
+  color: #f2c037; /* Color de acento */
+}
+
+/* Quitar el q-linear-progress si no es funcional aquí, o darle un propósito */
+/* .q-linear-progress { display: none; } */
+</style>

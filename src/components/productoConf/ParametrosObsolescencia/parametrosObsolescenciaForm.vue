@@ -1,47 +1,52 @@
 <template>
   <q-form @submit="handleSubmit">
-    <q-card-section>
-      <div class="text-h6">Registrar Parametros Obsolescencia</div>
-    </q-card-section>
-
-    <q-card-section>
-      <q-input
-        v-model="localData.nombre"
-        label="Parámetro*"
-        :rules="[(val) => !!val || 'Campo requerido']"
-        outlined
-        dense
-      />
-      <q-input
-        v-model="localData.valor"
-        label="Valor*"
-        :rules="[(val) => !!val || 'Campo requerido']"
-        outlined
-        dense
-      />
-      <q-select
-        v-model="localData.color"
-        :options="colores"
-        label="Color*"
-        :rules="[(val) => !!val || 'Seleccione un color']"
-        outlined
-        dense
-        map-options
-        emit-value
-        option-value="value"
-        option-label="label"
-      >
-        <template v-slot:option="scope">
-          <q-item v-bind="scope.itemProps">
-            <q-item-section avatar>
-              <q-icon name="lens" :style="{ color: scope.opt.value }" />
-            </q-item-section>
-            <q-item-section>
-              <q-item-label>{{ scope.opt.label }}</q-item-label>
-            </q-item-section>
-          </q-item>
-        </template>
-      </q-select>
+    <q-card-section class="row q-col-gutter-x-md">
+      <div class="col-12 col-md-4">
+        <label for="parametro">Parámetro*</label>
+        <q-input
+          v-model="localData.nombre"
+          id="parametro"
+          :rules="[(val) => !!val || 'Campo requerido']"
+          outlined
+          dense
+        />
+      </div>
+      <div class="col-12 col-md-4">
+        <label for="valor">Valor*</label>
+        <q-input
+          v-model="localData.valor"
+          id="valor"
+          :rules="[(val) => !!val || 'Campo requerido']"
+          outlined
+          dense
+        />
+      </div>
+      <div class="col-12 col-md-4">
+        <label for="color">Color*</label>
+        <q-select
+          v-model="localData.color"
+          :options="colores"
+          id="color"
+          :rules="[(val) => !!val || 'Seleccione un color']"
+          outlined
+          dense
+          map-options
+          emit-value
+          option-value="value"
+          option-label="label"
+        >
+          <template v-slot:option="scope">
+            <q-item v-bind="scope.itemProps">
+              <q-item-section avatar>
+                <q-icon name="lens" :style="{ color: scope.opt.value }" />
+              </q-item-section>
+              <q-item-section>
+                <q-item-label>{{ scope.opt.label }}</q-item-label>
+              </q-item-section>
+            </q-item>
+          </template>
+        </q-select>
+      </div>
     </q-card-section>
 
     <q-card-actions align="right">

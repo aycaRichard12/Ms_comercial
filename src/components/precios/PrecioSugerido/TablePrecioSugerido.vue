@@ -1,68 +1,65 @@
 <template>
-  <div class="q-pa-md">
-    <!-- Botón Cancelar Registro -->
-    <div class="row q-col-gutter-md q-mb-sm items-center justify-between">
-      <!-- Filtros -->
-      <div class="row q-col-gutter-md">
-        <q-select
-          v-model="filtroAlmacen"
-          :options="almacenes"
-          label="Almacén"
-          placeholder="Seleccione una opción"
-          style="min-width: 200px"
-          @update:model-value="cargarCategoriaPrecio"
-        />
-        <q-select
-          v-model="filtroscategoria"
-          :options="categorias"
-          label="Categoria"
-          placeholder="Seleccione una Categoría"
-          style="min-width: 200px"
-        />
-      </div>
-      <q-btn
-        flat
-        icon="print"
-        label="Imprimir"
-        color="info"
-        @click="onPrintReport"
-        title="Imprimir listado"
+  <!-- Botón Cancelar Registro -->
+  <div class="row q-col-gutter-x-md q-mb-md">
+    <div class="col-12 col-md-4">
+      <label for="almacen">Almacén</label>
+      <q-select
+        v-model="filtroAlmacen"
+        :options="almacenes"
+        id="almacen"
+        dense
+        outlined
+        @update:model-value="cargarCategoriaPrecio"
       />
     </div>
-
-    <!-- Tabla -->
-    <q-table
-      :rows="filtrados"
-      :columns="columnas"
-      row-key="id"
-      flat
-      bordered
-      :filter="filter"
-      :loading="loading"
-    >
-      <template v-slot:top-right>
-        <q-input
-          dense
-          debounce="300"
-          v-model="filter"
-          placeholder="Buscar..."
-          title="Buscar por código o descripción"
-        />
-      </template>
-      <template #body-cell-opciones="props">
-        <q-td :props="props" class="text-nowrap">
-          <q-btn
-            flat
-            dense
-            icon="edit"
-            color="info"
-            @click="editarProducto(props.row)"
-            title="Editar producto"
-          />
-        </q-td>
-      </template>
-    </q-table>
+    <div class="col-12 col-md-4">
+      <label for="categoria">Categoria</label>
+      <q-select v-model="filtroscategoria" :options="categorias" dense outlined />
+    </div>
+    <div class="col-12 col-md-4 flex justify-end">
+      <q-btn color="info" outline @click="onPrintReport" class="btn-res q-mt-lg">
+        <q-icon name="picture_as_pdf" class="icono" />
+        <span class="texto">Vista Previa PDF</span>
+      </q-btn>
+    </div>
+    <!-- Filtros -->
   </div>
+  <div class="row justify-end">
+    <div class="q-mb-md">
+      <label for="buscar">Buscar...</label>
+      <q-input v-model="filter" dense outlined debounce="300" style="background-color: white">
+        <template v-slot:append>
+          <q-icon name="search" />
+        </template>
+      </q-input>
+    </div>
+  </div>
+
+  <!-- Tabla -->
+  <q-table
+    :rows="filtrados"
+    :columns="columnas"
+    row-key="id"
+    flat
+    bordered
+    :filter="filter"
+    :loading="loading"
+  >
+    <template v-slot:top-right> </template>
+    <template #body-cell-opciones="props">
+      <q-td :props="props" class="text-nowrap">
+        <q-btn
+          flat
+          dense
+          icon="edit"
+          color="info"
+          @click="editarProducto(props.row)"
+          title="Editar producto"
+        />
+      </q-td>
+    </template>
+  </q-table>
+
   <q-dialog v-model="mostrarModal" persistent full-width full-height>
     <q-card class="q-pa-md" style="height: 100%; max-width: 100%">
       <q-card-section class="row items-center q-pb-none">

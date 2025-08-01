@@ -1,4 +1,21 @@
 import { URL_APICM } from './services'
+import { useRoute } from 'vue-router'
+import { useMenuStore } from 'src/stores/permitidos'
+import { idusuario_md5 } from 'src/composables/FuncionesGenerales'
+
+export function obtenerPermisosPagina() {
+  const menuStore = useMenuStore()
+  const route = useRoute()
+  const codigoPagina = route.path.replace(/^\//, '') + `-${idusuario_md5()}`
+  console.log(codigoPagina)
+
+  return menuStore.permisoPagina(codigoPagina)
+}
+export function verificarexistenciapagina(ruta) {
+  const menuStore = useMenuStore()
+  const codigoPagina = ruta + `-${idusuario_md5()}`
+  return menuStore.existePagina(codigoPagina)
+}
 export function generarCabeceraHTML(datos) {
   //const tableHeader = datos.tableHeader; vapp
   const columns = datos
@@ -664,4 +681,104 @@ export function buscarYClickearPorDataValue(dataValue) {
   // Si llegamos aquí, no se encontró el enlace
   console.log(`No se encontró ningún enlace con data-value: ${dataValue}`)
   return false
+}
+
+export function mes_a_Esp(date) {
+  console.log(date)
+  let formato = date.split(' ')
+  let mes = formato[0]
+  let respuesta = ''
+  switch (mes) {
+    case 'DECEMBER':
+      respuesta = 'DICIEMBRE '
+      break
+    case 'NOVEMBER':
+      respuesta = 'NOVIEMBRE '
+      break
+    case 'OCTOBER':
+      respuesta = 'OCTUBRE '
+      break
+    case 'SEPTEMBER':
+      respuesta = 'SEPTIEMBRE '
+      break
+    case 'AUGUST':
+      respuesta = 'AGOSTO '
+      break
+    case 'JULY':
+      respuesta = 'JULIO '
+      break
+
+    case 'JUNE':
+      respuesta = 'JUNIO '
+      break
+    case 'MAY':
+      respuesta = 'MAYO '
+      break
+    case 'APRIL':
+      respuesta = 'ABRIL '
+      break
+    case 'MARCH':
+      respuesta = 'MARZO '
+      break
+    case 'FEBRUARY':
+      respuesta = 'FEBRERO '
+      break
+    case 'JANUARY':
+      respuesta = 'ENERO '
+      break
+    default:
+      respuesta = date
+      break
+  }
+  return respuesta
+}
+export function obtenerUbicacion() {
+  return new Promise((resolve, reject) => {
+    if (!navigator.geolocation) {
+      return reject(new Error('La geolocalización no está disponible en este navegador'))
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        resolve({
+          lat: position.coords.latitude,
+          lng: position.coords.longitude,
+        })
+      },
+      (err) => {
+        let mensaje = ''
+
+        switch (err.code) {
+          case 1:
+            mensaje = 'Permiso de geolocalización denegado. Habilita el permiso desde el navegador.'
+            break
+          case 2:
+            mensaje = 'La ubicación no está disponible. Verifica tu conexión o señal GPS.'
+            break
+          case 3:
+            mensaje = 'La solicitud de ubicación ha expirado. Intenta nuevamente.'
+            break
+          default:
+            mensaje = 'Error desconocido al obtener la ubicación.'
+        }
+
+        console.error('Error en geolocation:', err)
+        reject(new Error(mensaje))
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+      },
+    )
+  })
+}
+
+export function msgNegative($q) {
+  $q.notify({
+    message:
+      'Su usuario no tiene habilitado el permiso. Solicite acceso al administrador del sistema.',
+    color: 'warning',
+    icon: 'info',
+    position: 'top-right',
+  })
 }

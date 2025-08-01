@@ -1,63 +1,67 @@
 <template>
-  <q-card class="q-pa-md">
-    <q-card-section>
-      <q-form @submit.prevent="onSubmit">
-        <div class="row q-col-gutter-md">
-          <div class="col-md-3">
-            <q-input
-              v-model="formData.fecha"
-              label="Fecha *"
-              id="fechaMOV"
-              lazy-rules
-              :rules="[(val) => (val && val.length > 0) || 'Por favor ingrese la fecha']"
-            />
-          </div>
-          <div class="col-md-3">
-            <q-input
-              v-model="formData.descripcion"
-              label="Descripción *"
-              id="descripcionMOV"
-              lazy-rules
-              :rules="[(val) => (val && val.length > 0) || 'Por favor ingrese la descripción']"
-            />
-          </div>
-          <div class="col-md-3">
-            <q-select
-              v-model="formData.almacenorigen"
-              :options="originStores"
-              label="Almacén Origen *"
-              emit-value
-              map-options
-              lazy-rules
-              :rules="[
-                (val) =>
-                  (val !== null && val !== '') || 'Por favor seleccione un almacén de origen',
-              ]"
-            />
-          </div>
-          <div class="col-md-3">
-            <q-select
-              v-model="formData.almacendestino"
-              :options="destinationStores"
-              label="Almacén Destino *"
-              emit-value
-              map-options
-              lazy-rules
-              :rules="[
-                (val) =>
-                  (val !== null && val !== '') || 'Por favor seleccione un almacén de destino',
-              ]"
-            />
-          </div>
-        </div>
+  <q-form @submit.prevent="onSubmit">
+    <div class="row q-col-gutter-md">
+      <div class="col-12 col-md-3">
+        <label for="fecha">Fecha *</label>
+        <q-input
+          v-model="formData.fecha"
+          dense
+          outlined
+          id="fechaMOV"
+          lazy-rules
+          :rules="[(val) => (val && val.length > 0) || 'Por favor ingrese la fecha']"
+        />
+      </div>
+      <div class="col-12 col-md-3">
+        <label for="descripcion">Descripción *</label>
+        <q-input
+          v-model="formData.descripcion"
+          id="descripcionMOV"
+          dense
+          outlined
+          lazy-rules
+          :rules="[(val) => (val && val.length > 0) || 'Por favor ingrese la descripción']"
+        />
+      </div>
+      <div class="col-12 col-md-3">
+        <label for="origen">Almacén Origen *</label>
+        <q-select
+          v-model="formData.almacenorigen"
+          :options="originStores"
+          id="origen"
+          dense
+          outlined
+          emit-value
+          map-options
+          lazy-rules
+          :rules="[
+            (val) => (val !== null && val !== '') || 'Por favor seleccione un almacén de origen',
+          ]"
+        />
+      </div>
+      <div class="col-12 col-md-3">
+        <label for="destino">Almacén Destino *</label>
+        <q-select
+          v-model="formData.almacendestino"
+          :options="destinationStores"
+          id="destino"
+          dense
+          outlined
+          emit-value
+          map-options
+          lazy-rules
+          :rules="[
+            (val) => (val !== null && val !== '') || 'Por favor seleccione un almacén de destino',
+          ]"
+        />
+      </div>
+    </div>
 
-        <q-card-actions align="right">
-          <q-btn label="Cancelar" flat color="negative" @click="$emit('cancel')" />
-          <q-btn label="Guardar" type="submit" color="primary" />
-        </q-card-actions>
-      </q-form>
-    </q-card-section>
-  </q-card>
+    <q-card-actions align="right">
+      <q-btn label="Cancelar" flat color="negative" @click="$emit('cancel')" />
+      <q-btn label="Guardar" type="submit" color="primary" />
+    </q-card-actions>
+  </q-form>
 </template>
 
 <script setup>

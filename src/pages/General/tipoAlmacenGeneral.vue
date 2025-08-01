@@ -1,7 +1,11 @@
 <template>
-  <div class="q-pa-md">
+  <q-page class="q-pa-md q-pa-md-md q-pa-lg-lg">
     <q-dialog v-model="showForm" persistent>
-      <q-card style="min-width: 400px; max-width: 600px">
+      <q-card class="responsive-dialog">
+        <q-card-section class="bg-primary text-white text-h6 flex justify-between">
+          <div>Registrar Tipo Cliente</div>
+          <q-btn icon="close" flat dense round @click="showForm = false"></q-btn>
+        </q-card-section>
         <q-card-section class="q-pa-none">
           <TipoAlmacenForm
             :model-value="formData"
@@ -20,7 +24,7 @@
       @delete="deleteItem"
       @toggle-status="changeStatus"
     />
-  </div>
+  </q-page>
 </template>
 
 <script setup>

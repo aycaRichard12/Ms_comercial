@@ -7,7 +7,7 @@ export function idempresa_md5() {
   } else {
     alert('Hubo un problema con la sesion, Por favor vuelva a iniciar sesion.')
     console.log('Los elementos no existen en localStorage')
-    localStorage.clear()
+    window.location.href = '/app/dashboard'
   }
 }
 export function idusuario_md5() {
@@ -17,8 +17,24 @@ export function idusuario_md5() {
   } else {
     alert('Hubo un problema con la sesion, Por favor vuelva a iniciar sesion.')
     console.log('Los elementos no existen en localStorage')
-    localStorage.clear()
+    window.location.href = '/app/dashboard'
   }
+}
+export function TipoFactura() {
+  const contenidousuario = JSON.parse(localStorage.getItem('yofinanciero'))
+  if (contenidousuario) {
+    return contenidousuario?.[0]?.factura?.tipo
+  } else {
+    alert('Hubo un problema con la sesion, Por favor vuelva a iniciar sesion.')
+    console.log('Los elementos no existen en localStorage')
+    window.location.href = '/app/dashboard'
+  }
+}
+
+export function obtenerEstadoFactura() {
+  const objetoDesdeLocalStorage = JSON.parse(localStorage.getItem('yofinanciero'))
+  console.log(objetoDesdeLocalStorage)
+  return Object.values(objetoDesdeLocalStorage[0].factura).every((valor) => valor !== '')
 }
 export function validarUsuario() {
   const contenidousuario = JSON.parse(localStorage.getItem('yofinanciero'))
@@ -28,7 +44,7 @@ export function validarUsuario() {
     alert('Hubo un problema con la sesion, Por favor vuelva a iniciar sesion.')
     console.log('Los elementos no existen en localStorage')
     localStorage.clear()
-    window.location.assign('../../app/')
+    window.location.href = '/app/dashboard'
   }
 }
 

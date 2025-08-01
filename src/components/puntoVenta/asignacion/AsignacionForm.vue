@@ -10,34 +10,36 @@
           @click="$emit('volver')"
         />
       </div>
-      <div class="col-md-8 text-center">
-        <div class="text-h6">Asignación de puntos de venta</div>
-        <div class="text-subtitle1">{{ user.name }}</div>
-      </div>
     </div>
 
     <q-form @submit.prevent="$emit('submit', { warehouse, pointOfSale })">
-      <div class="row q-col-gutter-md">
-        <div class="col-md-6">
+      <div class="title-container">
+        <div class="title">Asignación de puntos de venta</div>
+        <div class="subtitle">{{ user.name }}</div>
+      </div>
+      <q-card-section class="row q-col-gutter-x-md justify-center">
+        <div class="col-12 col-md-4">
+          <label for="almacen">Almacén*</label>
           <q-select
             v-model="warehouse"
             :options="warehouses"
-            label="Almacén*"
             outlined
             dense
             emit-value
             map-options
+            id="almacen"
             option-value="id"
             option-label="name"
             @update:model-value="$emit('load', warehouse)"
           />
         </div>
 
-        <div class="col-md-6">
+        <div class="col-12 col-md-4">
+          <label for="puntoventa">Punto de venta*</label>
           <q-select
             v-model="pointOfSale"
             :options="pointsOfSale"
-            label="Punto de venta*"
+            id="puntoventa"
             outlined
             dense
             emit-value
@@ -46,11 +48,10 @@
             option-label="name"
           />
         </div>
-
-        <div class="col-12 text-center">
-          <q-btn type="submit" color="primary" label="Registrar" />
-        </div>
-      </div>
+      </q-card-section>
+      <q-card-section class="flex justify-center">
+        <q-btn type="submit" color="primary" label="Registrar"
+      /></q-card-section>
     </q-form>
   </div>
 </template>

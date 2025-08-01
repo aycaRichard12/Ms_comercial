@@ -1,25 +1,36 @@
 <template>
-  <div class="q-gutter-sm q-mb-md">
-    <q-row class="q-col-gutter-md items-center">
-      <!-- Botones a la izquierda -->
-      <q-col cols="12" sm="6" class="flex q-gutter-sm">
-        <q-btn label="Agregar" icon="add" color="primary" @click="$emit('add')" />
-      </q-col>
-    </q-row>
+  <div class="flex justify-between">
+    <q-btn color="primary" @click="$emit('add')" class="btn-res q-mt-lg">
+      <q-icon name="add" class="icono" />
+      <span class="texto">Agregar</span>
+    </q-btn>
+    <div>
+      <label for="buscar"> Buscar...</label>
+      <q-input
+        v-model="search"
+        id="buscar"
+        dense
+        outlined
+        debounce="300"
+        class="q-mb-md"
+        style="background-color: white"
+      >
+        <template v-slot:append>
+          <q-icon name="search" />
+        </template>
+      </q-input>
+    </div>
   </div>
   <q-table
     title="Listado de Productos"
     :rows="ordenados"
     :columns="columns"
-    :pagination="pagination"
     row-key="id"
     flat
     bordered
     :filter="search"
   >
-    <template v-slot:top-right>
-      <q-input dense debounce="300" v-model="search" placeholder="Buscar..." />
-    </template>
+    <template v-slot:top-right> </template>
 
     <template v-slot:body-cell-imagen="props">
       <q-td :props="props">
@@ -77,7 +88,4 @@ const ordenados = computed(() =>
   })),
 )
 const search = ref('')
-const pagination = ref({
-  rowsPerPage: 10,
-})
 </script>

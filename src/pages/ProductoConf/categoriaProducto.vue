@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <q-page class="q-pa-md q-pa-md-md q-pa-lg-lg">
     <!-- Componente de la tabla -->
     <TablaCategorias
       :rows="categorias"
@@ -11,15 +11,25 @@
 
     <!-- Formulario en diálogo -->
     <q-dialog v-model="mostrarDialogo" persistent>
-      <CategoriaForm
-        :modalValue="registroActual"
-        :editing="modoEdicion"
-        :parentCategories="categoriasPadre"
-        @submit="guardarCategoria"
-        @cancel="cerrarDialogo"
-      />
+      <q-card class="responsive-dialog">
+        <q-card class="my-card">
+          <q-card-section class="bg-primary text-h6 text-white flex justify-between">
+            <div>Registrar Categoria Producto</div>
+            <q-btn color="" icon="close" @click="mostrarDialogo = false" flat round dense />
+          </q-card-section>
+          <q-card-section class="q-pa-none q-ma-md">
+            <CategoriaForm
+              :modalValue="registroActual"
+              :editing="modoEdicion"
+              :parentCategories="categoriasPadre"
+              @submit="guardarCategoria"
+              @cancel="cerrarDialogo"
+            />
+          </q-card-section>
+        </q-card>
+      </q-card>
     </q-dialog>
-  </div>
+  </q-page>
 </template>
 
 <script setup>

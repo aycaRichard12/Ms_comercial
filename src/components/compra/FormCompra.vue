@@ -1,94 +1,111 @@
 <template>
-  <q-card class="q-pa-md">
-    <q-card-section>
-      <h5 class="text-left q-mt-none q-mb-md">Nueva compra</h5>
-      <q-form @submit.prevent="onSubmit">
-        <div class="row q-col-gutter-md">
-          <div class="col-md-3">
-            <q-select
-              v-model="localData.tipoRegistro"
-              :options="tiposRegistro"
-              label="Tipo de registro*"
-              emit-value
-              map-options
-              :rules="[(val) => !!val || 'Campo requerido']"
-            />
-          </div>
+  <q-form @submit.prevent="onSubmit">
+    <q-card-section class="row q-col-gutter-x-md">
+      <div class="col-12 col-md-3">
+        <label for="tipo">Tipo de registro*</label>
+        <q-select
+          v-model="localData.tipoRegistro"
+          :options="tiposRegistro"
+          id="tipo"
+          emit-value
+          dense
+          outlined=""
+          :rules="[(val) => !!val || 'Campo requerido']"
+        />
+      </div>
 
-          <!-- Mostrar selezct de pedido solo si tipoRegistro es '1' -->
-          <div class="col-md-3" v-if="localData.tipoRegistro === '1'">
-            <q-select
-              v-model="localData.pedido"
-              :options="pedidos"
-              label="Pedido*"
-              emit-value
-              map-options
-              :rules="[(val) => !!val || 'Campo requerido']"
-            />
-          </div>
+      <!-- Mostrar selezct de pedido solo si tipoRegistro es '1' -->
+      <div class="col-12 col-md-3" v-if="localData.tipoRegistro === '1'">
+        <label for="pedido">Pedido*</label>
+        <q-select
+          v-model="localData.pedido"
+          :options="pedidos"
+          id="pedido"
+          emit-value
+          map-options
+          dense
+          outlined
+          :rules="[(val) => !!val || 'Campo requerido']"
+        />
+      </div>
 
-          <!-- Mostrar almacén solo si tipoRegistro es '2' -->
-          <div class="col-md-3" v-if="localData.tipoRegistro === '2'">
-            <q-select
-              v-model="localData.almacen"
-              :options="props.almacenes"
-              label="Almacén*"
-              emit-value
-              map-options
-              :rules="[(val) => !!val || 'Campo requerido']"
-            />
-          </div>
+      <!-- Mostrar almacén solo si tipoRegistro es '2' -->
+      <div class="col-12 col-md-3" v-if="localData.tipoRegistro === '2'">
+        <label for="almacen">Almacén*</label>
+        <q-select
+          v-model="localData.almacen"
+          :options="props.almacenes"
+          id="almacen"
+          dense
+          outlined
+          emit-value
+          map-options
+          :rules="[(val) => !!val || 'Campo requerido']"
+        />
+      </div>
 
-          <div class="col-md-3">
-            <q-input
-              v-model="localData.nombre"
-              label="Nombre*"
-              :rules="[(val) => !!val || 'Campo requerido']"
-            />
-          </div>
+      <div class="col-12 col-md-3">
+        <label for="nombre">Nombre*</label>
+        <q-input
+          v-model="localData.nombre"
+          id="nombre"
+          label
+          outlined
+          dense
+          :rules="[(val) => !!val || 'Campo requerido']"
+        />
+      </div>
 
-          <div class="col-md-3">
-            <q-input
-              v-model="localData.codigo"
-              label="Código*"
-              :rules="[(val) => !!val || 'Campo requerido']"
-            />
-          </div>
+      <div class="col-12 col-md-3">
+        <label for="codigo">Codigo*</label>
+        <q-input
+          v-model="localData.codigo"
+          id="codigo"
+          dense
+          outlined
+          :rules="[(val) => !!val || 'Campo requerido']"
+        />
+      </div>
 
-          <div class="col-md-3">
-            <q-select
-              v-model="localData.proveedor"
-              :options="props.proveedores"
-              label="Proveedor*"
-              emit-value
-              map-options
-              :rules="[(val) => !!val || 'Campo requerido']"
-            />
-          </div>
+      <div class="col-12 col-md-3">
+        <label for="provedor">Proveedor*</label>
+        <q-select
+          v-model="localData.proveedor"
+          :options="props.proveedores"
+          id="provedor"
+          dense
+          outlined
+          emit-value
+          map-options
+          :rules="[(val) => !!val || 'Campo requerido']"
+        />
+      </div>
 
-          <div class="col-md-3">
-            <q-input v-model="localData.factura" label="Nro Factura" />
-          </div>
+      <div class="col-12 col-md-3">
+        <label for="factura">Nro Factura</label>
+        <q-input v-model="localData.factura" id="factura" dense outlined />
+      </div>
 
-          <div class="col-md-3">
-            <q-select
-              v-model="localData.tipocompra"
-              :options="tiposCompra"
-              label="Tipo de Compra*"
-              emit-value
-              map-options
-              :rules="[(val) => !!val || 'Campo requerido']"
-            />
-          </div>
-        </div>
-
-        <q-card-actions align="right">
-          <q-btn label="Cancelar" flat color="negative" @click="$emit('cancel')" />
-          <q-btn label="Guardar" type="submit" color="primary" />
-        </q-card-actions>
-      </q-form>
+      <div class="col-12 col-md-3">
+        <label for="tipocompra">Tipo de Compra*</label>
+        <q-select
+          v-model="localData.tipocompra"
+          :options="tiposCompra"
+          id="tipocompra"
+          dense
+          outlined
+          emit-value
+          map-options
+          :rules="[(val) => !!val || 'Campo requerido']"
+        />
+      </div>
     </q-card-section>
-  </q-card>
+
+    <q-card-actions align="right">
+      <q-btn label="Cancelar" flat color="negative" @click="$emit('cancel')" />
+      <q-btn label="Guardar" type="submit" color="primary" />
+    </q-card-actions>
+  </q-form>
 </template>
 
 <script setup>

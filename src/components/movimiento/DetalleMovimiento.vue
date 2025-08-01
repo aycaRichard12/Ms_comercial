@@ -1,36 +1,32 @@
 <template>
-  <q-card style="min-width: 800px; max-width: 90vw">
-    <div class="col-md-2 col-12 flex justify-end items-center q-gutter-sm">
-      <q-btn label="Salir" color="negative" @click="$emit('close')" />
-    </div>
-    <div class="row">
-      <h4 class="q-mb-md">Detalle Movimiento</h4>
-    </div>
-
-    <q-form @submit="handleFormSubmit" ref="form" v-if="localData.autorizacion == 2">
-      <div class="row q-col-gutter-sm">
-        <div class="col-md-4 col-12">
+  <q-form @submit="handleFormSubmit" ref="form" v-if="localData.autorizacion == 2">
+    <div class="row q-col-gutter-x-md">
+      <div class="col-12 col-md-6">
+        <div v-if="isEditing">
+          <label for="producto">Producto *</label>
           <q-input
-            v-if="isEditing"
             v-model="localData.descripcion"
             use-input
             fill-input
             hide-dropdown-icon
-            label="Producto*"
+            id="producto"
             dense
+            outlined
             clearable
             class="full-width"
             disable
           />
+        </div>
+        <div v-if="!isEditing">
+          <label for="producto">Producto*</label>
           <q-select
-            v-if="!isEditing"
             use-input
-            fill-input
             hide-dropdown-icon
             v-model="localData.idproductoalmacen"
             :options="productosFiltrados"
             @filter="filtrarProductos"
-            label="Producto*"
+            id="producto"
+            outlined
             emit-value
             map-options
             option-label="label"
@@ -41,42 +37,45 @@
             class="full-width"
           />
         </div>
-
-        <div class="col-md-2 col-6">
-          <q-input label="Stock origen*" v-model="localData.stockOrigen" disable dense />
-        </div>
-        <div class="col-md-2 col-6">
-          <q-input label="Stock destino*" v-model="localData.stockDestino" disable dense />
-        </div>
-
-        <div class="col-md-2 col-6">
-          <q-input
-            label="Cantidad*"
-            v-model.number="localData.cantidad"
-            type="number"
-            :rules="[(val) => !!val || 'Requerido', (val) => val > 0 || 'Debe ser mayor a 0']"
-            dense
-            clearable
-            class="full-width"
-          />
-        </div>
-
-        <div class="col-md-2 col-12 flex justify-end items-center q-gutter-sm">
-          <q-btn :label="isEditing ? 'Actualizar' : 'Añadir'" color="primary" type="submit" />
-          <q-btn v-if="isEditing" label="Cancelar Edición" color="grey" @click="resetForm" />
-        </div>
       </div>
-    </q-form>
 
-    <q-table class="q-mt-lg" :rows="processedRows" :columns="columnas" row-key="id" flat bordered>
-      <template v-slot:body-cell-opciones="props" v-if="localData.autorizacion == 2">
-        <q-td align="center">
-          <q-btn dense icon="edit" color="primary" flat @click="editDetalle(props.row)" />
-          <q-btn dense icon="delete" color="negative" flat @click="deleteDetalle(props.row)" />
-        </q-td>
-      </template>
-    </q-table>
-  </q-card>
+      <div class="col-md-2 col-12">
+        <label for="stock">Stock origen*</label>
+        <q-input id="stock" v-model="localData.stockOrigen" disable dense outlined />
+      </div>
+      <div class="col-md-2 col-12">
+        <label for="stock_destino">Stock destino*</label>
+        <q-input id="stock_destino" v-model="localData.stockDestino" disable dense outlined />
+      </div>
+
+      <div class="col-md-2 col-6">
+        <label for="cantidad">Cantidad</label>
+        <q-input
+          id="cantidad"
+          v-model.number="localData.cantidad"
+          type="number"
+          :rules="[(val) => !!val || 'Requerido', (val) => val > 0 || 'Debe ser mayor a 0']"
+          dense
+          outlined
+          clearable
+          class="full-width"
+        />
+      </div>
+    </div>
+    <div class="col-md-2 col-12 flex justify-end items-center q-gutter-sm">
+      <q-btn :label="isEditing ? 'Actualizar' : 'Añadir'" color="primary" type="submit" />
+      <q-btn v-if="isEditing" label="Cancelar Edición" color="grey" @click="resetForm" />
+    </div>
+  </q-form>
+
+  <q-table class="q-mt-lg" :rows="processedRows" :columns="columnas" row-key="id" flat bordered>
+    <template v-slot:body-cell-opciones="props" v-if="localData.autorizacion == 2">
+      <q-td align="center">
+        <q-btn dense icon="edit" color="primary" flat @click="editDetalle(props.row)" />
+        <q-btn dense icon="delete" color="negative" flat @click="deleteDetalle(props.row)" />
+      </q-td>
+    </template>
+  </q-table>
 </template>
 
 <script setup>
@@ -180,7 +179,7 @@ async function sendApiRequest(endpoint, data, successMessage, errorMessage) {
       for (let [k, v] of formData.entries()) {
         console.log(`${k}:${v}`)
       }
-      response = await api.post(endpoint, formData)
+      response = await api.post('', formData)
     }
 
     console.log(`Respuesta de ${endpoint}:`, response.data)

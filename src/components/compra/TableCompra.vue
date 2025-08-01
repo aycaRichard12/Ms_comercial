@@ -1,54 +1,67 @@
 <template>
-  <q-page padding>
-    <div class="q-gutter-md">
+  <q-page>
+    <div>
       <!-- Botones principales -->
       <div class="row items-center justify-between q-mb-sm">
-        <div class="col-auto">
-          <q-btn label="Nuevo Registro" color="primary" @click="$emit('add')" />
-          <q-btn
-            label="Reporte Desglosado"
-            color="primary"
-            icon="picture_as_pdf"
-            class="q-mx-md"
-            @click="$emit('repDesglosado')"
-          />
-          <q-btn
-            label="Reporte Compras"
-            color="primary"
-            icon="picture_as_pdf"
-            @click="$emit('repCompras')"
-          />
+        <div class="col-2 q-mt-lg">
+          <q-btn color="primary" @click="$emit('add')" class="btn-res">
+            <q-icon name="add" class="icono" />
+            <span class="texto">Agregar</span>
+          </q-btn>
+        </div>
+        <div class="col-2 q-mt-lg">
+          <q-btn color="primary" @click="$emit('repDesglosado')" class="btn-res">
+            <q-icon name="picture_as_pdf" class="icono" />
+            <span class="texto">Rep. Desglosado</span>
+          </q-btn>
+        </div>
+        <div class="col-2 q-mt-lg">
+          <q-btn color="primary" @click="$emit('repCompras')" class="btn-res">
+            <q-icon name="picture_as_pdf" class="icono" />
+            <span class="texto">Rep. Compras</span>
+          </q-btn>
+        </div>
+        <div class="col-2 q-mt-lg flex justify-end">
+          <q-btn color="info" @click="imprimirReporte" class="btn-res" outline>
+            <q-icon name="picture_as_pdf" class="icono" />
+            <span class="texto">Vista Previa PDF</span>
+          </q-btn>
         </div>
 
         <!-- Filtro de almacén -->
-        <div class="col-auto row items-center">
+      </div>
+      <div class="row q-col-gutter-x-md flex justify-between q-mb-md">
+        <div class="col-12 col-md-4">
+          <label for="almacen">Seleccione un Almacén</label>
           <q-select
             v-model="filtroAlmacen"
             :options="almacenes"
-            label="Seleccione un Almacén"
-            class="q-mr-md"
+            id="almacen"
             clearable
-            style="min-width: 200px"
+            dense
+            outlined
           />
-          <q-btn color="info" label="Imprimir" icon="picture_as_pdf" @click="imprimirReporte" />
+        </div>
+        <div class="col-12 col-md-2">
+          <label for="buscar">Buscar...</label>
+          <q-input dense debounce="300" v-model="busqueda" id="buscar" outlined>
+            <template v-slot:append>
+              <q-icon name="search" />
+            </template>
+          </q-input>
         </div>
       </div>
 
       <!-- Tabla -->
       <q-table
+        title="Compras"
         :rows="processedRows"
         :columns="columnas"
         row-key="id"
         :filter="busqueda"
-        class="sticky-header-table"
+        dense
       >
-        <template v-slot:top-right>
-          <q-input dense debounce="300" v-model="busqueda" placeholder="Buscar...">
-            <template v-slot:append>
-              <q-icon name="search" />
-            </template>
-          </q-input>
-        </template>
+        <template v-slot:top-right> </template>
         <template v-slot:body-cell-autorizacion="props">
           <q-td :props="props">
             <q-badge
@@ -156,11 +169,11 @@ const mostrarModal = ref(false)
 const columnas = [
   { name: 'numero', label: 'N°', align: 'right', field: 'numero' },
   { name: 'fecha', label: 'Fecha', align: 'right', field: 'fecha' },
-  { name: 'proveedor', label: 'Proveedor', field: 'proveedor' },
-  { name: 'lote', label: 'Nombre lote', field: 'lote' },
+  { name: 'proveedor', label: 'Proveedor', field: 'proveedor', align: 'left' },
+  { name: 'lote', label: 'Nombre lote', field: 'lote', align: 'left' },
   { name: 'codigo', label: 'Código', field: 'codigo' },
   { name: 'nfactura', label: 'N° Factura', align: 'right', field: 'nfactura' },
-  { name: 'tipocompra', label: 'Tipo compra', field: 'tipocompra' },
+  { name: 'tipocompra', label: 'Tipo compra', field: 'tipocompra', align: 'center' },
   { name: 'total', label: 'Total compra', align: 'right', field: 'total' },
   { name: 'autorizacion', label: 'Autorización', field: 'autorizacion' },
   { name: 'detalle', label: 'Detalle', field: 'detalle', align: 'center' },

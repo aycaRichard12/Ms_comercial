@@ -12,4 +12,35 @@
 
 .text-bold {
   font-weight: bold;
+}
+
+.my-sticky-header-table {
+  height: 310px;
+}
+
+.q-table__top,
+thead tr:first-child th {
+  background-color: #004d40;
+  color: white;
+}
+
+thead tr th {
+  position: sticky;
+  z-index: 1;
+}
+
+thead tr:first-child th {
+  top: 0;
+}
+
+.q-table--loading thead tr:last-child th {
+  top: 48px;
+}
+
+tbody {
+  scroll-margin-top: 48px;
+}
+
+.q-table tbody td {
+  border-bottom: 1px solid #f2c037; /* color warning de Quasar */
 }/*# sourceMappingURL=quasar.variables.css.map */

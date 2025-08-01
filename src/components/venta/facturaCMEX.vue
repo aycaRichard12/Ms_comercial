@@ -1,42 +1,45 @@
 <template>
-  <q-page class="q-ma-lg">
-    <div class="forms">
-      <div style="display: flex; justify-content: space-between" class="q-mb-md">
-        <div class="col-12 col-sm-4">
-          <q-btn
-            label="Volver"
-            icon="arrow_back"
-            color="primary"
-            size="sm"
-            @click="$emit('volver')"
-            class="q-mr-sm"
-          />
-          <q-btn label="Inicio" icon="home" color="primary" size="sm" @click="handleContinue" />
-        </div>
-        <div class="col-12 col-sm-8 text-center">
-          <h4 class="q-ma-none text-primary" style="font-size: 20px">
-            <q-icon name="receipt_long" color="primary" size="28px" class="q-mr-sm" />
-            FACTURA COMERCIAL DE EXPORTACIÓN
-          </h4>
-        </div>
-        <div></div>
+  <q-page>
+    <div class="row q-col-gutter-x-md">
+      <div class="col-12 col-md-4">
+        <q-btn
+          label="Volver"
+          icon="arrow_back"
+          color="primary"
+          size="sm"
+          @click="$emit('volver')"
+          class="q-mr-sm"
+        />
+        <q-btn label="Inicio" icon="home" color="primary" size="sm" @click="handleContinue" />
       </div>
+      <div class="col-12 col-md-8">
+        <h4 class="q-ma-none text-primary" style="font-size: 20px">
+          <q-icon name="receipt_long" color="primary" size="28px" class="q-mr-sm" />
+          FACTURA COMERCIAL DE EXPORTACIÓN
+        </h4>
+      </div>
+      <div></div>
 
-      <q-form @submit="onSubmit" class="q-gutter-md">
+      <q-form @submit="onSubmit">
         <!-- Sección Cliente y Documentos -->
         <q-card class="q-mb-md">
           <q-card-section>
-            <div class="section-header">
-              <q-icon name="business" color="blue" size="24px" class="q-mr-sm" />
-              <h5 class="q-my-sm text-primary" style="font-size: 15px">
-                Datos del Cliente y Documentos
-              </h5>
+            <div class="row q-col-gutter-x-md">
+              <div class="">
+                <q-icon name="business" color="blue" size="24px" class="q-mr-sm" />
+                <h5 class="q-my-sm text-primary" style="font-size: 15px">
+                  Datos del Cliente y Documentos
+                </h5>
+              </div>
             </div>
-            <div class="row q-col-gutter-md">
+            <div class="row q-col-gutter-x-md">
               <div class="col-12 col-md-5">
+                <label for="cliente">Cliente*</label>
                 <q-select
                   v-model="formData.cliente"
-                  label="Cliente*"
+                  id="cliente"
+                  dense
+                  outlined
                   :options="filteredClients"
                   option-label="label"
                   option-value="value"
@@ -61,9 +64,12 @@
                 <q-btn color="blue" icon="person_add" @click="RegistrarCliente" />
               </div>
               <div class="col-12 col-md-3">
+                <label for="sucursal">Sucursal*</label>
                 <q-select
                   v-model="formData.sucursal"
-                  label="Sucursal*"
+                  id="sucursal"
+                  dense
+                  outlined
                   :options="branchOptions"
                   option-label="label"
                   option-value="value"
@@ -76,9 +82,12 @@
                 </q-select>
               </div>
               <div class="col-12 col-md-3">
+                <label for="tipodoc">Tipo de documento*</label>
                 <q-select
                   v-model="formData.tipodoc"
-                  label="Tipo de documento*"
+                  id="tipodoc"
+                  dense
+                  outlined
                   :options="typeDocOptions"
                   option-label="label"
                   option-value="value"
@@ -90,9 +99,12 @@
                 </q-select>
               </div>
               <div class="col-12 col-md-3">
+                <label for="nroDoc">Nro. documento*</label>
                 <q-input
                   v-model="formData.nroDoc"
-                  label="Nro. documento*"
+                  id="nroDoc"
+                  dense
+                  outlined
                   type="number"
                   :rules="[(val) => !!val || 'Campo Obligatorio']"
                   :disable="!formData.cliente"
@@ -103,16 +115,20 @@
                 </q-input>
               </div>
               <div class="col-12 col-md-3">
-                <q-input v-model="formData.fecha" label="Fecha*" type="date" required>
+                <label for="fecha">Fecha*</label>
+                <q-input v-model="formData.fecha" id="fecha" dense outlined type="date" required>
                   <template v-slot:prepend>
                     <q-icon name="event" color="blue" />
                   </template>
                 </q-input>
               </div>
               <div class="col-12 col-md-3">
+                <label for="canal">Canal de venta*</label>
                 <q-select
                   v-model="formData.canal"
-                  label="Canal de venta*"
+                  id="canal"
+                  dense
+                  outlined
                   :options="salesChannels"
                   option-label="label"
                   option-value="value"
@@ -125,9 +141,12 @@
                 </q-select>
               </div>
               <div class="col-12 col-md-3">
+                <label for="direccion">Dirección comprador*</label>
                 <q-input
                   v-model="formData.direccion"
-                  label="Dirección comprador*"
+                  id="direccion"
+                  dense
+                  outlined
                   type="text"
                   :rules="[(val) => !!val || 'Campo Obligatorio']"
                   :disable="!formData.cliente"
@@ -138,9 +157,12 @@
                 </q-input>
               </div>
               <div class="col-12 col-md-3">
+                <label for="puertoDestino">Puerto destino*</label>
                 <q-input
                   v-model="formData.puertodestino"
-                  label="Puerto destino*"
+                  id="puertoDestino"
+                  dense
+                  outlined
                   type="text"
                   :rules="[(val) => !!val || 'Campo Obligatorio']"
                   :disable="!formData.cliente"
@@ -151,10 +173,13 @@
                 </q-input>
               </div>
               <div class="col-12 col-md-3">
+                <label for="destino">Lugar destino*</label>
                 <q-input
                   v-model="formData.lugardestino"
-                  label="Lugar destino*"
+                  id="destino"
                   type="text"
+                  dense
+                  outlined
                   :rules="[(val) => !!val || 'Campo Obligatorio']"
                   :disable="!formData.cliente"
                 >
@@ -164,9 +189,12 @@
                 </q-input>
               </div>
               <div class="col-12 col-md-3">
+                <label for="incoterm">Incoterm*</label>
                 <q-input
                   v-model="formData.incoterm"
-                  label="Incoterm*"
+                  label="incoterm"
+                  dense
+                  outlined
                   type="text"
                   :rules="[(val) => !!val || 'Campo Obligatorio']"
                   :disable="!formData.cliente"
@@ -177,9 +205,12 @@
                 </q-input>
               </div>
               <div class="col-12 col-md-3">
+                <label for="detalleicoterm">Detalle incoterm*</label>
                 <q-input
                   v-model="formData.detalleincoterm"
-                  label="Detalle incoterm*"
+                  id="detalleicoterm"
+                  dense
+                  outlined
                   type="text"
                   :rules="[(val) => !!val || 'Campo Obligatorio']"
                   :disable="!formData.cliente"
@@ -190,9 +221,12 @@
                 </q-input>
               </div>
               <div class="col-12 col-md-3">
+                <label for="descripcionPaquete">Descripción paquetes*"</label>
                 <q-input
                   v-model="formData.descripcionPB"
-                  label="Descripción paquetes*"
+                  id="descripcionPaquete"
+                  dense
+                  outlined
                   type="text"
                   :rules="[(val) => !!val || 'Campo Obligatorio']"
                   :disable="!formData.cliente"
@@ -203,10 +237,13 @@
                 </q-input>
               </div>
               <div class="col-12 col-md-3">
+                <label for="infadic">Información adicional</label>
                 <q-input
                   v-model="formData.infoadicional"
-                  label="Información adicional"
+                  id="infadic"
                   type="text"
+                  dense
+                  outlined
                   :disable="!formData.cliente"
                 >
                   <template v-slot:prepend>
@@ -215,9 +252,12 @@
                 </q-input>
               </div>
               <div class="col-12 col-md-3">
+                <label for="puntoventa">Punto de venta*</label>
                 <q-select
                   v-model="formData.puntoventa"
-                  label="Punto de venta*"
+                  id="puntoventa"
+                  dense
+                  outlined
                   :options="puntosVenta"
                   option-label="label"
                   option-value="value"
@@ -238,47 +278,42 @@
             <div class="row q-col-gutter-md q-mb-md">
               <!-- Gastos nacionales -->
               <div class="col-md-6">
-                <div class="row q-col-gutter-md q-mb-md">
-                  <div class="section-header">
+                <div class="row q-col-gutter-x-md">
+                  <div class="col-12 col-6">
                     <q-icon name="payments" color="green" size="24px" class="q-mr-sm" />
-                    <label class="text-subtitle1">Gastos nacionales</label>
+                    <label class="text-subtitle1">Gastos Nacionales</label>
                   </div>
+                </div>
+                <div class="row q-col-gutter-md q-mb-md">
                   <div class="col-md-4">
+                    <label for="montonacVFE">Monto</label>
                     <q-input
                       id="montonacVFE"
                       name="montonac"
-                      label="Monto"
                       v-model="montoNacional"
+                      dense
+                      outlined
                       type="number"
                       step="0.01"
                     >
-                      <template v-slot:prepend>
-                        <q-icon name="attach_money" color="green" />
-                      </template>
                       <template v-slot:append>
                         <span class="divisaVE">{{ divisaActiva.simbolo }}</span>
                       </template>
                     </q-input>
                   </div>
                   <div class="col-md-5">
-                    <q-input
-                      id="descnacVFE"
-                      name="descnac"
-                      label="Descripción"
-                      v-model="descNacional"
-                    >
+                    <label for="descnacVFE">Descripción</label>
+                    <q-input id="descnacVFE" name="descnac" dense outlined v-model="descNacional">
                       <template v-slot:prepend>
                         <q-icon name="description" color="green" />
                       </template>
                     </q-input>
                   </div>
                   <div class="col-md-2 q-mb-sm">
-                    <q-btn
-                      label="Añadir"
-                      icon="add"
-                      color="primary"
-                      @click="agregarGastoNacional"
-                    />
+                    <q-btn color="primary" @click="agregarGastoNacional" class="btn-res q-mt-lg">
+                      <q-icon name="add" class="icono" />
+                      <span class="texto">Agregar</span>
+                    </q-btn>
                   </div>
                   <div class="col-12">
                     <q-table
@@ -315,16 +350,20 @@
 
               <!-- Gastos internacionales -->
               <div class="col-md-6">
-                <div class="row q-col-gutter-md q-mb-md">
-                  <div class="section-header">
+                <div class="row q-col-gutter-x-md">
+                  <div class="col-12 col-md-6">
                     <q-icon name="flight" color="orange" size="24px" class="q-mr-sm" />
                     <label class="text-subtitle1">Gastos internacionales</label>
                   </div>
+                </div>
+                <div class="row q-col-gutter-md q-mb-md">
                   <div class="col-md-4">
+                    <label for="montointerVFE">Monto</label>
                     <q-input
                       id="montointerVFE"
                       name="montointer"
-                      label="Monto"
+                      dense
+                      outlined
                       v-model="montoInternacional"
                       type="number"
                       step="0.01"
@@ -338,10 +377,12 @@
                     </q-input>
                   </div>
                   <div class="col-md-5">
+                    <label for="descinterVFE">Descripción</label>
                     <q-input
                       id="descinterVFE"
                       name="descinter"
-                      label="Descripción"
+                      dense
+                      outlined
                       v-model="descInternacional"
                     >
                       <template v-slot:prepend>
@@ -351,11 +392,13 @@
                   </div>
                   <div class="col-md-2 q-mb-sm">
                     <q-btn
-                      label="Añadir"
-                      icon="add"
                       color="primary"
                       @click="agregarGastoInternacional"
-                    />
+                      class="btn-res q-mt-lg"
+                    >
+                      <q-icon name="add" class="icono" />
+                      <span class="texto">Agregar</span>
+                    </q-btn>
                   </div>
                   <div class="col-12">
                     <q-table
@@ -394,7 +437,7 @@
         </q-card>
 
         <!-- Sección Pago -->
-        <q-card class="q-mb-md">
+        <q-card class="my-card">
           <q-card-section>
             <div class="section-header">
               <q-icon name="credit_card" color="purple" size="24px" class="q-mr-sm" />
@@ -418,14 +461,14 @@
                 </template>
               </q-radio>
             </div>
-
-            <q-separator spaced="md" />
-
             <div v-if="formData.variablePago === 'directo'" class="row q-col-gutter-md q-pt-md">
               <div class="col-12 col-md-4">
+                <label for="metodopago">Método de pago*</label>
                 <q-select
                   v-model="formData.metodoPago"
-                  label="Método de pago*"
+                  id="metodopago"
+                  dense
+                  outlined
                   :options="metodoPago"
                   option-label="label"
                   option-value="value"
@@ -445,9 +488,12 @@
                 class="row q-col-gutter-md q-mb-sm items-center"
               >
                 <div class="col-12 col-md-4">
+                  <label for="metodopago">Método de pago*</label>
                   <q-select
                     v-model="payment.metodoPago"
-                    label="Método de pago*"
+                    id="metodopago"
+                    dense
+                    outlined
                     :options="metodoPago"
                     option-label="label"
                     option-value="value"
@@ -459,13 +505,16 @@
                   </q-select>
                 </div>
                 <div class="col-12 col-md-3">
+                  <label for="monto">{{ 'Monto (' + divisaActiva.simbolo + ')' }}</label>
                   <q-input
                     v-model="payment.monto"
-                    :label="'Monto (' + divisaActiva.simbolo + ')'"
+                    id="monto"
                     type="number"
                     min="0"
                     step="0.01"
                     required
+                    dense
+                    outlined
                     @update:model-value="calculateRemainingAmount(index)"
                     :rules="[(val) => !!val || 'Campo Obligatorio']"
                   >
@@ -475,9 +524,12 @@
                   </q-input>
                 </div>
                 <div class="col-12 col-md-3">
+                  <label for="porcentaje">Porcentaje (%)</label>
                   <q-input
                     v-model="payment.porcentaje"
-                    label="Porcentaje (%)"
+                    id="porcentaje"
+                    dense
+                    outlined
                     type="number"
                     min="0"
                     max="100"
@@ -533,20 +585,15 @@
           </q-card-section>
         </q-card>
 
-        <!-- Sección Crédito -->
-        <q-card class="q-mb-md">
+        <q-separator spaced="md" />
+        <q-card class="">
           <q-card-section>
             <div class="section-header">
               <q-icon name="schedule" color="red" size="24px" class="q-mr-sm" />
               <h5 class="q-my-sm text-primary" style="font-size: 15px">Condiciones de Crédito</h5>
             </div>
             <div class="col-12 q-mb-md">
-              <q-toggle
-                v-model="formData.credito"
-                label="¿A crédito?"
-                left-label
-                @update:model-value="toggleCredit"
-              >
+              <q-toggle v-model="formData.credito" left-label @update:model-value="toggleCredit">
                 <template v-slot:default>
                   <div class="toggle-with-icon">
                     <q-icon name="credit_score" color="red" class="q-mr-sm" />
@@ -558,9 +605,12 @@
 
             <div v-if="formData.credito" class="row q-col-gutter-md q-pt-md">
               <div class="col-12 col-md-4">
+                <label for="cantidadpagos">Cantidad de pagos*</label>
                 <q-input
                   v-model="formData.cantidadPagos"
-                  label="Cantidad de pagos*"
+                  id="cantidadpagos"
+                  dense
+                  outlined
                   type="number"
                   min="0"
                   required
@@ -574,9 +624,13 @@
               </div>
 
               <div class="col-12 col-md-4">
+                <label for="montopago">Monto de pagos*</label>
                 <q-input
                   v-model="formData.montoPagos"
-                  label="Monto de pagos*"
+                  id="montopago"
+                  type="number"
+                  dense
+                  outlined
                   :disable="!formData.credito"
                 >
                   <template v-slot:prepend>
@@ -589,10 +643,13 @@
               </div>
 
               <div class="col-12 col-md-4">
+                <label for="periodo">Período establecido*</label>
                 <q-select
                   v-model="formData.periodo"
-                  label="Período establecido*"
+                  id="periodo"
                   :options="periodOptions"
+                  dense
+                  outlined
                   option-label="label"
                   option-value="value"
                   emit-value
@@ -607,9 +664,12 @@
               </div>
 
               <div v-if="formData.periodo === 0" class="col-12 col-md-4">
+                <label for="plazopersonalizado">Plazo total (días)*</label>
                 <q-input
                   v-model="formData.plazoPersonalizado"
-                  label="Plazo total (días)*"
+                  id="plazopersonalizado"
+                  dense
+                  outlined
                   type="number"
                   min="0"
                   required
@@ -623,10 +683,13 @@
               </div>
 
               <div class="col-12 col-md-4">
+                <label for="fechalimite">Fecha límite*</label>
                 <q-input
                   v-model="formData.fechaLimite"
-                  label="Fecha límite*"
+                  id="fechalimite"
                   type="date"
+                  dense
+                  outlined
                   :disable="true"
                 >
                   <template v-slot:prepend>
@@ -638,7 +701,7 @@
           </q-card-section>
         </q-card>
 
-        <div class="row q-col-gutter-md">
+        <div class="row q-col-gutter-md q-ma-md">
           <div class="col-12 text-right">
             <q-btn label="Registrar" type="submit" color="primary" icon="save" />
           </div>
@@ -690,6 +753,7 @@
 .divisaVE {
   font-weight: bold;
   color: var(--q-primary);
+  font-size: 18px;
 }
 </style>
 <script setup>
@@ -701,7 +765,7 @@ import { defineEmits } from 'vue'
 import { useCurrencyStore, useCurrencyLeyenda } from 'src/stores/currencyStore'
 import MyRegistrationForm from '../clientes/admin/modalClienteForm.vue'
 import { objectToFormData } from 'src/composables/FuncionesGenerales'
-import { obtenerHoraISO8601 } from 'src/composables/FuncionesG'
+import { obtenerHoraISO8601, decimas } from 'src/composables/FuncionesG'
 import { useNitValidator } from 'src/composables/useNitValidator'
 
 const { validarNIT } = useNitValidator()
@@ -931,7 +995,8 @@ const cargarMetodoPagoFactura = async () => {
     console.log(response.data)
     metodoPago.value = filtrado.map((item) => ({
       label: item.nombre,
-      value: item.metodopagosin.codigo,
+      id: item.metodopagosin.codigo,
+      value: item.id,
     }))
     formData.value.metodoPago = metodoPago.value[0] || null
   } catch (error) {
@@ -1194,7 +1259,20 @@ const onSubmit = async () => {
     if (!cartData.listaProductos || !cartData.listaProductos.length) {
       throw { message: 'El carrito está vacío' }
     }
-
+    const suma_pagos_divididos = decimas(
+      pagosDivididos.reduce((sum, dato) => {
+        return sum + parseFloat(dato.monto)
+      }, 0),
+    )
+    console.log(suma_pagos_divididos)
+    console.log(cartData.ventatotal)
+    console.log(variablePago)
+    if (
+      decimas(suma_pagos_divididos) !== decimas(cartData.ventatotal) &&
+      variablePago !== 'directo'
+    ) {
+      throw { message: 'Los pagos no coinciden con el monto total' }
+    }
     console.log('Datos del carrito:', cartData)
 
     $q.loading.show({ message: 'Procesando venta...', timeout: 30000 })
@@ -1203,8 +1281,10 @@ const onSubmit = async () => {
     //Preparar formulario para envío
     variablePago !== 'directo'
       ? (cartData.pagosDivididos = pagosDivididos)
-      : (cartData.pagosDivididos = [])
-    cartData.variablePago = variablePago
+      : (cartData.pagosDivididos = [
+          { metodoPago: metodoPago, monto: cartData.ventatotal, porcentaje: 100 },
+        ])
+    cartData.variablePago = 'dividido'
     cartData.nropagos = cantidadPagos
     cartData.fechalimite = fechaLimite
     cartData.valorpagos = montoPagos
@@ -1241,9 +1321,8 @@ const onSubmit = async () => {
     form.append('puntoventa', puntoventa.value)
     if ((!metodoPago || metodoPago.value == null) && pagosDivididos.length > 0) {
       form.append('metodopago', 0)
-      form.append('pagosDivididos', JSON.stringify(pagosDivididos))
     } else {
-      form.append('metodopago', metodoPago?.value || 0)
+      form.append('metodopago', metodoPago?.id || 0)
     }
     form.append('canal', canal.value)
     form.append('tipopago', credito ? 'credito' : CONSTANTES.tipopago)

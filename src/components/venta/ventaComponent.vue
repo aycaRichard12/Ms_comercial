@@ -1,19 +1,21 @@
 <template>
-  <carritoVenta
-    ref="carritoVentaRef"
-    v-show="!showCart"
-    :key="carritoKey"
-    @volver="toggleComponents"
-    @reiniciar="forzarReinicioCarrito"
-  />
-  <component
-    v-show="showCart"
-    :is="componenteSeleccionado"
-    @seleccionar="mostrarComponente"
-    @volver="componenteActual = 'tipo_doc'"
-    @continuar="toggleComponents"
-    @venta-registrada="resetearVenta"
-  />
+  <q-page>
+    <carritoVenta
+      ref="carritoVentaRef"
+      v-show="!showCart"
+      :key="carritoKey"
+      @volver="toggleComponents"
+      @reiniciar="forzarReinicioCarrito"
+    />
+    <component
+      v-show="showCart"
+      :is="componenteSeleccionado"
+      @seleccionar="mostrarComponente"
+      @volver="componenteActual = 'tipo_doc'"
+      @continuar="toggleComponents"
+      @venta-registrada="resetearVenta"
+    />
+  </q-page>
 </template>
 
 <script setup>

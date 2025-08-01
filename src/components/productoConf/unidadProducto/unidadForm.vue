@@ -1,24 +1,26 @@
 <template>
   <q-form @submit.prevent="handleSubmit">
-    <q-card-section>
-      <div class="text-h6">Registro de Unidades de Medida</div>
-    </q-card-section>
-
-    <q-card-section>
-      <q-input
-        v-model="localData.nombre"
-        label="Unidad del producto*"
-        outlined
-        dense
-        :rules="[(val) => !!val || 'Campo requerido']"
-      />
-      <q-input
-        v-model="localData.descripcion"
-        label="Descripción*"
-        outlined
-        dense
-        :rules="[(val) => !!val || 'Campo requerido']"
-      />
+    <q-card-section class="row q-col-gutter-x-md">
+      <div class="col-12 col-md-6">
+        <label for="unidad">Unidad del producto*</label>
+        <q-input
+          v-model="localData.nombre"
+          id="unidad"
+          outlined
+          dense
+          :rules="[(val) => !!val || 'Campo requerido']"
+        />
+      </div>
+      <div class="col-12 col-md-6">
+        <label for="descripcion">Descripción*</label>
+        <q-input
+          v-model="localData.descripcion"
+          id="descripcion"
+          outlined
+          dense
+          :rules="[(val) => !!val || 'Campo requerido']"
+        />
+      </div>
     </q-card-section>
 
     <q-card-actions align="right">

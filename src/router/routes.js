@@ -38,7 +38,7 @@ const routes = [
       { path: '', component: () => import('pages/IndexPage.vue') },
       {
         path: '/configuraciongeneral',
-        component: () => import('pages/General/tipoAlmacenGeneral.vue'),
+        component: () => import('pages/config/configuraciongeneralPage.vue'),
       },
       {
         path: '/tipodealmacen',
@@ -146,7 +146,7 @@ const routes = [
       },
       {
         path: '/registrarventaoculto',
-        component: () => import('src/components/venta/ventaComponent.vue'),
+        component: () => import('src/components/venta/ventaPage.vue'),
       },
       {
         path: '/administracionprecios',
@@ -208,6 +208,78 @@ const routes = [
         path: '/reporteproductosvendidosglobal',
         component: () => import('pages/reportes/reporteProductosVendidosGlobal.vue'),
       },
+      {
+        path: '/crearcampanas',
+        component: () => import('src/pages/campanas/campanasPage.vue'),
+      },
+      {
+        path: '/contingencias',
+        component: () => import('src/pages/devoluciones/anulacionPage.vue'),
+      },
+      {
+        path: '/registraranulaciones',
+        component: () => import('src/pages/devoluciones/anulacionPage.vue'),
+      },
+      {
+        path: '/registrodeextravios',
+        component: () => import('src/pages/devoluciones/extravioPage.vue'),
+      },
+      {
+        path: '/registrodemermas',
+        component: () => import('src/pages/devoluciones/registrodemermasPage.vue'),
+      },
+      {
+        path: '/reportedeindicederotacion',
+        component: () => import('src/pages/reportes/rotacionAlmacenPague.vue'),
+      },
+      {
+        path: '/reportedeindicederotacionglobal',
+        component: () => import('src/pages/reportes/rotacionGlobalPage.vue'),
+      },
+      {
+        path: '/reportedeindicederotacionporcliente',
+        component: () => import('src/pages/reportes/rotacionClientePage.vue'),
+      },
+      {
+        path: '/reportedeventasporcampanas',
+        component: () => import('src/pages/reportes/reporteVentasCampana.vue'),
+      },
+      {
+        path: '/inventarioexterno',
+        component: () => import('src/pages/inventarioExterior/inventarioExteriorPage.vue'),
+      },
+      {
+        path: '/registrarcotizacionoculto',
+        component: () => import('src/pages/cotizacion/cotizacionIndex.vue'),
+      },
+      {
+        path: '/reportedecotizacionesocultas',
+        component: () => import('src/pages/cotizacion/ReporteCotizacionPage.vue'),
+      },
+      {
+        path: '/reporteproductosvendidosindividual',
+        component: () => import('src/pages/cotizacion/DetalleProductosVendidosIndividual.vue'),
+      },
+      {
+        path: '/kardex',
+        component: () => import('src/pages/cotizacion/kardexPage.vue'),
+      },
+      {
+        path: '/metodosdepagodefacturas',
+        component: () => import('src/pages/metodoPago/metodoPago.vue'),
+      },
+      {
+        path: '/leyendasdefacturas',
+        component: () => import('src/pages/leyendaFactura/LeyendaFactura.vue'),
+      },
+      {
+        path: '/movimientosdeinventario',
+        component: () => import('src/pages/inventario/pruebaKardex.vue'),
+      },
+      {
+        path: '/procesarventaspendientes',
+        component: () => import('src/pages/Venta/VentasPendientesPage.vue'),
+      },
     ],
   },
   {
@@ -215,7 +287,7 @@ const routes = [
     component: () => import('pages/config/FormularioConfiguracionInicial.vue'),
   },
   // Always leave this as last one,
-  // but you can also remove it
+  // but you can also remove it registrarcotizacionoculto
   {
     path: '/:catchAll(.*)*',
     component: () => import('pages/ErrorNotFound.vue'),

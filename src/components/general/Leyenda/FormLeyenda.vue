@@ -3,13 +3,12 @@
   <q-form @submit.prevent="onSubmit">
     <q-card style="min-width: 350px">
       <q-card-section>
-        <div class="text-h6">Leyenda de la cotización</div>
-      </q-card-section>
-
-      <q-card-section>
+        <label for="leyenda">Leyenda *</label>
         <q-input
           v-model="localData.texto"
-          label="Leyenda *"
+          id="leyenda"
+          dense
+          outlined
           autofocus
           @keyup.enter="prompt = false"
           :rules="[(val) => !!val || 'Requerido']"

@@ -1,112 +1,118 @@
 <template>
-  <q-form @submit.prevent="handleSubmit" class="q-gutter-md">
-    <q-card-section class="q-gutter-md">
-      <q-row class="q-col-gutter-md">
-        <q-col cols="12" md="6">
+  <q-card>
+    <q-form @submit.prevent="handleSubmit">
+      <q-card-section class="row q-col-gutter-x-md">
+        <div class="col-12 col-md-6">
+          <label for="nombre">Nombre:</label>
           <q-input
             v-model="localData.nombre"
-            label="Nombre"
-            name="nombre"
+            id="nombre"
             outlined
             dense
             autocomplete="off"
             :rules="[(val) => !!val || 'Campo requerido']"
           />
-        </q-col>
+        </div>
 
-        <q-col cols="12" md="6">
+        <div class="col-12 col-md-6">
+          <label for="direccion">Dirección:</label>
           <q-input
             v-model="localData.direccion"
-            label="Dirección"
-            name="direccion"
+            id="direccion"
             outlined
             dense
             autocomplete="off"
             :rules="[(val) => !!val || 'Campo requerido']"
           />
-        </q-col>
+        </div>
 
-        <q-col cols="12" md="6">
+        <div class="col-12 col-md-4">
+          <label for="telefono">Teléfono:</label>
           <q-input
             v-model="localData.telefono"
-            label="Teléfono"
             name="telefono"
+            id="telefono"
             outlined
             dense
             autocomplete="off"
             :rules="[(val) => !!val || 'Campo requerido']"
           />
-        </q-col>
+        </div>
 
-        <q-col cols="12" md="6">
+        <div class="col-12 col-md-4">
+          <label for="emal">Email:</label>
           <q-input
             v-model="localData.email"
-            label="Email"
             name="email"
+            id="email"
             type="email"
             outlined
             dense
             autocomplete="off"
           />
-        </q-col>
+        </div>
 
-        <q-col cols="12" md="6">
+        <div class="col-12 col-md-4">
+          <label for="tipoalmacen">Tipo de Almacén:</label>
           <q-select
             v-model="localData.tipoalmacen"
             :options="tiposAlmacen"
-            label="Tipo de Almacén"
+            id="tipoalmacen"
             emit-value
             map-options
             outlined
             dense
             :rules="[(val) => !!val || 'Seleccione un tipo']"
           />
-        </q-col>
+        </div>
 
-        <q-col cols="12" md="6">
+        <div class="col-12 col-md-6">
+          <label for="sucursal">Sucursal:</label>
           <q-select
             v-model="localData.sucursal"
             :options="sucursales"
-            label="Sucursal"
+            id="sucursal"
             emit-value
             map-options
             outlined
             dense
             :rules="[(val) => !!val || 'Seleccione una sucursal']"
           />
-        </q-col>
+        </div>
 
-        <q-col cols="12" md="6">
+        <div class="col-12 col-md-3">
+          <label for="stockmin">Stock Mínimo:</label>
           <q-input
             v-model="localData.stockmin"
-            label="Stock Mínimo"
+            id="stockmin"
             name="stockmin"
             type="number"
             outlined
             dense
             :rules="[(val) => !!val || 'Ingrese un valor']"
           />
-        </q-col>
+        </div>
 
-        <q-col cols="12" md="6">
+        <div class="col-12 col-md-3">
+          <label for="stockmax">Stock Máximo:</label>
           <q-input
             v-model="localData.stockmax"
-            label="Stock Máximo"
             name="stockmax"
+            id="stockmax"
             type="number"
             outlined
             dense
             :rules="[(val) => !!val || 'Ingrese un valor']"
           />
-        </q-col>
-      </q-row>
-    </q-card-section>
+        </div>
+      </q-card-section>
 
-    <q-card-actions align="right">
-      <q-btn label="Cancelar" flat color="negative" @click="$emit('cancel')" />
-      <q-btn label="Guardar" type="submit" color="primary" />
-    </q-card-actions>
-  </q-form>
+      <q-card-actions class="flex justify-end">
+        <q-btn label="Cancelar" flat color="negative" @click="$emit('cancel')" />
+        <q-btn label="Guardar" type="submit" color="primary" />
+      </q-card-actions>
+    </q-form>
+  </q-card>
 </template>
 
 <script setup>
@@ -141,5 +147,3 @@ const handleSubmit = () => {
   emit('submit', localData.value)
 }
 </script>
-
-

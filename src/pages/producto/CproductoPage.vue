@@ -1,5 +1,5 @@
 <template>
-  <q-page>
+  <q-page class="q-pa-md q-pa-md-md q-pa-lg-lg">
     <q-card v-if="showForm" class="q-mx-auto q-mt-md">
       <q-card-section class="q-pa-none">
         <producto-form
@@ -179,15 +179,16 @@ const handleSubmit = async (data) => {
   try {
     if (isEditing.value) {
       const response = await api.post(``, formData)
-      console.log(response)
+      console.log(response.data)
     } else {
       const response = await api.post(``, formData)
-      console.log(response)
+      console.log(response.data)
     }
     $q.notify({
       type: 'positive',
       message: isEditing.value ? 'Editado correctamente' : 'Registrado correctamente',
     })
+    loadRows()
   } catch (error) {
     console.error('Error al guardar:', error)
     $q.notify({
@@ -230,6 +231,40 @@ const editUnit = (item) => {
 
   isEditing.value = true
   showForm.value = true
+}
+
+const confirmDelete = (row) => {
+  console.log(row)
+
+  $q.dialog({
+    title: 'Confirmar',
+    message: `¿Eliminar Proveedor "${row.nombre}"?`,
+    cancel: true,
+    persistent: true,
+  }).onOk(async () => {
+    try {
+      const response = await api.get(`eliminarProducto/${row.id}`) // Cambia a tu ruta real
+      console.log(response)
+      if (response.data.estado === 'exito') {
+        loadRows()
+        $q.notify({
+          type: 'positive',
+          message: response.data.mensaje,
+        })
+      } else {
+        $q.notify({
+          type: 'negative',
+          message: response.data.mensaje,
+        })
+      }
+    } catch (error) {
+      console.error('Error al cargar datos:', error)
+      $q.notify({
+        type: 'negative',
+        message: 'No se pudieron cargar los datos',
+      })
+    }
+  })
 }
 onMounted(() => {
   loadcategorias()

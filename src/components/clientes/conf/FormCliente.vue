@@ -1,35 +1,37 @@
 <template>
-  <q-card class="q-pa-md">
-    <q-card-section>
-      <q-form @submit.prevent="handleSubmit">
-        <q-card-section>
-          <div class="text-h6">Tipo Cliente</div>
-        </q-card-section>
-        <q-card-section>
+  <q-card>
+    <q-form @submit.prevent="handleSubmit">
+      <q-card-section class="row q-col-gutter-x-md">
+        <div class="col-12 col-md-6">
+          <label for="tipoC">Tipo cliente*</label>
           <q-input
             v-model="localData.tipo"
-            label="Tipo cliente*"
             outlined
             dense
+            id="tipoC"
             :rules="[(val) => !!val || 'Campo obligatorio']"
+            class="q-mt-xs"
           />
-        </q-card-section>
-        <q-card-section
-          ><q-input
-            v-model="localData.descripcion"
-            label="Descripción del tipo cliente*"
-            outlined
-            dense
-            :rules="[(val) => !!val || 'Campo obligatorio']"
-          />
-        </q-card-section>
+        </div>
 
-        <q-card-actions align="right">
-          <q-btn label="Cancelar" flat color="negative" @click="$emit('cancel')" />
-          <q-btn label="Guardar" type="submit" color="primary" />
-        </q-card-actions>
-      </q-form>
-    </q-card-section>
+        <div class="col-12 col-md-6">
+          <label for="desc">Descripción del tipo cliente*</label>
+          <q-input
+            v-model="localData.descripcion"
+            outlined
+            dense
+            id="desc"
+            :rules="[(val) => !!val || 'Campo obligatorio']"
+            class="q-mt-xs"
+          />
+        </div>
+      </q-card-section>
+
+      <q-card-actions class="flex justify-end">
+        <q-btn label="Cancelar" flat color="negative" @click="$emit('cancel')" />
+        <q-btn label="Guardar" type="submit" color="primary" />
+      </q-card-actions>
+    </q-form>
   </q-card>
 </template>
 

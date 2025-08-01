@@ -1,13 +1,21 @@
 <template>
-  <div class="q-pa-md">
-    <div v-if="showForm" class="q-mx-auto q-mt-md">
-      <form-proveedor
-        :isEditing="isEditing"
-        :modal-value="proveedorSeleccionado"
-        @submit="guardarProveedor"
-        @cancel="toggleForm"
-      />
-    </div>
+  <q-page class="q-pa-md">
+    <q-dialog v-model="showForm" persistent>
+      <q-card class="responsive-dialog">
+        <q-card-section class="bg-primary text-h6 text-white flex justify-between">
+          <div>Registrar Proveedor</div>
+          <q-btn color="" icon="close" @click="showForm = false" flat dense round />
+        </q-card-section>
+        <q-card-actions class="q-pa-none">
+          <form-proveedor
+            :isEditing="isEditing"
+            :modal-value="proveedorSeleccionado"
+            @submit="guardarProveedor"
+            @cancel="toggleForm"
+          />
+        </q-card-actions>
+      </q-card>
+    </q-dialog>
     <table-proveedor
       :isEditing="isEditing"
       :rows="provedores"
@@ -17,7 +25,7 @@
       @imprimirReporte="onImprimirReporte"
       @importFromExcel="onImportFromExcel"
     />
-  </div>
+  </q-page>
 </template>
 <script setup>
 import { ref, onMounted } from 'vue'

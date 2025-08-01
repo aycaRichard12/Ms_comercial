@@ -1,41 +1,63 @@
 <template>
   <div class="q-pa-md">
     <!-- Cabecera -->
-    <div class="row justify-between items-center q-gutter-md">
-      <div class="col-auto">
-        <q-btn icon="add" color="primary" label="Agregar" @click="$emit('add')" />
+    <div class="row q-col-gutter-x-md">
+      <div class="col-6 flex justify-start">
+        <q-btn color="primary" @click="$emit('add')" class="btn-res">
+          <q-icon name="add" class="icono" />
+          <span class="texto">Agregar</span>
+        </q-btn>
       </div>
-
-      <div class="col-6 row justify-center q-gutter-md">
+      <div class="col-6 flex justify-end">
+        <q-btn color="info" @click="imprimir" outline class="btn-res">
+          <q-icon name="picture_as_pdf" class="icono" />
+          <span class="texto">Vista Previa PDF</span>
+        </q-btn>
+      </div>
+    </div>
+    <div class="row q-col-gutter-x-md">
+      <div class="col-12 col-md-3">
+        <label for="almacen">Almacén</label>
         <q-select
           v-model="filtroAlmacen"
           :options="almacenes"
-          label="Seleccione un Almacén"
+          id="almacen"
           map-options
           clearable
-          class="col"
-          style="min-width: 200px"
-        />
-
-        <q-select
-          v-model="filtroTipo"
-          :options="tiposPedido"
-          label="Tipo"
-          emit-value
-          map-options
-          clearable
-          class="col"
+          dense
+          outlined
           style="min-width: 200px"
         />
       </div>
 
-      <div class="col-auto">
-        <q-btn color="info" icon="print" label="Imprimir" @click="imprimir" />
+      <div class="col-12 col-md-3">
+        <label for="tipo">Tipo</label>
+        <q-select
+          v-model="filtroTipo"
+          :options="tiposPedido"
+          id="tipo"
+          emit-value
+          map-options
+          clearable
+          dense
+          outlined
+        />
+      </div>
+      <div class="col-12 col-md-6 flex justify-end">
+        <div>
+          <label for="buscar">Buscar...</label>
+          <q-input dense debounce="300" v-model="search" id="buscar" outlined>
+            <template v-slot:append>
+              <q-icon name="search" />
+            </template>
+          </q-input>
+        </div>
       </div>
     </div>
 
     <!-- Tabla -->
     <q-table
+      title="Pedidos"
       :rows="ordenados"
       :columns="columnas"
       :loading="loading"
@@ -45,13 +67,7 @@
       wrap-cells
       class="q-mt-sm"
     >
-      <template v-slot:top-right>
-        <q-input dense debounce="300" v-model="search" placeholder="Buscar...">
-          <template v-slot:append>
-            <q-icon name="search" />
-          </template>
-        </q-input>
-      </template>
+      <template v-slot:top-right> </template>
       <template v-slot:body-cell-autorizacion="props">
         <q-td :props="props">
           <q-badge

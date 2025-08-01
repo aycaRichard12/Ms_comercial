@@ -1,130 +1,136 @@
 <template>
-  <q-page class="q-pa-md">
-    <div class="q-gutter-md">
-      <div class="row items-center justify-between q-mb-md">
-        <div class="col-auto">
-          <q-btn icon="add" color="primary" label="Agregar" @click="$emit('addRecord')" />
-          <q-btn
-            color="primary"
-            label="Reporte"
-            icon="picture_as_pdf"
-            class="q-ml-md"
-            @click="$emit('generateReport')"
-            title="Generar Reporte"
-          />
-        </div>
+  <div class="q-gutter-md">
+    <div class="row items-center justify-between q-mt-lg">
+      <q-btn color="primary" @click="$emit('addRecord')" class="btn-res">
+        <q-icon name="add" class="icono" />
+        <span class="texto">Agregar</span>
+      </q-btn>
+      <q-btn
+        color="primary"
+        class="btn-res"
+        @click="$emit('generateReport')"
+        title="Generar Reporte"
+      >
+        <q-icon name="description" class="icono" />
+        <span class="texto">Reporte</span>
+      </q-btn>
 
-        <div class="col-auto row q-gutter-x-md items-center">
-          <q-select
-            filled
-            v-model="selectedFilterStore"
-            :options="filterStores"
-            label="Seleccione un Almacén"
-            map-options
-            class="q-mr-sm"
-            style="min-width: 200px"
-            clearable
-            id="filtroAlmacenMOV"
-          />
-          <q-btn
-            color="info"
-            label="Imprimir"
-            icon="print"
-            @click="printFilteredTable"
-            id="generarReporteMOV"
-            title="Imprimir tabla del almacén seleccionado"
-          />
-
-          <q-input
-            filled
-            v-model="searchQuery"
-            placeholder="Buscar..."
-            class="q-ml-md"
-            style="min-width: 250px"
-          >
-            <template v-slot:append>
-              <q-icon name="search" />
-            </template>
-          </q-input>
-        </div>
+      <div class="col-8 col-md-3">
+        <label for="almacen">Seleccione un Almacén</label>
+        <q-select
+          v-model="selectedFilterStore"
+          :options="filterStores"
+          id="almacen"
+          map-options
+          class="q-mr-sm"
+          dense
+          outlined
+          clearable
+        />
       </div>
 
-      <div class="text-right q-mb-md">
+      <q-btn
+        color="info"
+        @click="printFilteredTable"
+        id="generarReporteMOV"
+        title="Imprimir tabla del almacén seleccionado"
+        class="btn-res"
+      >
+        <q-icon name="picture_as_pdf" class="icono" />
+        <span class="texto">Vista Previa PDF</span>
+      </q-btn>
+    </div>
+
+    <div class="row flex justify-between">
+      <div>
         <q-btn
           color="secondary"
           label="Lista de Pedidos"
           @click="showOrderList"
           id="listaPedidosMOV"
           title="Lista de Pedidos del almacén seleccionado"
+          class="q-mt-lg"
         />
       </div>
 
-      <q-table
-        :rows="filteredRows"
-        :columns="columns"
-        row-key="id"
-        :loading="props.loading || movementStore.isLoadingOriginStores"
-        :filter="searchQuery"
-        v-model:pagination="pagination"
-        class="my-sticky-header-table"
-        flat
-        bordered
-      >
-        <template v-slot:body-cell-Autorizacion="props">
-          <q-td :props="props">
-            <q-badge :color="props.row.autorizacionStatus === 'Autorizado' ? 'green' : 'red'">{{
-              props.row.autorizacionStatus
-            }}</q-badge>
-          </q-td>
-        </template>
+      <div>
+        <label for="buscar">Buscar...</label>
+        <q-input
+          v-model="searchQuery"
+          placeholder="Buscar..."
+          dense
+          outlined
+          debounce="300"
+          class="q-mb-md"
+          style="background-color: white"
+        >
+          <template v-slot:append>
+            <q-icon name="search" />
+          </template>
+        </q-input>
+      </div>
+    </div>
 
-        <template v-slot:body-cell-Detalle="props">
-          <q-td :props="props">
+    <q-table
+      :rows="filteredRows"
+      :columns="columns"
+      row-key="id"
+      :loading="props.loading || movementStore.isLoadingOriginStores"
+      :filter="searchQuery"
+      v-model:pagination="pagination"
+      flat
+      bordered
+      title="Movimientos Almacén"
+    >
+      <template v-slot:top-right> </template>
+      <template v-slot:body-cell-Autorizacion="props">
+        <q-td :props="props">
+          <q-badge :color="props.row.autorizacionStatus === 'Autorizado' ? 'green' : 'red'">{{
+            props.row.autorizacionStatus
+          }}</q-badge>
+        </q-td>
+      </template>
+
+      <template v-slot:body-cell-Detalle="props">
+        <q-td :props="props">
+          <q-btn
+            label="Productos"
+            color="blue"
+            dense
+            flat
+            @click="$emit('viewProductDetails', props.row)"
+          />
+        </q-td>
+      </template>
+
+      <template v-slot:body-cell-Opciones="props">
+        <q-td :props="props">
+          <div v-if="Number(props.row.autorizacion) === 2">
+            <q-btn size="sm" icon="visibility" flat @click="verDetalle(props.row)" />
+
+            <q-btn icon="edit" color="primary" dense flat @click="$emit('editRecord', props.row)" />
             <q-btn
-              label="Productos"
-              color="blue"
+              icon="delete"
+              color="negative"
               dense
               flat
-              @click="$emit('viewProductDetails', props.row)"
+              @click="$emit('deleteRecord', props.row)"
             />
-          </q-td>
-        </template>
-
-        <template v-slot:body-cell-Opciones="props">
-          <q-td :props="props">
-            <div v-if="Number(props.row.autorizacion) === 2">
-              <q-btn size="sm" icon="visibility" flat @click="verDetalle(props.row)" />
-
-              <q-btn
-                icon="edit"
-                color="primary"
-                dense
-                flat
-                @click="$emit('editRecord', props.row)"
-              />
-              <q-btn
-                icon="delete"
-                color="negative"
-                dense
-                flat
-                @click="$emit('deleteRecord', props.row)"
-              />
-              <q-btn
-                icon="toggle_off"
-                dense
-                flat
-                color="grey"
-                @click="$emit('toggleStatus', props.row)"
-              />
-            </div>
-            <div v-else>
-              <q-btn size="sm" icon="visibility" flat @click="verDetalle(props.row)" />
-            </div>
-          </q-td>
-        </template>
-      </q-table>
-    </div>
-  </q-page>
+            <q-btn
+              icon="toggle_off"
+              dense
+              flat
+              color="grey"
+              @click="$emit('toggleStatus', props.row)"
+            />
+          </div>
+          <div v-else>
+            <q-btn size="sm" icon="visibility" flat @click="verDetalle(props.row)" />
+          </div>
+        </q-td>
+      </template>
+    </q-table>
+  </div>
   <q-dialog v-model="mostrarModal" persistent full-width full-height>
     <q-card class="q-pa-md" style="height: 100%; max-width: 100%">
       <q-card-section class="row items-center q-pb-none">

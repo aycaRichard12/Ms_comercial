@@ -98,6 +98,11 @@
                   </q-th>
                 </q-tr>
               </template>
+              <template v-slot:body-cell-detalle="props">
+                <q-tr :props="props">
+                  {{ datosTablaResumen }}
+                </q-tr>
+              </template>
             </q-table>
           </div>
         </div>
@@ -421,7 +426,7 @@ const cargarDatos = () => {
     }
     resultado.push(row)
   }
-
+  console.log(resultado)
   datosTablaResumen.value = resultado
 }
 

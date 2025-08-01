@@ -1,26 +1,40 @@
 <template>
-  <div class="row">
-    <div class="col">
-      <div class="row items-center q-gutter-sm">
-        <q-btn label="Agregar" icon="add" color="primary" @click="$emit('add')" />
-      </div>
+  <div class="row q-col-gutter-x-md flex justify-between">
+    <div class="col-12 col-md-3">
+      <q-btn color="primary" @click="$emit('add')" class="btn-res q-mt-lg">
+        <q-icon name="add" class="icono" />
+        <span class="texto"> Agregar</span>
+      </q-btn>
     </div>
 
-    <div class="col">
-      <div class="row items-center q-gutter-sm" style="max-width: 200px">
-        <q-select
-          v-model="filtroTipoAlmacen"
-          :options="tiposAlmacen"
-          placeholder="Seleccione una opción"
-          label="Almacén"
-          emit-value
-          map-options
-          dense
-          outlined
-          clearable
-          class="full-width"
-        />
-      </div>
+    <div class="col-12 col-md-3">
+      <label for="almacen">Almacén</label>
+      <q-select
+        v-model="filtroTipoAlmacen"
+        :options="tiposAlmacen"
+        id="almacen"
+        emit-value
+        map-options
+        dense
+        outlined
+        clearable
+      />
+    </div>
+    <div class="col-12 col-md-3">
+      <label for="buscar">Buscar...</label>
+      <q-input
+        v-model="search"
+        id="buscar"
+        dense
+        outlined
+        debounce="300"
+        class="q-mb-md"
+        style="background-color: white"
+      >
+        <template v-slot:append>
+          <q-icon name="search" />
+        </template>
+      </q-input>
     </div>
   </div>
 
@@ -28,16 +42,12 @@
     title="Puntos Ventas"
     :rows="ordenados"
     :columns="columns"
-    :pagination="pagination"
     row-key="id"
     :filter="search"
     flat
     bordered
-    class="my-sticky-header-table q-mt-md"
   >
-    <template v-slot:top-right>
-      <q-input dense debounce="300" v-model="search" placeholder="Buscar..." />
-    </template>
+    <template v-slot:top-right> </template>
     <template v-slot:body-cell-opciones="props">
       <q-td :props="props" class="text-nowrap">
         <q-btn
@@ -85,9 +95,7 @@ const ordenados = computed(() =>
   })),
 )
 const search = ref('')
-const pagination = ref({
-  rowsPerPage: 10,
-})
+
 watch(filtroTipoAlmacen, (val) => {
   emit('onSeleccionarTipo', val)
 })

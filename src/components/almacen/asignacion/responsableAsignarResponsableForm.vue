@@ -10,29 +10,34 @@
           @click="$emit('volver')"
         />
       </div>
-      <div class="col-md-8 text-center">
-        <h6>Asignación de Almacenes</h6>
-        <h6 class="text-primary">{{ responsableNombre }}</h6>
-      </div>
     </div>
     <q-form @submit.prevent="handleSubmit">
-      <div style="display: flex; justify-content: center">
-        <q-select
-          v-model="localData.almacen"
-          :options="almacenes"
-          label="Almacenes*"
-          outlined
-          dense
-          required
-          option-value="value"
-          option-label="label"
-          emit-value
-          map-options
-          :rules="[(val) => !!val || 'Seleccione Almacen']"
-          style="width: 300px"
-        />
+      <div class="title-container">
+        <div class="title">Asignación de Almacenes</div>
+        <div class="subtitle">
+          {{ `${responsableNombre.usuario.usuario} ${responsableNombre.usuario.nombre}` }}
+        </div>
       </div>
-      <q-card-actions align="right">
+      <q-card-section class="row q-col-gutter-x-md flex justify-center">
+        <div class="col-12 col-md-3">
+          <label for="almacen">Almacenes*</label>
+          <q-select
+            v-model="localData.almacen"
+            :options="almacenes"
+            outlined
+            dense
+            required
+            option-value="value"
+            option-label="label"
+            emit-value
+            map-options
+            id="almacen"
+            :rules="[(val) => !!val || 'Seleccione Almacen']"
+          />
+        </div>
+      </q-card-section>
+
+      <q-card-actions class="flex justify-end">
         <q-btn label="Guardar" type="submit" color="primary" />
       </q-card-actions>
     </q-form>
@@ -44,13 +49,15 @@ import { ref, watch } from 'vue'
 
 const props = defineProps({
   responsableId: Number,
-  responsableNombre: String,
+  responsableNombre: Object,
   modelValue: Object,
   almacenes: {
     type: Array,
     default: () => [],
   },
 })
+
+console.log(props.responsableNombre.usuario)
 const localData = ref({ ...props.modelValue })
 
 watch(

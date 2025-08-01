@@ -38,7 +38,7 @@ export async function peticionGET(apiURL) {
     }
 
     const data = await response.json()
-    console.log(JSON.stringify(data))
+    // console.log(JSON.stringify(data))
     return data
   } catch (error) {
     console.error('Error al recibir datos de la API:', error)

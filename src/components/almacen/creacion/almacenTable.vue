@@ -1,81 +1,96 @@
 <template>
-  <div style="display: flex; justify-content: space-between">
-    <q-btn label="Agregar" icon="add" color="primary" @click="$emit('add')" />
-    <q-btn flat label="Imprimir" icon="print" color="info" @click="mostrarReporte" />
+  <div class="q-pa-md">
+    <div class="flex justify-between">
+      <q-btn color="primary" @click="$emit('add')" class="btn-res q-mt-lg">
+        <q-icon name="add" class="icono" />
+        <span class="texto">Agregar</span>
+      </q-btn>
+      <q-btn color="info" outline @click="mostrarReporte" class="btn-res q-mt-lg">
+        <q-icon name="picture_as_pdf" class="icono" />
+        <span class="texto">Vista previa PDF</span>
+      </q-btn>
+      <div>
+        <label for="buscar">Buscar...</label>
+        <q-input
+          v-model="search"
+          id="buscar"
+          dense
+          outlined
+          debounce="300"
+          class="q-mb-md"
+          style="background-color: white"
+        >
+          <template v-slot:append>
+            <q-icon name="search" />
+          </template>
+        </q-input>
+      </div>
+    </div>
+
+    <q-table
+      title="Almacenes"
+      :rows="rows"
+      :columns="columnas"
+      row-key="id"
+      :filter="search"
+      flat
+      bordered
+    >
+      <template v-slot:body-cell-sucursal="props">
+        <q-td :props="props">
+          <span v-if="props.row.sucursales?.length" class="text-primary text-weight-medium">
+            {{ props.row.sucursales[0].nombre }}
+          </span>
+          <span v-else>-</span>
+        </q-td>
+      </template>
+
+      <template v-slot:body-cell-estado="props">
+        <q-td :props="props">
+          <q-badge color="green" v-if="Number(props.row.estado) === 1" label="Activo" outline />
+          <q-badge color="red" v-else label="Inactivo" outline />
+        </q-td>
+      </template>
+      <template v-slot:body-cell-opciones="props">
+        <q-td :props="props" class="text-nowrap">
+          <q-btn
+            icon="edit"
+            color="primary"
+            dense
+            class="q-mr-sm"
+            @click="$emit('edit-item', props.row)"
+          />
+          <q-btn icon="delete" color="negative" dense @click="$emit('delete-item', props.row)" />
+          <q-btn
+            :icon="Number(props.row.estado) === 1 ? 'toggle_on' : 'toggle_off'"
+            dense
+            flat
+            :color="Number(props.row.estado) === 1 ? 'green' : 'grey'"
+            @click="$emit('toggle-status', props.row)"
+          />
+        </q-td>
+      </template>
+    </q-table>
+    <q-dialog v-model="mostrarModal" persistent full-width full-height>
+      <q-card class="q-pa-md" style="height: 100%; max-width: 100%">
+        <q-card-section class="row items-center q-pb-none">
+          <div class="text-h6">Vista previa de PDF</div>
+          <q-space />
+          <q-btn flat round icon="close" @click="mostrarModal = false" />
+        </q-card-section>
+
+        <q-separator />
+
+        <q-card-section class="q-pa-none" style="height: calc(100% - 60px)">
+          <iframe
+            v-if="pdfData"
+            :src="pdfData"
+            style="width: 100%; height: 100%; border: none"
+          ></iframe>
+        </q-card-section>
+      </q-card>
+    </q-dialog>
   </div>
-
-  <q-table
-    title="Almacenes"
-    :rows="rows"
-    :columns="columnas"
-    :pagination="pagination"
-    row-key="id"
-    :filter="search"
-    flat
-    bordered
-    class="my-sticky-header-table q-mt-md"
-  >
-    <template v-slot:top-right>
-      <q-input v-model="search" placeholder="Buscar..." dense outlined debounce="300">
-        <template v-slot:append>
-          <q-icon name="search" />
-        </template>
-      </q-input>
-    </template>
-    <template v-slot:body-cell-sucursal="props">
-      <q-td :props="props">
-        <span v-if="props.row.sucursales?.length" class="text-primary text-weight-medium">
-          {{ props.row.sucursales[0].nombre }}
-        </span>
-        <span v-else>-</span>
-      </q-td>
-    </template>
-
-    <template v-slot:body-cell-estado="props">
-      <q-td :props="props">
-        <q-badge color="green" v-if="Number(props.row.estado) === 1" label="Activo" outline />
-        <q-badge color="red" v-else label="Inactivo" outline />
-      </q-td>
-    </template>
-    <template v-slot:body-cell-opciones="props">
-      <q-td :props="props" class="text-nowrap">
-        <q-btn
-          icon="edit"
-          color="primary"
-          dense
-          class="q-mr-sm"
-          @click="$emit('edit-item', props.row)"
-        />
-        <q-btn icon="delete" color="negative" dense @click="$emit('delete-item', props.row)" />
-        <q-btn
-          :icon="Number(props.row.estado) === 1 ? 'toggle_on' : 'toggle_off'"
-          dense
-          flat
-          :color="Number(props.row.estado) === 1 ? 'green' : 'grey'"
-          @click="$emit('toggle-status', props.row)"
-        />
-      </q-td>
-    </template>
-  </q-table>
-  <q-dialog v-model="mostrarModal" persistent full-width full-height>
-    <q-card class="q-pa-md" style="height: 100%; max-width: 100%">
-      <q-card-section class="row items-center q-pb-none">
-        <div class="text-h6">Vista previa de PDF</div>
-        <q-space />
-        <q-btn flat round icon="close" @click="mostrarModal = false" />
-      </q-card-section>
-
-      <q-separator />
-
-      <q-card-section class="q-pa-none" style="height: calc(100% - 60px)">
-        <iframe
-          v-if="pdfData"
-          :src="pdfData"
-          style="width: 100%; height: 100%; border: none"
-        ></iframe>
-      </q-card-section>
-    </q-card>
-  </q-dialog>
 </template>
 
 <script setup>
@@ -112,7 +127,6 @@ const columnas = [
 ]
 
 const search = ref('')
-const pagination = ref({ rowsPerPage: 10 })
 
 function mostrarReporte() {
   console.log(props.rows) // ✅ Acceso correcto a los datos reactivos

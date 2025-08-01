@@ -1,7 +1,11 @@
 <template>
   <q-page>
     <q-dialog v-model="showForm" persistent>
-      <q-card style="min-width: 400px; max-width: 600px">
+      <q-card class="responsive-dialog">
+        <q-card-section class="bg-primary text-h6 text-white flex justify-between">
+          <div>Tipo Cliente</div>
+          <q-btn color="" icon="close" @click="showForm = false" flat dense round />
+        </q-card-section>
         <q-card-section class="q-pa-none">
           <tipo-cliente-form
             :isEditing="isEditing"

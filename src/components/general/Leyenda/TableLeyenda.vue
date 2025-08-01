@@ -1,8 +1,31 @@
 <!-- components/TableLeyendas.vue -->
 <template>
   <div>
-    <q-btn label="Agregar" icon="add" color="primary" @click="$emit('add')" class="q-mb-md" />
-    <div class="col flex items-center justify-end">
+    <div class="flex justify-between">
+      <q-btn color="primary" @click="$emit('add')" class="btn-res q-mt-lg">
+        <q-icon name="add" class="icono" />
+
+        <span class="texto">Agregar</span>
+      </q-btn>
+      <div>
+        <label for="buscar">Buscar...</label>
+        <q-input
+          v-model="busqueda"
+          id="buscar"
+          dense
+          outlined
+          debounce="300"
+          class="q-mb-md"
+          style="background-color: white"
+        >
+          <template v-slot:append>
+            <q-icon name="search" />
+          </template>
+        </q-input>
+      </div>
+    </div>
+
+    <!-- <div class="col flex items-center justify-end">
       <q-input
         dense
         outlined
@@ -16,7 +39,7 @@
           <q-icon name="search" />
         </template>
       </q-input>
-    </div>
+    </div> -->
 
     <!-- Tabla -->
     <q-table
@@ -27,7 +50,9 @@
       flat
       bordered
       class="my-sticky-header-table q-mt-md"
+      :filter="busqueda"
     >
+      <template v-slot:top-right> </template>
       <template v-slot:body-cell-estado="props">
         <q-td align="center">
           <q-badge color="green" v-if="Number(props.row.estado) === 1" label="Activo" outline />

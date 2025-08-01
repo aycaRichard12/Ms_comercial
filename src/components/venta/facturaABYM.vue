@@ -1,7 +1,7 @@
 <template>
-  <q-page class="q-ma-lg">
+  <q-page>
     <div class="forms">
-      <div style="display: flex; justify-content: space-between" class="q-mb-md">
+      <div class="flex justify-between q-mb-md">
         <div class="col-12 col-sm-4">
           <q-btn
             label="Volver"
@@ -34,9 +34,12 @@
             </div>
             <div class="row q-col-gutter-md">
               <div class="col-12 col-md-5">
+                <label for="cliente">Cliente*</label>
                 <q-select
                   v-model="formData.cliente"
-                  label="Cliente*"
+                  id="cliente"
+                  dense
+                  outlined
                   :options="filteredClients"
                   option-label="label"
                   option-value="value"
@@ -61,9 +64,12 @@
                 <q-btn color="blue" icon="person_add" @click="RegistrarCliente" />
               </div>
               <div class="col-12 col-md-3">
+                <label for="sucursal">Sucursal*</label>
                 <q-select
                   v-model="formData.sucursal"
-                  label="Sucursal*"
+                  id="sucursal"
+                  dense
+                  outlined
                   :options="branchOptions"
                   option-label="label"
                   option-value="value"
@@ -76,9 +82,12 @@
                 </q-select>
               </div>
               <div class="col-12 col-md-3">
+                <label for="tipodic">Tipo de documento*</label>
                 <q-select
                   v-model="formData.tipodoc"
-                  label="Tipo de documento*"
+                  id="tipodic"
+                  dense
+                  outlined
                   :options="typeDocOptions"
                   option-label="label"
                   option-value="value"
@@ -90,9 +99,12 @@
                 </q-select>
               </div>
               <div class="col-12 col-md-3">
+                <label for="nrodoc">Nro. documento*</label>
                 <q-input
                   v-model="formData.nroDoc"
-                  label="Nro. documento*"
+                  id="nrodoc"
+                  dense
+                  outlined
                   type="number"
                   :rules="[(val) => !!val || 'Campo Obligatorio']"
                   :disable="!formData.cliente"
@@ -103,16 +115,20 @@
                 </q-input>
               </div>
               <div class="col-12 col-md-3">
-                <q-input v-model="formData.fecha" label="Fecha*" type="date" required>
+                <label for="fecha">Fecha*</label>
+                <q-input v-model="formData.fecha" id="fecha" dense outlined type="date" required>
                   <template v-slot:prepend>
                     <q-icon name="event" color="blue" />
                   </template>
                 </q-input>
               </div>
               <div class="col-12 col-md-3">
+                <label for="canalventa">Canal de venta*</label>
                 <q-select
                   v-model="formData.canal"
-                  label="Canal de venta*"
+                  id="canalventa"
+                  dense
+                  outlined
                   :options="salesChannels"
                   option-label="label"
                   option-value="value"
@@ -125,9 +141,12 @@
                 </q-select>
               </div>
               <div class="col-12 col-md-3">
+                <label for="fecha">Período fecha*</label>
                 <q-input
                   v-model="formData.periodoFecha"
-                  label="Período fecha*"
+                  id="fecha"
+                  dense
+                  outlined
                   placeholder="Ej: 01-01-2023 al 01-02-2023"
                   :rules="[(val) => !!val || 'Campo obligatorio']"
                 >
@@ -143,9 +162,12 @@
               </div>
 
               <div class="col-12 col-md-3">
+                <label for="puntoventa">Punto de venta*</label>
                 <q-select
                   v-model="formData.puntoventa"
-                  label="Punto de venta*"
+                  id="puntoventa"
+                  dense
+                  outlined
                   :options="puntosVenta"
                   option-label="label"
                   option-value="value"
@@ -190,9 +212,12 @@
 
             <div v-if="formData.variablePago === 'directo'" class="row q-col-gutter-md q-pt-md">
               <div class="col-12 col-md-4">
+                <label for="metodopago">Método de pago*</label>
                 <q-select
                   v-model="formData.metodoPago"
-                  label="Método de pago*"
+                  id="metodopago"
+                  dense
+                  outlined
                   :options="metodoPago"
                   option-label="label"
                   option-value="value"
@@ -212,9 +237,12 @@
                 class="row q-col-gutter-md q-mb-sm items-center"
               >
                 <div class="col-12 col-md-4">
+                  <label for="metodopago">Método de pago*</label>
                   <q-select
                     v-model="payment.metodoPago"
-                    label="Método de pago*"
+                    id="metodopago"
+                    dense
+                    outlined
                     :options="metodoPago"
                     option-label="label"
                     option-value="value"
@@ -226,9 +254,12 @@
                   </q-select>
                 </div>
                 <div class="col-12 col-md-3">
+                  <label for="monto">{{ 'Monto (' + divisaActiva.simbolo + ')' }}</label>
                   <q-input
                     v-model="payment.monto"
-                    :label="'Monto (' + divisaActiva.simbolo + ')'"
+                    id="monto"
+                    dense
+                    outlined
                     type="number"
                     min="0"
                     step="0.01"
@@ -242,9 +273,12 @@
                   </q-input>
                 </div>
                 <div class="col-12 col-md-3">
+                  <label for="porcentaje">Porcentaje (%)</label>
                   <q-input
                     v-model="payment.porcentaje"
-                    label="Porcentaje (%)"
+                    id="porcentaje"
+                    dense
+                    outlined
                     type="number"
                     min="0"
                     max="100"
@@ -325,9 +359,12 @@
 
             <div v-if="formData.credito" class="row q-col-gutter-md q-pt-md">
               <div class="col-12 col-md-4">
+                <label for="cantidadpagos">Cantidad de pagos*</label>
                 <q-input
                   v-model="formData.cantidadPagos"
-                  label="Cantidad de pagos*"
+                  id="cantidadpagos"
+                  dense
+                  outlined
                   type="number"
                   min="0"
                   required
@@ -341,9 +378,12 @@
               </div>
 
               <div class="col-12 col-md-4">
+                <label for="metodopago">Monto de pagos*</label>
                 <q-input
                   v-model="formData.montoPagos"
-                  label="Monto de pagos*"
+                  id="metodopago"
+                  dense
+                  outlined
                   :disable="!formData.credito"
                 >
                   <template v-slot:prepend>
@@ -356,9 +396,12 @@
               </div>
 
               <div class="col-12 col-md-4">
+                <label for="periodoestableicido">Período establecido*</label>
                 <q-select
                   v-model="formData.periodo"
-                  label="Período establecido*"
+                  id="periodoestableicido"
+                  dense
+                  outlined
                   :options="periodOptions"
                   option-label="label"
                   option-value="value"
@@ -374,9 +417,12 @@
               </div>
 
               <div v-if="formData.periodo === 0" class="col-12 col-md-4">
+                <label for="plazo">Plazo total (días)*</label>
                 <q-input
                   v-model="formData.plazoPersonalizado"
-                  label="Plazo total (días)*"
+                  id="plazo"
+                  dense
+                  outlined
                   type="number"
                   min="0"
                   required
@@ -390,9 +436,12 @@
               </div>
 
               <div class="col-12 col-md-4">
+                <label for="fechalimite">Fecha límite*</label>
                 <q-input
                   v-model="formData.fechaLimite"
-                  label="Fecha límite*"
+                  id="fechalimite"
+                  dense
+                  outlined
                   type="date"
                   :disable="true"
                 >
@@ -405,7 +454,7 @@
           </q-card-section>
         </q-card>
 
-        <div class="row q-col-gutter-md">
+        <div class="row q-col-gutter-md q-ma-md">
           <div class="col-12 text-right">
             <q-btn label="Registrar" type="submit" color="primary" icon="save" />
           </div>

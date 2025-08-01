@@ -1,7 +1,11 @@
 <template>
-  <q-page padding>
+  <q-page class="q-pa-md q-pa-md-md q-pa-lg-lg">
     <q-dialog v-model="showForm" persistent>
-      <q-card style="min-width: 400px; max-width: 600px">
+      <q-card class="responsive-dialog">
+        <q-card-section class="bg-primary text-white text-h6 flex justify-between">
+          <div>Registrar Punto de Venta</div>
+          <q-btn color="" icon="close" @click="showForm = false" flat dense round />
+        </q-card-section>
         <q-card-section class="q-pa-none">
           <FormularioRegistroPDV
             :isEditing="isEditing"
@@ -13,19 +17,15 @@
         </q-card-section>
       </q-card>
     </q-dialog>
-    <q-card class="q-pa-md">
-      <q-card-section>
-        <TablaPDV
-          :rows="puntosVenta"
-          :tipos-almacen="tiposAlmacen"
-          @onSeleccionarTipo="cargarPuntosPorTipo"
-          @add="toggleForm"
-          @edit-item="editUnit"
-          @delete-item="confirmDelete"
-          @toggle-status="toggleStatus"
-        />
-      </q-card-section>
-    </q-card>
+    <TablaPDV
+      :rows="puntosVenta"
+      :tipos-almacen="tiposAlmacen"
+      @onSeleccionarTipo="cargarPuntosPorTipo"
+      @add="toggleForm"
+      @edit-item="editUnit"
+      @delete-item="confirmDelete"
+      @toggle-status="toggleStatus"
+    />
   </q-page>
 </template>
 

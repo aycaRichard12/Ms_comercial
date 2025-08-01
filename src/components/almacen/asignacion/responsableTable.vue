@@ -1,11 +1,13 @@
 <template>
-  <div class="q-gutter-sm q-mb-md">
-    <q-row class="q-col-gutter-md items-center">
-      <!-- Botones a la izquierda -->
-      <q-col cols="12" sm="6" class="flex q-gutter-sm">
-        <q-btn label="Agregar" icon="add" color="primary" @click="$emit('add')" />
-      </q-col>
-    </q-row>
+  <div class="flex justify-between">
+    <q-btn color="primary" @click="$emit('add')" class="btn-res q-mt-lg">
+      <q-icon name="add" class="icono" />
+      <span class="texto">Agregar</span>
+    </q-btn>
+    <div>
+      <label for="buscar">Buscar...</label>
+      <q-input dense outlined debounce="300" v-model="search" id="buscar" />
+    </div>
   </div>
   <q-table
     title="Responsables"
@@ -18,9 +20,7 @@
     bordered
     class="my-sticky-header-table q-mt-md"
   >
-    <template v-slot:top-right>
-      <q-input dense debounce="300" v-model="search" placeholder="Buscar..." />
-    </template>
+    <template v-slot:top-right> </template>
     <template v-slot:body-cell-opciones="props">
       <q-td align="center">
         <q-btn dense icon="delete" color="negative" @click="eliminar(props.row.id)" />

@@ -52,13 +52,13 @@
         <q-btn v-if="!showForm" label="Nuevo Registro" color="primary" @click="toggleForm" />
       </div>
 
-      <div class="col flex items-center justify-end">
+      <!-- <div class="col flex items-center justify-end">
         <q-input v-model="search" placeholder="Buscar" dense outlined class="q-ml-md">
           <template v-slot:append>
             <q-icon name="search" />
           </template>
         </q-input>
-      </div>
+      </div> -->
     </div>
 
     <q-table
@@ -69,6 +69,21 @@
       :filter="search"
       class="my-sticky-header-table"
     >
+      <template v-slot:top-right>
+        <q-input
+          v-model="search"
+          placeholder="Buscar..."
+          dense
+          outlined
+          debounce="300"
+          class="q-mb-md"
+          style="background-color: white"
+        >
+          <template v-slot:append>
+            <q-icon name="search" />
+          </template>
+        </q-input>
+      </template>
       <template v-slot:body-cell-estado="props">
         <q-td :props="props">
           <q-btn icon="thumb_up" color="primary" dense @click="changeStatus(props.row)" />

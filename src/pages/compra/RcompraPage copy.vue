@@ -6,9 +6,8 @@
       :proveedores="proveedores"
       @submit="guardarRegistro"
       @cancel="cerrarFormulario"
-    ></form-compra>
+    />
   </div>
-
   <table-compra
     :rows="compras"
     :almacenes="almacenes"
@@ -19,135 +18,88 @@
     @repDesglosado="generarReporteDesglosado"
     @repCompras="generarReporteGeneral"
     @toggle-status="autorizarCompra"
-  ></table-compra>
-  <div>
-    <q-dialog v-model="mostrarDetalleCompra" persistent>
-      <q-card class="q-pa-md" style="width: 1200px; max-width: 90vw">
-        <DetalleCompra
-          :model-value="formulario"
-          :rows="detalleCompra"
-          :product="productosDisponibles"
-          @submit="agregarDetalle"
-          @close="cancelarDetalle"
-          @editarDetalle="editarDetalle"
-          @eliminarDetalle="eliminarDetalle"
-        />
-      </q-card>
-    </q-dialog>
-  </div>
+  />
+
+  <q-dialog v-model="mostrarDetalleCompra" persistent>
+    <q-card class="q-pa-md" style="width: 1200px; max-width: 90vw">
+      <DetalleCompra :model-value="selectedcompra" @close="cancelarDetalle" />
+    </q-card>
+  </q-dialog>
+  <q-dialog v-model="showFormEdit" persistent>
+    <q-card class="q-pa-md" style="width: 1200px; max-width: 90vw">
+      <FormCompraEditar
+        :modalValue="registroActual"
+        :proveedores="proveedores"
+        :editing="isEditing"
+        @submit="guardarRegistro"
+        @cancel="cerrarFormulario"
+      />
+    </q-card>
+  </q-dialog>
 </template>
+
 <script setup>
 import { ref, onMounted } from 'vue'
 import { api } from 'boot/axios'
-import { idempresa_md5 } from 'src/composables/FuncionesGenerales'
-import { idusuario_md5 } from 'src/composables/FuncionesGenerales'
+import { idempresa_md5, idusuario_md5, objectToFormData } from 'src/composables/FuncionesGenerales'
 import { useQuasar } from 'quasar'
 import FormCompra from 'src/components/compra/FormCompra.vue'
+import FormCompraEditar from 'src/components/compra/EditarCompra.vue'
 import TableCompra from 'src/components/compra/TableCompra.vue'
 import DetalleCompra from 'src/components/compra/DetalleCompra.vue'
-import { objectToFormData } from 'src/composables/FuncionesGenerales'
 
 const $q = useQuasar()
 const idempresa = idempresa_md5()
 const idusuario = idusuario_md5()
+
 const showForm = ref(false)
+const isEditing = ref(false)
 const almacenes = ref([])
 const proveedores = ref([])
 const compras = ref([])
-const isEditing = ref([])
 const mostrarDetalleCompra = ref(false)
-const registroActual = ref({
-  ver: 'registrarCompra',
-  idusuario: idusuario,
-})
-
-//================================Formulario
-async function cargarProveedores() {
-  try {
-    const response = await api.get(`listaProveedor/${idempresa}`)
-
-    proveedores.value = response.data.map((item) => ({
-      label: item.nombre,
-      value: item.id,
-    }))
-    // Agregar opción "Todos (Canal Venta)" al inicio
-  } catch (error) {
-    console.error('Error al cargar datos:', error)
-    $q.notify({
-      type: 'negative',
-      message: 'No se pudieron cargar los Almacenes',
-    })
-  }
-}
-
-async function guardarRegistro(data) {
-  const formData = objectToFormData(data)
-  for (let [k, v] of formData.entries()) {
-    console.log(`${k}: ${v}`)
-  }
-  try {
-    let response
-    if (isEditing.value) {
-      // PUT con FormData (algunos servidores requieren POST + método oculto para PUT)
-      // Aquí se asume que tu backend acepta PUT con FormData directamente. tipoCompra
-      response = await api.post(``, formData)
-    } else {
-      // POST = nuevo cliente
-      response = await api.post('', formData)
-    }
-    console.log(response)
-
-    if (response.data.estado === 'exito') {
-      $q.notify({
-        type: 'positive',
-        message: response.data.mensaje || 'compra registrado correctamente',
-      })
-      loadRows()
-      showForm.value = false
-    } else {
-      $q.notify({
-        type: 'negative',
-        message: response.data.mensaje || 'Hubo un problema al registrar la compra',
-      })
-    }
-  } catch (error) {
-    console.error('Error al guardar cliente:', error)
-    $q.notify({
-      type: 'negative',
-      message: 'No se pudo guardar el cliente',
-    })
-  }
-}
-//================================Tabla
-async function verDetalle(compra) {
+const registroActual = ref({ ver: 'registrarCompra', idusuario })
+const showFormEdit = ref(false)
+const formularioDetalleCompra = ref({ ver: 'registrarDetalleCompra' })
+const detalleCompra = ref([])
+const productosDisponibles = ref([])
+async function editarCompra(compra) {
   console.log(compra)
-  await listaProductosDisponibles(compra) // espera que se carguen los productos
-  await getDetalleCompra(compra)
-  mostrarDetalleCompra.value = true
+  registroActual.value = {
+    ver: 'editarCompra',
+    id: compra.id,
+    nombre: compra.lote,
+    codigo: compra.codigo,
+    proveedor: compra.idproveedor,
+    factura: compra.nfactura,
+  }
+  showFormEdit.value = true
 }
-
-async function autorizarCompra(compra) {
-  console.log(compra.id, compra.autorizacion)
-
+async function eliminarCompra(compra) {
+  console.log(compra)
   $q.dialog({
     title: 'Confirmar',
-    message: `¿Confirmar Compra?`,
+    message: `¿Eliminar Compra?`,
     cancel: true,
     persistent: true,
   }).onOk(async () => {
     try {
-      const response = await api.get(`actualizarEstadoCompra/${compra.id}/1`)
+      const response = await api.get(`eliminarCompra/${compra.id}`) // Cambia a tu ruta real
       console.log(response)
-      if (response.data.estado === 'error') {
+      if (response.data.estado === 'exito') {
+        loadRows()
+        $q.notify({
+          type: 'positive',
+          message: response.data.mensaje,
+        })
+      } else {
         $q.notify({
           type: 'negative',
           message: response.data.mensaje,
         })
-      } else {
-        loadRows()
       }
     } catch (error) {
-      console.error('Error al confirmar compra:', error)
+      console.error('Error al cargar datos:', error)
       $q.notify({
         type: 'negative',
         message: 'No se pudieron cargar los datos',
@@ -155,6 +107,70 @@ async function autorizarCompra(compra) {
     }
   })
 }
+async function enviarFormData(endpoint, data, mensajeExito, mensajeError) {
+  try {
+    const formData = objectToFormData(data)
+    for (let [k, v] of formData.entries()) {
+      console.log(`${k}: ${v}`)
+    }
+    console.log(endpoint, formData)
+    const response = await api.post('', formData)
+    console.log(response.data)
+    if (response.data.estado === 'exito') {
+      $q.notify({ type: 'positive', message: response.data.mensaje || mensajeExito })
+      return response
+    } else {
+      $q.notify({ type: 'negative', message: response.data.mensaje || mensajeError })
+    }
+  } catch (error) {
+    console.error('Error en API:', error)
+    $q.notify({ type: 'negative', message: 'Error en la solicitud al servidor' + error })
+  }
+}
+
+async function guardarRegistro(data) {
+  const endpoint = isEditing.value ? 'editarCompra' : 'nuevaCompra'
+  const response = await enviarFormData(
+    endpoint,
+    data,
+    'Compra registrada correctamente',
+    'Hubo un problema al registrar la compra',
+  )
+  if (response?.data?.estado === 'exito') {
+    loadRows()
+    showForm.value = false
+    showFormEdit.value = false
+  }
+}
+
+function cerrarFormulario() {
+  showForm.value = false
+  isEditing.value = false
+  showFormEdit.value = false
+
+  resetForm()
+}
+
+function resetForm() {
+  registroActual.value = {
+    ver: 'registrarCompra',
+    idusuario,
+  }
+}
+
+async function cargarProveedores() {
+  try {
+    const response = await api.get(`listaProveedor/${idempresa}`)
+    proveedores.value = response.data.map((item) => ({
+      label: item.nombre,
+      value: item.id,
+    }))
+  } catch (error) {
+    console.error('Error al cargar proveedores:', error)
+    $q.notify({ type: 'negative', message: 'No se pudieron cargar los proveedores' })
+  }
+}
+
 async function cargarAlmacenes() {
   try {
     const response = await api.get(`listaResponsableAlmacen/${idempresa}`)
@@ -163,156 +179,106 @@ async function cargarAlmacenes() {
       label: item.almacen,
       value: item.idalmacen,
     }))
-    // Agregar opción "Todos (Canal Venta)" al inicio
   } catch (error) {
-    console.error('Error al cargar datos:', error)
-    $q.notify({
-      type: 'negative',
-      message: 'No se pudieron cargar los Almacenes',
-    })
+    console.error('Error al cargar almacenes:', error)
+    $q.notify({ type: 'negative', message: 'No se pudieron cargar los almacenes' })
   }
 }
+
 async function loadRows() {
   try {
-    const response = await api.get(`listaCompra/${idempresa}`) // Cambia a tu ruta real
-    console.log(response.data)
-    compras.value = response.data // Asume que la API devuelve un array
+    const response = await api.get(`listaCompra/${idempresa}`)
+    compras.value = response.data
   } catch (error) {
-    console.error('Error al cargar datos:', error)
-    $q.notify({
-      type: 'negative',
-      message: 'No se pudieron cargar los datos',
-    })
+    console.error('Error al cargar compras:', error)
+    $q.notify({ type: 'negative', message: 'No se pudieron cargar las compras' })
   }
 }
-const toggleForm = () => {
+
+function toggleForm() {
   showForm.value = !showForm.value
   if (!showForm.value) {
     isEditing.value = false
     resetForm()
   }
 }
-function resetForm() {
-  isEditing.value = false
-  registroActual.value = {
-    ver: 'registrarCliente',
-    idempresa: idempresa,
-  }
-}
-//=======================================Detalle modal
-const formulario = ref({
-  ver: 'registrarDetalleCompra',
-})
-const detalleCompra = ref([])
 
-const productosDisponibles = ref([])
-async function getDetalleCompra(compra) {
-  console.log(compra)
+async function verDetalle(compra) {
   try {
-    const response = await api.get(`listaDetalleCompra/${compra.id}`) // Cambia a tu ruta real
-    console.log(response.data)
-    detalleCompra.value = response.data // Asume que la API devuelve un array
+    await listaProductosDisponibles(compra)
+    await getDetalleCompra(compra)
+    mostrarDetalleCompra.value = true
+    formularioDetalleCompra.value = {
+      autorizacion: compra.autorizacion,
+      ver: 'registrarDetalleCompra',
+      idingreso: compra.id,
+      idalmacen: compra.idalmacen,
+    }
+    selectedcompra.value = compra
+    console.log(formularioDetalleCompra.value)
   } catch (error) {
-    console.error('Error al cargar datos:', error)
-    $q.notify({
-      type: 'negative',
-      message: 'No se pudieron cargar los datos',
-    })
+    $q.notify({ type: 'negative', message: 'No se pudo mostrar el detalle de la compra' + error })
   }
 }
+
 async function listaProductosDisponibles(compra) {
-  formulario.value = {
+  formularioDetalleCompra.value = {
     ver: 'registrarDetalleCompra',
     idingreso: compra.id,
   }
-  console.log(compra)
   try {
     const response = await api.get(`ListaProductosCompra/${compra.id}/${compra.idalmacen}`)
-    console.log(response)
     productosDisponibles.value = response.data.map((item) => ({
-      label: item.codigo + ' - ' + item.descripcion,
+      label: `${item.codigo} - ${item.descripcion}`,
       value: item.idproductoalmacen,
       stock: item.stock,
       descripcion: item.descripcion,
     }))
-    console.log(productosDisponibles.value)
-    // Agregar opción "Todos (Canal Venta)" al inicio
   } catch (error) {
-    console.error('Error al cargar datos:', error)
-    $q.notify({
-      type: 'negative',
-      message: 'No se pudieron cargar los Almacenes',
-    })
+    console.error('Error al cargar productos disponibles:', error)
+    $q.notify({ type: 'negative', message: 'No se pudieron cargar los productos' })
   }
 }
-async function agregarDetalle(item) {
-  const formData = objectToFormData(item)
-  for (let [k, v] of formData.entries()) {
-    console.log(`${k}: ${v}`)
-  }
-  let response
+//Hubo un problema al guardar el detalle
 
+async function getDetalleCompra(compra) {
   try {
-    if (item.idingreso) {
-      console.log(item.idingreso)
-      response = await api.post(``, formData)
-    } else {
-      console.log(item)
-      response = await api.post('', formData)
-    }
-    console.log(response)
-    if (response.data.estado === 'exito') {
-      $q.notify({
-        type: 'positive',
-        message: response.data.mensaje || 'Guardado correctamente',
-      })
-      getDetalleCompra({ id: item.idingreso })
-      showForm.value = false
-    } else {
-      $q.notify({
-        type: 'negative',
-        message: response.data.mensaje || 'Hubo un problema al guardar',
-      })
-    }
+    const response = await api.get(`listaDetalleCompra/${compra.id}`)
+    detalleCompra.value = response.data
   } catch (error) {
-    console.error('Error al guardar :', error)
-    $q.notify({
-      type: 'negative',
-      message: 'No se pudo guardar',
-    })
-  }
-
-  formulario.value = {
-    ver: 'registrarDetalleCompra',
+    console.error('Error al cargar detalles de compra:', error)
+    $q.notify({ type: 'negative', message: 'No se pudieron cargar los detalles de la compra' })
   }
 }
 
+async function autorizarCompra(compra) {
+  $q.dialog({
+    title: 'Confirmar',
+    message: `¿Confirmar Compra?`,
+    cancel: true,
+    persistent: true,
+  }).onOk(async () => {
+    try {
+      const response = await api.get(`actualizarEstadoCompra/${compra.id}/1`)
+      if (response.data.estado === 'error') {
+        $q.notify({ type: 'negative', message: response.data.mensaje })
+      } else {
+        loadRows()
+      }
+    } catch (error) {
+      console.error('Error al autorizar compra:', error)
+      $q.notify({ type: 'negative', message: 'No se pudo autorizar la compra' })
+    }
+  })
+}
+const selectedcompra = ref(null) // Usaremos esta ref para pasar el objeto completo del pedido
 function cancelarDetalle() {
   mostrarDetalleCompra.value = false
-  formulario.value = {
-    ver: 'registrarDetalleCompra',
-  }
-}
-
-function editarDetalle(row) {
-  formulario.value = {
-    ver: 'editarDetalleCompra',
-    idproductoalmacen: row.idproductoalmacen,
-    id: row.id,
-    precio: row.precio,
-    cantidad: row.cantidad,
-  }
-  getDetalleCompra({ id: row.idingreso })
-
-  // Elimina temporalmente el item para permitir edición
-}
-
-function eliminarDetalle(row) {
-  detalleCompra.value = detalleCompra.value.filter((item) => item.id !== row.id)
+  selectedcompra.value = null // Limpiar el pedido seleccionado si es necesario
 }
 onMounted(async () => {
-  await cargarAlmacenes() // Espera que almacenes se cargue
+  await cargarAlmacenes()
   await cargarProveedores()
-  await loadRows() // Finalmente carga las compras
+  await loadRows()
 })
 </script>

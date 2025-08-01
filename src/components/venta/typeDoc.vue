@@ -1,51 +1,54 @@
 <template>
-  <div class="">
-    <div class="options-header">
-      <q-btn
-        color="primary"
-        size="sm"
-        label="Volver"
-        @click="handleContinue"
-        icon="arrow_back"
-        class="back-button"
-        unelevated
-      />
+  <q-page class="q-ma-lg">
+    <div class="q-mt-md">
+      <div class="options-header q-mt-md">
+        <q-btn
+          color="primary"
+          size="sm"
+          label="Volver"
+          @click="handleContinue"
+          icon="arrow_back"
+          class="back-button"
+          unelevated
+          style="z-index: 10000; position: relative"
+        />
+      </div>
+
+      <div class="options-grid">
+        <q-card
+          v-for="opcion in opciones"
+          :key="opcion.codigo"
+          class="option-card"
+          @click="$emit('seleccionar', opcion.codigo)"
+          hoverable
+        >
+          <q-card-section class="card-content">
+            <q-icon
+              :name="opcion.icono || 'account_balance'"
+              :color="opcion.color || 'primary'"
+              size="48px"
+            />
+            <div class="text-h6 q-mt-md">{{ opcion.nombre }}</div>
+            <div class="text-caption q-mt-sm text-grey-7" v-if="opcion.descripcion">
+              {{ opcion.descripcion }}
+            </div>
+          </q-card-section>
+
+          <q-separator />
+
+          <q-card-actions align="center" class="card-actions">
+            <q-btn
+              label="Seleccionar"
+              color="primary"
+              outline
+              class="action-button"
+              icon-right="arrow_forward"
+            />
+          </q-card-actions>
+        </q-card>
+      </div>
     </div>
-
-    <div class="options-grid">
-      <q-card
-        v-for="opcion in opciones"
-        :key="opcion.codigo"
-        class="option-card"
-        @click="$emit('seleccionar', opcion.codigo)"
-        hoverable
-      >
-        <q-card-section class="card-content">
-          <q-icon
-            :name="opcion.icono || 'account_balance'"
-            :color="opcion.color || 'primary'"
-            size="48px"
-          />
-          <div class="text-h6 q-mt-md">{{ opcion.nombre }}</div>
-          <div class="text-caption q-mt-sm text-grey-7" v-if="opcion.descripcion">
-            {{ opcion.descripcion }}
-          </div>
-        </q-card-section>
-
-        <q-separator />
-
-        <q-card-actions align="center" class="card-actions">
-          <q-btn
-            label="Seleccionar"
-            color="primary"
-            outline
-            class="action-button"
-            icon-right="arrow_forward"
-          />
-        </q-card-actions>
-      </q-card>
-    </div>
-  </div>
+  </q-page>
 </template>
 
 <script setup>
@@ -56,13 +59,6 @@ const handleContinue = () => {
 }
 
 const opciones = [
-  {
-    codigo: 'preforma',
-    nombre: 'VENTA PROFORMA',
-    descripcion: 'Documento previo a la factura formal',
-    icono: 'description',
-    color: 'blue',
-  },
   {
     codigo: 'facturaCV',
     nombre: 'FACTURA COMPRA-VENTA',

@@ -3,69 +3,78 @@
     <!-- Contenedor principal -->
     <div v-if="vistaActiva === 'principal'">
       <!-- Filtros y botones superiores -->
-      <div class="row q-mb-md">
-        <div class="col"></div>
-
-        <div class="col-auto">
-          <div class="row q-gutter-sm">
-            <q-select
-              v-model="filtroAlmacen"
-              :options="opcionesAlmacenes"
-              label="Almacén"
-              style="min-width: 200px"
-              @update:model-value="filtrarDatos"
-              map-options
-              class="q-mr-sm"
-              clearable
-            />
-
-            <q-select
-              v-model="filtroEstado"
-              :options="opcionesEstados"
-              label="Estado"
-              style="min-width: 150px"
-              @update:model-value="filtrarDatos"
-              map-options
-              class="q-mr-sm"
-              clearable
-            />
-          </div>
+      <div class="row q-col-gutter-x-md q-mb-md">
+        <div class="col-12 col-md-3">
+          <label for="almacen">Almacén</label>
+          <q-select
+            v-model="filtroAlmacen"
+            :options="opcionesAlmacenes"
+            id="almacen"
+            dense
+            outlined
+            style="min-width: 200px"
+            @update:model-value="filtrarDatos"
+            map-options
+            class="q-mr-sm"
+            clearable
+          />
+        </div>
+        <div class="col-12 col-md-3">
+          <label for="estado">Estado</label>
+          <q-select
+            v-model="filtroEstado"
+            :options="opcionesEstados"
+            id="estado"
+            dense
+            outlined
+            @update:model-value="filtrarDatos"
+            map-options
+            clearable
+          />
         </div>
 
-        <div class="col-auto">
-          <div class="row items-center q-gutter-sm">
-            <q-select
-              v-model="columnaFiltro"
-              :options="opcionesColumnas"
-              label="Filtrar por"
-              style="min-width: 150px"
-              map-options
-              class="q-mr-sm"
-              clearable
-            />
-
-            <q-input
-              v-model="textoBusqueda"
-              placeholder="Buscar..."
-              clearable
-              @update:model-value="filtrarTabla"
-            >
-              <template v-slot:append>
-                <q-icon name="search" />
-              </template>
-            </q-input>
+        <div class="col-12 col-md-6">
+          <div class="row q-col-gutter-x-md">
+            <div class="col-6">
+              <label for="filtrarpor">Filtrar por...</label>
+              <q-select
+                v-model="columnaFiltro"
+                :options="opcionesColumnas"
+                id="filtrarpor"
+                dense
+                outlined
+                map-options
+                clearable
+              />
+            </div>
+            <div class="col-6">
+              <label for="buscar">Buscar...</label>
+              <q-input
+                v-model="textoBusqueda"
+                id="buscar"
+                dense
+                outlined
+                clearable
+                @update:model-value="filtrarTabla"
+              >
+                <template v-slot:append>
+                  <q-icon name="search" />
+                </template>
+              </q-input>
+            </div>
           </div>
         </div>
       </div>
 
       <!-- Tabla principal -->
       <q-table
+        title="Cuentas por Cobrar"
         :rows="datosFiltrados"
         :columns="columnas"
         row-key="id"
         flat
         bordered
-        :pagination="{ rowsPerPage: 20 }"
+        :pagination="{ rowsPerPage: 8 }"
         :loading="cargando"
       >
         <template v-slot:body-cell-opciones="props">
@@ -79,7 +88,6 @@
                 @click="cargarFormulario(props.row)"
                 title="Registrar cobro"
               />
-
               <!-- <span class="text-caption q-ml-sm">
                 Condition:
                 {{ privilegios[1] !== 0 && [1, 3].includes(props.row.estado) }} (Privilege[1]:
@@ -598,10 +606,20 @@ export default {
         const contenidousuario = validarUsuario()
         const idempresa = contenidousuario[0]?.empresa?.idempresa
 
-        const response = await fetch(`${URL_APICM}api/listacuentasxcobrar/${idempresa}`)
-        if (!response.ok) throw new Error('Error al cargar datos')
+        // const response = await api.get(`listacuentasxcobrar/${idempresa}`)
+        // console.log(response)
+        // const res = response.data
+        // console.log(res)
+        // const data = await response.json()
 
-        const data = await response.json()
+        // const response = await fetch(`${URL_APICM}api/listacuentasxcobrar/${idempresa}`)
+        // if (!response.ok) throw new Error('Error al cargar datos')
+
+        //const data = await response.json()
+        const response = await api.get(`listacuentasxcobrar/${idempresa}`)
+        console.log(response)
+        const data = response.data
+        console.log(data)
         if (data.estado === 'error') throw new Error(data.error)
 
         await actualizarEstados(data)
@@ -831,10 +849,8 @@ export default {
         // })
         const response = await api.post(``, datos) // Replace with your actual API endpoint
         console.log(response)
-        if (!response.ok) throw new Error('Error al realizar la solicitud')
 
-        const data = await response.json()
-        console.log('Datos recibidos:', data)
+        const data = response.data
 
         if (data.estado === 'exito') {
           $q.notify({

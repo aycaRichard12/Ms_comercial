@@ -1,29 +1,33 @@
 <template>
   <q-form @submit.prevent="handleSubmit">
-    <q-card style="min-width: 350px">
-      <q-card-section>
-        <div class="text-h6">Estados Productos</div>
-      </q-card-section>
-      <q-card-section>
-        <q-input
-          v-model="localData.nombre"
-          label="Estado del producto*"
-          outlined
-          dense
-          :rules="[(val) => !!val || 'Campo requerido']"
-          name="nombre"
-          autocomplete="off"
-        />
+    <q-card>
+      <q-card-section class="row q-col-gutter-x-md">
+        <div class="col-12 col-md-6">
+          <label for="nombre">Estado del producto*</label>
 
-        <q-input
-          v-model="localData.descripcion"
-          label="Descripción*"
-          outlined
-          dense
-          :rules="[(val) => !!val || 'Campo requerido']"
-          name="descripcion"
-          autocomplete="off"
-        />
+          <q-input
+            v-model="localData.nombre"
+            id="nombre"
+            outlined
+            dense
+            :rules="[(val) => !!val || 'Campo requerido']"
+            name="nombre"
+            autocomplete="off"
+          />
+        </div>
+        <div class="col-12 col-md-6">
+          <label for="descripcion">Descripción*</label>
+
+          <q-input
+            v-model="localData.descripcion"
+            label=""
+            outlined
+            dense
+            :rules="[(val) => !!val || 'Campo requerido']"
+            name="descripcion"
+            autocomplete="off"
+          />
+        </div>
       </q-card-section>
 
       <q-card-actions align="right">

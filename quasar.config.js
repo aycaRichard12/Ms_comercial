@@ -3,10 +3,11 @@
 
 import { defineConfig } from '#q-app/wrappers'
 import { fileURLToPath } from 'node:url'
+import svgLoader from 'vite-svg-loader'
 
 export default defineConfig((ctx) => {
   return {
-    // https://v2.quasar.dev/quasar-cli-vite/prefetch-feature
+    // https://v2.quasar.dev/quasar-cli-vite/prefetch-feature vite
     // preFetch: true,
 
     // app boot file (/src/boot)
@@ -60,6 +61,8 @@ export default defineConfig((ctx) => {
       publicPath: '/app/cmv1/',
 
       vitePlugins: [
+        // Plugin simple: vite-svg-loader
+        svgLoader(),
         [
           '@intlify/unplugin-vue-i18n/vite',
           {
@@ -93,6 +96,7 @@ export default defineConfig((ctx) => {
     // Full list of options: https://v2.quasar.dev/quasar-cli-vite/quasar-config-file#devserver
     devServer: {
       // https: true,
+
       open: true, // opens browser window automatically
     },
 
@@ -112,6 +116,11 @@ export default defineConfig((ctx) => {
 
       // Quasar plugins
       plugins: ['Notify', 'Loading', 'Dialog'],
+      defaults: {
+        QInput: { outlined: true },
+        QSelect: { outlined: true },
+        QField: { outlined: true },
+      },
     },
 
     // animations: 'all', // --- includes all animations

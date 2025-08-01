@@ -1,35 +1,44 @@
 <template>
   <q-form @submit.prevent="handleSubmit">
-    <q-card-section class="q-gutter-md">
-      <q-input
-        v-model="localData.nombre"
-        label="Punto de venta*"
-        outlined
-        dense
-        autocomplete="off"
-        :rules="[(val) => !!val || 'Campo requerido']"
-      />
-      <q-input
-        v-model="localData.descripcion"
-        label="Descripción*"
-        outlined
-        dense
-        autocomplete="off"
-        :rules="[(val) => !!val || 'Campo requerido']"
-      />
-      <q-select
-        v-model="localData.idalmacen"
-        :options="almacenes"
-        label="Almacén*"
-        emit-value
-        map-options
-        outlined
-        dense
-        :rules="[(val) => !!val || 'Seleccione un tipo']"
-      />
+    <q-card-section class="row q-col-gutter-x-md">
+      <div class="col-12 col-md-4">
+        <label for="puntoventa">Punto de venta*</label>
+        <q-input
+          v-model="localData.nombre"
+          id="puntoventa"
+          outlined
+          dense
+          autocomplete="off"
+          :rules="[(val) => !!val || 'Campo requerido']"
+        />
+      </div>
+      <div class="col-12 col-md-4">
+        <label for="descripcion">Descripción*</label>
+        <q-input
+          v-model="localData.descripcion"
+          id="descripcion"
+          outlined
+          dense
+          autocomplete="off"
+          :rules="[(val) => !!val || 'Campo requerido']"
+        />
+      </div>
+      <div class="col-12 col-md-4">
+        <label for="almacen">Almacén*</label>
+        <q-select
+          v-model="localData.idalmacen"
+          :options="almacenes"
+          id="almacen"
+          emit-value
+          map-options
+          outlined
+          dense
+          :rules="[(val) => !!val || 'Seleccione un tipo']"
+        />
+      </div>
     </q-card-section>
 
-    <q-card-actions align="right">
+    <q-card-actions class="flex justify-end">
       <q-btn label="Cancelar" flat color="negative" @click="$emit('cancel')" />
       <q-btn label="Guardar" type="submit" color="primary" />
     </q-card-actions>

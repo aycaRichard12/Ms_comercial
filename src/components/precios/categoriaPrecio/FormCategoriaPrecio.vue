@@ -1,43 +1,50 @@
 <template>
-  <q-card class="q-mb-md">
-    <q-card-section>
-      <q-form @submit.prevent="onSubmit">
-        <div class="row q-col-gutter-md">
-          <div class="col-md-3">
-            <q-input
-              v-model="localData.tipo"
-              label="Categoría de precio *"
-              :rules="[(val) => !!val || 'Campo requerido']"
-            />
-          </div>
-          <div class="col-md-3">
-            <q-input
-              v-model="localData.porcentaje"
-              label="Porcentaje incremento al costo unitario *"
-              type="number"
-              :rules="[(val) => !!val || 'Campo requerido']"
-            />
-          </div>
-          <div class="col-md-3">
-            <q-select
-              v-model="localData.idalmacen"
-              :options="props.almacenes"
-              label="Almacén *"
-              option-label="label"
-              option-value="value"
-              emit-value
-              map-options
-              :rules="[(val) => !!val || 'Campo requerido']"
-            />
-          </div>
+  <q-card>
+    <q-form @submit.prevent="onSubmit">
+      <q-card-section class="row q-col-gutter-x-md">
+        <div class="col-12 col-md-4">
+          <label for="categoria">Categoría de precio *</label>
+          <q-input
+            v-model="localData.tipo"
+            id="categoria"
+            dense
+            outlined
+            :rules="[(val) => !!val || 'Campo requerido']"
+          />
         </div>
+        <div class="col-12 col-md-4">
+          <label for="porcentaje">Porcentaje incremento al costo unitario *</label>
+          <q-input
+            v-model="localData.porcentaje"
+            id="porcentaje"
+            dense
+            outlined
+            type="number"
+            :rules="[(val) => !!val || 'Campo requerido']"
+          />
+        </div>
+        <div class="col-12 col-md-4">
+          <label for="almacen">Almacén *</label>
+          <q-select
+            v-model="localData.idalmacen"
+            :options="props.almacenes"
+            id="almacen"
+            option-label="label"
+            option-value="value"
+            emit-value
+            map-options
+            dense
+            outlined
+            :rules="[(val) => !!val || 'Campo requerido']"
+          />
+        </div>
+      </q-card-section>
 
-        <q-card-actions align="right">
-          <q-btn label="Cancelar" flat color="negative" @click="$emit('cancel')" />
-          <q-btn label="Guardar" type="submit" color="primary" />
-        </q-card-actions>
-      </q-form>
-    </q-card-section>
+      <q-card-actions align="right">
+        <q-btn label="Cancelar" flat color="negative" @click="$emit('cancel')" />
+        <q-btn label="Guardar" type="submit" color="primary" />
+      </q-card-actions>
+    </q-form>
   </q-card>
 </template>
 

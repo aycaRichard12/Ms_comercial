@@ -1,63 +1,71 @@
 <template>
   <div>
     <!-- Cabecera con filtros y botones -->
-    <q-card class="q-mb-md">
-      <q-card-section>
-        <div style="display: flex; justify-content: space-between">
-          <!-- Botones izquierda -->
-          <div>
-            <q-btn
-              label="Agregar"
-              icon="add"
-              color="primary"
-              @click="$emit('add')"
-              class="q-mr-sm"
-            />
-            <q-btn
-              icon="bi-file-earmark-excel"
-              label="Importar de Excel"
-              color="primary"
-              @click="$emit('importFromExcel')"
-              class="q-mx-auto"
-            />
-          </div>
+    <div class="row q-col-gutter-x-md q-mb-md">
+      <div class="col-4 col-md-4">
+        <q-btn color="primary" @click="$emit('add')" class="btn-res q-mt-lg">
+          <q-icon name="add" class="icono" />
+          <span class="texto">Agregar</span>
+        </q-btn>
+      </div>
+      <div class="col-4 col-md-4 flex justify-center">
+        <q-btn color="info" @click="$emit('importFromExcel')" class="btn-res q-mt-lg" outline>
+          <q-icon name="import_export" class="icono" />
+          <span class="texto">Importar de Excel</span>
+        </q-btn>
+      </div>
+      <div class="col-4 col-md-4 flex justify-end">
+        <q-btn color="info" @click="exportarClientesFiltrados" class="btn-res q-mt-lg" outline="">
+          <q-icon name="file_upload" class="icono" />
+          <span class="texto">Exportar a Excel</span>
+        </q-btn>
+      </div>
+    </div>
+    <div class="row q-col-gutter-x-md q-mb-md">
+      <!-- Botones izquierda -->
 
-          <!-- Filtros centrales -->
-          <div class="row items-center q-gutter-md">
-            <q-select
-              v-model="filtroTipoCliente"
-              :options="tipoClienteFilterOptions"
-              label="Tipo Cliente"
-              dense
-              outlined
-              style="min-width: 200px"
-            />
+      <div class="col-12 col-md-2">
+        <label for="tipocliente">Tipo Cliente</label>
+        <q-select
+          v-model="filtroTipoCliente"
+          :options="tipoClienteFilterOptions"
+          id="tipocliente"
+          dense
+          outlined
+        />
+      </div>
 
-            <q-select
-              v-model="filtroCanalVenta"
-              :options="canalVentaFilterOptions"
-              label="Canal Venta"
-              dense
-              outlined
-              style="min-width: 200px"
-            />
+      <!-- Filtros centrales -->
+      <div class="col-12 col-md-2">
+        <label for="canalventa">Canal Venta</label>
+        <q-select
+          v-model="filtroCanalVenta"
+          :options="canalVentaFilterOptions"
+          id="canalventa"
+          dense
+          outlined
+        />
+      </div>
 
-            <q-select
-              v-model="filtroTipoDocumento"
-              :options="tipoDocumentoFilterOptions"
-              label="Tipo Doc."
-              dense
-              outlined
-              style="min-width: 200px"
-            />
-
-            <q-btn label="Exportar a Excel" color="info" @click="exportarClientesFiltrados" />
-          </div>
-
-          <!-- Busqueda derecha -->
+      <div class="col-12 col-md-2">
+        <label for="tipodoc">Tipo Doc</label>
+        <q-select
+          v-model="filtroTipoDocumento"
+          :options="tipoDocumentoFilterOptions"
+          id="tipodoc"
+          dense
+          outlined
+        />
+      </div>
+      <div class="col-12 col-md-6 flex justify-end">
+        <div>
+          <label for="buscar">Buscar...</label>
+          <q-input dense debounce="300" v-model="search" id="buscar" outlined="" />
         </div>
-      </q-card-section>
-    </q-card>
+      </div>
+
+      <!-- Busqueda derecha -->
+    </div>
 
     <!-- Alerta/Notificación -->
     <q-banner v-if="alertMessage" :class="alertClass">
@@ -66,17 +74,15 @@
 
     <!-- Tabla de clientes -->
     <q-table
+      title="Clientes"
       :rows="filteredClients"
       :columns="columns"
       row-key="id"
-      v-model:pagination="pagination"
       :loading="loading"
       :filter="search"
       class="sticky-header-table"
     >
-      <template v-slot:top-right>
-        <q-input dense debounce="300" v-model="search" placeholder="Buscar..." />
-      </template>
+      <template v-slot:top-right> </template>
       <!-- Personalización de celdas para truncar texto -->
       <template v-slot:body-cell="props">
         <q-td :props="props">
@@ -158,10 +164,7 @@ const alertClass = ref('bg-green text-white')
 
 // Búsqueda y paginación
 const search = ref('')
-const pagination = ref({
-  page: 1,
-  rowsPerPage: 10,
-})
+
 const columns = [
   { name: 'id', label: 'N°', field: (row) => row.numero, align: 'center' },
   { name: 'nombre', label: 'Razón Social', field: 'nombre', align: 'left' },

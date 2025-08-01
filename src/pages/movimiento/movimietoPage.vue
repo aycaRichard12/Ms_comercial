@@ -1,14 +1,14 @@
 <template>
-  <q-page class="q-pa-md">
-    <h5>Gestión de Movimientos de Almacén</h5>
-
+  <q-page padding>
+    <div class="row items-center q-mb-md">
+      <div class="text-h5 text-weight-medium text-primary">Movimientos</div>
+    </div>
     <q-dialog v-model="showMovimientoFormDialog" persistent>
-      <q-card style="width: 1000px; max-width: 100vw">
-        <q-toolbar>
-          <q-toolbar-title>{{ formDialogTitle }}</q-toolbar-title>
-          <q-btn flat round icon="close" @click="showMovimientoFormDialog = false" />
-        </q-toolbar>
-
+      <q-card class="responsive-dialog">
+        <q-card-section class="bg-primary text-h6 text-white flex justify-between">
+          <div>{{ formDialogTitle }}</div>
+          <q-btn icon="close" @click="showMovimientoFormDialog = false" flat round dense />
+        </q-card-section>
         <q-card-section>
           <FormMovimiento
             :editing="formMode === 'edit'"
@@ -20,7 +20,7 @@
       </q-card>
     </q-dialog>
 
-    <TableMovimiento
+    <table-movimiento
       :movimientos="movimientosData"
       :loading="isLoadingMovimientos"
       @addRecord="handleAddRecord"
@@ -30,12 +30,18 @@
       @deleteRecord="handleDeleteRecord"
       @toggleStatus="handleToggleStatus"
     />
+    <q-dialog v-model="showDetalleMovimiento" persistent>
+      <q-card class="responsive-dialog">
+        <q-card-section class="bg-primary text-h6 text-white flex justify-between">
+          <div>Detalle Movimiento</div>
+          <q-btn icon="close" @click="cancelarDetalle" flat dense round />
+        </q-card-section>
+        <q-card-section>
+          <DetalleMovimiento :model-value="selectedMovimiento" />
+        </q-card-section>
+      </q-card>
+    </q-dialog>
   </q-page>
-  <q-dialog v-model="showDetalleMovimiento" persistent>
-    <q-card class="q-pa-md" style="width: 1200px; max-width: 90vw">
-      <DetalleMovimiento :model-value="selectedMovimiento" @close="cancelarDetalle" />
-    </q-card>
-  </q-dialog>
 </template>
 
 <script setup>

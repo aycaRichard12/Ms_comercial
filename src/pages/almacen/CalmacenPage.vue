@@ -1,7 +1,12 @@
 <template>
-  <q-page padding>
+  <q-page>
     <q-dialog v-model="showForm" persistent>
-      <q-card style="min-width: 400px; max-width: 600px">
+      <q-card class="responsive-dialog">
+        <q-card-section class="bg-primary text-white text-h6 flex justify-between">
+          <div>Registrar Almacén</div>
+          <q-btn icon="close" @click="showForm = false" flat round dense />
+        </q-card-section>
+
         <q-card-section class="q-pa-none">
           <FormularioAlmacen
             :isEditing="isEditing"
@@ -15,17 +20,13 @@
       </q-card>
     </q-dialog>
 
-    <q-card class="q-pa-md">
-      <q-card-section>
-        <TablaAlmacen
-          :rows="CaracteristicaProd"
-          @add="toggleForm"
-          @edit-item="editUnit"
-          @delete-item="confirmDelete"
-          @toggle-status="toggleStatus"
-        />
-      </q-card-section>
-    </q-card>
+    <TablaAlmacen
+      :rows="CaracteristicaProd"
+      @add="toggleForm"
+      @edit-item="editUnit"
+      @delete-item="confirmDelete"
+      @toggle-status="toggleStatus"
+    />
   </q-page>
 </template>
 

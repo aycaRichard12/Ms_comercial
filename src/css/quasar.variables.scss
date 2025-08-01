@@ -12,7 +12,7 @@
 // to match your app's branding.
 // Tip: Use the "Theme Builder" on Quasar's documentation website.
 
-$primary: #004d40;
+$primary: #004d40; //linear-gradient(to right, #219286, #044e49);
 $secondary: #26a69a;
 $accent: #9c27b0;
 
@@ -35,4 +35,73 @@ $warning: #f2c037;
 }
 .text-bold {
   font-weight: bold;
+}
+.my-sticky-header-table {
+  height: 310px;
+}
+.q-table__top,
+thead tr:first-child th {
+  background-color: #004d40;
+  color: #ffff;
+}
+
+thead tr th {
+  position: sticky;
+  z-index: 1;
+}
+
+thead tr:first-child th {
+  top: 0;
+}
+
+.q-table--loading thead tr:last-child th {
+  top: 48px;
+}
+
+tbody {
+  scroll-margin-top: 48px;
+}
+
+.q-table tbody td {
+  border-bottom: 1px solid #f2c037; /* color warning de Quasar */
+}
+
+/* En src/css/app.scss */
+.q-field--filled .q-field__control,
+.q-field--outlined .q-field__control,
+.q-field--standard .q-field__control {
+  background-color: white;
+  font-family: Arial, Helvetica, sans-serif;
+  justify-content: center;
+  align-items: center;
+  color: #f2c037;
+}
+
+.q-field__native {
+  padding-left: 5px;
+}
+
+.q-input .q-field__control,
+.q-select .q-field__control {
+  text-align: center;
+}
+
+.q-field__native[type='number'],
+.q-field__input[type='number'] {
+  text-align: right;
+}
+.q-btn {
+  padding: 4px 12px;
+  font-size: 0.85rem;
+  border-radius: 8px;
+  font-weight: 500;
+}
+
+label {
+  color: #004d40;
+}
+/* src/css/app.scss */
+
+.q-icon {
+  margin-bottom: 1px;
 }

@@ -1,26 +1,28 @@
 <template>
   <q-form @submit.prevent="handleSubmit">
-    <q-card-section>
-      <div class="text-h6">Registro Caracteristicas Producto</div>
+    <q-card-section class="row q-col-gutter-x-md">
+      <div class="col-12 col-md-6">
+        <label for="nombre">Característica del producto</label>
+        <q-input
+          v-model="localData.nombre"
+          id="nombre"
+          outlined
+          dense
+          :rules="[(val) => !!val || 'Campo requerido']"
+        />
+      </div>
+      <div class="col-12 col-md-6">
+        <label for="descripcion">Descripción de la característica del producto</label>
+        <q-input
+          v-model="localData.descripcion"
+          id="descripcion"
+          outlined
+          dense
+          :rules="[(val) => !!val || 'Campo requerido']"
+        />
+      </div>
     </q-card-section>
-
-    <q-card-section>
-      <q-input
-        v-model="localData.nombre"
-        label="Característica del producto"
-        outlined
-        dense
-        :rules="[(val) => !!val || 'Campo requerido']"
-      />
-      <q-input
-        v-model="localData.descripcion"
-        label="Descripción de la característica del producto"
-        outlined
-        dense
-        :rules="[(val) => !!val || 'Campo requerido']"
-      />
-    </q-card-section>
-    <q-card-actions align="right">
+    <q-card-actions class="flex justify-end">
       <q-btn label="Cancelar" flat color="negative" @click="$emit('cancel')" />
       <q-btn label="Guardar" type="submit" color="primary" />
     </q-card-actions>

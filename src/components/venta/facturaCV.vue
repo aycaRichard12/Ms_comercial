@@ -31,14 +31,17 @@
             </h5>
             <div class="row q-col-gutter-md">
               <div class="col-12 col-md-4">
+                <label for="cliente">Cliente*</label>
                 <q-select
                   v-model="formData.cliente"
-                  label="Cliente*"
+                  id="cliente"
                   :options="filteredClients"
                   option-label="label"
                   option-value="value"
                   use-input
                   map-options
+                  dense
+                  outlined
                   @filter="filterClientes"
                   @update:model-value="actualizarSucursales"
                   :rules="[(val) => !!val || 'Seleccione un cliente']"
@@ -56,12 +59,15 @@
               </div>
 
               <div class="col-12 col-md-4">
+                <label for="sucursal">Sucursal*</label>
                 <q-select
                   v-model="formData.sucursal"
-                  label="Sucursal*"
+                  id="sucursal"
                   :options="branchOptions"
                   option-label="label"
                   option-value="value"
+                  dense
+                  outlined
                   :disable="!formData.cliente"
                   required
                 >
@@ -71,9 +77,12 @@
                 </q-select>
               </div>
               <div class="col-12 col-md-4">
+                <label for="tipodoc">Tipo de documento tributario*</label>
                 <q-select
                   v-model="formData.tipodoc"
-                  label="Tipo de documento tributario*"
+                  id="tipodoc"
+                  dense
+                  outlined
                   :options="typeDocOptions"
                   option-label="label"
                   option-value="value"
@@ -85,9 +94,12 @@
                 </q-select>
               </div>
               <div class="col-12 col-md-4">
+                <label for="docTri">Nro. documento tributario*</label>
                 <q-input
                   v-model="formData.nroDoc"
-                  label="Nro. documento tributario*"
+                  id="docTri"
+                  dense
+                  outlined
                   type="number"
                   :rules="[(val) => !!val || 'Campo Obligatorio']"
                   :disable="!formData.cliente"
@@ -98,16 +110,20 @@
                 </q-input>
               </div>
               <div class="col-12 col-md-4">
-                <q-input v-model="formData.fecha" label="Fecha*" type="date" required>
+                <label for="fecha">Fecha*</label>
+                <q-input v-model="formData.fecha" id="fecha" type="date" required dense outlined>
                   <template v-slot:prepend>
                     <q-icon name="event" color="blue" />
                   </template>
                 </q-input>
               </div>
               <div class="col-12 col-md-4">
+                <label for="puntoventa">Punto de venta*</label>
                 <q-select
                   v-model="formData.puntoventa"
-                  label="Punto de venta*"
+                  id="puntoventa"
+                  dense
+                  outlined
                   :options="puntosVenta"
                   option-label="label"
                   option-value="value"
@@ -119,9 +135,12 @@
                 </q-select>
               </div>
               <div class="col-12 col-md-4">
+                <label for="canalVenta">Canal de venta*</label>
                 <q-select
                   v-model="formData.canal"
-                  label="Canal de venta*"
+                  id="canalVenta"
+                  dense
+                  outlined
                   :options="salesChannels"
                   option-label="label"
                   option-value="value"
@@ -173,9 +192,12 @@
 
             <div v-if="formData.variablePago === 'directo'" class="row q-col-gutter-md q-pt-md">
               <div class="col-12 col-md-4">
+                <label for="metodopago">Método de pago*</label>
                 <q-select
                   v-model="formData.metodoPago"
-                  label="Método de pago*"
+                  id="metodopago"
+                  dense
+                  outlined
                   :options="metodoPago"
                   option-label="label"
                   option-value="value"
@@ -195,9 +217,12 @@
                 class="row q-col-gutter-md q-mb-sm items-center"
               >
                 <div class="col-12 col-md-4">
+                  <label for="metodopago">Método de pago*</label>
                   <q-select
                     v-model="payment.metodoPago"
-                    label="Método de pago*"
+                    id="metodopago"
+                    dense
+                    outlined
                     :options="metodoPago"
                     option-label="label"
                     option-value="value"
@@ -209,13 +234,16 @@
                   </q-select>
                 </div>
                 <div class="col-12 col-md-3">
+                  <label for="monto">{{ 'Monto' + ' (' + divisaActiva.simbolo + ')' }}</label>
                   <q-input
                     v-model="payment.monto"
-                    :label="'Monto' + ' (' + divisaActiva.simbolo + ')'"
+                    id="monto"
                     type="number"
                     min="0"
                     step="0.01"
                     required
+                    dense
+                    outlined
                     @update:model-value="calculateRemainingAmount(index)"
                     :rules="[(val) => !!val || 'Campo Obligatorio']"
                   >
@@ -225,13 +253,16 @@
                   </q-input>
                 </div>
                 <div class="col-12 col-md-3">
+                  <label for="porcentaje">Porcentaje (%)</label>
                   <q-input
                     v-model="payment.porcentaje"
-                    label="Porcentaje (%)"
+                    id="porcentaje"
                     type="number"
                     min="0"
                     max="100"
                     step="0.01"
+                    dense
+                    outlined
                     @update:model-value="calculateAmountFromPercentage(index)"
                     :rules="[(val) => !!val || 'Campo Obligatorio']"
                   >
@@ -306,12 +337,15 @@
 
             <div v-if="formData.credito" class="row q-col-gutter-md q-pt-md">
               <div class="col-12 col-md-4">
+                <label for="cantidadpagos">Cantidad de pagos*</label>
                 <q-input
                   v-model="formData.cantidadPagos"
-                  label="Cantidad de pagos*"
+                  id="cantidadpagos"
                   type="number"
                   min="0"
                   required
+                  dense
+                  outlined
                   @update:model-value="calculatePayments"
                   :rules="[(val) => !!val || 'Campo Obligatorio']"
                 >
@@ -322,9 +356,12 @@
               </div>
 
               <div class="col-12 col-md-4">
+                <label for="montopago">Monto de pagos*</label>
                 <q-input
                   v-model="formData.montoPagos"
-                  label="Monto de pagos*"
+                  id="montopago"
+                  dense
+                  outlined
                   :disable="!formData.credito"
                 >
                   <template v-slot:prepend>
@@ -337,9 +374,12 @@
               </div>
 
               <div class="col-12 col-md-4">
+                <label for="periodo">Período establecido*</label>
                 <q-select
                   v-model="formData.periodo"
-                  label="Período establecido*"
+                  id="periodo"
+                  dense
+                  outlined
                   :options="periodOptions"
                   option-label="label"
                   option-value="value"
@@ -356,11 +396,14 @@
               </div>
 
               <div v-if="formData.periodo === 0" class="col-12 col-md-4">
+                <label for="plazopersonalizada">Plazo total (días)*</label>
                 <q-input
                   v-model="formData.plazoPersonalizado"
-                  label="Plazo total (días)*"
+                  id="plazopersonalizada"
                   type="number"
                   min="0"
+                  dense
+                  outlined
                   required
                   @update:model-value="calculateDueDate"
                   :rules="[(val) => !!val || 'Campo Obligatorio']"
@@ -372,9 +415,12 @@
               </div>
 
               <div class="col-12 col-md-4">
+                <label for="fechalimite">Fecha límite*</label>
                 <q-input
                   v-model="formData.fechaLimite"
-                  label="Fecha límite*"
+                  id="fechalimite"
+                  dense
+                  outlined
                   type="date"
                   :disable="true"
                 >
@@ -408,7 +454,7 @@ import { defineEmits } from 'vue'
 import { useCurrencyStore, useCurrencyLeyenda } from 'src/stores/currencyStore'
 import MyRegistrationForm from '../clientes/admin/modalClienteForm.vue'
 import { objectToFormData } from 'src/composables/FuncionesGenerales'
-import { obtenerHoraISO8601 } from 'src/composables/FuncionesG'
+import { obtenerHoraISO8601, decimas } from 'src/composables/FuncionesG'
 const divisaActiva = useCurrencyStore()
 const leyendaActiva = useCurrencyLeyenda()
 leyendaActiva.cargarLeyendaActivo()
@@ -621,7 +667,8 @@ const cargarMetodoPagoFactura = async () => {
     console.log(response.data)
     metodoPago.value = filtrado.map((item) => ({
       label: item.nombre,
-      value: item.metodopagosin.codigo,
+      id: item.metodopagosin.codigo,
+      value: item.id,
     }))
     formData.value.metodoPago = metodoPago.value[0] || null
   } catch (error) {
@@ -865,7 +912,25 @@ const onSubmit = async () => {
     if (!cartData.listaProductos || !cartData.listaProductos.length) {
       throw { message: 'El carrito está vacío' }
     }
-
+    console.log(pagosDivididos)
+    //  const subtotal = detallePlano.detalle.reduce(
+    //     (sum, dato) => sum + redondear(parseFloat(dato.cantidad) * parseFloat(dato.precio)),
+    //     0,
+    //   )
+    const suma_pagos_divididos = decimas(
+      pagosDivididos.reduce((sum, dato) => {
+        return sum + parseFloat(dato.monto)
+      }, 0),
+    )
+    console.log(suma_pagos_divididos)
+    console.log(cartData.ventatotal)
+    console.log(variablePago)
+    if (
+      decimas(suma_pagos_divididos) !== decimas(cartData.ventatotal) &&
+      variablePago !== 'directo'
+    ) {
+      throw { message: 'Los pagos no coinciden con el monto total' }
+    }
     console.log('Datos del carrito:', cartData)
 
     $q.loading.show({ message: 'Procesando venta...', timeout: 30000 })
@@ -874,8 +939,10 @@ const onSubmit = async () => {
     //Preparar formulario para envío
     variablePago !== 'directo'
       ? (cartData.pagosDivididos = pagosDivididos)
-      : (cartData.pagosDivididos = [])
-    cartData.variablePago = variablePago
+      : (cartData.pagosDivididos = [
+          { metodoPago: metodoPago, monto: cartData.ventatotal, porcentaje: 100 },
+        ])
+    cartData.variablePago = 'dividido'
     cartData.nropagos = cantidadPagos
     cartData.fechalimite = fechaLimite
     cartData.valorpagos = montoPagos
@@ -894,9 +961,8 @@ const onSubmit = async () => {
     form.append('puntoventa', puntoventa.value)
     if ((!metodoPago || metodoPago.value == null) && pagosDivididos.length > 0) {
       form.append('metodoPago', 0)
-      form.append('pagosDivididos', JSON.stringify(pagosDivididos))
     } else {
-      form.append('metodoPago', metodoPago?.value || 0)
+      form.append('metodoPago', metodoPago?.id)
     }
     form.append('canal', canal.value)
     form.append('tipopago', credito ? 'credito' : CONSTANTES.tipopago)
@@ -905,6 +971,9 @@ const onSubmit = async () => {
     console.log(cartData)
     console.log('Formulario enviado:')
     form.forEach((valor, clave) => console.log(`${clave}: ${valor}`))
+    const jsonObject = Object.fromEntries(form.entries())
+    jsonObject['jsonDetalles'] = cartData
+    console.log(jsonObject)
 
     //  Enviar al backend
     const response = await api.post('', form, {
@@ -924,7 +993,7 @@ const onSubmit = async () => {
     emit('venta-registrada')
     resetForm()
   } catch (error) {
-    // 🧠 Registro de errores
+    // 🧠 Registro de errores variablPeago
     const errorType = error.type || ERROR_TYPES.API
     const loggedError = logError(errorType, error, {
       formData: JSON.parse(JSON.stringify(formData.value)),
@@ -951,6 +1020,7 @@ const onSubmit = async () => {
     if (loadingShown) $q.loading.hide()
   }
 }
+
 // ====================== MANEJO DE ERRORES ======================
 const getEnhancedErrorMessage = (error) => {
   return error.details
@@ -1073,7 +1143,7 @@ const handleRecordCreated = async (newRecordData) => {
     })
   }
 }
-// ====================== HOOKS ======================
+// ====================== HOOKS ====================== formData despachado
 
 onMounted(() => {
   listaCLientes()

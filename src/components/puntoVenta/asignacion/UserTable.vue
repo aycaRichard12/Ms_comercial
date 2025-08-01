@@ -1,35 +1,33 @@
 <template>
-  <div class="q-pa-md">
-    <q-table
-      flat
-      bordered
-      title="Usuarios"
-      :rows="processedRows"
-      :columns="columnas"
-      :filter="filter"
-      row-key="id"
-      :rows-per-page-options="[0]"
-      virtual-scroll
-      style="max-height: calc(100vh - 200px)"
-    >
-      <template v-slot:top-right>
-        <q-input dense debounce="300" v-model="filter" placeholder="Buscar..." />
-      </template>
-      <template v-slot:body-cell-opciones="props">
-        <q-td class="text-center">
-          <q-btn
-            color="primary"
-            icon="add"
-            round
-            dense
-            size="sm"
-            @click="asignarPuntoVenta(props.row)"
-            title="Asignar Puntos de Venta"
-          />
-        </q-td>
-      </template>
-    </q-table>
+  <div class="flex justify-end">
+    <div class="q-mb-md">
+      <label for="buscar">Buscar...</label>
+      <q-input dense outlined debounce="300" v-model="filter" id="buscar" />
+    </div>
   </div>
+
+  <q-table
+    bordered
+    title="Usuarios"
+    :rows="processedRows"
+    :columns="columnas"
+    :filter="filter"
+    row-key="id"
+  >
+    <template v-slot:body-cell-opciones="props">
+      <q-td class="text-center">
+        <q-btn
+          color="primary"
+          icon="add"
+          round
+          dense
+          size="sm"
+          @click="asignarPuntoVenta(props.row)"
+          title="Asignar Puntos de Venta"
+        />
+      </q-td>
+    </template>
+  </q-table>
 </template>
 
 <script setup>
