@@ -58,8 +58,15 @@
             dense
             class="q-mr-sm"
             @click="$emit('edit-item', props.row)"
+            flat
           />
-          <q-btn icon="delete" color="negative" dense @click="$emit('delete-item', props.row)" />
+          <q-btn
+            icon="delete"
+            color="negative"
+            dense
+            @click="$emit('delete-item', props.row)"
+            flat
+          />
           <q-btn
             :icon="Number(props.row.estado) === 1 ? 'toggle_on' : 'toggle_off'"
             dense

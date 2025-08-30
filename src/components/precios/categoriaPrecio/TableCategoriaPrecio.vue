@@ -1,6 +1,6 @@
 <template>
   <!-- Encabezado de acciones -->
-  <div class="row flex justify-between q-mb-sm">
+  <div class="row flex justify-between">
     <q-btn color="primary" @click="$emit('add')" class="btn-res q-mt-lg">
       <q-icon name="add" class="icono" />
       <span class="texto">Agregar</span>
@@ -67,8 +67,9 @@
           dense
           class="q-mr-sm"
           @click="$emit('edit-item', props.row)"
+          flat
         />
-        <q-btn icon="delete" color="negative" dense @click="$emit('delete-item', props.row)" />
+        <q-btn icon="delete" color="negative" dense @click="$emit('delete-item', props.row)" flat />
         <q-btn
           :icon="Number(props.row.estado) === 1 ? 'toggle_on' : 'toggle_off'"
           dense
@@ -102,7 +103,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { validarUsuario } from 'src/composables/FuncionesGenerales'
 import jsPDF from 'jspdf'
 import autoTable from 'jspdf-autotable'
@@ -153,6 +154,17 @@ const filtradas = computed(() => {
 
   return rows
 })
+console.log(props.almacenes)
+watch(
+  () => props.almacenes,
+  (nuevosAlmacenes) => {
+    if (nuevosAlmacenes.length > 0 && !filtroAlmacen.value) {
+      console.log(nuevosAlmacenes)
+      filtroAlmacen.value = nuevosAlmacenes[0]
+    }
+  },
+  { immediate: true },
+)
 
 const imprimir = () => {
   const contenidousuario = validarUsuario()

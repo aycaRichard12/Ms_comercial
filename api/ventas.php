@@ -138,53 +138,99 @@ class ventas
             echo json_encode($res);
         }
     }
-    public function registrocliente($name, $nombrecomercial, $canal, $tipo, $tipodocumento, $nit, $detalle, $direction, $phone, $mobil, $email, $web, $pais, $city, $zona, $contacto, $idmd5)
+    
+    public function registrocliente($name, $nombrecomercial, $canal, $tipo, $tipodocumento, $nit, $detalle, $direction, $phone, $mobil, $email, $web, $pais, $city, $zona, $contacto, $idmd5, $respuesta = NULL)
     {
-        $idempresa = $this->verificar->verificarIDEMPRESAMD5($idmd5);
-        $defaul = "Central " . $name;
-        $res = "";
-        $verificarQuery = " SELECT COUNT(*) FROM cliente c
-                            WHERE c.idempresa = ? AND c.nit = ?; ";
+        // Initialize response array
+        $res = ["estado" => "error", "mensaje" => "Un error inesperado ha ocurrido."];
+        $newClientId = null;
 
-        $stmt = $this->cm->prepare($verificarQuery);
-        if ($stmt === false) {
-            $res=array("estado" => "error", "mensaje" => "Error al intentar registrar. Por favor, inténtalo de nuevo");
-            echo json_encode($res);
-            return;
-        }
+        try {
+            // Step 1: Get company ID and start a transaction
+            $idempresa = $this->verificar->verificarIDEMPRESAMD5($idmd5);
+            $this->cm->begin_transaction(); // Assuming $cm is a MySQLi object
 
-        $stmt->bind_param("is", $idempresa , $nit);
-        $stmt->execute();
-        $stmt->bind_result($count);
-        $stmt->fetch();
-        $stmt->close();
+            // Step 2: Check for duplicate NIT using a prepared statement
+            $verificarQuery = "SELECT COUNT(*) FROM cliente WHERE idempresa = ? AND nit = ?";
+            $stmt = $this->cm->prepare($verificarQuery);
+            if ($stmt === false) {
+                throw new Exception("Error al preparar la consulta de verificación.");
+            }
+            $stmt->bind_param("is", $idempresa, $nit);
+            $stmt->execute();
+            $stmt->bind_result($count);
+            $stmt->fetch();
+            $stmt->close();
 
-        if ($count > 0) {
-            $res=array("estado" => "error", "mensaje" => "Error al intentar registrar. Nit duplicado por favor, inténtalo de nuevo");
-        }else{
+            if ($count > 0) {
+                $res = ["estado" => "error", "mensaje" => "Error: El NIT proporcionado ya está registrado."];
+                $this->cm->rollback(); // No changes needed, but good practice
+                echo json_encode($res);
+                return;
+            }
+
+            // Step 3: Generate the client code
             $inicial = strtoupper(substr(trim($name), 0, 1));
             $final = strtoupper(substr(trim($name), -1));
+            
+            $countQuery = "SELECT COUNT(id_cliente) + 1 FROM cliente WHERE idempresa = ?";
+            $stmt = $this->cm->prepare($countQuery);
+            $stmt->bind_param("i", $idempresa);
+            $stmt->execute();
+            $stmt->bind_result($numero);
+            $stmt->fetch();
+            $stmt->close();
+            
+            $codigo = $inicial . $final . "-" . $idempresa . str_pad($numero, $this->numceros, "0", STR_PAD_LEFT);
 
-            $consulta = $this->cm->query("select count(c.id_cliente)+1 as numero from cliente c where c.idempresa = '$idempresa'");
-            $numero = $this->cm->fetch($consulta);
-            $codigo = $inicial . $final . "-" . $idempresa . str_pad($numero[0], $this->numceros, "0", STR_PAD_LEFT);
-
-            $registro = $this->cm->query("insert into cliente (id_cliente, nombre, nombrecomercial, tipo, codigo, nit, detalle, direccion, telefono, mobil, email, web, pais, ciudad, zona, contacto, idempresa, tipodocumento, canal) values(null, '$name','$nombrecomercial','$tipo','$codigo','$nit','$detalle','$direction','$phone','$mobil','$email','$web','$pais','$city','$zona','$contacto','$idempresa','$tipodocumento','$canal')");
-            if ($registro === TRUE) {
-                $listasucursal = $this->cm->query("select id_cliente from cliente where codigo='$codigo' order by id_cliente desc limit 1");
-                $qwe = $this->cm->fetch($listasucursal);
-                $sucursal = $this->cm->query("insert into sucursal (id_sucursal, nombre, telefono, direccion, cliente_id_cliente) values(null,'$defaul','$mobil','$direction','$qwe[0]')");
-                if ($sucursal === TRUE) {
-                    $res = array("estado" => "exito", "mensaje" => "Registro exitoso");
-                }
-            } else {
-                $res = array("estado" => "error", "mensaje" => "Error al intentar registrar. Por favor, inténtalo de nuevo");
+            // Step 4: Insert the new client using a prepared statement
+            $insertClientQuery = "INSERT INTO cliente (nombre, nombrecomercial, tipo, codigo, nit, detalle, direccion, telefono, mobil, email, web, pais, ciudad, zona, contacto, idempresa, tipodocumento, canal) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+            $stmt = $this->cm->prepare($insertClientQuery);
+            if ($stmt === false) {
+                throw new Exception("Error al preparar la inserción del cliente.");
             }
+            $stmt->bind_param("sssssssssssssssiss", $name, $nombrecomercial, $tipo, $codigo, $nit, $detalle, $direction, $phone, $mobil, $email, $web, $pais, $city, $zona, $contacto, $idempresa, $tipodocumento, $canal);
+            
+            if (!$stmt->execute()) {
+                throw new Exception("Error al registrar el cliente.");
+            }
+            
+            // Get the ID of the new client efficiently
+            $newClientId = $this->cm->insert_id;
+            $stmt->close();
+
+            // Step 5: Insert the default branch for the new client
+            $defaul = "Central " . $name;
+            $insertSucursalQuery = "INSERT INTO sucursal (nombre, telefono, direccion, cliente_id_cliente) VALUES (?, ?, ?, ?)";
+            $stmt = $this->cm->prepare($insertSucursalQuery);
+            if ($stmt === false) {
+                throw new Exception("Error al preparar la inserción de la sucursal.");
+            }
+            $stmt->bind_param("sssi", $defaul, $mobil, $direction, $newClientId);
+            
+            if (!$stmt->execute()) {
+                throw new Exception("Error al registrar la sucursal del cliente.");
+            }
+            $stmt->close();
+
+            // If both inserts were successful, commit the transaction
+            $this->cm->commit();
+            $res = ["estado" => "exito", "mensaje" => "Registro exitoso"];
+
+        } catch (Exception $e) {
+            // If any error occurred, roll back all changes
+            
+            $this->cm->rollback();
+            
+            $res = ["estado" => "error", "mensaje" => $e->getMessage()];
         }
 
-        
-
-        echo json_encode($res);
+        // Step 6: Return the response based on the $respuesta parameter
+        if ($respuesta == null) { // Correct comparison operator
+            echo json_encode($res);
+        } elseif($respuesta == 1) {
+            return $newClientId; // Return the new ID
+        }
     }
     public function registroClienteMinimal_($name, $nombrecomercial, $canal, $tipo, $tipodocumento, $nit, $telefono, $idmd5)
     {
@@ -2655,4 +2701,4 @@ class ventas
     }
 }
 
-//registroinventarioexterno
+//punto

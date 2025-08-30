@@ -45,6 +45,7 @@ export const PAGINAS = Object.freeze({
     'reportedeindicederotacionglobal',
     'reportedeindicederotacionporcliente',
   ]),
+  registrarclienteoproveedor: Object.freeze(['registrodecliente', 'registrarproveedor']),
   // ... (otros grupos con el mismo formato)
 })
 
@@ -101,6 +102,9 @@ export const PAGINAS_ICONS = Object.freeze({
   reportedeindicederotacionporalmacen: 'store',
   reportedeindicederotacionglobal: 'public',
   reportedeindicederotacionporcliente: 'person_search',
+
+  registrodecliente: 'person_add',
+  registrarproveedor: 'local_shipping',
 })
 
 /**

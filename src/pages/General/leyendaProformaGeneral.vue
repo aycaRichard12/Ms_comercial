@@ -3,7 +3,7 @@
     <q-dialog v-model="showForm" persistent>
       <q-card class="responsive-dialog">
         <q-card-section class="bg-primary text-white text-h6 flex justify-between">
-          <div>Registrar Leyenda</div>
+          <div>Registrar Condiciones para Cotización</div>
           <q-btn icon="close" @click="showForm = false" flat dense round />
         </q-card-section>
         <q-card-section class="q-pa-none">
@@ -30,7 +30,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onBeforeUnmount } from 'vue'
 import { useQuasar } from 'quasar'
 import FormLeyenda from 'components/general/Leyenda/FormLeyenda.vue'
 import TableLeyendas from 'components/general/Leyenda/TableLeyenda.vue'
@@ -154,6 +154,19 @@ async function changeStatus(item) {
     })
   }
 }
+
+function handleKeydown(e) {
+  if (e.key === 'Escape') {
+    showForm.value = false
+  }
+}
+
+onMounted(() => {
+  window.addEventListener('keydown', handleKeydown)
+})
+onBeforeUnmount(() => {
+  window.removeEventListener('keydown', handleKeydown)
+})
 onMounted(() => {
   loadRows()
 })

@@ -1,25 +1,30 @@
 <template>
-  <q-page class="q-pa-md">
-    <q-card class="q-pa-md">
-      <q-form>
-        <div class="row q-col-gutter-md" style="display: flex; justify-content: center">
-          <q-input v-model="startDate" type="date" label="Fecha Inicial*" class="col-md-4" />
-          <q-input v-model="endDate" type="date" label="Fecha Final*" class="col-md-4" />
+  <q-page padding>
+    <div class="titulo">Reporte Productos Comprados</div>
+    <q-form>
+      <div class="row q-col-gutter-md" style="display: flex; justify-content: center">
+        <div class="col-12 col-md-4">
+          <label for="fechaIni">Fecha Inicial*</label>
+          <q-input v-model="startDate" type="date" class="col-md-4" dense outlined />
         </div>
-        <div class="q-mt-md" style="display: flex; justify-content: center">
-          <q-btn color="primary" label="Generar reporte" @click="generarReporte" class="q-mr-sm" />
-          <q-btn color="secondary" label="Exportar a Excel" @click="exportarExcel" />
+        <div class="col-12 col-md-4">
+          <label for="fechafin">Fecha Final*</label>
+          <q-input v-model="endDate" type="date" dense outlined="" class="col-md-4" />
         </div>
-      </q-form>
+      </div>
+      <div class="q-mt-md" style="display: flex; justify-content: center">
+        <q-btn color="primary" label="Generar reporte" @click="generarReporte" class="q-mr-sm" />
+        <q-btn color="secondary" label="Exportar a Excel" @click="exportarExcel" />
+      </div>
+    </q-form>
 
-      <q-table
-        title="Reporte de Productos Comprados"
-        :rows="datosFiltrados"
-        :columns="columnas"
-        row-key="codigo"
-        class="q-mt-lg"
-      />
-    </q-card>
+    <q-table
+      title="Reporte de Productos Comprados"
+      :rows="datosFiltrados"
+      :columns="columnas"
+      row-key="codigo"
+      class="q-mt-lg"
+    />
   </q-page>
 </template>
 

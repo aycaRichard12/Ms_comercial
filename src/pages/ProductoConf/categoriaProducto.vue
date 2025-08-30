@@ -33,7 +33,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onBeforeUnmount } from 'vue'
 import { api } from 'src/boot/axios'
 import CategoriaForm from 'src/components/productoConf/categoria/categoriaForm.vue'
 import TablaCategorias from 'src/components/productoConf/categoria/categoriaTable.vue'
@@ -171,7 +171,18 @@ async function changeStatus(item) {
     })
   }
 }
+function handleKeydown(e) {
+  if (e.key === 'Escape') {
+    mostrarDialogo.value = false
+  }
+}
 
+onMounted(() => {
+  window.addEventListener('keydown', handleKeydown)
+})
+onBeforeUnmount(() => {
+  window.removeEventListener('keydown', handleKeydown)
+})
 onMounted(() => {
   getCategorias()
 })

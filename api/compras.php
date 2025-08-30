@@ -807,11 +807,11 @@ class compras
         $res="";
         $registro=$this->cm->query("update ingreso SET autorizacion='$estado' where id_ingreso='$idingreso'");
         $estadopedido=$this->cm->query("update pedidos SET estado=1 where id_pedidos='$idpedido'");
-        $nuevostock=$this->cm->query("select di.productos_almacen_id_productos_almacen, (di.cantidad + s.cantidad) as nuevo from detalle_ingreso as di inner join stock as s on di.productos_almacen_id_productos_almacen=s.productos_almacen_id_productos_almacen where di.ingreso_id_ingreso='$idingreso' and s.estado=1");
+        $nuevostock=$this->cm->query("select di.productos_almacen_id_productos_almacen, (di.cantidad + s.cantidad) as nuevo, di.id_detalle_ingreso from detalle_ingreso as di inner join stock as s on di.productos_almacen_id_productos_almacen=s.productos_almacen_id_productos_almacen where di.ingreso_id_ingreso='$idingreso' and s.estado=1");
         while($stock=$this->cm->fetch($nuevostock)){
             $cambioestado = $this->cm->query("update stock set estado=2 where productos_almacen_id_productos_almacen='$stock[0]' and estado=1");
             if($cambioestado === TRUE){
-                $registrostock=$this->cm->query("insert into stock(id_stock,cantidad,fecha,codigo,estado,productos_almacen_id_productos_almacen) value(null,'$stock[1]','$fecha','$codigo',1,'$stock[0]')");
+                $registrostock=$this->cm->query("insert into stock(id_stock,cantidad,fecha,codigo,estado,productos_almacen_id_productos_almacen) value(null,'$stock[1]','$fecha','$codigo',1,'$stock[0]','$stock[2]')");
             }
         }
             

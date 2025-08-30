@@ -17,6 +17,7 @@ class Facturacion
         $this->cm = $this->conexion->cm;
         $this->endpoint = $this->conexion->endPoint;
     }
+    //listadoConfigParametricas
 
     public function listadoConfigParametricas($url, $token, $tipo, $imprimir)
     {
@@ -334,4 +335,4 @@ class Facturacion
 }
 
 
-//86DCEAF5676FE1C8F207F23176B1BC4B1AA9830604E995006C3A1F74
+//86DCEAF5676FE1C8F207F23176B1BC4B1AA9830604E995006C3A1F74 encontrada

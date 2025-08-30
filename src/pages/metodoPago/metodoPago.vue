@@ -1,44 +1,56 @@
 <template>
   <q-page class="q-pa-md" style="background-color: #eeebe2">
     <q-dialog v-model="showForm" persistent class="responsive-dialog">
-      <q-card style="min-width: 100px; max-width: 1000px; width: 400px" class="dialog-card">
+      <q-card class="responsive-dialog">
         <q-card-section class="row items-center q-pb-none bg-primary text-white">
           <div class="text-h6">Metodo Pago</div>
           <q-space />
           <q-btn icon="close" flat round v-close-popup @click="toggleForm" />
         </q-card-section>
-        <q-card-section class="q-pa-none">
-          <q-form @submit.prevent="handleSubmit" ref="formRef" v-if="showForm">
-            <q-input
-              v-model="form.nombre"
-              label="Nombre del Método de Pago"
-              outlined
-              dense
-              color="warning"
-              class="q-ma-lg"
-              :rules="[(val) => !!val || 'El nombre es requerido']"
-            />
-            <q-select
-              v-if="Number(tipoFactura) == 2"
-              v-model="form.descripcionSIN"
-              :options="leyendaSINOptions"
-              label="Descripción SIN"
-              outlined
-              dense
-              color="warning"
-              emit-value
-              map-options
-              option-value="codigo"
-              option-label="descripcion"
-              class="q-ma-lg"
-              :rules="[(val) => !!val || 'La descripción SIN es requerida']"
-            >
-              <template v-slot:no-option>
-                <q-item>
-                  <q-item-section class="text-grey"> No hay opciones </q-item-section>
-                </q-item>
-              </template>
-            </q-select>
+        <q-card-section>
+          <q-form
+            @submit.prevent="handleSubmit"
+            ref="formRef"
+            v-if="showForm"
+            class="row q-col-gutter-x-md"
+          >
+            <div class="col-12 col-md-6">
+              <label for="nombre">Nombre del Método de Pago</label>
+              <q-input
+                v-model="form.nombre"
+                id="nombre"
+                outlined
+                dense
+                color="warning"
+                :rules="[(val) => !!val || 'El nombre es requerido']"
+              />
+            </div>
+            <div class="col-12 col-md-6">
+              <label for="descripcion">Descripción SIN</label>
+              <q-select
+                v-if="tipoFactura"
+                v-model="form.descripcionSIN"
+                :options="filteredMetodosPagoSin"
+                id="descripcion"
+                dense
+                outlined
+                map-options
+                use-input
+                fill-input
+                hide-selected
+                option-value="codigo"
+                option-label="descripcion"
+                input-debounce="0"
+                @filter="filterFn"
+                :rules="[(val) => !!val || 'Campo requerido']"
+              >
+                <template v-slot:no-option>
+                  <q-item>
+                    <q-item-section class="text-grey">No hay opciones</q-item-section>
+                  </q-item>
+                </template>
+              </q-select>
+            </div>
 
             <q-input
               v-if="false"
@@ -52,6 +64,13 @@
 
             <q-card-actions align="right">
               <q-btn
+                v-if="showForm"
+                type="submit"
+                label="Guardar"
+                color="positive"
+                class="q-mt-md q-ml-sm"
+              />
+              <q-btn
                 label="Cancelar"
                 flat
                 round
@@ -59,13 +78,6 @@
                 class="q-mt-md q-ml-sm"
                 color="negative"
                 @click="toggleForm"
-              />
-              <q-btn
-                v-if="showForm"
-                type="submit"
-                label="Guardar"
-                color="positive"
-                class="q-mt-md q-ml-sm"
               />
             </q-card-actions>
           </q-form>
@@ -183,7 +195,24 @@ const showForm = ref(false)
 const formTitle = ref('Nuevo registro')
 const searchTerm = ref('')
 const privileges = ref([0, 0, 0, 0]) // Default privileges, will be updated
+const filteredMetodosPagoSin = ref([])
+// Función de filtrado
+function filterFn(val, update) {
+  console.log(val)
+  if (val === '') {
+    update(() => {
+      filteredMetodosPagoSin.value = leyendaSINOptions.value
+    })
+    return
+  }
 
+  update(() => {
+    const needle = val.toLowerCase()
+    filteredMetodosPagoSin.value = leyendaSINOptions.value.filter((v) =>
+      v.descripcion.toLowerCase().includes(needle),
+    )
+  })
+}
 // Computed properties
 const filteredMetodosPago = computed(() => {
   const normalizedSearchTerm = normalizeText(searchTerm.value).toLowerCase()
@@ -196,7 +225,7 @@ const filteredMetodosPago = computed(() => {
       normalizeText(metodo.metodopagosin.descripcion).toLowerCase().includes(normalizedSearchTerm),
   )
 })
-if (tipoFactura == 2) {
+if (tipoFactura) {
   columns = [
     {
       name: 'index',
@@ -263,13 +292,15 @@ const resetForm = () => {
 
 const getLeyendaSINOptions = async () => {
   try {
-    if (tipoFactura == 2) {
+    if (tipoFactura) {
       const contenidousuario = validarUsuario()
       const token = contenidousuario[0]?.factura?.access_token
       const tipo = contenidousuario[0]?.factura?.tipo
       const endpoint = `listaMetodopagoSIN/metodopago/${token}/${tipo}`
+      console.log(endpoint)
       const response = await api.get(endpoint)
       const resultado = response.data
+      console.log(resultado)
       if (resultado[0] === 'error') {
         console.error(resultado.error)
         $q.notify({
@@ -298,8 +329,9 @@ const fetchMetodosPago = async () => {
     const token = contenidousuario[0]?.factura?.access_token
     const tipo = contenidousuario[0]?.factura?.tipo
     const endpoint = `listaMetodopagoFactura/${idempresa}/${token}/${tipo}`
+    console.log(endpoint)
     const response = await api.get(endpoint)
-    console.log(response)
+    console.log(response.data)
     const resultado = response.data
     if (resultado[0] === 'error') {
       console.error(resultado.error)
@@ -328,18 +360,19 @@ const handleSubmit = async () => {
   const idempresa = contenidousuario[0]?.empresa?.idempresa
 
   const formData = new FormData()
+  for (let [k, v] of formData.entries()) {
+    console.log(`${k}: ${v}`)
+  }
   if (form.id) {
     formData.append('id', form.id)
   }
   formData.append('nombre', form.nombre)
-  formData.append('codigosin', form.codigoSIN) // Send the code to the backend
   formData.append('ver', form.verMPF)
-  formData.append('descripcion', form.descripcionSIN)
+  formData.append('codigosin', form.descripcionSIN.codigo)
   formData.append('idempresa', idempresa)
 
   try {
     const response = await api.post('', formData) // peticionPOST expects FormData
-    console.log(response)
     const data = response.data
     if (data.estado === 'exito') {
       $q.notify({
@@ -468,7 +501,7 @@ onMounted(async () => {
   // In a real Vue app, you'd pass this as a prop or get from a store.
   const dummyPermissions = '1111' // Example, replace with actual logic
   privileges.value = [...dummyPermissions.toString()].map((digito) => parseInt(digito))
-  console.log(TipoFactura())
+
   await getLeyendaSINOptions()
   await fetchMetodosPago()
 })

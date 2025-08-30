@@ -16,9 +16,13 @@
       </q-input>
     </div> -->
     <div class="flex justify-between">
-      <q-btn color="primary" @click="$emit('add')" class="btn-res q-mt-lg">
+      <q-btn
+        color="primary"
+        @click="$emit('add')"
+        class="btn-res q-mt-lg"
+        title="registrar Tipo Almacén"
+      >
         <q-icon name="add" class="icono" />
-
         <span class="texto">Agregar</span>
       </q-btn>
 
@@ -58,9 +62,24 @@
 
       <template v-slot:body-cell-acciones="props">
         <q-td :props="props" class="text-nowrap">
-          <q-btn icon="edit" color="primary" dense flat @click="$emit('edit', props.row)" />
-          <q-btn icon="delete" dense flat color="negative" @click="$emit('delete', props.row)" />
           <q-btn
+            icon="edit"
+            color="primary"
+            dense
+            flat
+            @click="$emit('edit', props.row)"
+            title="Editar"
+          />
+          <q-btn
+            icon="delete"
+            dense
+            flat
+            color="negative"
+            @click="$emit('delete', props.row)"
+            title="Eliminar"
+          />
+          <q-btn
+            title="Cambiar de estado"
             :icon="Number(props.row.estado) === 1 ? 'toggle_on' : 'toggle_off'"
             dense
             flat

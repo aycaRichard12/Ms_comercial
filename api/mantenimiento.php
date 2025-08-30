@@ -57,23 +57,24 @@ class mantenimiento
             }
 
             // Consulta para obtener información de almacén
-            $consulta = $this->cm->query("SELECT a.id_almacen, a.nombre, a.direccion, a.telefono, a.email, a.tipo_almacen_id_tipo_almacen, ta.tipo_almacen, a.fecha_creacion, a.stockmin, a.stockmax, a.estado, a.idsucursal FROM almacen a
+            $consulta = $this->cm->query("SELECT a.id_almacen, a.nombre, a.direccion, a.telefono, a.email, a.tipo_almacen_id_tipo_almacen, ta.tipo_almacen, a.fecha_creacion, a.stockmin, a.stockmax, a.estado, a.idsucursal, a.codigo FROM almacen a
             LEFT JOIN tipo_almacen ta ON a.tipo_almacen_id_tipo_almacen = ta.id_tipo_almacen
             WHERE a.idempresa='$idempresa' ORDER BY a.id_almacen DESC");
 
             while ($lst = $this->cm->fetch($consulta)) {
                 $res = array(
-                    "id" => $lst[0],
-                    "nombre" => $lst[1],
-                    "direccion" => $lst[2],
-                    "telefono" => $lst[3],
-                    "email" => $lst[4],
-                    "idtipoalmacen" => $lst[5],
-                    "tipoalmacen" => $lst[6],
-                    "fecha" => $lst[7],
-                    "stockmin" => $lst[8],
-                    "stockmax" => $lst[9],
-                    "estado" => $lst[10],
+                    "id" => $lst['id_almacen'],
+                    "nombre" => $lst['nombre'],
+                    "direccion" => $lst['direccion'],
+                    "telefono" => $lst['telefono'],
+                    "email" => $lst['email'],
+                    "idtipoalmacen" => $lst['tipo_almacen_id_tipo_almacen'],
+                    "tipoalmacen" => $lst['tipo_almacen'],
+                    "fecha" => $lst['fecha_creacion'],
+                    "stockmin" => $lst['stockmin'],
+                    "stockmax" => $lst['stockmax'],
+                    "estado" => $lst['estado'],
+                    "codigo" => $lst['codigo'],
                     "verificar" => '1',
                     "sucursales" => []  // Inicializar array para almacenar información de sucursales asociadas
                 );
@@ -97,34 +98,65 @@ class mantenimiento
     }
 
     //funcion de registro de almacenes
-    public function registraralmacen($nombre,$direccion,$telefono,$email,$tipoalmacen,$stockmin,$stockmax,$idsucursal,$idmd5){
-        $fecha=date("Y-m-d");
-        $res="";
+    public function registraralmacen($nombre,$direccion,$telefono,$email,$tipoalmacen,$stockmin,$stockmax,$idsucursal,$idmd5, $codigo = null){
+        $fecha = date("Y-m-d");
+        $res = "";
         $idempresa = $this->verificar->verificarIDEMPRESAMD5($idmd5);
-        $verificarQuery = "SELECT COUNT(*) FROM almacen a WHERE a.idempresa = ? AND a.nombre = ?";
-        $stmt = $this->cm->prepare($verificarQuery);
+
+        // Verificar si ya existe el nombre
+        $verificarNombre = "SELECT COUNT(*) FROM almacen a WHERE a.idempresa = ? AND a.nombre = ?";
+        $stmt = $this->cm->prepare($verificarNombre);
         if ($stmt === false) {
-            $res=array("estado" => "error", "mensaje" => "Error al intentar registrar. Por favor, inténtalo de nuevo");
+            $res = array("estado" => "error", "mensaje" => "Error al intentar registrar. Por favor, inténtalo de nuevo");
+            echo json_encode($res);
             return;
         }
-    
-        $stmt->bind_param("is", $idempresa , $nombre);
+        $stmt->bind_param("is", $idempresa, $nombre);
         $stmt->execute();
-        $stmt->bind_result($count);
+        $stmt->bind_result($countNombre);
         $stmt->fetch();
         $stmt->close();
-    
-        if ($count > 0) {
-            $res=array("estado" => "error", "mensaje" => "Error al intentar registrar, ".$nombre." ya esta registrado. Por favor, inténtalo de nuevo");
-        }else{
-            $registro=$this->cm->query("insert into almacen(id_almacen, nombre, direccion, telefono, email, tipo_almacen_id_tipo_almacen, fecha_creacion, stockmin, stockmax, estado, idempresa, idsucursal)value(NULL,'$nombre','$direccion','$telefono','$email','$tipoalmacen','$fecha','$stockmin','$stockmax','1','$idempresa','$idsucursal')");
-            if($registro !== null){
-                $res=array("estado" => "exito", "mensaje" => "Registro exitoso");
-            }else{
-                $res=array("estado" => "error", "mensaje" => "Error al intentar registrar. Por favor, inténtalo de nuevo");
+
+        if ($countNombre > 0) {
+            $res = array("estado" => "error", "mensaje" => "Error al intentar registrar, el nombre '$nombre' ya está registrado.");
+            echo json_encode($res);
+            return;
+        }
+
+
+
+
+        if (!empty($codigo)) {
+            $verificarCodigo = "SELECT COUNT(*) FROM almacen WHERE codigo = ?";
+            $stmt = $this->cm->prepare($verificarCodigo);
+            if ($stmt === false) {
+                $res = array("estado" => "error", "mensaje" => "Error al verificar el código. Por favor, inténtalo de nuevo");
+                echo json_encode($res);
+                return;
+            }
+            $stmt->bind_param("s", $codigo);
+            $stmt->execute();
+            $stmt->bind_result($countCodigo);
+            $stmt->fetch();
+            $stmt->close();
+
+            if ($countCodigo > 0) {
+                $res = array("estado" => "error", "mensaje" => "Error al intentar registrar, el código '$codigo' ya está en uso.");
+                echo json_encode($res);
+                return;
             }
         }
+
+         // Insertar registro
+        $registro = $this->cm->query("INSERT INTO almacen(id_almacen, nombre, direccion, telefono, email, tipo_almacen_id_tipo_almacen, fecha_creacion, stockmin, stockmax, estado, idempresa, idsucursal, codigo)
+                                    VALUES(NULL,'$nombre','$direccion','$telefono','$email','$tipoalmacen','$fecha','$stockmin','$stockmax','1','$idempresa','$idsucursal','$codigo')");
         
+        if ($registro !== null) {
+            $res = array("estado" => "exito", "mensaje" => "Registro exitoso");
+        } else {
+            $res = array("estado" => "error", "mensaje" => "Error al intentar registrar. Por favor, inténtalo de nuevo");
+        }
+
         echo json_encode($res);
 
     }
@@ -155,9 +187,9 @@ class mantenimiento
     }
 
     //funcion de actualizacion de almacenes
-    public function editaralmacen($idalmacen,$nombre,$direccion,$telefono,$email,$tipoalmacen,$stockmin,$stockmax,$idsucursal){
+    public function editaralmacen($idalmacen,$nombre,$direccion,$telefono,$email,$tipoalmacen,$stockmin,$stockmax,$idsucursal, $codigo = null){
         $res="";
-        $registro=$this->cm->query("update almacen SET nombre='$nombre',direccion='$direccion',telefono='$telefono',email='$email',tipo_almacen_id_tipo_almacen='$tipoalmacen', stockmin='$stockmin', stockmax='$stockmax', idsucursal='$idsucursal' where id_almacen='$idalmacen'");
+        $registro=$this->cm->query("update almacen SET nombre='$nombre',direccion='$direccion',telefono='$telefono',email='$email',tipo_almacen_id_tipo_almacen='$tipoalmacen', stockmin='$stockmin', stockmax='$stockmax', idsucursal='$idsucursal', codigo = '$codigo' where id_almacen='$idalmacen'");
         if($registro !== null){
             $res=array("estado" => "exito", "mensaje" => "Actualización exitosa");
         }else{
@@ -679,7 +711,7 @@ class mantenimiento
     }
     
 
-    // public function listaProductos($idmd5, $token, $tipo)
+    // public function listaProductos($idmd5, $token, $tipo) listadoConfigParametricas
     // {
     //     ini_set('display_errors', 1);
     //     ini_set('display_startup_errors', 1);
@@ -937,11 +969,16 @@ class mantenimiento
             // Verificar si el producto está relacionado en otras tablas
             $relacionadas = [
                 'cambios' => 'No se puede eliminar porque hay registros en Cambios',
-                'productos_almacen' => 'No se puede eliminar porque se asigno a un Almacen',
+                'productos_almacen' => 'No se puede eliminar: el registro está vinculado a transacciones de compra o venta existentes.',
+            ];
+
+            $sqlrelacionada =  [
+                'cambios' => 'SELECT 1 FROM cambios WHERE productos_id_productos = ?',
+                'productos_almacen' => 'SELECT 1 from productos_almacen pa inner join detalle_ingreso di on pa.id_productos_almacen = di.productos_almacen_id_productos_almacen inner join detalle_venta dv on pa.id_productos_almacen = dv.productos_almacen_id_productos_almacen where pa.productos_id_productos = ?',
             ];
 
             foreach ($relacionadas as $tabla => $mensaje) {
-                $query = "SELECT 1 FROM $tabla WHERE productos_id_productos = ?";
+                $query = $sqlrelacionada[$tabla];
                 $stmt = $this->cm->prepare($query);
                 if ($stmt === false) {
                     throw new Exception("No se pudo preparar la consulta para verificar $tabla");

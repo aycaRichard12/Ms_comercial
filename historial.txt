@@ -1,0 +1,44 @@
+[
+  {
+    "ok": "success",
+    "login": "usuario",
+    "idusuario": "03afdbd66e7929b125f8597834fa83a4",
+    "usuario": "richard50",
+    "nombre": "Richard Systems",
+    "cargo": "Programador full stack",
+    "idarea": "182be0c5cdcd5072bb1864cdee4d3d6e",
+    "idcargo": "d67d8ab4f4c10bf22aa353e27879133c",
+    "area": "Sistemas",
+    "empresa": {
+      "nombre": "Comercio e Inversiones YF SRL",
+      "idempresa": "c0c7c76d30bd3dcaefc96f40275bdc0a",
+      "nit": "123456789",
+      "telefono": "+591 12345678",
+      "direccion": "Av. Ayacucho N° 218 esq. Gral Achá",
+      "logo": "logos/yof_279bd03d09.jpg",
+      "email": "info@yofinanciero.com",
+      "idsucursal": "1f0e3dad99908345f7439f8ffabdffc4",
+      "sucursal": "Cochabamba-Central",
+      "opais": "Bolivia",
+      "oestado": "Cochababma",
+      "ociudad": "Cercado",
+      "ocelular": "+591 76548252",
+      "ositioweb": "www.yofinanciero.com",
+      "ocierrefiscal": "31/12",
+      "onempleador": null,
+      "onpatronal": null,
+      "idregion": "d41d8cd98f00b204e9800998ecf8427e",
+      "region": null,
+      "tiponegocio": "Comercial",
+      "tipo": "2",
+      "idtiponegocio": "c9f0f895fb98ab9159f51fd0297e236d"
+    },
+    "factura": {
+      "token_type": "",
+      "expires_in": "",
+      "access_token": "",
+      "tipo": "0",
+      "tipof": "NINGUNO"
+    }
+  }
+]

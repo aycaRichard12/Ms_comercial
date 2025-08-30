@@ -7,7 +7,7 @@ require_once "funciones.php";
 require_once "logErrores.php";
 
 /**
- * Clase para gestionar las operaciones de ventas, facturación y stock. puntoventa
+ * Clase para gestionar las operaciones de ventas, facturación y stock. idproductoalmacen id datosAdicionales
  */
 class UseVEnta
 {
@@ -51,7 +51,7 @@ class UseVEnta
      * @param int $idempresa ID de la empresa.
      * @param int $tipoventa Tipo de venta.
      * @return int|null El número de factura disponible.
-     * @throws Exception Si no se puede encontrar un número disponible.
+     * @throws Exception Si no se puede encontrar un número disponible. descripcion
      */
     private function obtenerNumeroFacturaDisponible($idempresa, $tipoventa)
     {
@@ -317,7 +317,32 @@ class UseVEnta
                     throw new Exception("No se pudo insertar el detalle para el producto con ID almacén: " . $producto['idproductoalmacen']);
                 }
                 if ((int)$producto['despachado'] == 2) {
-                    $this->_registrar_venta_no_despachada($ultimoIDventa, $producto);
+                    // Obtener cantidad actual del stock
+                    $stmtGetStock->bind_param("i", $producto['idstock']);
+                    $stmtGetStock->execute();
+                    $cantidadActual = $stmtGetStock->get_result()->fetch_row()[0];
+                    $stmtUpdateStock->bind_param("i", $producto['idstock']);
+                    $stmtUpdateStock->execute();
+                    if ($stmtUpdateStock->affected_rows === 0) {
+                        throw new Exception("Conflicto al actualizar el stock para id: " . $producto['idstock'] . ". La venta fue cancelada.");
+                    }
+                    if($cantidadActual == 0){
+                        $this->_registrar_venta_no_despachada($ultimoIDventa, $producto);
+                    }else{
+                        if($cantidadActual <  $producto['cantidad'] ){
+                            $cantidadrestante = $producto['cantidad'] - $cantidadActual;
+                            $nuevaCantidad =0;
+                            $stmtNewStock->bind_param("di", $nuevaCantidad, $producto['idproductoalmacen']);
+                            $stmtNewStock->execute();
+                            if ($stmtNewStock->affected_rows === 0) {
+                                throw new Exception("No se pudo crear el nuevo registro de stock para el producto con ID almacén: " . $producto['idproductoalmacen']);
+                            }
+                            $producto['cantidad'] = $cantidadrestante;
+                            $this->_registrar_venta_no_despachada($ultimoIDventa, $producto);
+
+                        }
+                    }
+                    
                 }else{
 
                     // Obtener cantidad actual del stock

@@ -35,8 +35,9 @@
             round
             color="negative"
             icon="delete"
-            size="sm"
+            dense
             @click="$emit('delete', props.row.id)"
+            flat
           />
         </q-td>
       </template>

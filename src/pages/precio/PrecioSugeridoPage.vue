@@ -1,13 +1,21 @@
 <template>
-  <q-page class="q-pa-md q-pa-md-md q-pa-lg-lg">
-    <div v-if="showForm" class="q-mx-auto q-mt-md">
-      <form-precio-sugerido
-        :isEditing="isEditing"
-        :modalValue="ProductoSeleccionado"
-        @submit="guardarPrecioBase"
-        @cancel="toggleForm"
-      />
-    </div>
+  <q-page padding>
+    <q-dialog v-model="showForm">
+      <q-card class="responsive-dialog">
+        <q-card-section class="bg-primary text-white text-h6 flex justify-between">
+          <div>Nuevo Precio Sugerido</div>
+          <q-btn icon="close" flat dense rounf @click="showForm = false" />
+        </q-card-section>
+        <q-card-section>
+          <form-precio-sugerido
+            :isEditing="isEditing"
+            :modalValue="ProductoSeleccionado"
+            @submit="guardarPrecioBase"
+            @cancel="toggleForm"
+          />
+        </q-card-section>
+      </q-card>
+    </q-dialog>
 
     <table-precio-sugerido
       :rows="productos"

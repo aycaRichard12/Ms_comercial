@@ -28,7 +28,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onBeforeUnmount } from 'vue'
 import { useQuasar } from 'quasar'
 import ProductStateForm from 'src/components/productoConf/estadoProducto/estadoForm.vue'
 import ProductStateTable from 'src/components/productoConf/estadoProducto/estadoTable.vue'
@@ -158,6 +158,18 @@ const handleSubmit = async (data) => {
   toggleForm()
 }
 
+function handleKeydown(e) {
+  if (e.key === 'Escape') {
+    showForm.value = false
+  }
+}
+
+onMounted(() => {
+  window.addEventListener('keydown', handleKeydown)
+})
+onBeforeUnmount(() => {
+  window.removeEventListener('keydown', handleKeydown)
+})
 onMounted(() => {
   loadRows()
 })

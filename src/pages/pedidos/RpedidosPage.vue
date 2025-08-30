@@ -1,5 +1,6 @@
 <template>
-  <q-page class="q-pa-md q-pa-md-md q-pa-lg-lg">
+  <q-page padding="">
+    <div class="titulo">Pedidos</div>
     <!-- Diálogo con Formulario -->
     <q-dialog v-model="showForm" persistent>
       <q-card class="responsive-dialog">
@@ -61,7 +62,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onBeforeUnmount } from 'vue'
 import FormPedidos from 'src/components/pedidos/FormPedidos.vue'
 import TablePedidos from 'src/components/pedidos/TablePedidos.vue'
 import DetallePedido from 'src/components/pedidos/DetallePedido.vue'
@@ -246,6 +247,21 @@ function cancelarDetalle() {
   showDetallePedido.value = false
   selectedPedido.value = null // Limpiar el pedido seleccionado si es necesario
 }
+
+function handleKeydown(e) {
+  if (e.key === 'Escape') {
+    showForm.value = false
+    showDetallePedido.value = false
+    selectedPedido.value = null
+  }
+}
+
+onMounted(() => {
+  window.addEventListener('keydown', handleKeydown)
+})
+onBeforeUnmount(() => {
+  window.removeEventListener('keydown', handleKeydown)
+})
 onMounted(() => {
   getAlmacen()
   getPedidos()

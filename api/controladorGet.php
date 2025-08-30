@@ -5,14 +5,16 @@ require_once "compras.php";
 require_once "ventas.php";
 require_once "facturacion.php";
 require_once "reportes.php";
-require_once "funciones.php";
 require_once "dashboard.php";
 require_once "configuracionInicial.php";
 require_once "useCotizacion.php";
 require_once "useVenta.php";
+require_once "notificaciones.php";
+require_once "arqueoPuntoVenta.php";
+require_once "funciones.php";
 $ver = explode("/", $_GET['ver']);
 
-$controlador = null;  
+$controlador = null;  //Facturacion
 if ($ver[0] == "datosusuario") {
     $controlador = new Funciones();
     $controlador->obtenerDatosUsuario($ver[1], $ver[2]);
@@ -759,7 +761,47 @@ elseif($ver[0]== "listar_ventas_no_despachadas"){
     echo json_encode($respuesta);
 
 }
+elseif($ver[0]== "arqueoPuntoVenta"){
+    $controlador = new reportes();
+    $respuesta = $controlador->arqueoPuntoVenta($ver[1],$ver[2],$ver[3],$ver[4]); // idventaND, idproductoalmacen, cantidad
+    echo json_encode($respuesta);
+
+}
+elseif($ver[0]== "puntosVentaUsuario"){
+    $controlador = new reportes();
+    $respuesta = $controlador->puntosVentaUsuario($ver[1]); // idventaND, idproductoalmacen, cantidad
+
+}
+elseif($ver[0]== "getNotificaciones"){
+    $controlador = new Notificaciones();
+    $respuesta = $controlador->getNotificaciones($ver[1],$ver[2]); // idventaND, idproductoalmacen, cantidad
+    
+
+}
+
+
+elseif($ver[0]== "getLogoBase64"){
+    $controlador = new Notificaciones();
+    $respuesta = $controlador->getLogoBase64($ver[1],$ver[2]); // idventaND, idproductoalmacen, cantidad
+    if ($respuesta) {
+        echo json_encode(["base64" => $respuesta]);
+    } else {
+        echo json_encode(["error" => "Imagen no encontrada"]);
+    }
+
+}
+elseif($ver[0]== "cierres_registrados"){
+    $controlador = new ArqueoPuntoVenta();
+    $controlador->cierres_registrados($ver[1],$ver[2]); // idventaND, idproductoalmacen, cantidad
+    
+
+}
+elseif($ver[0]== "reporteCierrePorId"){
+    $controlador = new ArqueoPuntoVenta();
+    $controlador->reporteCierrePorId($ver[1],$ver[2]); // idventaND, idproductoalmacen, listaPuntoVentaFactura
+}
+
 if ($controlador === null) {
-    // Acción por defecto si no se encuentra una ruta valida detallesCotizacion reporteventasporproductosglobal
+    // Acción por defecto si no se encuentra una ruta valida detallesCotizacion calcularCrecimiento
     echo json_encode(array("error" => "La ruta ".$_GET['ver']." no existe"));
 }

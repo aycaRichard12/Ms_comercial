@@ -2,7 +2,14 @@
   <q-table title="Almacenes Asignados" :rows="rows" :columns="columns" row-key="id" flat bordered>
     <template v-slot:body-cell-opciones="props">
       <q-td align="center">
-        <q-btn dense icon="delete" color="negative" @click="eliminar(props.row.id)" />
+        <q-btn
+          dense
+          icon="delete"
+          color="negative"
+          @click="eliminar(props.row.id)"
+          title="Eliminar"
+          flat
+        />
       </q-td>
     </template>
   </q-table>

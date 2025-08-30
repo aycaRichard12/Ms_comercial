@@ -196,6 +196,21 @@
             @click="crearMensaje(props.row)"
             class="q-ml-sm"
           />
+          <q-btn
+            v-if="props.row.tipoventa == 1"
+            icon="receipt_long"
+            dense
+            flat=""
+            color="blue"
+            @click="ir_a_factura(props.row)"
+          />
+          <q-btn
+            v-if="props.row.tipoventa == 1"
+            icon="policy"
+            flat=""
+            color="warning"
+            @click="ir_a_impuestos(props.row)"
+          />
         </q-td>
       </template>
     </q-table>
@@ -374,6 +389,16 @@ const columnas = [
 
 const rows = ref([])
 const detalleVenta = ref([])
+
+const ir_a_factura = (row) => {
+  console.log(row)
+  // const urlPDF = 'https://example.com/factura.pdf'
+  window.open(row.shortlink, '_blank')
+}
+const ir_a_impuestos = (row) => {
+  console.log(row)
+  window.open(row.urlsin, '_blank')
+}
 // Acciones
 const verDetalle = async (row) => {
   console.log(row)

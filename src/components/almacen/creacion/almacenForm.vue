@@ -66,7 +66,7 @@
           />
         </div>
 
-        <div class="col-12 col-md-6">
+        <div class="col-12 col-md-3">
           <label for="sucursal">Sucursal:</label>
           <q-select
             v-model="localData.sucursal"
@@ -74,6 +74,18 @@
             id="sucursal"
             emit-value
             map-options
+            outlined
+            dense
+            :rules="[(val) => !!val || 'Seleccione una sucursal']"
+          />
+        </div>
+        <div class="col-12 col-md-3">
+          <label for="codigo">Codigo para web:</label>
+          <q-input
+            v-model="localData.codigo"
+            id="sucursal"
+            name="codigo"
+            type="text"
             outlined
             dense
             :rules="[(val) => !!val || 'Seleccione una sucursal']"
@@ -107,9 +119,9 @@
         </div>
       </q-card-section>
 
-      <q-card-actions class="flex justify-end">
-        <q-btn label="Cancelar" flat color="negative" @click="$emit('cancel')" />
+      <q-card-actions class="flex justify-start">
         <q-btn label="Guardar" type="submit" color="primary" />
+        <q-btn label="Cancelar" flat color="negative" @click="$emit('cancel')" />
       </q-card-actions>
     </q-form>
   </q-card>

@@ -2,6 +2,25 @@ import { URL_APICM } from './services'
 import { useRoute } from 'vue-router'
 import { useMenuStore } from 'src/stores/permitidos'
 import { idusuario_md5 } from 'src/composables/FuncionesGenerales'
+import { api } from 'src/boot/axios'
+
+export async function cargarLogoBase64(logoPath) {
+  const [carpeta, imagen] = logoPath.split('/')
+  try {
+    const point = `getLogoBase64/${carpeta}/${imagen}`
+    console.log(point)
+    const response = await api.get(point)
+    const data = response.data
+    console.log(data)
+    if (data.base64) {
+      return data.base64
+    }
+    return null
+  } catch (err) {
+    console.error('Error cargando logo:', err)
+    return null
+  }
+}
 
 export function obtenerPermisosPagina() {
   const menuStore = useMenuStore()
@@ -15,6 +34,21 @@ export function verificarexistenciapagina(ruta) {
   const menuStore = useMenuStore()
   const codigoPagina = ruta + `-${idusuario_md5()}`
   return menuStore.existePagina(codigoPagina)
+}
+
+export function permisoNotificaciones() {
+  const menuStore = useMenuStore()
+
+  const id = idusuario_md5()
+  const gP = `gestionPedido-${id}`
+  const vnd = `procesarventaspendientes-${id}`
+  const cxc = `cuentasporcobrar-${id}`
+
+  return (
+    menuStore.verificarExistencia(gP) ||
+    menuStore.verificarExistencia(vnd) ||
+    menuStore.verificarExistencia(cxc)
+  )
 }
 export function generarCabeceraHTML(datos) {
   //const tableHeader = datos.tableHeader; vapp

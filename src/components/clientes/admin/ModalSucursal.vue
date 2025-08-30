@@ -45,7 +45,14 @@
     >
       <template v-slot:body-cell-opciones="props">
         <q-td :props="props" class="text-nowrap">
-          <q-btn icon="edit" color="info" size="sm" dense flat @click="editarSucursal(props.row)" />
+          <q-btn
+            icon="edit"
+            color="primary"
+            size="sm"
+            dense
+            flat
+            @click="editarSucursal(props.row)"
+          />
           <q-btn
             icon="delete"
             color="negative"

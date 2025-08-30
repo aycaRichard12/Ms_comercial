@@ -280,6 +280,14 @@ const routes = [
         path: '/procesarventaspendientes',
         component: () => import('src/pages/Venta/VentasPendientesPage.vue'),
       },
+      {
+        path: '/cierrecaja',
+        component: () => import('src/pages/cierrecaja/cierresDeCaja.vue'),
+      },
+      {
+        path: '/generartokensapis',
+        component: () => import('src/pages/token/ManualApisPage.vue'),
+      },
     ],
   },
   {

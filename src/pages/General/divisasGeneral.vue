@@ -29,7 +29,7 @@
   </q-page>
 </template>
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onBeforeUnmount } from 'vue'
 import { validarUsuario } from 'src/composables/FuncionesG'
 import FormDivisa from 'src/components/general/divisa/FormDivisa.vue'
 import TableDivisa from 'src/components/general/divisa/TableDivisa.vue'
@@ -175,6 +175,19 @@ async function changeStatus(item) {
     })
   }
 }
+
+function handleKeydown(e) {
+  if (e.key === 'Escape') {
+    showForm.value = false
+  }
+}
+
+onMounted(() => {
+  window.addEventListener('keydown', handleKeydown)
+})
+onBeforeUnmount(() => {
+  window.removeEventListener('keydown', handleKeydown)
+})
 onMounted(() => {
   loadRows()
 })

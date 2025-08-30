@@ -110,7 +110,6 @@
               v-model="productoSeleccionado"
               :options="productosFiltrados"
               use-input
-              input-debounce="300"
               @filter="filtrarProductos"
               id="producto"
               option-label="label"
@@ -125,6 +124,17 @@
               <template v-slot:prepend>
                 <q-icon name="search" color="primary" />
               </template>
+              <template v-slot:append>
+                <q-btn
+                  icon="refresh"
+                  color="primary"
+                  :disable="!almacenSeleccionado"
+                  title="Refrescar Productos"
+                  @click="cargarProductosDisponibles"
+                  flat
+                  round
+                />
+              </template>
               <template v-slot:no-option>
                 <q-item>
                   <q-item-section class="text-grey">
@@ -138,16 +148,38 @@
               </template>
             </q-select>
           </div>
-          <div class="col-2 flex items-center q-mt-lg">
-            <q-btn
-              icon="refresh"
-              color="primary"
-              :disable="!almacenSeleccionado"
-              title="Refrescar Productos"
-              @click="cargarProductosDisponibles"
-              flat
-              round
-            />
+          <div class="q-ma-md flex justify-around" style="width: 80px; height: 80px">
+            <q-img
+              :src="imagen + productoSeleccionado?.originalData?.imagen || null"
+              @click="mostrarGrande = true"
+              style="max-width: 70px; max-height: 70px; cursor: pointer"
+              spinner-color="primary"
+            >
+              <template v-slot:error>
+                <div
+                  class="column items-center justify-center bg-grey-3"
+                  style="height: 100%; width: 100%"
+                >
+                  <q-icon name="image_not_supported" size="md" color="grey-7" />
+                </div>
+              </template>
+            </q-img>
+
+            <q-dialog v-model="mostrarGrande">
+              <q-card class="responsive-dialog">
+                <q-card-section class="bg-primary text-white text-h6 flex justify-between">
+                  <div>Vista previa de imagen</div>
+                  <q-btn icon="close" flat dense round @click="mostrarGrande = false" />
+                </q-card-section>
+                <q-card-section>
+                  <q-img
+                    :src="imagen + productoSeleccionado?.originalData?.imagen || null"
+                    style="max-width: 100%; max-height: 100%"
+                    spinner-color="primary"
+                  />
+                </q-card-section>
+              </q-card>
+            </q-dialog>
           </div>
         </div>
 
@@ -331,16 +363,18 @@ body {
 </style>
 
 <script setup>
-import { ref, computed, onMounted, defineExpose } from 'vue'
+import { ref, computed, onMounted, defineExpose, watch } from 'vue'
 import { useQuasar } from 'quasar'
 import { api } from 'boot/axios'
 import { idempresa_md5, idusuario_md5 } from 'src/composables/FuncionesGenerales'
 import { useCurrencyStore } from 'src/stores/currencyStore'
+import { imagen } from 'src/boot/url'
 const currencyStore = useCurrencyStore()
 const permitirStock = ref(false)
 const idempresa = idempresa_md5()
 const idusuario = idusuario_md5()
 const $q = useQuasar()
+const mostrarGrande = ref(false)
 const emit = defineEmits(['reiniciar', 'volver'])
 
 const limpiarCarrito = async () => {
@@ -481,41 +515,79 @@ async function cargarAlmacenes() {
     cargandoAlmacenes.value = false
   }
 }
+
 //permitirStockvacio carrito
 async function cargarCategoriasPrecio() {
-  const datos = JSON.parse(localStorage.getItem('carrito'))
-  datos.idalmacen = almacenSeleccionado.value?.value
-  datos.codigosinsucursal = almacenSeleccionado.value?.codigosin
-  localStorage.setItem('carrito', JSON.stringify(datos))
+  if (almacenSeleccionado.value) {
+    const datos = JSON.parse(localStorage.getItem('carrito'))
 
-  console.log(almacenSeleccionado.value?.codigosin)
-  try {
-    cargandoCategorias.value = true
-    categoriaPrecioSeleccionada.value = null
-    categoriasPrecio.value = []
+    const almacen = almacenSeleccionado.value
 
-    const endpoint = `/listaCategoriaPrecio/${usuario.value.empresa.idempresa}`
-    const { data } = await api.get(endpoint)
+    datos.idalmacen = almacen.value
 
-    if (data[0] === 'error') throw new Error(data.error || 'Error al cargar categorías')
+    datos.codigosinsucursal = almacenSeleccionado.value?.codigosin
+    localStorage.setItem('carrito', JSON.stringify(datos))
+    try {
+      cargandoCategorias.value = true
+      categoriaPrecioSeleccionada.value = null
+      categoriasPrecio.value = []
 
-    categoriasPrecio.value = data
-      .filter((item) => item.estado == 1 && item.idalmacen == almacenSeleccionado.value?.value)
-      .map((item) => ({
-        label: item.nombre,
-        value: item.id,
-      }))
-    reinicia()
-  } catch (error) {
-    console.error('Error al cargar categorías:', error)
-    $q.notify({
-      type: 'negative',
-      message: 'Error al cargar las categorías de precio',
-    })
-  } finally {
-    cargandoCategorias.value = false
+      const endpoint = `/listaCategoriaPrecio/${usuario.value.empresa.idempresa}`
+      const { data } = await api.get(endpoint)
+
+      if (data[0] === 'error') throw new Error(data.error || 'Error al cargar categorías')
+
+      categoriasPrecio.value = data
+        .filter((item) => item.estado == 1 && item.idalmacen == almacenSeleccionado.value?.value)
+        .map((item) => ({
+          label: item.nombre,
+          value: item.id,
+        }))
+      reinicia()
+    } catch (error) {
+      console.error('Error al cargar categorías:', error)
+      $q.notify({
+        type: 'negative',
+        message: 'Error al cargar las categorías de precio',
+      })
+    } finally {
+      cargandoCategorias.value = false
+    }
+  } else {
+    console.error('Almacén seleccionado es nulo, no se pueden cargar categorías.')
   }
 }
+watch(
+  () => almacenes.value,
+  async (almacenes) => {
+    // Si la lista de almacenes no está vacía y no hay uno seleccionado...
+    if (almacenes.length > 0 && !almacenSeleccionado.value) {
+      almacenSeleccionado.value = almacenes[0]
+
+      // Ahora que tenemos un almacén, cargamos las categorías.
+      try {
+        // Inside your cargarCategoriasPrecio() or related function
+
+        await cargarCategoriasPrecio()
+
+        // Si las categorías se cargaron correctamente y hay alguna...
+        if (categoriasPrecio.value.length > 0) {
+          categoriaPrecioSeleccionada.value = categoriasPrecio.value[0].value
+
+          // Y finalmente, cargamos los productos.
+          cargarProductosDisponibles()
+        }
+      } catch (error) {
+        // Manejo de errores: ¿Qué pasa si la llamada a la API falla?
+        console.error('Error al cargar categorías o productos:', error)
+      }
+    }
+  },
+  { immediate: true },
+)
+
+// Los otros dos `watch` ya no son necesarios.)
+
 function reinicia() {
   const datos = JSON.parse(localStorage.getItem('carrito')) || {}
 
@@ -577,6 +649,7 @@ async function cargarProductosDisponibles() {
 
     const endpoint = `/listaProductosDisponiblesVenta/${usuario.value.empresa.idempresa}`
     const { data } = await api.get(endpoint)
+    console.log(data)
 
     if (data[0] === 'error') throw new Error(data.error || 'Error al cargar productos')
 
@@ -846,8 +919,8 @@ onMounted(async () => {
 
     // Limpiar y cargar todo
     eliminarCarrito()
-    await cargarAlmacenes()
     await crearCarritoVenta()
+    await cargarAlmacenes()
   } catch (error) {
     console.error('Error en inicialización:', error)
     $q.notify({

@@ -122,11 +122,16 @@
         <!-- <q-badge color="green" v-if="Number(props.row.estado) === 1" label="Activo" outline />
           <q-badge color="red" v-else label="Inactivo" outline /> -->
         <q-td class="flex justify-center">
-          <q-badge color="deep-purple" v-if="Number(props.row.estado) === 1" label="ESP" outline="">
+          <q-badge
+            color="deep-purple"
+            v-if="Number(props.row.estado) === 1"
+            label="PREF"
+            outline=""
+          >
           </q-badge>
           <q-badge
             color="blue"
-            v-if="Number(props.row.estado) === 0"
+            v-if="Number(props.row.estado) === 2"
             label="NOR"
             outline=""
           ></q-badge>

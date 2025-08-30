@@ -29,9 +29,24 @@
       </template>
       <template v-slot:body-cell-opciones="props">
         <q-td align="center">
-          <q-btn icon="edit" color="primary" dense flat @click="$emit('edit', props.row)" />
-          <q-btn icon="delete" dense flat color="negative" @click="$emit('delete', props.row)" />
           <q-btn
+            icon="edit"
+            color="primary"
+            dense
+            flat
+            @click="$emit('edit', props.row)"
+            title="Editar"
+          />
+          <q-btn
+            icon="delete"
+            dense
+            flat
+            color="negative"
+            @click="$emit('delete', props.row)"
+            title="Eliminar"
+          />
+          <q-btn
+            title="Cambiar de Estado"
             :icon="Number(props.row.estado) === 1 ? 'toggle_on' : 'toggle_off'"
             dense
             flat

@@ -39,6 +39,7 @@
     <q-table
       flat
       bordered
+      title="Proveedores"
       :rows="filtrarProveedores"
       :columns="columnas"
       row-key="id"
@@ -57,7 +58,7 @@
       </template>
       <template v-slot:body-cell-opciones="props">
         <q-td :props="props" class="text-center">
-          <q-btn flat dense icon="edit" color="info" @click="editarProveedor(props.row)" />
+          <q-btn flat dense icon="edit" color="primary" @click="editarProveedor(props.row)" />
           <q-btn flat dense icon="delete" color="negative" @click="eliminarProveedor(props.row)" />
         </q-td>
       </template>

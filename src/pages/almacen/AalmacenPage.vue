@@ -39,7 +39,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onBeforeUnmount } from 'vue'
 import ResponsableForm from 'src/components/almacen/asignacion/responsableForm.vue'
 import ResponsableTable from 'src/components/almacen/asignacion/responsableTable.vue'
 import AsignarAlmacenes from 'components/almacen/asignacion/responsableAsignarResponsableForm.vue'
@@ -191,6 +191,18 @@ const toggleForm = () => {
     isEditing.value = false
   }
 }
+function handleKeydown(e) {
+  if (e.key === 'Escape') {
+    showForm.value = false
+  }
+}
+
+onMounted(() => {
+  window.addEventListener('keydown', handleKeydown)
+})
+onBeforeUnmount(() => {
+  window.removeEventListener('keydown', handleKeydown)
+})
 const formData = ref({
   ver: 'registrarResponsablealmacen',
   idempresa: idempresa,

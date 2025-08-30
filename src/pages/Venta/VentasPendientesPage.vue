@@ -1,21 +1,25 @@
 <template>
   <q-page padding>
+    <div class="titulo">Ventas pendientes</div>
     <!-- Filtros -->
     <q-card-section class="row q-col-gutter-md">
       <div class="col-xs-12 col-sm-4">
+        <label for="almacen">Selecciona un almacén</label>
         <q-select
           v-model="almacenSeleccionado"
           :options="almacenOptions"
-          label="Selecciona un almacén"
+          id="almacen"
           emit-value
           map-options
           @update:model-value="cargarProductos"
           dense
+          outlined
           bg-color="white"
         />
       </div>
 
       <div class="col-xs-12 col-sm-4">
+        <label for="producto">Producto *</label>
         <q-select
           v-if="!loading && !error"
           v-model="productoSeleccionado"
@@ -23,7 +27,8 @@
           hide-selected
           fill-input
           input-debounce="0"
-          label="Producto *"
+          id="producto"
+          outlined
           :options="filteredProductos"
           @filter="filtrarProductos"
           clearable
@@ -32,13 +37,15 @@
         />
       </div>
       <div class="col-xs-12 col-sm-4">
+        <label for="estado">Filtrar por Estado</label>
         <q-select
           v-model="filterStatus"
           :options="statusOptions"
-          label="Filtrar por Estado"
+          id="estado"
           emit-value
           map-options
           dense
+          outlined
           bg-color="white"
         />
       </div>
@@ -113,11 +120,14 @@ import { useAlmacenStore } from 'src/stores/listaResponsableAlmacen'
 import { idempresa_md5, idusuario_md5 } from 'src/composables/FuncionesGenerales'
 import { storeToRefs } from 'pinia'
 import { api } from 'src/boot/axios'
+import emitter from 'src/event-bus'
+import { verificarexistenciapagina } from 'src/composables/FuncionesG'
+import { useCompraStore } from 'src/stores/compras'
 
 const idmd5 = ref('')
 const productosStore = useProductosDisponibleAlmacen()
 const almacenes = useAlmacenStore()
-
+const compraStore = useCompraStore()
 const filteredProductos = ref([])
 const productoSeleccionado = ref(null)
 const almacenSeleccionado = ref(null)
@@ -309,6 +319,14 @@ const processConfirmedSale = async () => {
       // Recargar la tabla después de procesar la venta
       await fetchSales()
     } else {
+      const datosCompra = {
+        idproducto: productos_almacen_id_productos_almacen,
+        cantidad: cantidad_pendiente,
+      }
+      const compra = verificarexistenciapagina('registrarcompra')
+      compraStore.registrarCompra(datosCompra)
+      emitter.emit('abrir-submenu', compra)
+
       $q.notify({
         message:
           'Error al procesar la venta: ' + (response.data.mensaje || 'Respuesta inesperada.'),

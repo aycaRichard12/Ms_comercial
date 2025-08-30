@@ -45,7 +45,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue' // Import computed for formDialogTitle viewProductDetails
+import { ref, onMounted, computed, onBeforeUnmount } from 'vue' // Import computed for formDialogTitle viewProductDetails
 import { useQuasar } from 'quasar'
 import { api } from 'boot/axios'
 import { idempresa_md5, idusuario_md5 } from 'src/composables/FuncionesGenerales' // Ensure idusuario_md5 is imported if used
@@ -344,6 +344,19 @@ const mostrarAlertaInformacion = (mensaje, detalle, tipo = 'info') => {
     icon: tipo === 'info' ? 'info' : tipo === 'negative' ? 'error' : 'check_circle',
   })
 }
+
+function handleKeydown(e) {
+  if (e.key === 'Escape') {
+    showMovimientoFormDialog.value = false
+  }
+}
+
+onMounted(() => {
+  window.addEventListener('keydown', handleKeydown)
+})
+onBeforeUnmount(() => {
+  window.removeEventListener('keydown', handleKeydown)
+})
 // --- Lifecycle Hook ---
 onMounted(async () => {
   // First, load origin and destination stores into the Pinia store.

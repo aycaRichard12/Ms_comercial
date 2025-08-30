@@ -1,5 +1,5 @@
 <template>
-  <q-form @submit="handleFormSubmit" ref="form" v-if="localData.autorizacion == 2">
+  <q-form @submit="handleFormSubmit" ref="formRef" v-if="localData.autorizacion == 2">
     <div class="row q-col-gutter-x-md">
       <div class="col-12 col-md-4" v-if="isEditing">
         <label for="producto">Producto*</label>
@@ -16,11 +16,10 @@
           disable
         />
       </div>
-      <div class="col-12 col-md-4" v-if="!isEditing">
+      <div class="col-12 col-md-6" v-if="!isEditing">
         <label for="producto">Producto*</label>
         <q-select
           use-input
-          fill-input
           hide-dropdown-icon
           v-model="localData.idproductoalmacen"
           :options="productosFiltrados"
@@ -58,7 +57,7 @@
         />
       </div>
 
-      <div class="col-12 col-md-4 flex justify-end items-center q-gutter-sm">
+      <div class="col-12 col-md-2 flex justify-end items-center q-gutter-sm">
         <q-btn :label="isEditing ? 'Actualizar' : 'Añadir'" color="primary" type="submit" />
         <q-btn v-if="isEditing" label="Cancelar Edición" color="grey" @click="resetForm" />
       </div>
@@ -87,6 +86,7 @@ const props = defineProps({
   // De aquí se extraerán idpedido, autorizacion, idalmacen, idalmacenorigen
   modelValue: { type: Object, required: true },
 })
+const formRef = ref(null)
 
 defineEmits(['close']) // Solo emitimos 'close' al padre
 
@@ -346,6 +346,8 @@ function resetForm() {
     idalmacen: props.modelValue.idalmacen,
     idalmacenorigen: props.modelValue.idalmacenorigen,
   }
+  formRef.value.reset() // limpia campos
+  formRef.value.resetValidation() // limpia mensajes de error
   // Opcional: Reiniciar la validación del formulario
   // form.value?.resetValidation();
 }

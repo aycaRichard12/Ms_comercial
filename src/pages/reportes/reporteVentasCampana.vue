@@ -1,25 +1,30 @@
 <template>
-  <q-page padding class="q-mt-lg">
+  <q-page padding>
+    <div class="titulo">Reporte Campañas</div>
     <q-form @submit.prevent="handleGenerarReporte">
-      <div class="row justify-center q-col-gutter-md">
-        <q-input
-          v-model="fechaInicio"
-          label="Fecha Inicial*"
-          type="date"
-          class="col-md-4"
-          outlined
-          dense
-          @update:model-value="validarFechas"
-        />
-        <q-input
-          v-model="fechaFin"
-          label="Fecha Final*"
-          type="date"
-          class="col-md-4"
-          outlined
-          dense
-          @update:model-value="validarFechas"
-        />
+      <div class="row justify-center q-col-gutter-x-md">
+        <div class="col-12 col-md-4">
+          <label for="fechaIni">Fecha Inicial*</label>
+          <q-input
+            v-model="fechaInicio"
+            id="fechaIni"
+            type="date"
+            outlined
+            dense
+            @update:model-value="validarFechas"
+          />
+        </div>
+        <div class="col-12 col-md-4">
+          <label for="fechafin">Fecha Final*</label>
+          <q-input
+            v-model="fechaFin"
+            id="fechafin"
+            type="date"
+            outlined
+            dense
+            @update:model-value="validarFechas"
+          />
+        </div>
       </div>
       <div class="row justify-center q-pt-md">
         <q-btn
@@ -39,18 +44,21 @@
 
     <div class="q-mt-lg">
       <q-form>
-        <div class="row justify-center q-pa-sm">
-          <q-select
-            v-model="almacenSeleccionado"
-            :options="opcionesAlmacenes"
-            label="Almacén*"
-            emit-value
-            map-options
-            class="col-md-4"
-            outlined
-            dense
-            :disable="!reporteGenerado"
-          />
+        <div class="row justify-center q-col-gutter-x-md">
+          <div class="col-12 col-md-4">
+            <label for="almacen">Almacén*</label>
+            <q-select
+              v-model="almacenSeleccionado"
+              :options="opcionesAlmacenes"
+              id="almacen"
+              emit-value
+              map-options
+              class="col-md-4"
+              outlined
+              dense
+              :disable="!reporteGenerado"
+            />
+          </div>
         </div>
       </q-form>
       <q-table
@@ -63,7 +71,7 @@
         class="q-mt-md"
       >
         <template v-slot:no-data>
-          <div class="full-width row flex-center text-accent q-gutter-sm">
+          <div class="full-width row flex-center q-gutter-sm">
             <span> No hay datos para mostrar. Genere un reporte primero. </span>
           </div>
         </template>

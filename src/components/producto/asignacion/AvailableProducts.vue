@@ -58,7 +58,21 @@
       <template v-slot:top-right> </template>
       <template #body-cell-imagen="props">
         <q-td :props="props">
-          <img :src="props.value" alt="img" width="50" height="50" style="object-fit: cover" />
+          <q-img
+            :src="imagen + props.row.imagen"
+            @click="abrirModal(props.row.imagen)"
+            style="max-width: 100px; max-height: 100px; cursor: pointer"
+            spinner-color="primary"
+          >
+            <template v-slot:error>
+              <div
+                class="column items-center justify-center bg-grey-3"
+                style="height: 100%; width: 100%"
+              >
+                <q-icon name="image_not_supported" size="md" color="grey-7" />
+              </div>
+            </template>
+          </q-img>
         </q-td>
       </template>
       <template #body-cell-seleccion="props">
@@ -67,13 +81,35 @@
         </q-td>
       </template>
     </q-table>
+    <q-dialog v-model="mostrarImagen">
+      <q-card class="responsive-dialog">
+        <q-card-section class="bg-primary text-white text-h6 flex justify-between">
+          <div>Vista Previa de Imagen</div>
+          <q-btn icon="close" flat dense round @click="mostrarImagen = false" />
+        </q-card-section>
+        <q-card-section>
+          <q-img
+            :src="imagen + imagenSeleccionada"
+            style="max-width: 100%; max-height: 100%"
+            spinner-color="primary"
+          />
+        </q-card-section>
+      </q-card>
+    </q-dialog>
   </div>
 </template>
 
 <script setup>
 import { ref, watch } from 'vue'
-
+import { imagen } from 'src/boot/url'
 // Props
+const mostrarImagen = ref(false)
+const imagenSeleccionada = ref(null)
+
+const abrirModal = (img) => {
+  imagenSeleccionada.value = img
+  mostrarImagen.value = true
+}
 defineProps({
   rows: {
     type: Array,

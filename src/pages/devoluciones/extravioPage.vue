@@ -83,9 +83,9 @@
                   />
                 </div>
 
-                <div class="col-12 flex justify-end q-mt-md">
-                  <q-btn flat label="Cancelar" color="negative" @click="cancelarRegistro" />
+                <div class="col-12 flex justify-start q-mt-md">
                   <q-btn type="submit" label="Guardar" color="primary" />
+                  <q-btn flat label="Cancelar" color="negative" @click="cancelarRegistro" />
                 </div>
               </q-form>
             </q-card-section>
@@ -195,8 +195,7 @@
             <div class="row q-col-gutter-x-md">
               <div class="col-12 col-md-8">
                 <label for="producto">Producto</label>
-                {{ formularioDetalle.idproductoalmacen }}
-                {{ productosOptions }}
+
                 <q-select
                   v-model="formularioDetalle.idproductoalmacen"
                   :options="productosOptions"
@@ -307,7 +306,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, watch } from 'vue'
+import { ref, onMounted, watch, onBeforeUnmount } from 'vue'
 import { useQuasar } from 'quasar'
 import { api } from 'boot/axios'
 import { date } from 'quasar'
@@ -795,7 +794,18 @@ watch(
     }
   },
 )
+function handleKeydown(e) {
+  if (e.key === 'Escape') {
+    mostrarFormulario.value = false
+  }
+}
 
+onMounted(() => {
+  window.addEventListener('keydown', handleKeydown)
+})
+onBeforeUnmount(() => {
+  window.removeEventListener('keydown', handleKeydown)
+})
 // Inicialización
 onMounted(() => {
   cargarAlmacenes()

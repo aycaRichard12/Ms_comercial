@@ -2,7 +2,7 @@
   <div class="flex justify-between">
     <q-btn color="primary" @click="$emit('add')" class="btn-res q-mt-lg">
       <q-icon name="add" class="icono" />
-      <span class="texto">Agregar</span>
+      <span class="texto">Nueva Asignación</span>
     </q-btn>
     <div>
       <label for="buscar">Buscar...</label>
@@ -18,13 +18,26 @@
     :filter="search"
     flat
     bordered
-    class="my-sticky-header-table q-mt-md"
   >
     <template v-slot:top-right> </template>
     <template v-slot:body-cell-opciones="props">
-      <q-td align="center">
-        <q-btn dense icon="delete" color="negative" @click="eliminar(props.row.id)" />
-        <q-btn dense icon="add_box" color="primary" @click="asignarAlmacenes(props.row)" />
+      <q-td class="flex justify-center">
+        <q-btn
+          dense
+          icon="delete"
+          color="negative"
+          @click="eliminar(props.row.id)"
+          title="Eliminar"
+          flat
+        />
+        <q-btn
+          dense
+          icon="add_box"
+          color="primary"
+          @click="asignarAlmacenes(props.row)"
+          title="Asignar Almacen"
+          flat
+        />
       </q-td>
     </template>
   </q-table>

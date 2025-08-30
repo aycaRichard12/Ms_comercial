@@ -1,35 +1,39 @@
 <template>
-  <q-form @submit.prevent="onSubmit" style="display: flex; justify-content: space-around">
-    <q-input
-      v-model="localData.descripcion"
-      label="Descripción del producto*"
-      disable
-      class="q-mb-md"
-      style="width: 300px"
-    />
+  <q-form @submit.prevent="onSubmit">
+    <div class="row q-col-gutter-x-md">
+      <div class="col-12 col-md-4">
+        <label for="producto">Descripción del producto*</label>
+        <q-input v-model="localData.descripcion" id="producto" dense="" outlined="" disable />
+      </div>
+      <div class="col-12 col-md-4">
+        <label for="preciosug">Actual precio sugerido</label>
+        <q-input
+          v-model="localData.precioActual"
+          id="preciosug"
+          disable
+          dense
+          outlined
+          :suffix="divisa"
+        />
+      </div>
+      <div class="col-12 col-md-4">
+        <label for="nuevoprecio">Nuevo precio sugerido*</label>
+        <q-input
+          v-model="localData.precio"
+          id="nuevoprecio"
+          type="number"
+          :suffix="divisa"
+          lazy-rules
+          dense
+          outlined
+          :rules="[(val) => !!val || 'Campo requerido']"
+        />
+      </div>
+    </div>
 
-    <q-input
-      v-model="localData.precioActual"
-      label="Actual precio sugerido"
-      disable
-      class="q-mb-md"
-      style="width: 300px"
-      :suffix="divisa"
-    />
-
-    <q-input
-      v-model="localData.precio"
-      label="Nuevo precio sugerido*"
-      type="number"
-      :suffix="divisa"
-      lazy-rules
-      style="width: 300px"
-      :rules="[(val) => !!val || 'Campo requerido']"
-    />
-
-    <q-card-actions align="right">
-      <q-btn label="Cancelar" flat color="negative" @click="$emit('cancel')" />
+    <q-card-actions class="flex justify-start">
       <q-btn label="Guardar" type="submit" color="primary" />
+      <q-btn label="Cancelar" flat color="negative" @click="$emit('cancel')" />
     </q-card-actions>
   </q-form>
 </template>

@@ -74,7 +74,8 @@
         row-key="id"
         flat
         bordered
-        :pagination="{ rowsPerPage: 8 }"
+        dense
+        :pagination="{ rowsPerPage: 5 }"
         :loading="cargando"
       >
         <template v-slot:body-cell-opciones="props">
@@ -85,6 +86,7 @@
                 icon="add_circle"
                 color="primary"
                 round
+                :id="'btn-' + props.row.id"
                 @click="cargarFormulario(props.row)"
                 title="Registrar cobro"
               />
@@ -108,51 +110,47 @@
 
     <!-- Formulario de registro -->
     <q-dialog v-model="mostrarForm" persistent>
-      <q-card style="min-width: 1500px">
-        <q-card-section>
+      <q-card class="responsive-dialog">
+        <q-card-section class="bg-primary text-white text-h6 flex justify-between">
           <div class="text-h6">Registrar Cobro</div>
+          <q-btn icon="close" flat round dense @click="mostrarForm = false" />
         </q-card-section>
 
         <q-card-section>
           <q-form @submit="registrarCobro">
             <div class="row q-col-gutter-md">
-              <div class="col-6">
-                <q-input v-model="formulario.cliente" label="Cliente" readonly />
-
-                <q-input v-model="formulario.sucursal" label="Sucursal" readonly />
-
-                <q-input v-model="formulario.deudaTotal" label="Total venta" readonly>
-                  <template v-slot:append>
-                    <span>{{ divisa }}</span>
-                  </template>
-                </q-input>
-
-                <q-input v-model="formulario.saldoPendiente" label="Saldo" readonly>
-                  <template v-slot:append>
-                    <span>{{ divisa }}</span>
-                  </template>
-                </q-input>
-
-                <q-input v-model="formulario.cuotasPendientes" label="Cuotas pendientes" readonly />
-
-                <q-input v-model="formulario.valorCuota" label="Cuota individual" readonly>
-                  <template v-slot:append>
-                    <span>{{ divisa }}</span>
-                  </template>
-                </q-input>
+              <div class="col-12 col-md-6">
+                <label for="cliente">Cliente</label>
+                <q-input v-model="formulario.cliente" id="cliente" dense outlined readonly />
               </div>
-
-              <div class="col-6">
+              <div class="col-12 col-md-6">
+                <label for="fecha">Fecha</label>
                 <q-input
                   v-model="formulario.fecha"
-                  label="Fecha"
+                  id="fecha"
+                  dense
+                  outlined
                   type="date"
                   :rules="[(val) => !!val || 'Campo requerido']"
                 />
-
+              </div>
+              <div class="col-12 col-md-6">
+                <label for="Sucursal">Sucursal</label>
+                <q-input
+                  v-model="formulario.sucursal"
+                  id="Sucursal"
+                  dense=""
+                  outlined=""
+                  readonly
+                />
+              </div>
+              <div class="col-12 col-md-6">
+                <label for="nroCobros">N° Cobros</label>
                 <q-input
                   v-model="formulario.numeroCobros"
-                  label="N° Cobros"
+                  id="nroCobros"
+                  dense
+                  outlined
                   :rules="[
                     (val) => !!val || 'Campo requerido',
                     (val) =>
@@ -162,10 +160,22 @@
                   :disable="formulario.cuotasPendientes === 1"
                   @update:model-value="calcularTotales"
                 />
-
+              </div>
+              <div class="col-12 col-md-6">
+                <label for="total">Total venta</label>
+                <q-input v-model="formulario.deudaTotal" id="total" dense outlined readonly>
+                  <template v-slot:append>
+                    <span>{{ divisa }}</span>
+                  </template>
+                </q-input>
+              </div>
+              <div class="col-12 col-md-6">
+                <label for="totalacobrar">Total a Cobrar</label>
                 <q-input
                   v-model="formulario.totalCobro"
-                  label="Total a Cobrar"
+                  id="totalacobrar"
+                  dense
+                  outlined
                   :rules="[
                     (val) => !!val || 'Campo requerido',
                     (val) =>
@@ -178,20 +188,62 @@
                     <span>{{ divisa }}</span>
                   </template>
                 </q-input>
+              </div>
+              <div class="col-12 col-md-6">
+                <label for="saldo">Saldo</label>
 
-                <q-input v-model="formulario.saldoPorCobrar" label="Saldo por Cobrar" readonly>
+                <q-input v-model="formulario.saldoPendiente" id="saldo" dense outlined="" readonly>
                   <template v-slot:append>
                     <span>{{ divisa }}</span>
                   </template>
                 </q-input>
-
+              </div>
+              <div class="col-12 col-md-6">
+                <label for="saldoporcobrar">Saldo por Cobrar</label>
+                <q-input
+                  v-model="formulario.saldoPorCobrar"
+                  id="saldoporcobrar"
+                  dense
+                  outlined
+                  readonly
+                >
+                  <template v-slot:append>
+                    <span>{{ divisa }}</span>
+                  </template>
+                </q-input>
+              </div>
+              <div class="col-12 col-md-6">
+                <label for="pendiente">Cuotas pendientes</label>
+                <q-input
+                  v-model="formulario.cuotasPendientes"
+                  id="pendiente"
+                  dense
+                  outlined
+                  readonly
+                />
+              </div>
+              <div class="col-12 col-md-6">
+                <label for="comprobante">Comprobante</label>
                 <q-file
                   v-model="formulario.comprobante"
-                  label="Comprobante (JPG, JPEG, PNG)"
+                  id="comprobante"
+                  dense
+                  outlined
                   accept=".jpg,.jpeg,.png"
                   @update:model-value="convertirImagen"
                 />
               </div>
+              <div class="col-12 col-md-6">
+                <label for="cuota">Cuota individual</label>
+                <q-input v-model="formulario.valorCuota" id="cuota" dense outlined readonly>
+                  <template v-slot:append>
+                    <span>{{ divisa }}</span>
+                  </template>
+                </q-input>
+              </div>
+              <div class="col-12 col-md-6"></div>
+
+              <div class="col-6"></div>
             </div>
 
             <div class="q-mt-md text-center">
@@ -230,6 +282,7 @@
         :rows="detallesCobros"
         :columns="columnasDetalles"
         row-key="id"
+        @row-click="onRowClick"
         flat
         bordered
         :pagination="{ rowsPerPage: 20 }"
@@ -286,7 +339,7 @@
 </template>
 
 <script>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import { useQuasar } from 'quasar'
 import { peticionGET } from 'src/composables/peticionesFetch'
 import { URL_APICM } from 'src/composables/services'
@@ -297,6 +350,7 @@ import { decimas } from 'src/composables/FuncionesG'
 import { obtenerFechaActual } from 'src/composables/FuncionesG'
 import { convertirImagenUtil } from 'src/composables/FuncionesG'
 import { api } from 'src/boot/axios'
+import emitter from 'src/event-bus'
 
 export default {
   props: {
@@ -368,7 +422,7 @@ export default {
     // Columnas de la tabla principal
     const columnas = [
       { name: 'numero', label: 'N°', field: 'numero', align: 'center' },
-      { name: 'cliente', label: 'Cliente', field: 'cliente', align: 'left' },
+      { name: 'cliente', label: 'Razon Social', field: 'cliente', align: 'left' },
       { name: 'factura', label: 'N° Factura', field: 'nfactura', align: 'center' },
       {
         name: 'fecha',
@@ -467,6 +521,10 @@ export default {
       4: 'Anulado',
     }
 
+    const onRowClick = (evt, row, index) => {
+      alert('Click en fila', index, row.id, row)
+    }
+    console.log(onRowClick)
     // Computed
     // const datosFiltrados = computed(() => {
     //   let datos = [...datosOriginales.value]
@@ -525,6 +583,7 @@ export default {
     //     numero: index + 1,
     //   }))
     // })
+
     const datosFiltrados = computed(() => {
       let datos = [...datosOriginales.value]
       // console.datos // This line seems like a typo, should probably be console.log(datos)
@@ -857,6 +916,8 @@ export default {
             type: 'positive',
             message: 'Cobro registrado correctamente',
           })
+
+          emitter.emit('reiniciar-notificaciones')
           cargarDatos()
           cerrarFormulario()
         } else {
@@ -921,7 +982,23 @@ export default {
     const formatoMoneda = (valor) => {
       return decimas(redondear(parseFloat(valor || 0)))
     }
+    function handleKeydown(e) {
+      if (e.key === 'Escape') {
+        mostrarForm.value = false
+      }
+    }
 
+    onMounted(() => {
+      window.addEventListener('keydown', handleKeydown)
+
+      emitter.on('realizar-pago', (Notification) => {
+        console.log(Notification)
+        document.getElementById(`btn-${Notification.id}`).click() // accedemos al elemento real del q-btn
+      })
+    })
+    onBeforeUnmount(() => {
+      window.removeEventListener('keydown', handleKeydown)
+    })
     // Inicialización
     onMounted(() => {
       cargarDatos()

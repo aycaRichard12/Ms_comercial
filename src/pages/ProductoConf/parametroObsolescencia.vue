@@ -28,7 +28,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onBeforeUnmount } from 'vue'
 import ParametroForm from 'components/productoConf/ParametrosObsolescencia/parametrosObsolescenciaForm.vue'
 import ParametrosTable from 'components/productoConf/ParametrosObsolescencia/parametrosObsolescenciaTable.vue'
 import { idempresa_md5 } from 'src/composables/FuncionesGenerales'
@@ -141,6 +141,19 @@ const handleSubmit = async (data) => {
   }
   toggleForm()
 }
+
+function handleKeydown(e) {
+  if (e.key === 'Escape') {
+    showForm.value = false
+  }
+}
+
+onMounted(() => {
+  window.addEventListener('keydown', handleKeydown)
+})
+onBeforeUnmount(() => {
+  window.removeEventListener('keydown', handleKeydown)
+})
 onMounted(() => {
   loadRows()
 })

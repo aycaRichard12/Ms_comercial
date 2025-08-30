@@ -3,6 +3,21 @@
     <!-- Sección: Datos del cliente -->
     <q-form ref="formClientes">
       <div class="row q-col-gutter-x-md">
+        <div class="col-12 col-md-3">
+          <label for="tipooperacion">Tipo de Operación*</label>
+          <q-select
+            v-model="tipoOperacion"
+            :options="optionOperacion"
+            id="tipooperacion"
+            map-options
+            :rules="[(val) => !!val || 'Campo requerido']"
+            @update:model-value="handleTipoOperacionChange"
+            outlined
+            dense
+          />
+        </div>
+      </div>
+      <div class="row q-col-gutter-x-md">
         <div class="col-12 col-md-5">
           <label for="cliente">Cliente*</label>
           <q-select
@@ -67,20 +82,6 @@
     <!-- Sección: Configuración inicial -->
     <q-form ref="cotizacionFormRef" class="q-gutter-y-md">
       <div class="row q-col-gutter-x-md">
-        <div class="col-12 col-md-3">
-          <label for="tipooperacion">Tipo de Operación*</label>
-          <q-select
-            v-model="tipoOperacion"
-            :options="optionOperacion"
-            id="tipooperacion"
-            map-options
-            :rules="[(val) => !!val || 'Campo requerido']"
-            @update:model-value="handleTipoOperacionChange"
-            outlined
-            dense
-          />
-        </div>
-
         <div class="col-12 col-md-3">
           <label for="almacen">Almacén origen *</label>
           <q-select
@@ -527,7 +528,7 @@ const leyendasCotizacion = ref([]) // Para el aviso en el comprobante
 const tipoOperacion = ref({ value: 2, label: 'Cotización Normal' })
 const optionOperacion = ref([
   { value: 2, label: 'Cotización Normal' },
-  { value: 1, label: 'Cotización Especial' },
+  { value: 1, label: 'Cotización Preferencial' },
 ])
 // Datos del formulario
 const filtroAlmacenCO = ref(null)
@@ -1131,11 +1132,11 @@ async function anadirProductoACarrito() {
       })
     }
   }
-  console.log(selectedProduct.value)
+  console.log(selectedProduct.value, cantidadCO.value)
 
   const contenidousuario = await getUserData()
   const idusuario = contenidousuario?.idusuario
-
+  console.log(selectedProduct.value.stock)
   const nuevoProducto = {
     num: carritoCO.listaProductos.length + 1,
     idproductoalmacen: idproductoalmacenCO.value,
@@ -1146,7 +1147,11 @@ async function anadirProductoACarrito() {
     candiponible: cantidaddisponibleCO.value,
     descripcion: selectedProduct.value.descripcion,
     codigo: selectedProduct.value.codigo,
-    despachado: Number(selectedProduct.value.stock) == 0 ? 2 : 1,
+    despachado:
+      Number(selectedProduct.value.stock) == 0 ||
+      Number(selectedProduct.value.stock) < Number(cantidadCO.value)
+        ? 2
+        : 1,
   }
   console.log(carritoCO.listaProductos.length)
   carritoCO.idusuario = idusuario
@@ -1480,6 +1485,7 @@ watch(
     }
   },
 )
+
 // --- Inicialización ---
 onMounted(async () => {
   localStorage.removeItem('carritoCO') // Limpiar localStorage al inicio

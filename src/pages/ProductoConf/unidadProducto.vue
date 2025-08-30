@@ -28,7 +28,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onBeforeUnmount } from 'vue'
 import ProductUnitForm from 'src/components/productoConf/unidadProducto/unidadForm.vue'
 import ProductUnitTable from 'src/components/productoConf/unidadProducto/unidadTable.vue'
 import { idempresa_md5 } from 'src/composables/FuncionesGenerales'
@@ -154,6 +154,19 @@ const handleSubmit = async (data) => {
   }
   toggleForm()
 }
+
+function handleKeydown(e) {
+  if (e.key === 'Escape') {
+    showForm.value = false
+  }
+}
+
+onMounted(() => {
+  window.addEventListener('keydown', handleKeydown)
+})
+onBeforeUnmount(() => {
+  window.removeEventListener('keydown', handleKeydown)
+})
 onMounted(() => {
   loadRows()
 })

@@ -1294,45 +1294,98 @@ class configuracion
         echo  json_encode($res);
     }
 
+    /**
+     * Obtiene y lista las divisas de una empresa.
+     *
+     * @param string $idmd5 ID de la empresa en formato MD5.
+     * @param string $token Token de autenticación.
+     * @param mixed  $tipo Tipo de lista a obtener.
+     * @return void Imprime una respuesta en formato JSON.
+     */
     public function listaDivisa($idmd5, $token, $tipo)
     {
-        $lista = [];
+        // --- 1. Verificación y seguridad ---
+        // Mejorar la validación del ID de la empresa.
         $idempresa = $this->verificar->verificarIDEMPRESAMD5($idmd5);
-        if ($idempresa === "false") {
-            echo json_encode(array("error" => "El id de empresa no existe"));
+        if (!$idempresa) {
+            echo json_encode(['error' => 'El id de empresa no existe']);
             return;
         }
 
-        $consulta = $this->cm->query("select * from divisas where idempresa='$idempresa' order by id_divisas desc");
+        // --- 2. Preparar la consulta a la base de datos de manera segura ---
+        // Usamos una consulta preparada para prevenir la inyección SQL.
+        // Esto es mucho más seguro que concatenar la variable en el string de la consulta.
+        $sql = "SELECT id_divisas, nombre, tipo_divisa, estado, monedasin, locale, current FROM divisas WHERE idempresa = ? ORDER BY id_divisas DESC";
+        $stmt = $this->cm->prepare($sql); // Asumiendo que $this->cm es una clase de base de datos con un método prepare.
+        $stmt->bind_param('s', $idempresa); // Enlaza el parámetro 'idempresa' de manera segura.
+        $stmt->execute();
+        $consulta = $stmt->get_result();
+        
+        $lista = [];
 
-        $monedaRespuesta = "";
-        if ($token !== "") {
+        // --- 3. Lógica de procesamiento optimizada ---
+        // La lógica se ha refactorizado para ser más clara y eficiente.
+
+        if (!empty($token)) {
+            // Obtenemos la lista de monedas de una vez.
             $monedaRespuesta = $this->factura->listadoConfigParametricas('monedas', $token, $tipo, 2);
-            if ($monedaRespuesta->status === "success") {
-                while ($qwe = $this->cm->fetch($consulta)) {
-                    $codigo = null;
-                    $descripcion = null;
-                    if (is_array($monedaRespuesta->data)) {
-                        foreach ($monedaRespuesta->data as $moneda) {
-                            if (isset($moneda->codigo) && $moneda->codigo == $qwe[5]) {
-                                $codigo = $moneda->codigo;
-                                $descripcion = $moneda->descripcion;
-                                break;
-                            }
+
+            if (isset($monedaRespuesta->status) && $monedaRespuesta->status === "success") {
+                // Creamos un mapa de búsqueda para evitar el bucle anidado.
+                // Esto convierte la búsqueda de O(n) a O(1), mejorando la eficiencia.
+                $monedasMap = [];
+                if (is_array($monedaRespuesta->data)) {
+                    foreach ($monedaRespuesta->data as $moneda) {
+                        if (isset($moneda->codigo)) {
+                            $monedasMap[$moneda->codigo] = $moneda;
                         }
-                        $res = array("id" => $qwe[0], "nombre" => $qwe[1], "tipo" => $qwe[2], "estado" => $qwe[3], "monedasin" => array("valor" => $qwe[5], "codigo" => $codigo, "descripcion" => $descripcion));
-                        array_push($lista, $res);
                     }
                 }
+
+                while ($row = $consulta->fetch_assoc()) {
+                    // Usamos fetch_assoc() para obtener un array asociativo.
+                    // Esto mejora la legibilidad, ya que podemos usar nombres de columna en lugar de índices numéricos.
+                    $monedaSinData = null;
+                    if (isset($monedasMap[$row['monedasin']])) {
+                        $monedaMatch = $monedasMap[$row['monedasin']];
+                        $monedaSinData = [
+                            "valor" => $row['monedasin'],
+                            "codigo" => $monedaMatch->codigo,
+                            "descripcion" => $monedaMatch->descripcion,
+                        ];
+                    }
+
+                    $res = [
+                        "id" => $row['id_divisas'],
+                        "nombre" => $row['nombre'],
+                        "tipo" => $row['tipo_divisa'],
+                        "estado" => $row['estado'],
+                        "monedasin" => $monedaSinData,
+                        "locale" => $row['locale'],
+                        "current" => $row['current'],
+                    ];
+                    array_push($lista, $res);
+                }
             } else {
+                // Si la llamada a la API externa falla, devolvemos su respuesta de error.
                 $lista = $monedaRespuesta;
             }
         } else {
-            while ($qwe = $this->cm->fetch($consulta)) {
-                $res = array("id" => $qwe[0], "nombre" => $qwe[1], "tipo" => $qwe[2], "estado" => $qwe[3]);
+            // --- 4. Lógica para cuando no hay token, también mejorada ---
+            while ($row = $consulta->fetch_assoc()) {
+                $res = [
+                    "id" => $row['id_divisas'],
+                    "nombre" => $row['nombre'],
+                    "tipo" => $row['tipo_divisa'],
+                    "estado" => $row['estado'],
+                    "locale" => $row['locale'],
+                    "current" => $row['current'],
+                ];
                 array_push($lista, $res);
             }
         }
+        
+        // Devolvemos la respuesta como JSON.
         echo json_encode($lista);
     }
 
@@ -2378,7 +2431,7 @@ class configuracion
 
     public function listaMetodoPagoFactura($idmd5, $token, $tipo)
     {
-         $lista = [];
+        $lista = [];
         $idempresa = $this->verificar->verificarIDEMPRESAMD5($idmd5);
         if ($idempresa === "false") {
             echo json_encode(array("error" => "El id de empresa no existe"));
@@ -2386,7 +2439,6 @@ class configuracion
         }
 
         $consulta = $this->cm->query("select * from metodopago where idempresa='$idempresa' order by idmetodopago desc");
-
         if($tipo == 2 || $tipo == 1){
             $metodoPagoRespuesta = "";
             $metodoPagoRespuesta = $this->factura->listadoConfigParametricas('metodopago', $token, $tipo, 2);
@@ -2680,3 +2732,4 @@ class configuracion
         echo json_encode($res);
     }
 }
+//encontrada

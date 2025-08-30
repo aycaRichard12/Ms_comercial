@@ -1,6 +1,6 @@
 <template>
-  <q-page padding>
-    <q-card-section class="row flex justify-between">
+  <q-page>
+    <div class="row flex justify-between q-ml-md">
       <div class="text-h6 text-primary">
         {{ tipoReporte ? 'Reporte de Crédito al Corte' : 'Reporte de Crédito en Periodo' }}
       </div>
@@ -12,12 +12,12 @@
         @click="cambiarTipoReporte"
         title="CAMBIAR TIPO REPORTE"
       />
-    </q-card-section>
+    </div>
 
     <!-- Fechas y botón generar -->
 
     <q-form>
-      <q-card-section class="row q-col-gutter-x-md flex justify-center">
+      <div class="row q-col-gutter-x-md flex justify-center">
         <div v-if="!tipoReporte" class="col-12 col-md-4">
           <label for="fechaini">Fecha Inicio</label>
           <q-input
@@ -43,7 +43,7 @@
           >
           </q-input>
         </div>
-      </q-card-section>
+      </div>
       <div class="row q-col-gutter-x-md flex justify-center">
         <div class="col-12 col-md-4 flex justify-center">
           <q-btn
@@ -58,8 +58,8 @@
     </q-form>
 
     <!-- Sección de filtros -->
-    <q-card-section>
-      <q-expansion-item label="Filtros avanzados" icon="filter_list">
+    <div>
+      <q-expansion-item label="Filtros" icon="filter_list">
         <!-- Indicador de filtros activos -->
 
         <div class="row q-col-gutter-x-md">
@@ -175,7 +175,7 @@
           </div> -->
         </div>
       </q-expansion-item>
-    </q-card-section>
+    </div>
 
     <!-- Mensajes de estado -->
     <q-card-section v-if="!idmd5">
@@ -225,20 +225,10 @@
         flat
         bordered
         :loading="loading"
-        :pagination="pagination"
         no-data-label="No hay datos para mostrar"
         class="sticky-header-table"
         @request="onTableRequest"
       >
-        <!-- format: (val) => (val ? Number(val).toFixed(2) : '0.00'), -->
-        <!-- Columnas personalizadas -->
-
-        <template v-slot:body-cell-saldo="props">
-          <q-td :props="props">
-            {{ props.row.montoventa - props.row.totalcobrado }}
-          </q-td>
-        </template>
-
         <template v-slot:body-cell-estado="props">
           <q-td :props="props" v-if="props.row.estado !== 5">
             <q-badge :color="colorEstado[Number(props.row.estado)]">{{
@@ -246,34 +236,6 @@
             }}</q-badge>
           </q-td>
         </template>
-
-        <template v-slot:body-cell-moradias="props">
-          <q-td :props="props">
-            {{
-              props.row.fechalimite && Number(props.row.estado) === 3
-                ? Math.max(obtenerDias(props.row.fechalimite), 0)
-                : 0
-            }}
-          </q-td>
-        </template>
-
-        <template v-slot:body-cell-totalanulado="props">
-          <q-td :props="props">
-            {{
-              Number(props.row.estado) === 4 ? decimas(redondear(parseFloat(props.row.saldo))) : 0.0
-            }}
-          </q-td>
-        </template>
-
-        <template v-slot:body-cell-totalatrasado="props">
-          <q-td :props="props">
-            {{
-              Number(props.row.estado) === 3 ? decimas(redondear(parseFloat(props.row.saldo))) : 0.0
-            }}
-          </q-td>
-        </template>
-
-        <!-- Fila de totales con estilo diferente -->
       </q-table>
     </q-card-section>
 
@@ -385,7 +347,6 @@ const columns = [
     align: 'center',
     label: 'Fecha Crédito',
     field: 'fechaventa',
-    format: (val) => (val ? cambiarFormatoFecha(val) : ''),
     sortable: true,
   },
   {
@@ -407,22 +368,20 @@ const columns = [
     align: 'center',
     label: 'Fecha Límite',
     field: 'fechalimite',
-    format: (val) => (val ? cambiarFormatoFecha(val) : ''),
     sortable: true,
   },
   {
     name: 'ncuotas',
     align: 'center',
-    label: 'Cuotas',
+    label: 'Catidad Cuotas',
     field: 'ncuotas',
     sortable: true,
   },
   {
-    name: 'cuotaspagadas',
+    name: 'cuotasprocesadas',
     align: 'center',
-    label: 'Cuotas Pagadas',
-    field: 'cuotaspagadas',
-    format: (val) => (val ? val : '0'),
+    label: 'Cuotas Procesadas',
+    field: 'cuotasprocesadas',
     sortable: true,
   },
   {
@@ -430,15 +389,13 @@ const columns = [
     align: 'right',
     label: 'Valor Cuota',
     field: 'valorcuotas',
-    format: (val) => (val ? Number(val).toFixed(2) : '0.00'),
     sortable: true,
   },
   {
-    name: 'montoventa',
+    name: 'totalventa',
     align: 'right',
-    label: 'Monto Venta',
-    field: 'montoventa',
-    format: (val) => (val ? Number(val).toFixed(2) : '0.00'),
+    label: 'Total Venta',
+    field: 'totalventa',
     sortable: true,
   },
   {
@@ -446,7 +403,6 @@ const columns = [
     align: 'right',
     label: 'Total Cobrado',
     field: 'totalcobrado',
-    format: (val) => (val ? Number(val).toFixed(2) : '0.00'),
     sortable: true,
   },
   {
@@ -461,21 +417,21 @@ const columns = [
     name: 'totalatrasado',
     align: 'right',
     label: 'Total Atrasado',
-    field: 'estado',
+    field: 'totalatrasado',
     sortable: true,
   },
   {
     name: 'totalanulado',
     align: 'right',
     label: 'Total Anulado',
-    field: 'estado',
+    field: 'totalanulado',
     sortable: true,
   },
   {
     name: 'moradias',
     align: 'right',
-    label: 'Días Mora',
-    field: 'estado',
+    label: 'Mora Días',
+    field: 'moradias',
     sortable: true,
   },
   {
@@ -549,19 +505,43 @@ const filteredReportData = computed(() => {
 })
 
 // --- Funciones ---
-const obtenerDias = (fechalimite) => {
-  const fecha1 = Math.floor(new Date().getTime() / (1000 * 3600 * 24))
-  const fecha2 = Math.floor(new Date(fechalimite).getTime() / (1000 * 3600 * 24))
-  return fecha1 - fecha2
-}
 
 const processDataWithTotals = (data) => {
   if (data.length === 0) return []
 
-  const numberedData = data.map((row, index) => ({
-    ...row,
-    numero: index + 1,
-  }))
+  const numberedData = data.map((row, index) => {
+    let fecha1 = new Date()
+    let fecha2 = new Date(row.fechalimite)
+
+    fecha1 = Math.floor(fecha1.getTime() / (1000 * 3600 * 24))
+    fecha2 = Math.floor(fecha2.getTime() / (1000 * 3600 * 24))
+    let dias = fecha1 - fecha2
+
+    return {
+      idventa: row.idventa,
+      idcredito: row.idcredito,
+      idcliente: row.idcliente,
+      numero: index + 1,
+      fechaventa: cambiarFormatoFecha(row.fechaventa),
+      razonsocial: row.razonsocial,
+      sucursal: row.sucursal,
+      fechalimite: cambiarFormatoFecha(row.fechalimite),
+      ncuotas: row.ncuotas,
+      cuotasprocesadas: row.cuotaspagadas || 0,
+      valorcuotas: decimas(redondear(parseFloat(row.valorcuotas))),
+      totalventa: decimas(redondear(parseFloat(row.montoventa))),
+      totalcobrado: row.totalcobrado == null ? 0 : decimas(redondear(parseFloat(row.totalcobrado))),
+      saldo: decimas(redondear(parseFloat(row.saldo))),
+      totalatrasado: Number(row.estado) === 3 ? decimas(redondear(parseFloat(row.saldo))) : '0.00',
+      totalanulado: Number(row.estado) === 4 ? decimas(redondear(parseFloat(row.saldo))) : '0.00',
+      moradias: dias < 0 ? `0.00` : decimas(dias),
+      estado: row.estado,
+      idalmacen: row.idalmacen,
+      montoventa: row.montoventa,
+      cuotaspagadas: row.cuotaspagadas,
+      idsucursal: row.idsucursal,
+    }
+  })
 
   const totales = {
     numero: '',
@@ -570,24 +550,52 @@ const processDataWithTotals = (data) => {
     sucursal: '',
     fechalimite: '',
     ncuotas: '',
-    cuotaspagadas: 'TOTAL:',
+    cuotasprocesadas: 'TOTAL:',
     valorcuotas: numberedData.reduce((sum, u) => sum + Number(u.valorcuotas || 0), 0),
-    montoventa: numberedData.reduce((sum, u) => sum + Number(u.montoventa || 0), 0),
-    totalcobrado: numberedData.reduce((sum, u) => sum + Number(u.totalcobrado || 0), 0),
-    saldo: numberedData.reduce((sum, u) => sum + Number(u.saldo || 0), 0),
-    totalatrasado: numberedData
-      .filter((u) => Number(u.estado) === 3)
-      .reduce((sum, u) => sum + Number(u.saldo || 0), 0),
-    totalanulado: numberedData
-      .filter((u) => Number(u.estado) === 4)
-      .reduce((sum, u) => sum + Number(u.saldo || 0), 0),
+    totalventa: numberedData.reduce((sum, u) => sum + Number(u.montoventa || 0), 0),
+    totalcobrado: decimas(
+      redondear(
+        parseFloat(
+          numberedData.reduce((sum, u) => {
+            const cobrado =
+              u.totalcobrado == null ? 0 : decimas(redondear(parseFloat(u.totalcobrado)))
+            return (
+              sum +
+              (Number(u.estado) === 1 || Number(u.estado) === 2 || Number(u.estado) === 3
+                ? parseFloat(cobrado)
+                : 0)
+            )
+          }, 0),
+        ),
+      ),
+    ),
+    saldo: decimas(
+      redondear(
+        parseFloat(
+          numberedData.reduce((sum, u) => {
+            return (
+              sum +
+              (Number(u.estado) === 1 || Number(u.estado) === 2 || Number(u.estado) === 3
+                ? parseFloat(u.saldo)
+                : 0)
+            )
+          }, 0),
+        ),
+      ),
+    ),
+    totalatrasado: numberedData.reduce((sum, u) => {
+      return sum + (Number(u.estado) === 3 ? parseFloat(u.saldo) : 0)
+    }, 0),
+    totalanulado: numberedData.reduce((sum, u) => {
+      const valueToAdd = Number(u.estado) === 4 ? parseFloat(u.saldo) : 0
+      return sum + valueToAdd
+    }, 0),
     moradias: '',
     estado: 5,
   }
 
   return [...numberedData, totales]
 }
-
 const filterClientes = (val, update) => {
   update(() => {
     searchCliente.value = val.toLowerCase()

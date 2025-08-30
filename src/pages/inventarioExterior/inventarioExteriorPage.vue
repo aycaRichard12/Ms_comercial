@@ -46,7 +46,7 @@
                   v-model:branch="formData.sucursal"
                 />
 
-                <div class="col-12 col-md-4">
+                <div class="col-12 col-md-2">
                   <label for="fechaINV">Fecha*</label>
                   <q-input
                     dense
@@ -60,7 +60,7 @@
                   />
                 </div>
 
-                <div class="col-md-6">
+                <div class="col-12 col-md-4">
                   <label for="observacionINV">Observación</label>
                   <q-input
                     type="text"
@@ -72,7 +72,28 @@
                     outlined
                   />
                 </div>
-
+                <div class="col-12 col-md-3">
+                  <label for="ubicacion">Latitud</label>
+                  <q-input
+                    name="ubicacion"
+                    id="ubicacion"
+                    v-model="formData.latitud"
+                    dense
+                    outlined
+                    readonly
+                  />
+                </div>
+                <div class="col-12 col-md-3">
+                  <label for="ubicacion2">Longitud</label>
+                  <q-input
+                    name="ubicacion2"
+                    id="ubicacion2"
+                    v-model="formData.longitud"
+                    dense
+                    outlined
+                    readonly
+                  />
+                </div>
                 <div class="col-md-12 flex justify-end">
                   <q-btn label="Registrar" type="submit" color="primary" />
                 </div>

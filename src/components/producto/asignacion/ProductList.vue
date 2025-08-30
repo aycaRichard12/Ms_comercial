@@ -2,7 +2,7 @@
   <div class="row flex justify-between">
     <q-btn color="primary" @click="$emit('add')" unelevated class="btn-res q-mt-lg">
       <q-icon name="inventory_2" class="icono" />
-      <span class="texto">productos</span>
+      <span class="texto">Nueva Asignación</span>
     </q-btn>
 
     <!-- Filtro por almacén -->
@@ -54,8 +54,15 @@
     <!-- Acciones -->
     <template v-slot:body-cell-opciones="props">
       <q-td :props="props" class="text-nowrap">
-        <q-btn dense round flat icon="edit" color="info" @click="$emit('edit-item', props.row)" />
-        <q-btn icon="delete" color="negative" dense @click="$emit('delete-item', props.row)" />
+        <q-btn
+          dense
+          round
+          flat
+          icon="edit"
+          color="primary"
+          @click="$emit('edit-item', props.row)"
+        />
+        <q-btn icon="delete" color="negative" dense @click="$emit('delete-item', props.row)" flat />
       </q-td>
     </template>
   </q-table>
@@ -120,7 +127,24 @@ const filter = ref('') // texto del buscador
 const pagination = ref({
   rowsPerPage: 10,
 })
-
+watch(
+  () => props.opciones,
+  (nuevosAlmacenes) => {
+    if (nuevosAlmacenes.length > 0 && !filtro.value) {
+      filtro.value = nuevosAlmacenes[0].value
+    }
+  },
+  { immediate: true },
+)
+// Emitir selección de almacén
+watch(
+  filtro,
+  (val) => {
+    console.log(val)
+    emit('onSeleccion_almacen', val)
+  },
+  { immediate: true },
+)
 // Columnas de la tabla
 const columns = [
   { name: 'numero', label: 'N°', field: 'numero', align: 'center' },
@@ -295,11 +319,6 @@ function onPrintReport() {
   pdfData.value = doc.output('dataurlstring') // muestra el pdf en un modal
   mostrarModal.value = true
 }
-
-// Emitir selección de almacén
-watch(filtro, (val) => {
-  emit('onSeleccion_almacen', val)
-})
 </script>
 
 <style scoped>

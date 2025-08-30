@@ -318,7 +318,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue'
 import { useQuasar } from 'quasar'
 import { api } from 'boot/axios'
 // import { useMenuStore } from 'src/layouts/permitidos'
@@ -442,7 +442,19 @@ const pagination = ref({
 // Computed properties
 const filteredTableData = computed(() => {
   if (!selectedWarehouse.value) return tableData.value
-  return tableData.value.filter((item) => item.idalmacen == selectedWarehouse.value)
+  console.log(selectedWarehouse.value)
+  const almacen = selectedWarehouse.value
+  console.log(almacen)
+  if (almacen) {
+    if (almacen.value == 0) {
+      console.log(almacen)
+      return tableData.value.filter((camp) => camp.idalmacen == 0)
+    } else {
+      return tableData.value.filter((camp) => camp.idalmacen == almacen)
+    }
+  } else {
+    return []
+  }
 })
 
 // Métodos
@@ -476,12 +488,22 @@ const loadUserData = async () => {
 // }
 const almacenOptions = computed(() => {
   const options = [{ label: 'Todos los almacenes', value: 0 }]
-  console.log(warehouses.almacenes)
   warehouses.almacenes.forEach((almacen) => {
     options.push({ label: almacen.almacen, value: Number(almacen.idalmacen) })
   })
   return options
 })
+
+watch(
+  almacenOptions,
+  (nuevasOpciones) => {
+    console.log(nuevasOpciones)
+    if (nuevasOpciones.length > 0 && !selectedWarehouse.value) {
+      selectedWarehouse.value = nuevasOpciones[0]
+    }
+  },
+  { immediate: true },
+)
 const loadTableData = async () => {
   loading.value = true
   try {
@@ -914,6 +936,18 @@ const togglestatus = (row) => {
     }
   })
 }
+function handleKeydown(e) {
+  if (e.key === 'Escape') {
+    collapseVisible.value = false
+  }
+}
+
+onMounted(() => {
+  window.addEventListener('keydown', handleKeydown)
+})
+onBeforeUnmount(() => {
+  window.removeEventListener('keydown', handleKeydown)
+})
 // Inicialización
 onMounted(async () => {
   await loadUserData()

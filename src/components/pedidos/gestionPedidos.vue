@@ -1,11 +1,18 @@
 <template>
   <q-page class="q-ma-md">
     <div>
+      <div class="titulo">Autorizando Pedidos</div>
       <!-- Formulario principal -->
       <q-form @submit.prevent="onSubmit">
-        <div class="row justify-center q-col-gutter-md">
-          <q-input type="date" v-model="fechai" label="Fecha Inicial*" class="col-12 col-md-4" />
-          <q-input type="date" v-model="fechaf" label="Fecha Final*" class="col-12 col-md-4" />
+        <div class="row justify-center q-col-gutter-x-md">
+          <div class="col-12 col-md-4">
+            <label for="fechaini">Fecha Inicial*</label>
+            <q-input type="date" v-model="fechai" id="fechaini" dense outlined />
+          </div>
+          <div class="col-12 col-md-4">
+            <label for="fechafin">Fecha Final*</label>
+            <q-input type="date" v-model="fechaf" id="fechafin" dense outlined />
+          </div>
         </div>
 
         <div class="row justify-center q-mt-md">
@@ -15,17 +22,14 @@
           </div>
         </div>
       </q-form>
-      <div style="display: flex; justify-content: space-between">
-        <q-select
-          label="Filtrar por Almacén"
-          v-model="almacen"
-          :options="almacenes"
-          style="width: 200px; min-width: 200px"
-          class="q-ma-sm"
-          clearable
-        />
+      <div class="row q-col-gutter-x-md flex justify-start">
+        <div class="col-12 col-md-3">
+          <label for="almacen">Filtrar por Almacén</label>
+          <q-select id="almacen" v-model="almacen" :options="almacenes" clearable dense outlined />
+        </div>
       </div>
       <q-table
+        title="Pedidos"
         :rows="filterPedido"
         :columns="columnas"
         row-key="id"
@@ -113,7 +117,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, computed, watch } from 'vue'
 import { api } from 'src/boot/axios'
 import { idempresa_md5, idusuario_md5 } from 'src/composables/FuncionesGenerales'
 import { useQuasar } from 'quasar'
@@ -246,6 +250,15 @@ const getDatallePedido = async (id) => {
     })
   }
 }
+watch(
+  () => almacenes.value,
+  (nuevosAlmacenes) => {
+    if (nuevosAlmacenes.length > 0 && !almacen.value) {
+      almacen.value = nuevosAlmacenes[0]
+    }
+  },
+  { immediate: true },
+)
 
 function imprimirReporte() {
   console.log(detallePedido.value)

@@ -1,6 +1,11 @@
 <template>
   <div class="flex justify-between">
-    <q-btn color="primary" @click="$emit('add')" class="btn-res q-mt-lg">
+    <q-btn
+      color="primary"
+      @click="$emit('add')"
+      class="btn-res q-mt-lg"
+      title="Registrar Parametro"
+    >
       <q-icon name="add" class="icono" />
       <span class="texto">Agregar</span>
     </q-btn>
@@ -54,8 +59,17 @@
           dense
           class="q-mr-sm"
           @click="$emit('edit-item', props.row)"
+          title="Editar"
+          flat
         />
-        <q-btn icon="delete" color="negative" dense @click="$emit('delete-item', props.row)" />
+        <q-btn
+          icon="delete"
+          color="negative"
+          dense
+          @click="$emit('delete-item', props.row)"
+          title="Eliminar"
+          flat
+        />
       </q-td>
     </template>
   </q-table>

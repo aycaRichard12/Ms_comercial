@@ -119,7 +119,8 @@
         <q-td>
           <q-btn
             color="primary"
-            label="Productos"
+            label=""
+            icon="shopping_cart"
             dense
             flat
             @click="$emit('verDetalle', props.row)"
@@ -184,13 +185,10 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
-import jsPDF from 'jspdf'
-import autoTable from 'jspdf-autotable'
-import { validarUsuario } from 'src/composables/FuncionesGenerales'
-import { cambiarFormatoFecha, obtenerFechaActualDato } from 'src/composables/FuncionesG'
-import { URL_APIE } from 'src/composables/services'
+import { ref, computed, watch } from 'vue'
+import { PDFpedidos } from 'src/utils/pdfReportGenerator'
 import baucherPedido from './baucherPedido.vue'
+//filtroAlmacen
 const props = defineProps({
   pedidos: {
     type: Array,
@@ -211,6 +209,7 @@ const baucherPedidomodal = ref(false)
 defineEmits(['add', 'edit', 'delete'])
 const tipoestados = { 1: 'Procesado', 2: 'Pendiente', 3: 'Descartado' }
 const pdfData = ref(null)
+console.log(props.almacenes[0])
 const filtroAlmacen = ref(null)
 const search = ref('')
 const mostrarModal = ref(false)
@@ -219,27 +218,57 @@ const tiposPedido = [
   { label: 'Pedidos de Compras', value: 1 },
   { label: 'Pedidos de Movimientos', value: 2 },
 ]
-const filtroTipo = ref(1) // Siempre comienza en 1
-const columnas = [
-  { name: 'numero', label: 'N°', field: 'numero', align: 'center' },
-  { name: 'fecha', label: 'Fecha', field: 'fecha', align: 'center' },
-  { name: 'almacenorigen', label: 'Almacén origen', field: 'almacenorigen', align: 'center' },
-  { name: 'almacen', label: 'Almacén destino', field: 'almacen', align: 'center' },
-  { name: 'codigo', label: 'Código', field: 'codigo', align: 'center' },
-  { name: 'tipopedido', label: 'Tipo', field: 'tipopedido', align: 'align' },
-  { name: 'observacion', label: 'Observación', field: 'observacion', align: 'align' },
-  { name: 'autorizacion', label: 'Autorización', field: 'autorizacion', align: 'center' },
-  { name: 'estado', label: 'Estado', field: 'estado', align: 'center' },
-  { name: 'ruta', label: 'Vaucher', field: 'ruta', align: 'center' },
-  { name: 'detalle', label: 'Detalle', field: 'detalle', align: 'center' },
-  { name: 'opciones', label: 'Opciones', field: 'opciones', align: 'center' },
-]
 
+const filtroTipo = ref(null) // Siempre comienza en 1
+const columnas = ref([])
+console.log(filtroTipo.value)
+
+function actualizarColumnas() {
+  columnas.value = [
+    { name: 'numero', label: 'N°', field: 'numero', align: 'center' },
+    { name: 'fecha', label: 'Fecha', field: 'fecha', align: 'center' },
+    ...(filtroTipo.value === 2
+      ? [
+          {
+            name: 'almacenorigen',
+            label: 'Almacén origen',
+            field: 'almacenorigen',
+            align: 'center',
+          },
+        ]
+      : []),
+    { name: 'almacen', label: 'Almacén destino', field: 'almacen', align: 'center' },
+    { name: 'codigo', label: 'Código', field: 'codigo', align: 'center' },
+    { name: 'tipopedido', label: 'Tipo', field: 'tipopedido', align: 'align' },
+    { name: 'observacion', label: 'Observación', field: 'observacion', align: 'align' },
+    { name: 'autorizacion', label: 'Autorización', field: 'autorizacion', align: 'center' },
+    { name: 'estado', label: 'Estado', field: 'estado', align: 'center' },
+    { name: 'ruta', label: 'Vaucher', field: 'ruta', align: 'center' },
+    { name: 'detalle', label: 'Detalle', field: 'detalle', align: 'center' },
+    { name: 'opciones', label: 'Opciones', field: 'opciones', align: 'center' },
+  ]
+}
+
+watch(filtroTipo, () => {
+  actualizarColumnas()
+})
+watch(
+  () => tiposPedido,
+  (tipos) => {
+    if (tipos.length > 0 && !filtroTipo.value) {
+      filtroTipo.value = tipos[0].value
+    }
+  },
+  { immediate: true },
+)
+filtroAlmacen.value = props.almacenes[0]
+console.log(filtroAlmacen.value)
 const filtrados = computed(() => {
   return props.pedidos.filter((p) => {
     const coincideAlmacen = filtroAlmacen.value?.value
       ? String(p.idalmacen).includes(filtroAlmacen.value?.value)
       : true
+    console.log(filtroTipo.value)
     const coincideTipo = filtroTipo.value ? Number(p.tipopedido) === filtroTipo.value : true
     const coincideBusqueda = search.value
       ? Object.values(p).some((val) =>
@@ -259,132 +288,7 @@ const ordenados = computed(() => {
 })
 
 function imprimir() {
-  console.log(tiposPedido.value)
-  const contenidousuario = validarUsuario()
-  const doc = new jsPDF({ orientation: 'portrait' })
-
-  const idempresa = contenidousuario[0]
-  const nombreEmpresa = idempresa.empresa.nombre
-  const direccionEmpresa = idempresa.empresa.direccion
-  const telefonoEmpresa = idempresa.empresa.telefono
-  const logoEmpresa = idempresa.empresa.logo // Ruta relativa o base64
-  const nombre = idempresa.nombre
-  const cargo = idempresa.cargo
-  const columns = [
-    { header: 'N', dataKey: 'indice' },
-    { header: 'Fecha', dataKey: 'fecha' },
-    { header: 'Almacén Destino', dataKey: 'almacen' },
-    { header: 'Almacén Origen', dataKey: 'almacenorigen' },
-
-    { header: 'Código', dataKey: 'codigo' },
-    { header: 'Nro.Pedido', dataKey: 'nropedido' },
-    { header: 'Tipo', dataKey: 'tipopedido' },
-
-    { header: 'Observación', dataKey: 'observacion' },
-    { header: 'Autorización', dataKey: 'autorizacion' },
-    { header: 'Esatado', dataKey: 'estado' },
-  ]
-
-  const datos = ordenados.value.map((item, indice) => ({
-    indice: indice + 1,
-    fecha: item.fecha,
-    codigo: item.codigo,
-    nropedido: item.nropedido,
-    tipopedido: Number(item.tipopedido) === 1 ? 'Pedido Compra' : 'Pedido Movimiento',
-    almacenorigen: item.almacenorigen,
-    almacen: item.almacen,
-    observacion: item.observacion,
-    estado: tipoestados[Number(item.estado)],
-    autorizacion: item.autorizacion == 2 ? 'No Autorizado' : 'Autorizado',
-  }))
-
-  autoTable(doc, {
-    columns,
-    body: datos,
-    styles: {
-      overflow: 'linebreak',
-      fontSize: 5,
-      cellPadding: 2,
-    },
-    headStyles: {
-      fillColor: [22, 160, 133],
-      textColor: 255,
-      halign: 'center',
-    },
-    columnStyles: {
-      indice: { cellWidth: 10, halign: 'center' },
-      fecha: { cellWidth: 15, halign: 'left' },
-      codigo: { cellWidth: 25, halign: 'left' },
-      nropedido: { cellWidth: 10, halign: 'center' },
-      tipopedido: { cellWidth: 25, halign: 'left' },
-      almacenorigen: { cellWidth: 20, halign: 'left' },
-      almacen: { cellWidth: 20, halign: 'left' },
-      observacion: { cellWidth: 35, halign: 'left' },
-      estado: { cellWidth: 15, halign: 'left' },
-      autorizacion: { cellWidth: 20, halign: 'left' },
-    },
-    //20 + 15 + 20 + 25 + 30 + 20 + 20 + 25 + 20 + 15 + 20 + 15 + 20 = 265 mm
-
-    startY: 45,
-    margin: { horizontal: 5 },
-    theme: 'striped',
-    didDrawPage: () => {
-      if (doc.internal.getNumberOfPages() === 1) {
-        // Logo (requiere base64 o ruta absoluta en servidor si usas Node)
-        if (logoEmpresa) {
-          doc.addImage(`${URL_APIE}${logoEmpresa}`, 'PNG', 180, 8, 20, 20)
-        }
-
-        // Nombre y datos de empresa
-        doc.setFontSize(7)
-        doc.setFont(undefined, 'bold')
-        doc.text(nombreEmpresa, 5, 10)
-
-        doc.setFontSize(6)
-        doc.setFont(undefined, 'normal')
-        doc.text(direccionEmpresa, 5, 13)
-        doc.text(`Tel: ${telefonoEmpresa}`, 5, 16)
-
-        // Título centrado
-        doc.setFontSize(10)
-        doc.setFont(undefined, 'bold')
-        doc.text('PEDIDOS', doc.internal.pageSize.getWidth() / 2, 15, { align: 'center' })
-
-        doc.setDrawColor(0) // Color negro
-        doc.setLineWidth(0.2) // Grosor de la línea
-        doc.line(5, 30, 200, 30) // De (x1=5, y1=25) a (x2=200, y2=25)
-
-        doc.setFontSize(7)
-        doc.setFont(undefined, 'bold')
-        doc.text('DATOS DEL REPORTE', 5, 35)
-        console.log(filtroAlmacen.value)
-        doc.setFontSize(6)
-        doc.setFont(undefined, 'normal')
-        doc.text(
-          'Nombre del Almacen: ' + (filtroAlmacen.value?.label || 'Todos los Almacenes'),
-          5,
-          38,
-        )
-
-        doc.setFontSize(6)
-        doc.setFont(undefined, 'normal')
-        doc.text('Fecha de Impresion: ' + cambiarFormatoFecha(obtenerFechaActualDato()), 5, 41)
-
-        doc.setFontSize(7)
-        doc.setFont(undefined, 'bold')
-        doc.text('DATOS DEL ENCARGADO:', 200, 35, { align: 'right' })
-
-        doc.setFontSize(6)
-        doc.setFont(undefined, 'normal')
-        doc.text(nombre, 200, 38, { align: 'right' })
-
-        doc.setFontSize(6)
-        doc.setFont(undefined, 'normal')
-        doc.text(cargo, 200, 41, { align: 'right' })
-      }
-    },
-  })
-
+  const doc = PDFpedidos(ordenados, tipoestados, filtroAlmacen)
   // doc.save('proveedores.pdf') ← comenta o elimina esta línea
   //doc.output('dataurlnewwindow') // ← muestra el PDF en una nueva ventana del navegador
   pdfData.value = doc.output('dataurlstring') // muestra el pdf en un modal
@@ -401,6 +305,16 @@ const subirBaucher = (item) => {
 const abrirEnNuevaPestana = (ruta) => {
   window.open(ruta, '_blank')
 }
+
+watch(
+  () => props.almacenes,
+  (nuevo) => {
+    if (nuevo.length > 0 && !filtroAlmacen.value) {
+      filtroAlmacen.value = nuevo[0]
+    }
+  },
+  { immediate: true },
+)
 </script>
 
 <style scoped>

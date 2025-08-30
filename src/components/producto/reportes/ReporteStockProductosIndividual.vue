@@ -3,21 +3,24 @@
     <q-form @submit.prevent>
       <div class="q-gutter-md">
         <div class="row q-col-gutter-md justify-center">
-          <q-select
-            v-model="form.almacen"
-            label="Almacén*"
-            :options="almacenes"
-            option-label="label"
-            option-value="value"
-            emit-value
-            map-options
-            dense
-            outlined
-            clearable
-            class="col-md-4"
-            :input-style="{ paddingLeft: '10px', paddingRight: '10px' }"
-            @update:model-value="generarReporte"
-          />
+          <div class="col-12 col-md-4">
+            <label for="almacen">Almacén*</label>
+            <q-select
+              v-model="form.almacen"
+              id="almacen"
+              :options="almacenes"
+              option-label="label"
+              option-value="value"
+              emit-value
+              map-options
+              dense
+              outlined
+              clearable
+              class="col-md-4"
+              :input-style="{ paddingLeft: '10px', paddingRight: '10px' }"
+              @update:model-value="generarReporte"
+            />
+          </div>
         </div>
       </div>
 
@@ -32,36 +35,24 @@
     <q-form class="q-my-md">
       <div class="row q-col-gutter-md">
         <div class="col-12 col-md-6">
+          <label for="filtrarporestado">Filtrar por estado del producto</label>
           <q-select
             v-model="filtroEstado"
-            label="Filtrar por estado del producto"
+            id="filtrarporestado"
             :options="estados"
             dense
             outlined
           />
         </div>
         <div class="col-12 col-md-6">
-          <q-select
-            v-model="filtroOrden"
-            label="Ordenar por stock de manera"
-            :options="ordenes"
-            dense
-            outlined
-          />
+          <label for="filtrarpororden">Ordenar por stock de manera</label>
+          <q-select v-model="filtroOrden" id="filtrarpororden" :options="ordenes" dense outlined />
         </div>
       </div>
     </q-form>
-
-    <q-table
-      title="Productos"
-      :rows="processedRows"
-      :columns="columnas"
-      flat
-      row-key="id"
-      separator="horizontal"
-      :filter="search"
-    >
-      <template v-slot:top-right>
+    <div class="row q-col-gutter-x-md flex justify-end">
+      <div class="col-12 col-md-4">
+        <label for="buscar">Buscar...</label>
         <q-input
           v-model="search"
           placeholder="Buscar..."
@@ -75,7 +66,19 @@
             <q-icon name="search" />
           </template>
         </q-input>
-      </template>
+      </div>
+    </div>
+
+    <q-table
+      title="Productos"
+      :rows="processedRows"
+      :columns="columnas"
+      flat
+      row-key="id"
+      separator="horizontal"
+      :filter="search"
+    >
+      <template v-slot:top-right> </template>
       <template v-slot:body-cell-estado="props">
         <q-td :props="props">
           {{ Number(props.row.estado) === 1 ? 'Activo' : 'No Activo' }}

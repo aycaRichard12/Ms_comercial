@@ -1,6 +1,12 @@
 <template>
   <div class="flex justify-between">
-    <q-btn color="primary" @click="$emit('add')" unelevated class="btn-res q-mt-lg">
+    <q-btn
+      color="primary"
+      @click="$emit('add')"
+      unelevated
+      class="btn-res q-mt-lg"
+      title="Registrar Unidad"
+    >
       <q-icon name="add" class="icono" />
       <span class="texto">Agregar</span>
     </q-btn>
@@ -45,14 +51,24 @@
           dense
           class="q-mr-sm"
           @click="$emit('edit-item', props.row)"
+          title="Editar"
+          flat
         />
-        <q-btn icon="delete" color="negative" dense @click="$emit('delete-item', props.row)" />
+        <q-btn
+          icon="delete"
+          color="negative"
+          dense
+          @click="$emit('delete-item', props.row)"
+          title="Eliminar"
+          flat
+        />
         <q-btn
           :icon="Number(props.row.estado) === 1 ? 'toggle_on' : 'toggle_off'"
           dense
           flat
           :color="Number(props.row.estado) === 1 ? 'green' : 'grey'"
           @click="$emit('toggle-status', props.row)"
+          title="Cambiar de Estado"
         />
       </q-td>
     </template>

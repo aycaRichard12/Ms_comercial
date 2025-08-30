@@ -581,7 +581,7 @@ const filterClientes = (val, update) => {
   // val: The current text typed in the q-select input
   // update: The function to call to update the q-select's options
 
-  // Always call update. The filtering logic goes inside its callback.
+  // Always call update. The filtering logic goes inside its callback api
   update(() => {
     const needle = val ? val.toLowerCase().trim() : ''
 
@@ -688,6 +688,8 @@ const listaCLientes = async () => {
         value: cliente.id,
         originalData: cliente,
       }))
+
+      console.log(data)
     }
   } catch (error) {
     showError('Error al cargar clientes', error)
@@ -878,8 +880,6 @@ watch(
 const onSubmit = async () => {
   let loadingShown = false
   try {
-    console.log('Datos del formulario:', formData.value)
-
     const cartData = JSON.parse(localStorage.getItem('carrito') || '{}')
     const {
       cliente,
@@ -892,7 +892,6 @@ const onSubmit = async () => {
       canal,
       pagosDivididos = [],
       credito,
-      tipopago,
       variablePago,
       cantidadPagos,
       fechaLimite,
@@ -900,9 +899,7 @@ const onSubmit = async () => {
       periodo,
       plazoPersonalizado,
     } = formData.value
-    console.log(credito)
-    console.log(tipopago)
-    console.log(cliente.value)
+
     //Validaciones previas
     if (!cliente) throw { message: 'Debe seleccionar un cliente' }
     if (!sucursal || !sucursal.value) throw { message: 'Debe seleccionar una sucursal válida' }
@@ -912,7 +909,6 @@ const onSubmit = async () => {
     if (!cartData.listaProductos || !cartData.listaProductos.length) {
       throw { message: 'El carrito está vacío' }
     }
-    console.log(pagosDivididos)
     //  const subtotal = detallePlano.detalle.reduce(
     //     (sum, dato) => sum + redondear(parseFloat(dato.cantidad) * parseFloat(dato.precio)),
     //     0,
@@ -922,17 +918,13 @@ const onSubmit = async () => {
         return sum + parseFloat(dato.monto)
       }, 0),
     )
-    console.log(suma_pagos_divididos)
-    console.log(cartData.ventatotal)
-    console.log(variablePago)
+
     if (
       decimas(suma_pagos_divididos) !== decimas(cartData.ventatotal) &&
       variablePago !== 'directo'
     ) {
       throw { message: 'Los pagos no coinciden con el monto total' }
     }
-    console.log('Datos del carrito:', cartData)
-
     $q.loading.show({ message: 'Procesando venta...', timeout: 30000 })
     loadingShown = true
 
@@ -968,13 +960,14 @@ const onSubmit = async () => {
     form.append('tipopago', credito ? 'credito' : CONSTANTES.tipopago)
     form.append('periodopersonalizado', plazoPersonalizado)
     form.append('jsonDetalles', JSON.stringify(cartData))
-    console.log(cartData)
-    console.log('Formulario enviado:')
+
     form.forEach((valor, clave) => console.log(`${clave}: ${valor}`))
     const jsonObject = Object.fromEntries(form.entries())
     jsonObject['jsonDetalles'] = cartData
-    console.log(jsonObject)
 
+    const json = Object.fromEntries(form.entries())
+    json.jsonDetalles = cartData
+    console.log(json)
     //  Enviar al backend
     const response = await api.post('', form, {
       headers: {

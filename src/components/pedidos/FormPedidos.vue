@@ -87,7 +87,8 @@
         </div>
       </q-card-section>
 
-      <q-card-actions class="flex justify-end">
+      <q-card-actions class="flex justify-start">
+        <q-btn label="Guardar" type="submit" color="primary" :loading="submitting" />
         <q-btn
           label="Cancelar"
           flat
@@ -95,7 +96,6 @@
           @click="$emit('cancel')"
           :disable="submitting"
         />
-        <q-btn label="Guardar" type="submit" color="primary" :loading="submitting" />
       </q-card-actions>
     </q-form>
   </q-card>

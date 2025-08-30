@@ -41,12 +41,12 @@ class Conexion extends BDyofinanciero {
             $this->em = new BDyofinanciero("u335921272_vempresa", "@Empresa123", "u335921272_vempresa");
             $this->ad = new BDyofinanciero("u335921272_adminy","@Admin#123","u335921272_administradorY");
             $this->cm=new BDyofinanciero("u335921272_vcomercial","@Comercial#2025","u335921272_vcomercial");
-            
             $this->rh = new BDyofinanciero("u335921272_rrhh","@Rrhh#234","u335921272_rrhh");
            
             $this->endPoint = array(
                 1 => "https://sinfel.emizor.com",
-                2 => "https://fel.emizor.com"
+                2 => "https://fel.emizor.com",
+                3 => "https://mistersofts.com"
             );
         } catch (Exception $e) {
             echo "Error al conectar con la base de datos: " . $e->getMessage();

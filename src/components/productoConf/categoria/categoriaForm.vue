@@ -1,5 +1,5 @@
 <template>
-  <q-form @submit="submitForm">
+  <q-form @submit="submitForm" ref="formRef">
     <div class="row q-col-gutter-md">
       <div class="col-12 col-md-5">
         <label for="nombre">Categoría del producto*</label>
@@ -63,9 +63,9 @@
             />
           </div> -->
     </div>
-    <q-card-actions class="flex justify-end">
-      <q-btn label="Cancelar" flat color="negative" @click="$emit('cancel')" />
+    <q-card-actions class="flex justify-start">
       <q-btn label="Guardar" type="submit" color="primary" />
+      <q-btn label="Cancelar" flat color="negative" @click="$emit('cancel')" />
     </q-card-actions>
   </q-form>
 </template>

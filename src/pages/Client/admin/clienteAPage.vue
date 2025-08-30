@@ -1,5 +1,6 @@
 <template>
-  <q-page class="q-pa-md q-pa-md-md q-pa-lg-lg">
+  <q-page padding="">
+    <div class="titulo">Registrar Cliente</div>
     <q-dialog v-model="showForm">
       <q-card class="responsive-dialog">
         <q-card-section class="bg-primary text-h6 text-white flex justify-between">
@@ -46,7 +47,7 @@
   </q-page>
 </template>
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onBeforeUnmount } from 'vue'
 import { api } from 'boot/axios'
 import { idempresa_md5 } from 'src/composables/FuncionesGenerales'
 import RegistroCliente from 'components/clientes/admin/FormCliente.vue'
@@ -385,6 +386,20 @@ const eliminarSucursal = (sucursal) => {
     }
   })
 }
+
+function handleKeydown(e) {
+  if (e.key === 'Escape') {
+    showForm.value = false
+  }
+}
+
+onMounted(() => {
+  window.addEventListener('keydown', handleKeydown)
+})
+onBeforeUnmount(() => {
+  window.removeEventListener('keydown', handleKeydown)
+})
+
 onMounted(() => {
   loadRows()
   cargarCanalesVenta()

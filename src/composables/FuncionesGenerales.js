@@ -22,10 +22,18 @@ export function idusuario_md5() {
 }
 export function TipoFactura() {
   const contenidousuario = JSON.parse(localStorage.getItem('yofinanciero'))
-  if (contenidousuario) {
-    return contenidousuario?.[0]?.factura?.tipo
+
+  if (contenidousuario && contenidousuario[0]?.factura) {
+    const tipo = contenidousuario[0].factura.tipo
+
+    // Verificar si está vacío, null o undefined
+    if (tipo === null || tipo === '' || tipo === undefined) {
+      return false // está vacío
+    } else {
+      return true // tiene valor
+    }
   } else {
-    alert('Hubo un problema con la sesion, Por favor vuelva a iniciar sesion.')
+    alert('Hubo un problema con la sesión, por favor vuelva a iniciar sesión.')
     console.log('Los elementos no existen en localStorage')
     window.location.href = '/app/dashboard'
   }

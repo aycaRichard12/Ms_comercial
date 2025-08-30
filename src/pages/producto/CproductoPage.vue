@@ -1,21 +1,29 @@
 <template>
-  <q-page class="q-pa-md q-pa-md-md q-pa-lg-lg">
-    <q-card v-if="showForm" class="q-mx-auto q-mt-md">
-      <q-card-section class="q-pa-none">
-        <producto-form
-          :isEditing="isEditing"
-          :model-value="formData"
-          :categorias="categorias"
-          :estados="estados"
-          :subcategorias="subcategorias"
-          :unidades="unidades"
-          :medidas="medidas"
-          @submit="handleSubmit"
-          @cancel="toggleForm"
-          @categoria-changed="loadsubcategorias"
-        />
-      </q-card-section>
-    </q-card>
+  <q-page padding>
+    <q-dialog v-model="showForm">
+      <q-card class="responsive-dialog">
+        <q-card-section class="bg-primary text-h6 text-white flex justify-between">
+          <div>Registrar Producto o Servicio</div>
+          <q-btn icon="close" @click="toggleForm" dense flat round />
+        </q-card-section>
+        <q-card-section class="q-pa-none">
+          <producto-form
+            :isEditing="isEditing"
+            :model-value="formData"
+            :categorias="categorias"
+            :estados="estados"
+            :subcategorias="subcategorias"
+            :unidades="unidades"
+            :medidas="medidas"
+            :productoSIN="ProductoSin"
+            :unidadSIN="UnidadSin"
+            @submit="handleSubmit"
+            @cancel="toggleForm"
+            @categoria-changed="loadsubcategorias"
+          />
+        </q-card-section>
+      </q-card>
+    </q-dialog>
 
     <producto-tabla
       :rows="productos"
@@ -36,6 +44,9 @@ import { useQuasar } from 'quasar'
 import { objectToFormData } from 'src/composables/FuncionesGenerales'
 import ProductoForm from 'src/components/producto/creacion/productoForm.vue'
 import ProductoTabla from 'src/components/producto/creacion/productoTable.vue'
+import { imagen } from 'src/boot/url'
+import { TipoFactura } from 'src/composables/FuncionesGenerales'
+const tipoFactura = TipoFactura()
 const idempresa = idempresa_md5()
 const contenidousuario = validarUsuario()
 console.log(contenidousuario)
@@ -56,7 +67,8 @@ const formData = ref({
   ver: 'registrarProducto',
   idempresa: idempresa,
 })
-
+const ProductoSin = ref([])
+const UnidadSin = ref([])
 async function loadRows() {
   try {
     let response
@@ -118,7 +130,7 @@ async function loadsubcategorias(idcategoria) {
   }
   try {
     const response = await api.get(`listaCategoriaProducto/${idempresa}`) // Cambia a tu ruta real
-    console.log(formData.value.categoria)
+    console.log(formData.value)
     const filtrados = response.data.filter((u) => u.estado == 1 && u.idp == idcategoria)
     const formateado = filtrados.map((item) => ({
       label: item.nombre,
@@ -151,6 +163,60 @@ async function loadunidades() {
     })
   }
 }
+async function ListaProductoSin() {
+  if (!tipoFactura) {
+    return
+  }
+  const contenidousuario = validarUsuario()
+  const token = contenidousuario[0]?.factura?.access_token
+  const tipo = contenidousuario[0]?.factura?.tipo
+  const endpoint = `listaproductoSIN/productossin/${token}/${tipo}`
+  try {
+    const response = await api.get(endpoint) // Cambia a tu ruta real
+    console.log(response)
+    const res = response.data
+    if (res.status == 'success') {
+      const formateado = res.data.map((item) => ({
+        label: item.descripcion,
+        value: item.codigo,
+      }))
+      ProductoSin.value = formateado
+    }
+  } catch (error) {
+    console.error('Error al cargar datos:', error)
+    $q.notify({
+      type: 'negative',
+      message: 'No se pudieron cargar los datos',
+    })
+  }
+}
+async function ListaUnidadSin() {
+  if (!tipoFactura) {
+    return
+  }
+  const contenidousuario = validarUsuario()
+  const token = contenidousuario[0]?.factura?.access_token
+  const tipo = contenidousuario[0]?.factura?.tipo
+  const endpoint = `listaproductoSIN/unidadsin/${token}/${tipo}`
+  try {
+    const response = await api.get(endpoint) // Cambia a tu ruta real
+    console.log(response)
+    const res = response.data
+    if (res.status == 'success') {
+      const formateado = res.data.map((item) => ({
+        label: item.descripcion,
+        value: item.codigo,
+      }))
+      UnidadSin.value = formateado
+    }
+  } catch (error) {
+    console.error('Error al cargar datos:', error)
+    $q.notify({
+      type: 'negative',
+      message: 'No se pudieron cargar los datos',
+    })
+  }
+}
 async function loadmedidas() {
   try {
     const response = await api.get(`listaCaracteristicaProducto/${idempresa}`) // Cambia a tu ruta real
@@ -172,6 +238,7 @@ async function loadmedidas() {
 }
 
 const handleSubmit = async (data) => {
+  console.log(data)
   const formData = objectToFormData(data)
   for (let [k, v] of formData.entries()) {
     console.log(`${k}: ${v}`)
@@ -182,6 +249,7 @@ const handleSubmit = async (data) => {
       console.log(response.data)
     } else {
       const response = await api.post(``, formData)
+
       console.log(response.data)
     }
     $q.notify({
@@ -213,22 +281,32 @@ function resetForm() {
     idempresa: idempresa,
   }
 }
-const editUnit = (item) => {
+const editUnit = async (row) => {
+  console.log(row)
+  const contenidousuario = validarUsuario()
+  const token = contenidousuario[0]?.factura?.access_token
+  const tipo = contenidousuario[0]?.factura?.tipo
+  const response = await api.get(`verificarExistenciaProducto/${row.id}/${token}/${tipo}`) // Cambia a tu ruta real
+  console.log(response.data)
+  const item = response.data.datos
+  console.log(item)
   formData.value = {
     ver: 'editarProducto',
+    id: item.id,
     idempresa: idempresa,
     codigo: item.codigo,
     nombre: item.nombre,
-    codigobarras: item.codigobarras,
-    categoria: item.categoria,
-    estadoproductos: item.estadoproductos,
     descripcion: item.descripcion,
-    subcategoria: item.subcategoria,
-    unidad: item.unidad,
-    medida: item.medida,
-    otraCaracteristica: item.otraCaracteristica,
+    codigobarras: item.codbarras,
+    categoria: item.idsubcategoria,
+    subcategoria: item.idcategoria,
+    estadoproductos: item.idestadoproducto,
+    unidad: item.idunidad,
+    medida: item.idmedida,
+    caracteristica: item.caracteristica,
+    imagen: imagen + item.imagen,
   }
-
+  loadsubcategorias(item.idcategoria)
   isEditing.value = true
   showForm.value = true
 }
@@ -273,5 +351,9 @@ onMounted(() => {
   loadsubcategorias()
   loadunidades()
   loadRows()
+  if (TipoFactura()) {
+    ListaProductoSin()
+    ListaUnidadSin()
+  }
 })
 </script>

@@ -1,10 +1,11 @@
 <template>
   <q-page padding>
+    <div class="titulo">Registrar Compras</div>
     <q-dialog v-model="showForm" persistent>
       <q-card class="responsive-dialog">
         <q-card-section class="bg-primary flex justify-between text-h6 text-white">
           <div>Registrar Compra</div>
-          <q-btn color="white" icon="close" @click="showForm = false" flat round dense />
+          <q-btn color="white" icon="close" @click="cerrarFormulario" flat round dense />
         </q-card-section>
         <q-card-section>
           <form-compra
@@ -56,7 +57,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onBeforeUnmount, watch } from 'vue'
 import { api } from 'boot/axios'
 import { idempresa_md5, idusuario_md5, objectToFormData } from 'src/composables/FuncionesGenerales'
 import { useQuasar } from 'quasar'
@@ -64,6 +65,9 @@ import FormCompra from 'src/components/compra/FormCompra.vue'
 import FormCompraEditar from 'src/components/compra/EditarCompra.vue'
 import TableCompra from 'src/components/compra/TableCompra.vue'
 import DetalleCompra from 'src/components/compra/DetalleCompra.vue'
+import { useCompraStore } from 'src/stores/compras'
+
+const compraStore = useCompraStore()
 
 const $q = useQuasar()
 const idempresa = idempresa_md5()
@@ -79,6 +83,7 @@ const registroActual = ref({
   ver: 'registrarCompra',
   idusuario: idusuario,
   factura: compras.value.length,
+  tipoRegistro: 2,
 })
 const showFormEdit = ref(false)
 const formularioDetalleCompra = ref({ ver: 'registrarDetalleCompra' })
@@ -168,7 +173,7 @@ function cerrarFormulario() {
   showForm.value = false
   isEditing.value = false
   showFormEdit.value = false
-
+  compraStore.eliminarCompra()
   resetForm()
 }
 
@@ -303,16 +308,32 @@ async function autorizarCompra(compra) {
 }
 
 function generarCodigo() {
-  const now = new Date()
-
-  const anio = now.getFullYear()
-  const mes = String(now.getMonth() + 1).padStart(2, '0')
-  const dia = String(now.getDate()).padStart(2, '0')
-  const hora = String(now.getHours()).padStart(2, '0')
-  const minutos = String(now.getMinutes()).padStart(2, '0')
-
-  return `${dia}${mes}${anio}F${hora}${minutos}H${compras.value.length}`
+  return `C-${compras.value.length}`
 }
+watch(
+  () => compraStore.compraPendiente,
+  (nueva) => {
+    if (nueva) {
+      console.log('Se registró nueva compra:', nueva)
+      toggleForm()
+      // aquí abres modal, reseteas formulario, etc.
+    }
+  },
+  { immediate: true },
+)
+function handleKeydown(e) {
+  if (e.key === 'Escape') {
+    showForm.value = false
+    mostrarDetalleCompra.value = false
+  }
+}
+
+onMounted(() => {
+  window.addEventListener('keydown', handleKeydown)
+})
+onBeforeUnmount(() => {
+  window.removeEventListener('keydown', handleKeydown)
+})
 
 onMounted(async () => {
   await cargarAlmacenes()
@@ -324,6 +345,7 @@ onMounted(async () => {
     factura: compras.value.length,
     codigo: generarCodigo(),
     nombre: 'CMP-',
+    tipoRegistro: 2,
   }
 })
 </script>

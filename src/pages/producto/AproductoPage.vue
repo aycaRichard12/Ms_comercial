@@ -148,6 +148,7 @@ function abrirModalAgregar(view) {
   currentView.value = view
 }
 function handleSeleccionAlmacen(val) {
+  console.log(val)
   almacenSeleccionado.value = val
 }
 //==================================================================================

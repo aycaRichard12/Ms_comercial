@@ -1,17 +1,21 @@
 <template>
   <q-layout view="lHh lpr lff">
     <q-header class="bg-primary text-white">
-      <q-toolbar class="q-pa-sm" style="height: 56px">
+      <q-toolbar class="row flex justify-between">
         <q-btn dense flat round icon="menu" @click="toggleLeftDrawer" />
-        <q-toolbar-title>
-          <q-avatar
-            v-if="typeof logo === 'string'"
-            style="width: 150px; height: 30px; border-radius: 0"
-          >
-            <img :src="logo" alt="icon" />
-          </q-avatar>
-        </q-toolbar-title>
+        <div class="col-1 col-md-4">
+          <q-toolbar-title>
+            <q-avatar
+              v-if="typeof logo === 'string'"
+              style="width: 150px; height: 30px; border-radius: 0"
+            >
+              <img :src="logo" alt="icon" />
+            </q-avatar>
+          </q-toolbar-title>
+        </div>
+
         <q-toolbar-title class="q-gutter-sm flex justify-end items-center" clearable>
+          <notificacion-layout v-if="permitidoNotificaciones" />
           <q-btn
             flat
             dense
@@ -37,7 +41,7 @@
             @click="navigateToTab(tab)"
             :class="{ 'text-weight-bold': currentTab === tab.codigo }"
             style="background: linear-gradient(to right, #219286, #044e49); border-radius: 10px"
-            class="btn-res q-ma-sm"
+            class="btn-res q-ma-sm texto-normal"
           >
             <q-icon :name="tab.icono" class="icono q-mt-lg" />
             <span class="texto q-mt-lg">{{ tab.titulo.split('-')[2] }}</span>
@@ -92,7 +96,7 @@
               @update:model-value="updateExpandedMenu(menu.codigo, $event)"
               style=""
             >
-              <q-list class="submenu-list q-pl-lg">
+              <q-list class="submenu-list q-pl-lg" id="menulayout">
                 <q-item
                   v-for="submenu in menu.submenu"
                   :key="submenu.codigo + '_' + submenu.permiso"
@@ -127,33 +131,16 @@
 </template>
 
 <script setup>
+import emitter from 'src/event-bus'
 import { ref, onMounted, reactive } from 'vue'
 import { useRouter } from 'vue-router'
 import { PAGINAS, PAGINAS_ICONS } from 'src/stores/paginas'
 import { useMenuStore } from 'src/stores/permitidos'
 import logo from 'src/assets/IMAGOTIPO-02.png'
-const expandedMenu = reactive({})
-const subMenuSeleccionado = ref(null)
-
-const updateExpandedMenu = (currentMenuCode, isExpanded) => {
-  for (const menuCode in expandedMenu) {
-    if (menuCode !== currentMenuCode) {
-      expandedMenu[menuCode] = false
-    }
-  }
-  expandedMenu[currentMenuCode] = isExpanded
-}
-
-onMounted(() => {
-  items.value.forEach((item) => {
-    if (item.codigo !== 'opcionesocultas') {
-      expandedMenu[item.codigo] = false
-    }
-  })
-})
-
+import NotificacionLayout from './NotificacionLayout.vue'
+import { permisoNotificaciones } from 'src/composables/FuncionesG'
+// NOTIFICACIONES
 const ocultarTabs = () => {
-  console.log('ocultar tabs')
   tabsVisible.value = false
 }
 const irdashboard = () => {
@@ -169,6 +156,21 @@ const cargo = ref('Sin cargo')
 const items = ref([])
 const activeTabs = ref([])
 const currentTab = ref('')
+/// ================================================
+const permitidoNotificaciones = permisoNotificaciones()
+const expandedMenu = reactive({})
+const subMenuSeleccionado = ref(null)
+
+const updateExpandedMenu = (currentMenuCode, isExpanded) => {
+  for (const menuCode in expandedMenu) {
+    if (menuCode !== currentMenuCode) {
+      expandedMenu[menuCode] = false
+    }
+  }
+  expandedMenu[currentMenuCode] = isExpanded
+  const primerPaginaMenu = menuStore.obtenerPrimerSubmenu(currentMenuCode)
+  emitter.emit('abrir-submenu', primerPaginaMenu)
+}
 
 // --- Drawer auto-open/close logic ---
 
@@ -191,8 +193,7 @@ const clearTabsTimeout = () => {
     tabsTimeout = null
   }
 }
-
-// --- End of auto-open/close logic for both drawer and tabs ---
+// --- End of auto-open/close logic for both drawer and tabs ---  permitidos
 
 const iconos = ref({
   configuraciones: 'settings',
@@ -212,7 +213,7 @@ const iconos = ref({
   administracioncreacion: 'create',
   administracionasignacion: 'assignment_turned_in',
   administracionprecios: 'attach_money',
-  registrodecliente: 'person_add',
+  registrarclienteoproveedor: 'sync_alt',
   registrarproveedor: 'local_shipping',
   crearcampanas: 'campaign',
   generarpedido: 'add_shopping_cart',
@@ -229,6 +230,7 @@ const iconos = ref({
   reportedeventasporcampanas: 'campaign',
   reportedecaducidaddeproductos: 'event_busy',
   reporteproductosvendidosglobal: 'assessment',
+  configuracionfactura: 'settings',
 })
 
 const loadTabsForSubmenu = (submenuCodigo) => {
@@ -238,9 +240,7 @@ const loadTabsForSubmenu = (submenuCodigo) => {
   activeTabs.value = paginasSubmenu
     .map((paginaCodigo) => {
       const codigoCompleto = `${paginaCodigo}-${usuario}`
-      console.log(codigoCompleto)
       const pagina = menuStore.obtenerPagina(codigoCompleto)
-      console.log(pagina)
       if (!pagina || !pagina.permiso) return null
 
       return {
@@ -259,7 +259,6 @@ const cargarPaginasSubMenu = (submenuCodigo) => {
   return paginasSubmenu.map((paginaCodigo) => {
     const codigoCompleto = `${paginaCodigo}-${usuario}`
     const pagina = menuStore.obtenerPagina(codigoCompleto)
-
     if (!pagina || !pagina.permiso) return null
 
     return {
@@ -296,11 +295,9 @@ const selectSubmenu = async (submenu) => {
 }
 
 const navigateToTab = (tab) => {
-  console.log('navegando')
-  console.log(tab)
-  router.push(`/${tab.codigo}?key=${tab.permiso}`)
+  router.push(`/${tab.codigo}`)
   startTabsTimeout()
-  console.log('ok')
+
   currentTab.value = tab.codigo // Asegura que el tab actual se actualice
 }
 
@@ -329,7 +326,7 @@ const navigateToTab = (tab) => {
 //       }
 //     }
 //   },
-//   { immediate: true },
+//   { immediate: true }, uppercase
 // )
 
 onMounted(() => {
@@ -347,11 +344,20 @@ onMounted(() => {
     nombreUsuario.value = userData[0].nombre || 'Usuario'
     cargo.value = userData[0].cargo || 'Sin cargo'
   }
+  const menuPrincipal = menuStore.obtenerMenuPrincipal
+  items.value = menuPrincipal
 
-  const menuData = loadData('yofinancieromenu')
-  if (menuData[0]?.menu) {
-    items.value = menuData[0].menu
-  }
+  items.value.forEach((item) => {
+    if (item.codigo !== 'opcionesocultas') {
+      expandedMenu[item.codigo] = false
+    }
+  })
+
+  emitter.on('abrir-submenu', (submenu) => {
+    selectSubmenu(submenu) // Tu lógica normal console
+    const ruta = '/' + llevarPrimeraPAgina(submenu)
+    router.push(ruta)
+  })
 })
 
 const toggleLeftDrawer = () => {

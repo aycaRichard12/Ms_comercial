@@ -30,7 +30,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onBeforeUnmount } from 'vue'
 
 import FormularioRegistroPDV from 'components/puntoVenta/creacion/puntoVentaForm.vue'
 import TablaPDV from 'components/puntoVenta/creacion/puntoVentaTable.vue'
@@ -188,6 +188,18 @@ const handleSubmit = async (data) => {
   }
   toggleForm()
 }
+function handleKeydown(e) {
+  if (e.key === 'Escape') {
+    showForm.value = false
+  }
+}
+
+onMounted(() => {
+  window.addEventListener('keydown', handleKeydown)
+})
+onBeforeUnmount(() => {
+  window.removeEventListener('keydown', handleKeydown)
+})
 onMounted(() => {
   cargarTiposAlmacen()
 })

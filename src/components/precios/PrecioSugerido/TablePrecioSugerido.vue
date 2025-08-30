@@ -52,7 +52,7 @@
           flat
           dense
           icon="edit"
-          color="info"
+          color="primary"
           @click="editarProducto(props.row)"
           title="Editar producto"
         />
@@ -82,7 +82,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { idempresa_md5, idusuario_md5 } from 'src/composables/FuncionesGenerales'
 import { api } from 'src/boot/axios'
 import { useQuasar } from 'quasar'
@@ -184,7 +184,16 @@ const cargarCategoriaPrecio = async () => {
 function editarProducto(id) {
   emit('edit', id)
 }
-
+watch(
+  () => props.almacenes,
+  (nuevosAlmacenes) => {
+    if (nuevosAlmacenes.length > 0 && !filtroAlmacen.value) {
+      console.log(nuevosAlmacenes)
+      filtroAlmacen.value = nuevosAlmacenes[0]
+    }
+  },
+  { immediate: true },
+)
 function onPrintReport() {
   const contenidousuario = validarUsuario()
   const doc = new jsPDF({ orientation: 'portrait' })

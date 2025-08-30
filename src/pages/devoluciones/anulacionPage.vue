@@ -107,6 +107,7 @@
                     color="primary"
                     dense
                     round
+                    title="Generar Comprobante PDF"
                     @click="generarComprobantePDF(props.row.id)"
                   />
                 </template>
@@ -117,6 +118,7 @@
                     color="info"
                     dense
                     round
+                    title="Ver Factura"
                     @click="verFactura(props.row.shortlink)"
                   />
                   <q-btn
@@ -124,6 +126,7 @@
                     color="info"
                     dense
                     round
+                    title="Ver Factura Siat"
                     @click="verFacturaSIAT(props.row.urlsin)"
                   />
                 </template>

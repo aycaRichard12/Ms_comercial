@@ -49,9 +49,9 @@
         </div>
       </div>
 
-      <q-card-actions align="right">
-        <q-btn label="Cancelar" flat color="negative" @click="$emit('cancel')" />
+      <q-card-actions class="flex justify-start">
         <q-btn label="Guardar" type="submit" color="primary" />
+        <q-btn label="Cancelar" flat color="negative" @click="$emit('cancel')" />
       </q-card-actions>
     </q-form>
   </q-card-section>

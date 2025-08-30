@@ -1,8 +1,8 @@
 <template>
   <q-card-section v-if="compra.autorizacion == 2">
-    <q-form @submit="onSubmit" @reset="onResetForm" ref="formRef">
+    <q-form @submit="onSubmit" ref="formRef">
       <div class="row q-col-gutter-x-md">
-        <div class="col-12 col-md-4" v-if="esModoEdicion">
+        <div class="col-12 col-md-8" v-if="esModoEdicion">
           <label for="producto">Producto*</label>
           <q-input
             v-model="detalleForm.descripcion"
@@ -17,11 +17,10 @@
             disable
           />
         </div>
-        <div class="col-12 col-md-4" v-if="!esModoEdicion">
+        <div class="col-12 col-md-8" v-if="!esModoEdicion">
           <label for="producto">Producto*</label>
           <q-select
             use-input
-            fill-input
             hide-dropdown-icon
             v-model="detalleForm.idproductoalmacen"
             :options="productosFiltrados"
@@ -40,12 +39,19 @@
           />
         </div>
 
-        <div class="col-12 col-md-2">
+        <div class="col-12 col-md-4">
           <label for="stockactual">Stock actual</label>
-          <q-input label="stockactual" v-model="detalleForm.stockActual" readonly dense outlined />
+          <q-input
+            label="stockactual"
+            v-model="detalleForm.stockActual"
+            readonly
+            dense
+            outlined
+            type="number"
+          />
         </div>
 
-        <div class="col-12 col-md-2">
+        <div class="col-12 col-md-4">
           <label for="precio">Precio*</label>
           <q-input
             id="precio"
@@ -61,7 +67,7 @@
           />
         </div>
 
-        <div class="col-12 col-md-2">
+        <div class="col-12 col-md-4">
           <label for="cantidad">Cantidad*</label>
           <q-input
             id="cantidad"
@@ -148,14 +154,13 @@ const productosFiltrados = ref([]) // Para el QSelect
 const esModoEdicion = ref(false)
 
 // Estado para el formulario de añadir/editar un nuevo detalle
-const createDefaultForm = () => ({
+
+const detalleForm = ref({
   id: null,
   idproductoalmacen: null,
   precio: null,
   cantidad: null,
 })
-
-const detalleForm = ref(createDefaultForm())
 
 // --- COMPUTED PROPERTIES ---
 
@@ -287,9 +292,16 @@ async function onSubmit() {
 }
 
 function onResetForm() {
-  detalleForm.value = createDefaultForm()
+  detalleForm.value = {
+    id: null,
+    idproductoalmacen: null,
+    precio: null,
+    cantidad: null,
+  }
+  formRef.value.reset()
+  formRef.value.resetValidation() // limpia mensajes de error
+
   esModoEdicion.value = false
-  formRef.value?.resetValidation()
 }
 
 // --- MÉTODOS DE LA TABLA ---

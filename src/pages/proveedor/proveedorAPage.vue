@@ -1,5 +1,7 @@
 <template>
-  <q-page class="q-pa-md">
+  <q-page padding="">
+    <div class="titulo">Registrar Proveedor</div>
+
     <q-dialog v-model="showForm" persistent>
       <q-card class="responsive-dialog">
         <q-card-section class="bg-primary text-h6 text-white flex justify-between">

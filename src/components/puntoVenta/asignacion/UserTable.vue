@@ -20,7 +20,6 @@
           color="primary"
           icon="add"
           round
-          dense
           size="sm"
           @click="asignarPuntoVenta(props.row)"
           title="Asignar Puntos de Venta"

@@ -31,7 +31,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onBeforeUnmount } from 'vue'
 import FormularioAlmacen from 'components/almacen/creacion/almacenForm.vue'
 import TablaAlmacen from 'components/almacen/creacion/almacenTable.vue'
 import { idempresa_md5 } from 'src/composables/FuncionesGenerales'
@@ -55,6 +55,7 @@ const listaSucursales = ref([])
 async function loadRows() {
   try {
     const response = await api.get(`listaAlmacen/${idempresa}`) // Cambia a tu ruta real
+    console.log(response.data)
     CaracteristicaProd.value = response.data // Asume que la API devuelve un array
   } catch (error) {
     console.error('Error al cargar datos:', error)
@@ -105,6 +106,19 @@ const toggleForm = () => {
     resetForm()
   }
 }
+
+function handleKeydown(e) {
+  if (e.key === 'Escape') {
+    showForm.value = false
+  }
+}
+
+onMounted(() => {
+  window.addEventListener('keydown', handleKeydown)
+})
+onBeforeUnmount(() => {
+  window.removeEventListener('keydown', handleKeydown)
+})
 function resetForm() {
   isEditing.value = false
   formData.value = {

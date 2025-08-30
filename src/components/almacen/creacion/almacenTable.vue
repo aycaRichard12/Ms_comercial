@@ -1,7 +1,12 @@
 <template>
   <div class="q-pa-md">
     <div class="flex justify-between">
-      <q-btn color="primary" @click="$emit('add')" class="btn-res q-mt-lg">
+      <q-btn
+        color="primary"
+        @click="$emit('add')"
+        class="btn-res q-mt-lg"
+        title="Registrar Almacen"
+      >
         <q-icon name="add" class="icono" />
         <span class="texto">Agregar</span>
       </q-btn>
@@ -59,14 +64,24 @@
             dense
             class="q-mr-sm"
             @click="$emit('edit-item', props.row)"
+            title="Editar"
+            flat
           />
-          <q-btn icon="delete" color="negative" dense @click="$emit('delete-item', props.row)" />
+          <q-btn
+            icon="delete"
+            color="negative"
+            dense
+            @click="$emit('delete-item', props.row)"
+            title="Eliminar"
+            flat
+          />
           <q-btn
             :icon="Number(props.row.estado) === 1 ? 'toggle_on' : 'toggle_off'"
             dense
             flat
             :color="Number(props.row.estado) === 1 ? 'green' : 'grey'"
             @click="$emit('toggle-status', props.row)"
+            title="Cambiar de Estadato"
           />
         </q-td>
       </template>
@@ -114,6 +129,7 @@ const pdfData = ref(null)
 const mostrarModal = ref(false)
 
 const columnas = [
+  { name: 'codigo', label: 'Codigo', field: 'codigo', align: 'left' },
   { name: 'nombre', label: 'Nombre', field: 'nombre', align: 'left' },
   { name: 'direccion', label: 'Dirección', field: 'direccion', align: 'left' },
   { name: 'telefono', label: 'Teléfono', field: 'telefono', align: 'left' },
@@ -143,6 +159,7 @@ function mostrarReporte() {
   const columns = [
     { header: 'N°', dataKey: 'indice' },
     { header: 'Nombre', dataKey: 'nombre' },
+    { header: 'Codigo', dataKey: 'codigo' },
     { header: 'Dirección', dataKey: 'direccion' },
     { header: 'Teléfono', dataKey: 'telefono' },
     { header: 'Email', dataKey: 'email' },
@@ -156,6 +173,7 @@ function mostrarReporte() {
   const datos = props.rows.map((item, indice) => ({
     indice: indice + 1,
     nombre: item.nombre,
+    codigo: item.codigo,
     direccion: item.direccion,
     telefono: item.telefono,
     email: item.email,
@@ -182,6 +200,7 @@ function mostrarReporte() {
     columnStyles: {
       indice: { cellWidth: 10, halign: 'center' },
       nombre: { cellWidth: 15, halign: 'left' },
+      codigo: { cellWidth: 15, halign: 'left' },
       direccion: { cellWidth: 30, halign: 'left' },
       telefono: { cellWidth: 15, halign: 'right' },
       email: { cellWidth: 30, halign: 'left' },

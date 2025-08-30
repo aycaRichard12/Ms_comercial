@@ -4,11 +4,12 @@
       <!-- Botones principales -->
       <div class="row items-center justify-between q-mb-sm">
         <div class="col-2 q-mt-lg">
-          <q-btn color="primary" @click="$emit('add')" class="btn-res">
+          <q-btn color="primary" @click="$emit('add')" class="btn-res" id="btnNuevaCompra">
             <q-icon name="add" class="icono" />
-            <span class="texto">Agregar</span>
+            <span class="texto">Nueva Compra</span>
           </q-btn>
         </div>
+
         <div class="col-2 q-mt-lg">
           <q-btn color="primary" @click="$emit('repDesglosado')" class="btn-res">
             <q-icon name="picture_as_pdf" class="icono" />
@@ -82,7 +83,7 @@
         <template v-slot:body-cell-detalle="props">
           <q-td>
             <q-btn
-              label="Productos"
+              icon="shopping_cart"
               color="primary"
               dense
               flat
@@ -137,7 +138,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import jsPDF from 'jspdf'
 import autoTable from 'jspdf-autotable'
 import { validarUsuario } from 'src/composables/FuncionesGenerales'
@@ -194,6 +195,16 @@ const processedRows = computed(() => {
     numero: index + 1,
   }))
 })
+
+watch(
+  () => props.almacenes,
+  (nuevo) => {
+    if (nuevo.length > 0 && !filtroAlmacen.value) {
+      filtroAlmacen.value = nuevo[0]
+    }
+  },
+  { immediate: true },
+)
 
 function imprimirReporte() {
   console.log(filtroAlmacen.value)

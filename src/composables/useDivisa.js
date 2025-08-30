@@ -47,6 +47,8 @@ export function useDivisa() {
           codigosin: item.monedasin?.codigo || null,
           simbolo: item.tipo || '$',
           valor: item.valor,
+          locale: item.locale || 'es-CO',
+          current: item.current || 'COP',
         }))[0]
 
       if (!divisaActiva) {

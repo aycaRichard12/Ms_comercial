@@ -3,7 +3,7 @@
     <q-dialog v-model="showForm" persistent>
       <q-card class="responsive-dialog">
         <q-card-section class="bg-primary text-white text-h6 flex justify-between">
-          <div>Registrar Tipo Cliente</div>
+          <div>Registrar Tipo de Almacén</div>
           <q-btn icon="close" flat dense round @click="showForm = false"></q-btn>
         </q-card-section>
         <q-card-section class="q-pa-none">
@@ -28,7 +28,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onBeforeUnmount } from 'vue'
 import { useQuasar } from 'quasar'
 import TipoAlmacenForm from 'components/general/tipoAlmacen/FormTipoAlmacen.vue'
 import TipoAlmacenTable from 'components/general/tipoAlmacen/TableTipoAlmacen.vue'
@@ -155,6 +155,18 @@ async function changeStatus(item) {
     })
   }
 }
+function handleKeydown(e) {
+  if (e.key === 'Escape') {
+    showForm.value = false
+  }
+}
+
+onMounted(() => {
+  window.addEventListener('keydown', handleKeydown)
+})
+onBeforeUnmount(() => {
+  window.removeEventListener('keydown', handleKeydown)
+})
 onMounted(() => {
   loadRows()
 })

@@ -1,14 +1,18 @@
 <template>
   <q-page class="q-pa-md">
     <!-- Formulario de parámetros -->
-    <q-card class="q-mb-md">
+    <div class="titulo">Stock Productos Global</div>
+    <div class="q-mb-md">
       <q-card-section>
         <div class="row justify-center q-col-gutter-md">
-          <div class="col-md-4">
+          <div class="col-12 col-md-4">
+            <label for="almacen">Almacén*</label>
             <q-select
               v-model="almacenSeleccionado"
               :options="opcionesAlmacenes"
-              label="Almacén*"
+              id="almacen"
+              dense=""
+              outlined=""
               option-label="nombre"
               option-value="id"
               emit-value
@@ -29,26 +33,32 @@
           />
         </div>
       </q-card-section>
-    </q-card>
+    </div>
 
     <!-- Filtros -->
     <q-card class="q-mb-md" v-if="datosFiltrados.length">
       <q-card-section>
         <div class="row justify-center q-col-gutter-md">
-          <div class="col-md-4">
+          <div class="col-12 col-md-4">
+            <label for="porestado">Filtrar por estado del producto</label>
             <q-select
               v-model="filtroEstado"
               :options="opcionesEstado"
-              label="Filtrar por estado del producto"
+              id="porestado"
+              dense
+              outlined
               emit-value
               map-options
             />
           </div>
-          <div class="col-md-4">
+          <div class="col-12 col-md-4">
+            <label for="porstock">Ordenar por stock</label>
             <q-select
               v-model="ordenStock"
               :options="opcionesOrden"
-              label="Ordenar por stock"
+              id="porstock"
+              dense
+              outlined
               emit-value
               map-options
             />
@@ -60,6 +70,7 @@
     <!-- Tabla de resultados -->
     <q-card v-if="datosFiltrados.length">
       <q-table
+        title="Stock De Productos"
         :rows="datosFiltrados"
         :columns="columnas"
         row-key="id"

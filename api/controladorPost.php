@@ -8,8 +8,19 @@ require_once "ventas.php";
 require_once "sendIvoiceEmail.php";
 require_once "useVenta.php";
 require_once "useCotizacion.php";
-$ver = $_POST['ver'];
-$controlador = null;
+require_once "arqueoPuntoVenta.php";
+
+$input = file_get_contents("php://input");
+$data = json_decode($input, true);
+
+// Si es JSON, lo uso; si no, uso $_POST
+if (is_array($data) && isset($data['ver'])) {
+    $ver = $data['ver'];
+} elseif (isset($_POST['ver'])) {
+    $ver = $_POST['ver'];
+} else {
+    $ver = null;
+}
 if ($ver == "registrarResponsable") {
     $controlador = new configuracion();
     $controlador->registroResponsable($_POST['usuario'], $_POST['idempresa']);
@@ -109,10 +120,10 @@ if ($ver == "registrarResponsable") {
     $controlador->editarParametro($_POST['id'], $_POST['nombre'], $_POST['valor'], $_POST['color'],$_POST['tipo']);
 } elseif ($ver == "registrarAlmacen") {
     $controlador = new mantenimiento();
-    $controlador->registraralmacen($_POST['nombre'], $_POST['direccion'], $_POST['telefono'], $_POST['email'], $_POST['tipoalmacen'], $_POST['stockmin'], $_POST['stockmax'], $_POST['sucursal'], $_POST['idempresa']);
+    $controlador->registraralmacen($_POST['nombre'], $_POST['direccion'], $_POST['telefono'], $_POST['email'], $_POST['tipoalmacen'], $_POST['stockmin'], $_POST['stockmax'], $_POST['sucursal'], $_POST['idempresa'], $_POST['codigo']);
 } elseif ($ver == "editarAlmacen") {
     $controlador = new mantenimiento();
-    $controlador->editaralmacen($_POST['id'], $_POST['nombre'], $_POST['direccion'], $_POST['telefono'], $_POST['email'], $_POST['tipoalmacen'], $_POST['stockmin'], $_POST['stockmax'], $_POST['sucursal']);
+    $controlador->editaralmacen($_POST['id'], $_POST['nombre'], $_POST['direccion'], $_POST['telefono'], $_POST['email'], $_POST['tipoalmacen'], $_POST['stockmin'], $_POST['stockmax'], $_POST['sucursal'], $_POST['codigo']);
 } elseif ($ver == "registrarPuntoventa") {
     $controlador = new mantenimiento();
     $controlador->registroPuntoVenta($_POST['nombre'], $_POST['descripcion'], $_POST['idalmacen']);
@@ -122,35 +133,83 @@ if ($ver == "registrarResponsable") {
 } elseif ($ver == "crearPuntoVentaFacturacion") {
     $controlador = new mantenimiento();
     $controlador->crarPuntoVentaFactura(json_decode($_POST['puntoventaJSON'], true), $_POST['codigosucursal'], $_POST['token'], $_POST['tipof'], $_POST['id'], $_POST['tipo']);
-} elseif ($ver == "registrarProducto") {
+}elseif ($ver == "registrarProducto") {
     try {
         $controlador = new mantenimiento();
-    if(!empty($_FILES['imagen']) && $_FILES['imagen']['error'] === 0){
-        $filename = $_FILES['imagen']['name'];
-        $file = $_FILES['imagen']['tmp_name'];
-        $url = "imagen";
-        $url = $url . "/" . $_POST['nombre'] . rand(10000, 999999) . ".jpg";
-        move_uploaded_file($file, $url);
-    }
-    else{
-        $url = $_POST['imagen'];
-    }
-    $controlador->registroProducto($_POST['nombre'], $_POST['codigo'], $_POST['descripcion'], $_POST['codigobarras'], $_POST['categoria'], $_POST['medida'], $_POST['estadoproductos'], $_POST['unidad'], $_POST['caracteristica'], $url, $_POST['codigosin'], $_POST['codigoactividad'], $_POST['unidadsin'], $_POST['codigoNandina'], $_POST['idempresa']);
+        $carpetaDestino = __DIR__ . "/../../cm/api/imagen/";
+
+        if (!is_dir($carpetaDestino)) {
+            mkdir($carpetaDestino, 0775, true);
+        }
+
+        if (!empty($_FILES['imagen']) && $_FILES['imagen']['error'] === UPLOAD_ERR_OK) {
+            $extension = strtolower(pathinfo($_FILES['imagen']['name'], PATHINFO_EXTENSION));
+            $mime = mime_content_type($_FILES['imagen']['tmp_name']);
+
+            if (!in_array($extension, ['jpg', 'jpeg', 'png']) || !in_array($mime, ['image/jpeg', 'image/png'])) {
+                throw new Exception("Formato de imagen no permitido. Solo JPG y PNG.");
+            }
+
+            $nombreLimpio = preg_replace('/[^a-zA-Z0-9_-]/', '_', $_POST['nombre']);
+            $nombreArchivo = $nombreLimpio . rand(10000, 999999) . ".jpg";
+            $url = "imagen/" . $nombreArchivo;
+
+            if (!move_uploaded_file($_FILES['imagen']['tmp_name'], $carpetaDestino . $nombreArchivo)) {
+                throw new Exception("Error al guardar la imagen en el servidor.");
+            }
+        } else {
+            if (empty($_POST['imagen'])) {
+                throw new Exception("Debe proporcionar una imagen.");
+            }
+            $url = $_POST['imagen'];
+        }
+
+        $controlador->registroProducto(
+            $_POST['nombre'], $_POST['codigo'], $_POST['descripcion'], $_POST['codigobarras'],
+            $_POST['categoria'], $_POST['medida'], $_POST['estadoproductos'], $_POST['unidad'],
+            $_POST['caracteristica'], $url, $_POST['codigosin'], $_POST['codigoactividad'],
+            $_POST['unidadsin'], $_POST['codigoNandina'], $_POST['idempresa']
+        );
+
+        echo json_encode(["estado" => "ok", "mensaje" => "Producto registrado correctamente", "imagen" => $url]);
+
     } catch (Exception $e) {
-        echo json_encode(array("estado" => "error", "mensaje" => $e->getMessage()));
+        echo json_encode(["estado" => "error", "mensaje" => $e->getMessage()]);
     }
 } elseif ($ver == "editarProducto") {
-    $controlador = new mantenimiento();
-    if(!empty($_FILES['imagen']) && $_FILES['imagen']['error'] === 0){
-        $filename = $_FILES['imagen']['name'];
-        $file = $_FILES['imagen']['tmp_name'];
-        $url = "imagen";
-        $url = $url . "/" . $_POST['nombre'] . rand(10000, 999999) . ".jpg";
-        move_uploaded_file($file, $url);
-    }else{
-        $url = $_POST['imagen'];
+    try {
+        $controlador = new mantenimiento();
+        $carpetaDestino = __DIR__ . "/../../cm/api/imagen/";
+
+        if (!is_dir($carpetaDestino)) {
+            mkdir($carpetaDestino, 0775, true);
+        }
+
+        if (!empty($_FILES['imagen']) && $_FILES['imagen']['error'] === UPLOAD_ERR_OK) {
+            $extension = strtolower(pathinfo($_FILES['imagen']['name'], PATHINFO_EXTENSION));
+            $mime = mime_content_type($_FILES['imagen']['tmp_name']);
+
+            if (!in_array($extension, ['jpg', 'jpeg', 'png']) || !in_array($mime, ['image/jpeg', 'image/png'])) {
+                throw new Exception("Formato de imagen no permitido. Solo JPG y PNG.");
+            }
+
+            $nombreLimpio = preg_replace('/[^a-zA-Z0-9_-]/', '_', $_POST['nombre']);
+            $nombreArchivo = $nombreLimpio . rand(10000, 999999) . ".jpg";
+            $url = "imagen/" . $nombreArchivo;
+
+            if (!move_uploaded_file($_FILES['imagen']['tmp_name'], $carpetaDestino . $nombreArchivo)) {
+                throw new Exception("Error al guardar la imagen en el servidor.");
+            }
+        } else {
+            if (empty($_POST['imagen'])) {
+                        throw new Exception("Debe proporcionar una imagen.");
+            }
+            $url = $_POST['imagen'];
+        }   
+        $controlador->editarProducto($_POST['id'], $_POST['nombre'], $_POST['codigo'], $_POST['descripcion'], $_POST['codigobarras'], $_POST['categoria'], $_POST['medida'], $_POST['estadoproductos'], $_POST['unidad'], $_POST['caracteristica'], $url, $_POST['codigosin'], $_POST['codigoactividad'], $_POST['unidadsin'],$_POST['codigoNandina']);
+    } catch (Exception $e) {
+        echo json_encode(["estado" => "error", "mensaje" => $e->getMessage()]);
     }
-    $controlador->editarProducto($_POST['id'], $_POST['nombre'], $_POST['codigo'], $_POST['descripcion'], $_POST['codigobarras'], $_POST['categoria'], $_POST['medida'], $_POST['estadoproductos'], $_POST['unidad'], $_POST['caracteristica'], $url, $_POST['codigosin'], $_POST['codigoactividad'], $_POST['unidadsin'],$_POST['codigoNandina']);
 } elseif ($ver == "registrarProductoAlmacen") {
     $controlador = new mantenimiento();
     $controlador->registroProductoAlmacen($_POST['stockmin'], $_POST['stockmax'], $_POST['detalle'], json_decode($_POST['jsonProductos'], true));
@@ -217,7 +276,17 @@ elseif ($ver == "registrarDetallePedido") {
     $controlador->editarDetallePedido($_POST['id'], $_POST['cantidad'], $_POST['idproductoalmacen']);
 } elseif ($ver == "registrarCompra") {
     $controlador = new compras();
-    $controlador->registroCompra($_POST['nombre'], $_POST['codigo'], $_POST['proveedor'], $_POST['pedido'], $_POST['factura'], $_POST['tipocompra'], $_POST['almacen'], $_POST['idusuario']);
+    $nombre     = $_POST['nombre']     ?? null;
+    $codigo     = $_POST['codigo']     ?? null;
+    $proveedor  = $_POST['proveedor']  ?? null;
+    $pedido     = $_POST['pedido']     ?? null; // <- Evita el warning
+    $factura    = $_POST['factura']    ?? null;
+    $tipocompra = $_POST['tipocompra'] ?? null;
+    $almacen    = $_POST['almacen']    ?? null;
+    $idusuario  = $_POST['idusuario']  ?? null;
+
+    $controlador = new compras();
+    $controlador->registroCompra($nombre, $codigo, $proveedor, $pedido, $factura, $tipocompra, $almacen, $idusuario);
 } elseif ($ver == "editarCompra") {
     $controlador = new compras();
     $controlador->editarCompra($_POST['id'], $_POST['nombre'], $_POST['codigo'], $_POST['proveedor'], $_POST['factura']);
@@ -501,7 +570,32 @@ elseif ($ver == "registroCotizacion_enVenta") {
     $controlador = new UseCotizacion();
     $controlador->cotizacionVenta($_POST['idcotizacion'],$_POST['fecha'], $_POST['tipoventa'], $_POST['tipopago'],$_POST['idcliente'], $_POST['idsucursal'],$_POST['canalventa'],$_POST['idempresa'],$_POST['idusuario'],json_decode($_POST['jsonDetalle'],true));
 }
+elseif ($ver == "registrarCierre") {
+    $controlador = new ArqueoPuntoVenta(); 
+    $controlador->registrarCierre(
+        $data['idempresa'],
+        $data['idusuario'], 
+        $data['fechaInicio'], 
+        $data['fechaFin'], 
+        $data['puntoVenta'],
+        $data['caja'], 
+        $data['totalesPorMetodo'], 
+        $data['totalesPorMetodoCotizacion'], 
+        $data['denominaciones'], 
+        $data['observacion']
+    );
+  
+    
+}
+elseif ($ver == "AutorizacionCierre") {
+    $controlador = new ArqueoPuntoVenta(); 
+    $controlador->AutorizacionCierre($data);
+  
+    
+}
+
+
 if ($controlador === null) {
-    // Acción por defecto si no se encuentra una ruta válida producto sendEmail registrarDetallemerma registrarmerma use
+    // Acción por defecto si no se encuentra una ruta válida producto sendEmail editaralmacen registroProducto use
     echo json_encode("El formulario ".$_POST['ver']." no existe");
 }

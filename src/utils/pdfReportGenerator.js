@@ -7,8 +7,28 @@ import { obtenerFechaActualDato } from 'src/composables/FuncionesG'
 import { numeroALetras } from 'src/composables/FuncionesG'
 import { imagen } from 'src/boot/url'
 import { api } from 'src/boot/axios'
-//import { URL_APIE } from 'src/composables/services'
+import { cargarLogoBase64 } from 'src/composables/FuncionesG'
+
+// Variables globales
+let logoBase64 = null
+let contenidousuario = null
+let idempresa = null
+let logoEmpresa = null
+
 const tipo = { 1: 'Pedido Compra', 2: 'Pedido Movimiento' }
+
+async function initPdfReportGenerator() {
+  contenidousuario = validarUsuario()
+  idempresa = contenidousuario[0]
+  logoEmpresa = idempresa.empresa.logo
+  logoBase64 = await cargarLogoBase64(logoEmpresa)
+}
+
+export function getLogoBase64() {
+  return logoBase64
+}
+
+initPdfReportGenerator()
 
 export default function imprimirReporte(detallePedido) {
   const contenidousuario = validarUsuario()
@@ -303,7 +323,6 @@ export function PDFreporteCreditos(
   const nombreEmpresa = idempresa.empresa.nombre
   const direccionEmpresa = idempresa.empresa.direccion
   const telefonoEmpresa = idempresa.empresa.telefono
-  const logoEmpresa = idempresa.empresa.logo
   const nombreUsuario = idempresa.nombre
   const cargoUsuario = idempresa.cargo
 
@@ -315,40 +334,42 @@ export function PDFreporteCreditos(
     { header: 'Sucursal', dataKey: 'sucursal' },
     { header: 'Fecha Límite', dataKey: 'fechalimite' },
     { header: 'Cuotas', dataKey: 'ncuotas' },
-    { header: 'Cuotas Pagadas', dataKey: 'cuotaspagadas' },
+    { header: 'Cuotas Procesadas', dataKey: 'cuotasprocesadas' },
     { header: 'Valor Cuota', dataKey: 'valorcuotas' },
-    { header: 'Monto Venta', dataKey: 'montoventa' },
+    { header: 'Total Venta', dataKey: 'totalventa' },
     { header: 'Total Cobrado', dataKey: 'totalcobrado' },
     { header: 'Saldo', dataKey: 'saldo' },
-    { header: 'Total Anulado', dataKey: 'totalanulado' },
     { header: 'Total Atrasado', dataKey: 'totalatrasado' },
-    { header: 'Días Mora', dataKey: 'moradias' },
+    { header: 'Total Anulado', dataKey: 'totalanulado' },
+
+    { header: 'Mora Días', dataKey: 'moradias' },
     { header: 'Estado', dataKey: 'estado' },
   ]
-
+  console.log(reportData)
   // Mapeo de datos
-  const datos = reportData.map((item) => ({
-    numero: item.numero,
-    fechaventa: item.fechaventa ? cambiarFormatoFecha(item.fechaventa) : '',
-    razonsocial: item.razonsocial,
-    sucursal: item.sucursal,
-    fechalimite: item.fechalimite ? cambiarFormatoFecha(item.fechalimite) : '',
-    ncuotas: item.ncuotas,
-    cuotaspagadas: item.cuotaspagadas || '0',
-    valorcuotas: item.valorcuotas ? decimas(redondear(parseFloat(item.valorcuotas))) : '0.00',
-    montoventa: item.montoventa ? decimas(redondear(parseFloat(item.montoventa))) : '0.00',
-    totalcobrado: item.totalcobrado ? decimas(redondear(parseFloat(item.totalcobrado))) : '0.00',
-
-    saldo:
-      decimas(redondear(parseFloat(item.montoventa) - parseFloat(item.totalcobrado || 0))) ||
-      '0.00',
-    totalanulado: Number(item.estado) === 4 ? decimas(redondear(parseFloat(item.saldo))) : 0.0,
-    totalatrasado: Number(item.estado) === 3 ? decimas(redondear(parseFloat(item.saldo))) : 0.0,
-    moradias:
-      item.fechalimite && Number(item.estado) === 3
-        ? Math.max(obtenerDias(item.fechalimite), 0)
-        : 0,
-    estado: getEstadoText(item.estado),
+  const datos = reportData.map((row) => ({
+    idventa: row.idventa,
+    idcredito: row.idcredito,
+    idcliente: row.idcliente,
+    numero: row.numero,
+    fechaventa: row.fechaventa,
+    razonsocial: row.razonsocial,
+    sucursal: row.sucursal,
+    fechalimite: row.fechalimite,
+    ncuotas: row.ncuotas,
+    cuotasprocesadas: row.cuotasprocesadas,
+    valorcuotas: row.valorcuotas,
+    totalventa: row.totalventa,
+    totalcobrado: row.totalcobrado,
+    saldo: row.saldo,
+    totalatrasado: row.totalatrasado,
+    totalanulado: row.totalanulado,
+    moradias: row.moradias,
+    estado: getEstadoText(row.estado),
+    idalmacen: row.idalmacen,
+    montoventa: row.montoventa,
+    cuotaspagadas: row.cuotaspagadas,
+    idsucursal: row.idsucursal,
   }))
 
   // Configuración de autoTable
@@ -357,15 +378,15 @@ export function PDFreporteCreditos(
     body: datos,
     styles: {
       fontSize: 7,
-      cellPadding: 2,
+      cellPadding: 3,
       overflow: 'linebreak',
       valign: 'middle',
     },
     headStyles: {
-      fillColor: [22, 160, 133], // Verde
+      fillColor: [128, 128, 128], // Negro
       textColor: 255,
       halign: 'center',
-      fontSize: 8,
+      fontSize: 7,
       fontStyle: 'bold',
     },
     bodyStyles: {
@@ -374,22 +395,23 @@ export function PDFreporteCreditos(
     columnStyles: {
       numero: { cellWidth: 10 },
       fechaventa: { cellWidth: 20 },
-      razonsocial: { cellWidth: 30 },
-      sucursal: { cellWidth: 25 },
+      razonsocial: { cellWidth: 25, halign: 'left' },
+      sucursal: { cellWidth: 25, halign: 'left' },
       fechalimite: { cellWidth: 20 },
-      ncuotas: { cellWidth: 12 },
-      cuotaspagadas: { cellWidth: 18 },
+      ncuotas: { cellWidth: 15 },
+      cuotasprocesadas: { cellWidth: 25 },
       valorcuotas: { cellWidth: 18, halign: 'right' },
-      montoventa: { cellWidth: 18, halign: 'right' },
+      totalventa: { cellWidth: 18, halign: 'right' },
       totalcobrado: { cellWidth: 18, halign: 'right' },
       saldo: { cellWidth: 18, halign: 'right' },
-      totalanulado: { cellWidth: 18, halign: 'right' },
       totalatrasado: { cellWidth: 18, halign: 'right' },
+      totalanulado: { cellWidth: 18, halign: 'right' },
+
       moradias: { cellWidth: 15 },
       estado: { cellWidth: 15 },
     },
     startY: 45,
-    margin: { horizontal: 5 },
+    margin: { horizontal: 10 },
     theme: 'grid',
     didDrawPage: (data) => {
       // Encabezado en cada página
@@ -398,18 +420,24 @@ export function PDFreporteCreditos(
 
       // Solo agregar logo en primera página
       if (data.pageNumber === 1) {
-        if (logoEmpresa && logoEmpresa.startsWith('data:image')) {
-          doc.addImage(logoEmpresa, 'PNG', 10, 5, 20, 20)
+        if (logoBase64) {
+          const pageWidth = doc.internal.pageSize.getWidth() // Ancho total página
+          const imgWidth = 20 // Ancho del logo en mm
+          const imgHeight = 20 // Alto del logo en mm
+          const xPos = pageWidth - imgWidth - 10 // 10mm de margen derecho
+          const yPos = 5 // margen superior
+
+          doc.addImage(logoBase64, 'JPEG', xPos, yPos, imgWidth, imgHeight)
         }
 
         // Información de la empresa
         doc.setFontSize(10)
         doc.setFont(undefined, 'bold')
-        doc.text(nombreEmpresa, 35, 10)
+        doc.text(nombreEmpresa, 10, 10)
         doc.setFontSize(8)
         doc.setFont(undefined, 'normal')
-        doc.text(direccionEmpresa, 35, 15)
-        doc.text(`Tel: ${telefonoEmpresa}`, 35, 20)
+        doc.text(direccionEmpresa, 10, 15)
+        doc.text(`Tel: ${telefonoEmpresa}`, 10, 20)
 
         // Título del reporte
         doc.setFontSize(12)
@@ -488,11 +516,6 @@ function getEstadoText(estado) {
 }
 
 // Función auxiliar para calcular días de mora
-function obtenerDias(fechalimite) {
-  const fecha1 = Math.floor(new Date().getTime() / (1000 * 3600 * 24))
-  const fecha2 = Math.floor(new Date(fechalimite).getTime() / (1000 * 3600 * 24))
-  return fecha1 - fecha2
-}
 
 export function PDFreporteStockProductosIndividual(processedRows) {
   console.log(processedRows.value)
@@ -2514,6 +2537,706 @@ export function PDFComprovanteMerma(detallemerma) {
         doc.text('COMPROBANTE DE MERMA', doc.internal.pageSize.getWidth() / 2, 15, {
           align: 'center',
         })
+      }
+    },
+  })
+  return doc
+}
+
+export function PDFKardex(kardex, almacenLabel, productoLabel, fechaiR, fechafR) {
+  console.log(kardex)
+  console.log(almacenLabel, productoLabel, fechaiR, fechafR)
+  const contenidousuario = validarUsuario()
+  const doc = new jsPDF({ orientation: 'portrait' })
+
+  const idempresa = contenidousuario[0]
+  const nombreEmpresa = idempresa.empresa.nombre
+  const direccionEmpresa = idempresa.empresa.direccion
+  const telefonoEmpresa = idempresa.empresa.telefono
+  const nombre = idempresa.nombre
+  const cargo = idempresa.cargo
+  const columns = [
+    { header: 'N', dataKey: 'c' },
+    { header: 'Fecha', dataKey: 'fecha' },
+    { header: 'Descripcion', dataKey: 'descripcion' },
+    { header: 'Cant. Entrada', dataKey: 'canentrada' },
+    { header: 'Cant. Salida', dataKey: 'cansalida' },
+    { header: 'Cant. Saldo', dataKey: 'cansaldo' },
+    { header: 'Entrada', dataKey: 'ingreso' },
+    { header: 'Salida', dataKey: 'egreso' },
+    { header: 'Saldo', dataKey: 'saldoT' },
+  ]
+  // filteredCompra.value.reduce((sum, row) => sum + Number(row.total), 0)
+  const datos = kardex.map((item) => ({
+    c: item.c,
+    fecha: cambiarFormatoFecha(item.fecha),
+    descripcion: item.descripcion,
+    canentrada: item.canentrada,
+    cansalida: item.cansalida,
+    cansaldo: item.cansaldo,
+    ingreso: item.ingreso,
+    egreso: item.egreso,
+    saldoT: item.saldoT,
+  }))
+
+  autoTable(doc, {
+    columns,
+    body: datos,
+    styles: {
+      overflow: 'linebreak',
+      fontSize: 5,
+      cellPadding: 2,
+    },
+    headStyles: {
+      fillColor: [128, 128, 128], // Negro
+      textColor: 255,
+      halign: 'center',
+      fontSize: 7,
+      fontStyle: 'bold',
+    },
+    columnStyles: {
+      c: { cellWidth: 15, halign: 'center' },
+      fecha: { cellWidth: 20, halign: 'center' },
+      descripcion: { cellWidth: 35, halign: 'left' },
+      canentrada: { cellWidth: 20, halign: 'right' },
+      cansalida: { cellWidth: 20, halign: 'right' },
+      cansaldo: { cellWidth: 20, halign: 'right' },
+      ingreso: { cellWidth: 20, halign: 'right' },
+      egreso: { cellWidth: 20, halign: 'right' },
+      saldoT: { cellWidth: 25, halign: 'right' },
+    },
+    //20 + 15 + 20 + 25 + 30 + 20 + 20 + 25 + 20 + 15 + 20 + 15 + 20 = 265 mm
+
+    startY: 46,
+    margin: { horizontal: 5 },
+    theme: 'striped',
+    didDrawPage: () => {
+      if (doc.internal.getNumberOfPages() === 1) {
+        // Logo (requiere base64 o ruta absoluta en servidor si usas Node)
+        if (logoBase64) {
+          const pageWidth = doc.internal.pageSize.getWidth() // Ancho total página
+          const imgWidth = 20 // Ancho del logo en mm
+          const imgHeight = 20 // Alto del logo en mm
+          const xPos = pageWidth - imgWidth - 10 // 10mm de margen derecho
+          const yPos = 5 // margen superior
+
+          doc.addImage(logoBase64, 'JPEG', xPos, yPos, imgWidth, imgHeight)
+        }
+
+        // Nombre y datos de empresa
+        doc.setFontSize(7)
+        doc.setFont(undefined, 'bold')
+        doc.text(nombreEmpresa, 5, 10)
+
+        doc.setFontSize(6)
+        doc.setFont(undefined, 'normal')
+        doc.text(direccionEmpresa, 5, 13)
+        doc.text(`Tel: ${telefonoEmpresa}`, 5, 16)
+
+        // Título centrado
+        doc.setFontSize(10)
+        doc.setFont(undefined, 'bold')
+        doc.text('REPORTE KARDEX', doc.internal.pageSize.getWidth() / 2, 15, { align: 'center' })
+
+        doc.setFontSize(6)
+        doc.setFont(undefined, 'normal')
+        doc.text('Entre ' + fechaiR + ' Y ' + fechafR, doc.internal.pageSize.getWidth() / 2, 18, {
+          align: 'center',
+        })
+
+        doc.setDrawColor(0) // Color negro
+        doc.setLineWidth(0.2) // Grosor de la línea
+        doc.line(5, 30, 200, 30) // De (x1=5, y1=25) a (x2=200, y2=25)
+
+        doc.setFontSize(7)
+        doc.setFont(undefined, 'bold')
+        doc.text('DATOS DEL REPORTE', 5, 35)
+
+        doc.setFontSize(6)
+        doc.setFont(undefined, 'normal')
+        doc.text('Almacén: ' + almacenLabel, 5, 38)
+
+        doc.setFontSize(6)
+        doc.setFont(undefined, 'normal')
+        doc.text('Producto: ' + productoLabel, 5, 41)
+
+        doc.setFontSize(6)
+        doc.setFont(undefined, 'normal')
+        doc.text('Fecha de Impresion: ' + cambiarFormatoFecha(obtenerFechaActualDato()), 5, 44)
+
+        doc.setFontSize(7)
+        doc.setFont(undefined, 'bold')
+        doc.text('DATOS DEL ENCARGADO:', 200, 35, { align: 'right' })
+
+        doc.setFontSize(6)
+        doc.setFont(undefined, 'normal')
+        doc.text(nombre, 200, 38, { align: 'right' })
+
+        doc.setFontSize(6)
+        doc.setFont(undefined, 'normal')
+        doc.text(cargo, 200, 41, { align: 'right' })
+      }
+    },
+  })
+  return doc
+}
+
+// export function PDFCierreCaja(datosCierreCaja) {
+//   console.log(datosCierreCaja)
+
+//   const contenidousuario = validarUsuario()
+//   const doc = new jsPDF({ orientation: 'portrait' })
+
+//   const idempresa = contenidousuario[0]
+//   const nombreEmpresa = idempresa.empresa.nombre
+//   const direccionEmpresa = idempresa.empresa.direccion
+//   const telefonoEmpresa = idempresa.empresa.telefono
+//   const nombre = idempresa.nombre
+//   const cargo = idempresa.cargo
+//   const columns = [
+//     { header: '', dataKey: 'concepto' },
+//     { header: 'Según Sistema', dataKey: 'sistema' },
+//     { header: 'Según Arqueo', dataKey: 'contado' },
+//     { header: 'Diferencia', dataKey: 'diferencia' },
+//   ]
+//   // filteredCompra.value.reduce((sum, row) => sum + Number(row.total), 0)
+//   const datos = datosCierreCaja.conceptos.map((item) => ({
+//     concepto: item.concepto,
+//     sistema: item.sistema,
+//     contado: item.contado,
+//     diferencia: item.diferencia,
+//   }))
+
+//   autoTable(doc, {
+//     columns,
+//     body: datos,
+//     styles: {
+//       overflow: 'linebreak',
+//       fontSize: 5,
+//       cellPadding: 2,
+//     },
+//     headStyles: {
+//       fillColor: [128, 128, 128], // Negro
+//       textColor: 255,
+//       halign: 'center',
+//       fontSize: 7,
+//       fontStyle: 'bold',
+//     },
+//     columnStyles: {
+//       concepto: { cellWidth: 45, halign: 'right' },
+//       sistema: { cellWidth: 50, halign: 'right' },
+//       contado: { cellWidth: 50, halign: 'right' },
+//       diferencia: { cellWidth: 50, halign: 'right' },
+//     },
+//     //20 + 15 + 20 + 25 + 30 + 20 + 20 + 25 + 20 + 15 + 20 + 15 + 20 = 265 mm
+
+//     startY: 49,
+//     margin: { horizontal: 5 },
+//     theme: 'striped',
+//     didDrawPage: () => {
+//       if (doc.internal.getNumberOfPages() === 1) {
+//         // Logo (requiere base64 o ruta absoluta en servidor si usas Node)
+//         if (logoBase64) {
+//           const pageWidth = doc.internal.pageSize.getWidth() // Ancho total página
+//           const imgWidth = 20 // Ancho del logo en mm
+//           const imgHeight = 20 // Alto del logo en mm
+//           const xPos = pageWidth - imgWidth - 10 // 10mm de margen derecho
+//           const yPos = 5 // margen superior
+
+//           doc.addImage(logoBase64, 'JPEG', xPos, yPos, imgWidth, imgHeight)
+//         }
+
+//         // Nombre y datos de empresa
+//         doc.setFontSize(7)
+//         doc.setFont(undefined, 'bold')
+//         doc.text(nombreEmpresa, 5, 10)
+
+//         doc.setFontSize(6)
+//         doc.setFont(undefined, 'normal')
+//         doc.text(direccionEmpresa, 5, 13)
+//         doc.text(`Tel: ${telefonoEmpresa}`, 5, 16)
+
+//         // Título centrado
+//         doc.setFontSize(10)
+//         doc.setFont(undefined, 'bold')
+//         doc.text('CIERRE PUNTO VENTA', doc.internal.pageSize.getWidth() / 2, 15, {
+//           align: 'center',
+//         })
+
+//         doc.setFontSize(6)
+//         doc.setFont(undefined, 'normal')
+//         doc.text('Creado ' + datosCierreCaja.creado_en, doc.internal.pageSize.getWidth() / 2, 18, {
+//           align: 'center',
+//         })
+
+//         doc.setDrawColor(0) // Color negro
+//         doc.setLineWidth(0.2) // Grosor de la línea
+//         doc.line(5, 30, 200, 30) // De (x1=5, y1=25) a (x2=200, y2=25)
+
+//         doc.setFontSize(7)
+//         doc.setFont(undefined, 'bold')
+//         doc.text('DATOS DEL REPORTE', 5, 35)
+
+//         doc.setFontSize(6)
+//         doc.setFont(undefined, 'normal')
+//         doc.text('Fecha Apertura : ' + datosCierreCaja.fecha_inicio, 5, 38)
+
+//         doc.setFontSize(6)
+//         doc.setFont(undefined, 'normal')
+//         doc.text('Fecha Cierre : ' + datosCierreCaja.fecha_fin, 5, 41)
+
+//         doc.setFontSize(6)
+//         doc.setFont(undefined, 'normal')
+//         doc.text('Punto de Venta: ' + datosCierreCaja.punto_venta, 5, 44)
+
+//         doc.setFontSize(6)
+//         doc.setFont(undefined, 'normal')
+//         doc.text('Fecha de Impresion: ' + cambiarFormatoFecha(obtenerFechaActualDato()), 5, 47)
+
+//         doc.setFontSize(7)
+//         doc.setFont(undefined, 'bold')
+//         doc.text('DATOS DEL ENCARGADO:', 200, 35, { align: 'right' })
+
+//         doc.setFontSize(6)
+//         doc.setFont(undefined, 'normal')
+//         doc.text(nombre, 200, 38, { align: 'right' })
+
+//         doc.setFontSize(6)
+//         doc.setFont(undefined, 'normal')
+//         doc.text(cargo, 200, 41, { align: 'right' })
+//       }
+//     },
+//   })
+//   return doc
+// }
+
+// export function PDFCierreCaja(datosCierreCaja) {
+//   const contenidousuario = validarUsuario()
+//   const doc = new jsPDF({ orientation: 'portrait' })
+
+//   const idempresa = contenidousuario[0]
+//   const nombreEmpresa = idempresa.empresa.nombre
+//   const direccionEmpresa = idempresa.empresa.direccion
+//   const telefonoEmpresa = idempresa.empresa.telefono
+//   const nombre = idempresa.nombre
+//   const cargo = idempresa.cargo
+
+//   // === TABLA 1: Conceptos ===
+//   const conceptos = datosCierreCaja.conceptos.map((item) => ({
+//     concepto: item.concepto,
+//     sistema: item.sistema,
+//     contado: item.contado,
+//     diferencia: item.diferencia,
+//   }))
+
+//   autoTable(doc, {
+//     head: [['', 'Según Sistema', 'Según Arqueo', 'Diferencia']],
+//     body: conceptos.map((c) => [c.concepto, c.sistema, c.contado, c.diferencia]),
+//     startY: 49,
+//     margin: { horizontal: 5 },
+//     theme: 'striped',
+//     styles: { fontSize: 7, cellPadding: 2 },
+//     headStyles: { fillColor: [128, 128, 128], textColor: 255 },
+//     didDrawPage: () => {
+//       if (doc.internal.getNumberOfPages() === 1) {
+//         // Logo (requiere base64 o ruta absoluta en servidor si usas Node)
+//         if (logoBase64) {
+//           const pageWidth = doc.internal.pageSize.getWidth() // Ancho total página
+//           const imgWidth = 20 // Ancho del logo en mm
+//           const imgHeight = 20 // Alto del logo en mm
+//           const xPos = pageWidth - imgWidth - 10 // 10mm de margen derecho
+//           const yPos = 5 // margen superior
+//           doc.addImage(logoBase64, 'JPEG', xPos, yPos, imgWidth, imgHeight)
+//         }
+//         // Nombre y datos de empresa
+//         doc.setFontSize(7)
+//         doc.setFont(undefined, 'bold')
+//         doc.text(nombreEmpresa, 5, 10)
+//         doc.setFontSize(6)
+//         doc.setFont(undefined, 'normal')
+//         doc.text(direccionEmpresa, 5, 13)
+//         doc.text(`Tel: ${telefonoEmpresa}`, 5, 16)
+//         // Título centrado
+//         doc.setFontSize(10)
+//         doc.setFont(undefined, 'bold')
+//         doc.text('CIERRE PUNTO VENTA', doc.internal.pageSize.getWidth() / 2, 15, {
+//           align: 'center',
+//         })
+//         doc.setFontSize(6)
+//         doc.setFont(undefined, 'normal')
+//         doc.text('Creado ' + datosCierreCaja.creado_en, doc.internal.pageSize.getWidth() / 2, 18, {
+//           align: 'center',
+//         })
+//         doc.setDrawColor(0) // Color negro
+//         doc.setLineWidth(0.2) // Grosor de la línea
+//         doc.line(5, 30, 200, 30) // De (x1=5, y1=25) a (x2=200, y2=25)
+//         doc.setFontSize(7)
+//         doc.setFont(undefined, 'bold')
+//         doc.text('DATOS DEL REPORTE', 5, 35)
+//         doc.setFontSize(6)
+//         doc.setFont(undefined, 'normal')
+//         doc.text('Fecha Apertura : ' + datosCierreCaja.fecha_inicio, 5, 38)
+//         doc.setFontSize(6)
+//         doc.setFont(undefined, 'normal')
+//         doc.text('Fecha Cierre : ' + datosCierreCaja.fecha_fin, 5, 41)
+//         doc.setFontSize(6)
+//         doc.setFont(undefined, 'normal')
+//         doc.text('Punto de Venta: ' + datosCierreCaja.punto_venta, 5, 44)
+//         doc.setFontSize(6)
+//         doc.setFont(undefined, 'normal')
+//         doc.text('Fecha de Impresion: ' + cambiarFormatoFecha(obtenerFechaActualDato()), 5, 47)
+//         doc.setFontSize(7)
+//         doc.setFont(undefined, 'bold')
+//         doc.text('DATOS DEL ENCARGADO:', 200, 35, { align: 'right' })
+//         doc.setFontSize(6)
+//         doc.setFont(undefined, 'normal')
+//         doc.text(nombre, 200, 38, { align: 'right' })
+//         doc.setFontSize(6)
+//         doc.setFont(undefined, 'normal')
+//         doc.text(cargo, 200, 41, { align: 'right' })
+//       }
+//     },
+//   })
+
+//   // === TABLA 2: Métodos de Pago ===
+//   const metodos = datosCierreCaja.metodos_pago.map((m) => ({
+//     metodo: m.metodo + ' (' + m.tipo + ')',
+//     sistema: m.total_sistema,
+//     contado: m.total_contado,
+//     diferencia: m.diferencia,
+//   }))
+
+//   autoTable(doc, {
+//     head: [['Método', 'Total Sistema', 'Total Contado', 'Diferencia']],
+//     body: metodos.map((m) => [m.metodo, m.sistema, m.contado, m.diferencia]),
+//     startY: doc.lastAutoTable.finalY + 10,
+//     margin: { horizontal: 5 },
+//     theme: 'grid',
+//     styles: { fontSize: 7 },
+//     headStyles: { fillColor: [128, 128, 128], textColor: 255 },
+//   })
+
+//   // === TABLA 3: Arqueo Físico ===
+//   const arqueo = datosCierreCaja.arqueo_fisico.map((a) => ({
+//     label: a.label,
+//     valor: a.valor_moneda,
+//     cantidad: a.cantidad,
+//     subtotal: (parseFloat(a.valor_moneda) * parseInt(a.cantidad || 0)).toFixed(2),
+//   }))
+
+//   autoTable(doc, {
+//     head: [['Denominación', 'Valor', 'Cantidad', 'Subtotal']],
+//     body: arqueo.map((a) => [a.label, a.valor, a.cantidad, a.subtotal]),
+//     startY: doc.lastAutoTable.finalY + 10,
+//     margin: { horizontal: 5 },
+//     theme: 'striped',
+//     styles: { fontSize: 7 },
+//     headStyles: { fillColor: [128, 128, 128], textColor: 255 },
+//   })
+
+//   return doc
+// }
+
+export function PDFCierreCaja(datosCierreCaja) {
+  const contenidousuario = validarUsuario()
+  const doc = new jsPDF({ orientation: 'portrait' })
+
+  const idempresa = contenidousuario[0]
+  const nombreEmpresa = idempresa.empresa.nombre
+  const direccionEmpresa = idempresa.empresa.direccion
+  const telefonoEmpresa = idempresa.empresa.telefono
+  const nombre = idempresa.nombre
+  const cargo = idempresa.cargo
+
+  // === Información del Encabezado ===
+  if (logoBase64) {
+    const pageWidth = doc.internal.pageSize.getWidth()
+    const imgWidth = 20
+    const imgHeight = 20
+    const xPos = pageWidth - imgWidth - 10
+    const yPos = 5
+    doc.addImage(logoBase64, 'JPEG', xPos, yPos, imgWidth, imgHeight)
+  }
+  doc.setFontSize(7)
+  doc.setFont(undefined, 'bold')
+  doc.text(nombreEmpresa, 5, 10)
+  doc.setFontSize(6)
+  doc.setFont(undefined, 'normal')
+  doc.text(direccionEmpresa, 5, 13)
+  doc.text(`Tel: ${telefonoEmpresa}`, 5, 16)
+
+  doc.setFontSize(10)
+  doc.setFont(undefined, 'bold')
+  doc.text('CIERRE PUNTO VENTA', doc.internal.pageSize.getWidth() / 2, 15, {
+    align: 'center',
+  })
+  doc.setFontSize(6)
+  doc.setFont(undefined, 'normal')
+  doc.text('Creado ' + datosCierreCaja.creado_en, doc.internal.pageSize.getWidth() / 2, 18, {
+    align: 'center',
+  })
+
+  doc.setDrawColor(0)
+  doc.setLineWidth(0.2)
+  doc.line(5, 30, 200, 30)
+
+  doc.setFontSize(7)
+  doc.setFont(undefined, 'bold')
+  doc.text('DATOS DEL REPORTE', 5, 35)
+  doc.setFontSize(6)
+  doc.setFont(undefined, 'normal')
+  doc.text('Fecha Apertura : ' + datosCierreCaja.fecha_inicio, 5, 38)
+  doc.text('Fecha Cierre : ' + datosCierreCaja.fecha_fin, 5, 41)
+  doc.text('Punto de Venta: ' + datosCierreCaja.punto_venta, 5, 44)
+  doc.text('Fecha de Impresión: ' + cambiarFormatoFecha(obtenerFechaActualDato()), 5, 47)
+
+  doc.setFontSize(7)
+  doc.setFont(undefined, 'bold')
+  doc.text('DATOS DEL ENCARGADO:', 200, 35, { align: 'right' })
+  doc.setFontSize(6)
+  doc.setFont(undefined, 'normal')
+  doc.text(nombre, 200, 38, { align: 'right' })
+  doc.text(cargo, 200, 41, { align: 'right' })
+
+  // === TABLA 1: Conceptos ===
+  const conceptos = datosCierreCaja.conceptos.map((item) => ({
+    concepto: item.concepto,
+    sistema: item.sistema,
+    contado: item.contado,
+    diferencia: item.diferencia,
+  }))
+
+  autoTable(doc, {
+    head: [['', 'Según Sistema', 'Según Arqueo', 'Diferencia']],
+    body: conceptos.map((c) => [c.concepto, c.sistema, c.contado, c.diferencia]),
+    startY: 55,
+    margin: { horizontal: 5 },
+    theme: 'striped',
+    styles: { fontSize: 7, cellPadding: 2, halign: 'right' },
+    headStyles: { fillColor: [128, 128, 128], textColor: 255, halign: 'center' },
+    columnStyles: {
+      0: { halign: 'left' },
+    },
+  })
+
+  // === TABLA 2: Métodos de Pago ===
+  const metodos = datosCierreCaja.metodos_pago.map((m) => ({
+    metodo: m.metodo + ' (' + m.tipo + ')',
+    sistema: m.total_sistema,
+    contado: m.total_contado,
+    diferencia: m.diferencia,
+  }))
+
+  autoTable(doc, {
+    head: [['Método', 'Total Sistema', 'Total Contado', 'Diferencia']],
+    body: metodos.map((m) => [m.metodo, m.sistema, m.contado, m.diferencia]),
+    startY: doc.lastAutoTable.finalY + 10,
+    margin: { horizontal: 5 },
+    theme: 'striped',
+    styles: { fontSize: 7, cellPadding: 2, halign: 'right' },
+    headStyles: { fillColor: [128, 128, 128], textColor: 255, halign: 'center' },
+    columnStyles: {
+      0: { halign: 'left' },
+    },
+  })
+
+  // === TABLA 3: Arqueo Físico ===
+  const arqueo = datosCierreCaja.arqueo_fisico.map((a) => {
+    const subtotal = (parseFloat(a.valor_moneda) * parseInt(a.cantidad || 0)).toFixed(2)
+    return {
+      label: a.label,
+      valor: a.valor_moneda,
+      cantidad: a.cantidad,
+      subtotal: subtotal,
+    }
+  })
+
+  autoTable(doc, {
+    head: [['Denominación', 'Valor', 'Cantidad', 'Subtotal']],
+    body: arqueo.map((a) => [a.label, a.valor, a.cantidad, a.subtotal]),
+    startY: doc.lastAutoTable.finalY + 10,
+    margin: { horizontal: 5 },
+    theme: 'striped',
+    styles: { fontSize: 7, cellPadding: 2, halign: 'right' },
+    headStyles: { fillColor: [128, 128, 128], textColor: 255, halign: 'center' },
+    columnStyles: {
+      0: { halign: 'left' },
+    },
+  })
+
+  // === TABLA 4: Totales ===
+  const totalConceptos = datosCierreCaja.conceptos.reduce(
+    (acc, item) => acc + parseFloat(item.diferencia),
+    0,
+  )
+  const totalMetodosPago = datosCierreCaja.metodos_pago.reduce(
+    (acc, item) => acc + parseFloat(item.diferencia),
+    0,
+  )
+  const totalArqueoFisico = datosCierreCaja.arqueo_fisico.reduce(
+    (acc, item) => acc + parseFloat(item.cantidad * item.valor_moneda),
+    0,
+  )
+
+  const totales = [
+    ['Total Diferencia Conceptos', '', '', totalConceptos],
+    ['Total Diferencia Métodos de Pago', '', '', totalMetodosPago],
+    ['Total Arqueo Físico', '', '', totalArqueoFisico],
+  ]
+
+  autoTable(doc, {
+    head: [['Resumen de Totales', '', '', '']],
+    body: totales,
+    startY: doc.lastAutoTable.finalY + 10,
+    margin: { horizontal: 5 },
+    theme: 'grid',
+    styles: { fontSize: 7, cellPadding: 2, fontStyle: 'bold', halign: 'right' },
+    headStyles: { fillColor: [128, 128, 128], textColor: 255, halign: 'center' },
+    columnStyles: {
+      0: { halign: 'left' },
+    },
+  })
+
+  // Observaciones
+  const finalY = doc.lastAutoTable.finalY + 5
+  doc.setFontSize(8)
+  doc.setFont(undefined, 'bold')
+  doc.text('Observaciones:', 5, finalY + 5)
+  doc.setFontSize(7)
+  doc.setFont(undefined, 'normal')
+  const splitText = doc.splitTextToSize(datosCierreCaja.observacion || 'Sin observaciones.', 190)
+  doc.text(splitText, 5, finalY + 10)
+
+  return doc
+}
+
+export function PDFpedidos(ordenados, tipoestados, filtroAlmacen) {
+  const contenidousuario = validarUsuario()
+  const doc = new jsPDF({ orientation: 'portrait' })
+
+  const idempresa = contenidousuario[0]
+  const nombreEmpresa = idempresa.empresa.nombre
+  const direccionEmpresa = idempresa.empresa.direccion
+  const telefonoEmpresa = idempresa.empresa.telefono
+  const nombre = idempresa.nombre
+  const cargo = idempresa.cargo
+  const columns = [
+    { header: 'N', dataKey: 'indice' },
+    { header: 'Fecha', dataKey: 'fecha' },
+    { header: 'Almacén Destino', dataKey: 'almacen' },
+    { header: 'Almacén Origen', dataKey: 'almacenorigen' },
+
+    { header: 'Código', dataKey: 'codigo' },
+    { header: 'Nro.Pedido', dataKey: 'nropedido' },
+    { header: 'Tipo', dataKey: 'tipopedido' },
+
+    { header: 'Observación', dataKey: 'observacion' },
+    { header: 'Autorización', dataKey: 'autorizacion' },
+    { header: 'Esatado', dataKey: 'estado' },
+  ]
+
+  const datos = ordenados.value.map((item, indice) => ({
+    indice: indice + 1,
+    fecha: item.fecha,
+    codigo: item.codigo,
+    nropedido: item.nropedido,
+    tipopedido: Number(item.tipopedido) === 1 ? 'Pedido Compra' : 'Pedido Movimiento',
+    almacenorigen: item.almacenorigen,
+    almacen: item.almacen,
+    observacion: item.observacion,
+    estado: tipoestados[Number(item.estado)],
+    autorizacion: item.autorizacion == 2 ? 'No Autorizado' : 'Autorizado',
+  }))
+
+  autoTable(doc, {
+    columns,
+    body: datos,
+    styles: {
+      overflow: 'linebreak',
+      fontSize: 5,
+      cellPadding: 2,
+    },
+    headStyles: {
+      fillColor: [22, 160, 133],
+      textColor: 255,
+      halign: 'center',
+    },
+    columnStyles: {
+      indice: { cellWidth: 10, halign: 'center' },
+      fecha: { cellWidth: 15, halign: 'left' },
+      codigo: { cellWidth: 25, halign: 'left' },
+      nropedido: { cellWidth: 10, halign: 'center' },
+      tipopedido: { cellWidth: 25, halign: 'left' },
+      almacenorigen: { cellWidth: 20, halign: 'left' },
+      almacen: { cellWidth: 20, halign: 'left' },
+      observacion: { cellWidth: 35, halign: 'left' },
+      estado: { cellWidth: 15, halign: 'left' },
+      autorizacion: { cellWidth: 20, halign: 'left' },
+    },
+    //20 + 15 + 20 + 25 + 30 + 20 + 20 + 25 + 20 + 15 + 20 + 15 + 20 = 265 mm
+
+    startY: 45,
+    margin: { horizontal: 5 },
+    theme: 'striped',
+    didDrawPage: () => {
+      if (doc.internal.getNumberOfPages() === 1) {
+        // Logo (requiere base64 o ruta absoluta en servidor si usas Node)
+        if (logoBase64) {
+          const pageWidth = doc.internal.pageSize.getWidth() // Ancho total página
+          const imgWidth = 20 // Ancho del logo en mm
+          const imgHeight = 20 // Alto del logo en mm
+          const xPos = pageWidth - imgWidth - 10 // 10mm de margen derecho
+          const yPos = 5 // margen superior
+
+          doc.addImage(logoBase64, 'JPEG', xPos, yPos, imgWidth, imgHeight)
+        }
+
+        // Nombre y datos de empresa
+        doc.setFontSize(7)
+        doc.setFont(undefined, 'bold')
+        doc.text(nombreEmpresa, 5, 10)
+
+        doc.setFontSize(6)
+        doc.setFont(undefined, 'normal')
+        doc.text(direccionEmpresa, 5, 13)
+        doc.text(`Tel: ${telefonoEmpresa}`, 5, 16)
+
+        // Título centrado
+        doc.setFontSize(10)
+        doc.setFont(undefined, 'bold')
+        doc.text('PEDIDOS', doc.internal.pageSize.getWidth() / 2, 15, { align: 'center' })
+
+        doc.setDrawColor(0) // Color negro
+        doc.setLineWidth(0.2) // Grosor de la línea
+        doc.line(5, 30, 200, 30) // De (x1=5, y1=25) a (x2=200, y2=25)
+
+        doc.setFontSize(7)
+        doc.setFont(undefined, 'bold')
+        doc.text('DATOS DEL REPORTE', 5, 35)
+        console.log(filtroAlmacen.value)
+        doc.setFontSize(6)
+        doc.setFont(undefined, 'normal')
+        doc.text(
+          'Nombre del Almacen: ' + (filtroAlmacen.value?.label || 'Todos los Almacenes'),
+          5,
+          38,
+        )
+
+        doc.setFontSize(6)
+        doc.setFont(undefined, 'normal')
+        doc.text('Fecha de Impresion: ' + cambiarFormatoFecha(obtenerFechaActualDato()), 5, 41)
+
+        doc.setFontSize(7)
+        doc.setFont(undefined, 'bold')
+        doc.text('DATOS DEL ENCARGADO:', 200, 35, { align: 'right' })
+
+        doc.setFontSize(6)
+        doc.setFont(undefined, 'normal')
+        doc.text(nombre, 200, 38, { align: 'right' })
+
+        doc.setFontSize(6)
+        doc.setFont(undefined, 'normal')
+        doc.text(cargo, 200, 41, { align: 'right' })
       }
     },
   })

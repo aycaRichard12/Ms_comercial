@@ -1,7 +1,7 @@
 <template>
-  <q-card-section class="row flex justify-between">
+  <div class="row flex justify-between">
     <!-- Filtro por almacén -->
-    <div class="col-6">
+    <div class="col-12 col-md-4">
       <label for="almacen">Almacén</label>
       <q-select
         v-model="filtroAlmacen"
@@ -21,7 +21,7 @@
 
       <span class="texto">Vista previa PDF</span>
     </q-btn>
-  </q-card-section>
+  </div>
   <div class="row flex justify-end">
     <div class="">
       <label for="buscar">Buscar...</label>
@@ -53,7 +53,7 @@
           flat
           dense
           icon="edit"
-          color="info"
+          color="primary"
           @click="editarProducto(props.row)"
           title="Editar producto"
         />
@@ -82,7 +82,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { validarUsuario } from 'src/composables/FuncionesGenerales'
 import jsPDF from 'jspdf'
 import autoTable from 'jspdf-autotable'
@@ -159,6 +159,16 @@ const filtrados = computed(() => {
   }))
 })
 
+watch(
+  () => props.almacenes,
+  (nuevosAlmacenes) => {
+    if (nuevosAlmacenes.length > 0 && !filtroAlmacen.value) {
+      console.log(nuevosAlmacenes)
+      filtroAlmacen.value = nuevosAlmacenes[0]
+    }
+  },
+  { immediate: true },
+)
 // Emitir evento de edición
 function editarProducto(id) {
   emit('edit', id)

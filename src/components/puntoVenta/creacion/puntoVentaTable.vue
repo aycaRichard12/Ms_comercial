@@ -56,8 +56,9 @@
           dense
           class="q-mr-sm"
           @click="$emit('edit-item', props.row)"
+          flat
         />
-        <q-btn icon="delete" color="negative" dense @click="$emit('delete-item', props.row)" />
+        <q-btn icon="delete" color="negative" dense @click="$emit('delete-item', props.row)" flat />
       </q-td>
     </template>
   </q-table>
@@ -95,7 +96,15 @@ const ordenados = computed(() =>
   })),
 )
 const search = ref('')
-
+watch(
+  () => props.tiposAlmacen,
+  (nuevosAlmacenes) => {
+    if (nuevosAlmacenes.length > 0 && !filtroTipoAlmacen.value) {
+      filtroTipoAlmacen.value = nuevosAlmacenes[0].value
+    }
+  },
+  { immediate: true },
+)
 watch(filtroTipoAlmacen, (val) => {
   emit('onSeleccionarTipo', val)
 })

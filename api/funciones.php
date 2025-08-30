@@ -1,5 +1,4 @@
 <?php
-require_once "../db/conexion.php";
 class Funciones
 {
     private $conexion;
@@ -37,6 +36,7 @@ class Funciones
             return "false";
         }
     }
+    
 
     public function convertirObjeto($objeto) {
         $nuevoFormato = [];
@@ -163,7 +163,45 @@ class Funciones
       return $datos;
   }
 
-  public function ventasPorFechaYPV_ids($fecha,$puntoventa){
+  public function cotizacionventaFechayPV_ids($fechai,$fechaf,$puntoventa){
+      $res = [];
+      $sql = "SELECT DISTINCT
+              c.id_cotizacion
+              FROM punto_venta pv 
+              inner JOIN almacen a on pv.idalmacen = a.id_almacen
+              inner JOIN productos_almacen pa on pa.almacen_id_almacen = a.id_almacen 
+              inner JOIN productos p on p.id_productos = pa.productos_id_productos
+              inner JOIN detalle_cotizacion dc on dc.productos_almacen_id_productos_almacen = pa.id_productos_almacen 
+              inner JOIN cotizacion c on c.id_cotizacion = dc.cotizacion_id_cotizacion
+              where c.fecha_cotizacion BETWEEN ? AND ? and pv.idpunto_venta = ? and c.estado = 1";
+
+      $stm = $this->cm->prepare($sql);
+
+      if(!$stm){
+        return [];
+      }
+
+      $stm->bind_param('ssi',$fechai,$fechaf,$puntoventa);
+
+      $stm->execute();
+      
+      $result = $stm->get_result();
+
+      if(!$result){
+        return [];
+      }
+
+      while ($qwe = $result->fetch_assoc()) {
+        $res[] = $qwe['id_cotizacion'];
+      }
+      $stm->close();
+
+      $resultado = implode(',', $res);
+
+      return $resultado;
+  }
+
+  public function ventasPorFechaYPV_ids($fechai,$fechaf,$puntoventa){
     $res = [];
     $sql = "SELECT DISTINCT
             v.id_venta
@@ -173,14 +211,14 @@ class Funciones
             inner JOIN productos p on p.id_productos = pa.productos_id_productos
             inner JOIN detalle_venta dv on dv.productos_almacen_id_productos_almacen = pa.id_productos_almacen 
             inner JOIN venta v on v.id_venta = dv.venta_id_venta
-            WHERE v.fecha_venta = ?  and pv.idpunto_venta = ?";
+            WHERE v.fecha_venta BETWEEN ? AND ? and pv.idpunto_venta = ?";
 
     $stm = $this->cm->prepare($sql);
     if(!$stm){
       return [];
     }
 
-    $stm->bind_param('si',$fecha,$puntoventa);
+    $stm->bind_param('ssi',$fechai,$fechaf,$puntoventa);
 
     $stm->execute();
     
@@ -199,7 +237,7 @@ class Funciones
 
     return $resultado;
   }
-  public function ventasPorFechaYANUL_ids($fecha,$puntoventa){
+  public function ventasPorFechaYANUL_ids($fechai,$fechaf,$puntoventa){
     $res = [];
     $sql = "SELECT DISTINCT
             v.id_venta
@@ -210,14 +248,14 @@ class Funciones
             LEFT JOIN detalle_venta dv on dv.productos_almacen_id_productos_almacen = pa.id_productos_almacen 
             LEFT JOIN venta v on v.id_venta = dv.venta_id_venta
             inner JOIN anulaciones anl on anl.venta_id_venta = dv.venta_id_venta
-            WHERE v.fecha_venta = ? and pv.idpunto_venta = ?";
+            WHERE v.fecha_venta BETWEEN ? AND ? and pv.idpunto_venta = ?";
 
     $stm = $this->cm->prepare($sql);
     if(!$stm){
       return [];
     }
 
-    $stm->bind_param('si',$fecha,$puntoventa);
+    $stm->bind_param('ssi',$fechai,$fechaf,$puntoventa);
 
     $stm->execute();
     
@@ -236,16 +274,16 @@ class Funciones
 
     return $resultado;
   }
-  public function comprasPorFechaYPV_ids($fecha,$puntoventa){
+  
+  public function comprasPorFechaYPV_ids($fechai,$fechaf,$puntoventa){
     $res = [];
     $sql = "SELECT DISTINCT
             ig.id_ingreso
-            AS monto
             FROM punto_venta pv
             LEFT JOIN almacen a ON pv.idalmacen = a.id_almacen 
             LEFT JOIN ingreso ig ON ig.almacen_id_almacen = a.id_almacen
             LEFT JOIN detalle_ingreso di ON di.ingreso_id_ingreso = ig.id_ingreso
-            WHERE ig.fecha_ingreso = ? 
+            WHERE ig.fecha_ingreso BETWEEN ? AND ?
               AND pv.idpunto_venta = ?;";
 
     $stm = $this->cm->prepare($sql);
@@ -253,7 +291,7 @@ class Funciones
       return [];
     }
 
-    $stm->bind_param('si',$fecha,$puntoventa);
+    $stm->bind_param('ssi',$fechai,$fechaf,$puntoventa);
 
     $stm->execute();
     
@@ -264,7 +302,7 @@ class Funciones
     }
 
     while ($qwe = $result->fetch_assoc()) {
-      $res[] = $qwe['id_venta'];
+      $res[] = $qwe['id_ingreso'];
     }
     $stm->close();
 

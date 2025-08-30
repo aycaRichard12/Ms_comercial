@@ -3,19 +3,18 @@
     <q-card-section class="row q-col-gutter-x-md">
       <div class="col-12 col-md-3">
         <label for="tipo">Tipo de registro*</label>
-        <q-select
-          v-model="localData.tipoRegistro"
-          :options="tiposRegistro"
-          id="tipo"
-          emit-value
+
+        <q-toggle
+          v-model="isIngresoConPedido"
+          label="Ingreso con pedido"
           dense
-          outlined=""
-          :rules="[(val) => !!val || 'Campo requerido']"
+          outlined
+          id="tipo"
         />
       </div>
 
       <!-- Mostrar selezct de pedido solo si tipoRegistro es '1' -->
-      <div class="col-12 col-md-3" v-if="localData.tipoRegistro === '1'">
+      <div class="col-12 col-md-3" v-if="conPEdido">
         <label for="pedido">Pedido*</label>
         <q-select
           v-model="localData.pedido"
@@ -30,7 +29,7 @@
       </div>
 
       <!-- Mostrar almacén solo si tipoRegistro es '2' -->
-      <div class="col-12 col-md-3" v-if="localData.tipoRegistro === '2'">
+      <div class="col-12 col-md-3" v-if="conPEdido === false">
         <label for="almacen">Almacén*</label>
         <q-select
           v-model="localData.almacen"
@@ -71,12 +70,17 @@
         <label for="provedor">Proveedor*</label>
         <q-select
           v-model="localData.proveedor"
-          :options="props.proveedores"
+          :options="filteredProveedores"
           id="provedor"
           dense
           outlined
           emit-value
           map-options
+          use-input
+          fill-input
+          hide-selected
+          input-debounce="0"
+          @filter="filterFn"
           :rules="[(val) => !!val || 'Campo requerido']"
         />
       </div>
@@ -101,22 +105,22 @@
       </div>
     </q-card-section>
 
-    <q-card-actions align="right">
-      <q-btn label="Cancelar" flat color="negative" @click="$emit('cancel')" />
+    <q-card-actions class="flex justify-start">
       <q-btn label="Guardar" type="submit" color="primary" />
+      <q-btn label="Cancelar" flat color="negative" @click="$emit('cancel')" />
     </q-card-actions>
   </q-form>
 </template>
 
 <script setup>
-import { ref, watch } from 'vue'
+import { ref, watch, computed } from 'vue'
 import { api } from 'boot/axios'
 import { idempresa_md5 } from 'src/composables/FuncionesGenerales'
 import { useQuasar } from 'quasar'
 
 const $q = useQuasar()
 const idempresa = idempresa_md5()
-
+const conPEdido = ref(true)
 const props = defineProps({
   editing: Boolean,
   modalValue: Object,
@@ -128,16 +132,32 @@ const emit = defineEmits(['submit', 'cancel'])
 const pedidos = ref([])
 const localData = ref({ ...props.modalValue })
 
-const tiposRegistro = [
-  { label: 'Ingreso con pedido', value: '1' },
-  { label: 'Ingreso sin pedido', value: '2' },
-]
+const isIngresoConPedido = computed({
+  get() {
+    // La vista lee este valor para saber si el toggle está 'encendido'
+    console.log(localData.value)
+    verificar()
+    return localData.value.tipoRegistro === 1
+  },
+  set(val) {
+    // Cuando el usuario cambia el toggle, actualizamos el valor original
+    console.log(localData)
+    localData.value.tipoRegistro = val ? 1 : 2
+    // Llamamos a la función 'verificar' como antes
+    verificar()
+  },
+})
 const tiposCompra = [{ label: 'Al contado', value: '2' }]
 
 const onSubmit = () => {
   emit('submit', localData.value)
 }
 
+const verificar = () => {
+  const tipo = localData.value.tipoRegistro
+  console.log(tipo)
+  conPEdido.value = tipo == 1
+}
 async function cargarPedidos() {
   try {
     const idAlmacenes = props.almacenes.map((obj) => obj.value)
@@ -159,7 +179,24 @@ async function cargarPedidos() {
     })
   }
 }
+const filteredProveedores = ref([...props.proveedores])
 
+// Función de filtrado
+function filterFn(val, update) {
+  if (val === '') {
+    update(() => {
+      filteredProveedores.value = [...props.proveedores]
+    })
+    return
+  }
+
+  update(() => {
+    const needle = val.toLowerCase()
+    filteredProveedores.value = props.proveedores.filter((v) =>
+      v.label.toLowerCase().includes(needle),
+    )
+  })
+}
 // Esperar a que los almacenes estén disponibles
 watch(
   () => props.almacenes,

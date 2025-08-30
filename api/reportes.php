@@ -1326,7 +1326,7 @@ class reportes
         echo json_encode($lista);
     }
 
-    public function calcularCrecimiento($fechaReferencia, $tipo = 'a', $idmd5)
+    public function calcularCrecimiento($fechaReferencia, $tipo = 'a', $idmd5 = null)
     {
         $idempresa = $this->verificar->verificarIDEMPRESAMD5($idmd5);
 
@@ -1421,36 +1421,159 @@ class reportes
         echo json_encode($monto);
     }
 
-    public function arqueoPuntoVenta($fecha,$pv,$idmd5){
+    public function puntosVentaUsuario($idmd5)
+    {
+        $lista = [];
+        $idusuario = $this->verificar->verificarIDUSERMD5($idmd5);
+        // Consulta principal
+        $rep = $this->cm->query("
+            SELECT 
+                pv.idpunto_venta,
+                pv.nombre,
+                pv.descripcion,
+                pv.tipo,
+                pv.codigoSucursal,
+                pv.idalmacen,
+                pv.estadosin,
+                pv.codigosin
+            FROM punto_venta pv
+            LEFT JOIN responsable_puntoventa rpv 
+                ON rpv.idpuntoventa = pv.idpunto_venta 
+            LEFT JOIN responsable r 
+                ON r.id_responsable = rpv.idresponsable
+            WHERE r.id_usuario = '" . $idusuario . "'
+        ");
+
+        while ($row = $this->cm->fetch($rep)) {
+            $res = array(
+                "idpunto_venta"  => $row[0],
+                "nombre"         => $row[1],
+                "descripcion"    => $row[2],
+                "tipo"           => $row[3],
+                "codigoSucursal" => $row[4],
+                "idalmacen"      => $row[5],
+                "estadosin"      => $row[6],
+                "codigosin"      => $row[7]
+            );
+            array_push($lista, $res);
+        }
+
+        
+        echo json_encode($lista);
+    }
+
+    public function arqueoPuntoVenta($fechai,$fechaf,$pv,$idmd5){
         $idempresa = $this->verificar->verificarIDEMPRESAMD5($idmd5);
-        $idVentas = $this->verificar->ventasPorFechaYPV_ids($fecha,$pv);
-        $idAnuladas = $this->verificar->ventasPorFechaYANUL_ids($fecha,$pv);
-        $idcompras = $this->verificar->comprasPorFechaYPV_ids($fecha,$pv);
+        $idVentas = $this->verificar->ventasPorFechaYPV_ids($fechai,$fechaf,$pv);
+        $idAnuladas = $this->verificar->ventasPorFechaYANUL_ids($fechai,$fechaf,$pv);
+        $idIngresos = $this->verificar->comprasPorFechaYPV_ids($fechai,$fechaf,$pv);
+        $idcotizaciones = $this->verificar->cotizacionventaFechayPV_ids($fechai,$fechaf,$pv);
+
+        $idVentas = empty($idVentas) ? 0 : $idVentas;
+        $idAnuladas = empty($idAnuladas) ? 0 : $idAnuladas;
+        $idCompras = empty($idIngresos) ? 0 : $idIngresos;
+        $idcotizaciones = empty($idcotizaciones) ? 0 : $idcotizaciones;
+
+        
         $sqlMontoIngreso = "SELECT sum(v.monto_total) AS total FROM venta v WHERE v.id_venta IN ($idVentas) AND v.id_venta NOT IN ($idAnuladas)";
-
-
-        $idVentas = empty($idVentas) ? '0' : $idVentas;
-        $idAnuladas = empty($idAnuladas) ? '0' : $idAnuladas;
-        $idCompras = empty($idCompras) ? '0' : $idCompras;
+        
+        $sqlMontoCotizacion = "SELECT sum(c.monto_total) AS total FROM cotizacion c WHERE c.id_cotizacion IN ($idcotizaciones)";
+       
 
         $sqlMontoAnuladas = "SELECT sum(v.monto_total) AS total FROM venta v WHERE v.id_venta IN ($idAnuladas)";
 
-        $sqlMontoEgreso = "SELECT sum(di.precio_unitario * di.cantidad) AS total FROM ingreso i 
-                            INNER JOIN detalle_ingreso di ON di.ingreso_id_ingreso = i.id_ingreso
-                            WHERE i.id_ingreso IN ($idcompras)";
+        $sqlMontoEgreso = "SELECT sum(di.precio_unitario * di.cantidad) AS total FROM ingreso i INNER JOIN detalle_ingreso di ON di.ingreso_id_ingreso = i.id_ingreso WHERE i.id_ingreso IN ($idCompras)";
 
-        $montoIngreso = $this->getValorUnico($sqlMontoIngreso);
+        $montoCotizacion = $this->getValorUnico($sqlMontoCotizacion);
+        if ($montoCotizacion === null) {
+            $montoCotizacion = 0; // Si no hay cotizaciones, establecer a 0
+        } 
+        $montoIngreso = $this->getValorUnico($sqlMontoIngreso);         
         $montoAnuladas = $this->getValorUnico($sqlMontoAnuladas);
         $montoEgreso = $this->getValorUnico($sqlMontoEgreso);
 
-        $metodos_pago = $this->verificar->MetodosPagos($idempresa);//[]
+        
+        $metodos_pago = $this->verificar->MetodosPagos($idempresa);
+        // resultado
+        // [
+        //     [
+        //         "id" => 1,
+        //         "nombre" => "Efectivo",
+        //         "codigosin" => 101
+        //     ],
+        //     [
+        //         "id" => 2,
+        //         "nombre" => "Tarjeta de Débito",
+        //         "codigosin" => 102
+        //     ],
+        // ]
+        $lista_metodos_ventas = [];
+        $lista_metodos_cotizacion = [];
+
+        foreach ($metodos_pago as $metodo) {
+            $idMetodo = $metodo['id'];
+
+            $sql = "
+                SELECT SUM(pv.monto) AS total
+                FROM pagoVenta pv
+                LEFT JOIN venta v ON v.id_venta = pv.id_venta
+                WHERE pv.id_canalventa = $idMetodo AND pv.tipo != 2 AND v.id_venta in ($idVentas)
+            ";
+
+            $monto = $this->getValorUnico($sql);
+
+            $arqueo = [
+                "id" => $metodo['id'],
+                "metodo" => $metodo['nombre'],
+                "monto" => floatval($monto),
+                "tipo" => "Facturas"
+            ];
+
+            $lista_metodos_ventas[] = $arqueo;
+        }
+
+       foreach ($metodos_pago as $metodo) {
+            $idMetodo = $metodo['id'];
+
+            $sql = "
+                SELECT SUM(pv.monto) AS total
+                FROM pagoVenta pv
+                LEFT JOIN cotizacion c ON c.id_cotizacion = pv.id_venta
+                WHERE pv.id_canalventa = $idMetodo AND pv.tipo = 2 AND c.id_cotizacion in ($idcotizaciones)
+            ";
+
+            $monto = $this->getValorUnico($sql);
+
+            $arqueo = [
+
+                "id" => $metodo['id'],
+                "metodo" => $metodo['nombre'],
+                "monto" => floatval($monto),
+                "tipo" => "Facturas"
+            ];
+
+            $lista_metodos_cotizacion[] = $arqueo;
+        }
+        
 
 
 
         return [
+            // 'sqlMontoIngreso' => $sqlMontoIngreso,
+            // 'sqlMontoEgreso'=>$sqlMontoEgreso,
+            // 'sqlMontoAnuladas' => $sqlMontoAnuladas,
+            'fecha' => '' . $fechai . ' - ' . $fechaf . '',
+            'idempresa' => $idempresa,
+            'pv' => $pv,
+            'cotizaciones' => floatval($montoCotizacion),
             'ingresos' => floatval($montoIngreso),
             'anuladas' => floatval($montoAnuladas),
-            'egresos' => floatval($montoEgreso)
+            'egresos' => floatval($montoEgreso),
+            'arqueo_x_pv' => $lista_metodos_ventas,
+            'arqueo_x_cotizacion' => $lista_metodos_cotizacion,
+            //'ventas' => $idVentas,
+            // 'compras' => $idCompras,
+            // 'anuladas' => $idAnuladas, reportepedidos
         ];
 
     }
@@ -1466,4 +1589,4 @@ class reportes
 
 
 
-//reportecotizacion
+//listadoConfigParametricas

@@ -13,6 +13,7 @@ export const useMenuStore = defineStore('menu', {
           menuPrincipal: [],
           permisos: {},
           todos: [],
+          modulo: [],
         }
       }
 
@@ -27,6 +28,7 @@ export const useMenuStore = defineStore('menu', {
           menuPrincipal: [],
           permisos: {},
           todos: [],
+          modulo: [],
         }
       }
 
@@ -39,21 +41,22 @@ export const useMenuStore = defineStore('menu', {
       let menuPrincipal = []
       let permisos = {}
       let todos = []
-
+      usuario = modulo.menu[0].usuario || null
       if (modulo.menu && Array.isArray(modulo.menu)) {
         // Encontrar opciones ocultas
-        const ocultas = modulo.menu.find((obj) => obj.codigo === 'opcionesocultas')
+        const ocultas = modulo.menu.filter((obj) => obj.codigo === 'opcionesocultas')
         if (ocultas) {
+          let submenus = []
+          ocultas.map((obj) => {
+            submenus = submenus.concat(obj.submenu)
+          })
           opcionesOcultas = {
-            submenu: Array.isArray(ocultas.submenu) ? ocultas.submenu : [],
+            submenu: Array.isArray(submenus) ? submenus : [],
           }
           // Extraer usuario del primer item (si existe)
-          usuario = ocultas.usuario || null
         }
-
         // Filtrar menu principal (excluyendo opcionesocultas)
         menuPrincipal = modulo.menu.filter((item) => item.codigo !== 'opcionesocultas')
-        console.log(menuPrincipal)
         //submenu
         modulo.menu.forEach((seccion) => {
           if (Array.isArray(seccion.submenu)) {
@@ -80,6 +83,7 @@ export const useMenuStore = defineStore('menu', {
         menuPrincipal,
         permisos,
         todos,
+        modulo: modulo.menu,
       }
     } catch (error) {
       console.error('Error al cargar datos del menú:', error)
@@ -89,16 +93,21 @@ export const useMenuStore = defineStore('menu', {
         menuPrincipal: [],
         permisos: {},
         todos: [],
+        modulo: [],
       }
     }
   },
 
   getters: {
-    // Verifica si una página está permitida
+    // Verifica si una página está permitida devolver pagina
     existePagina: (state) => (codigopagina) => {
       return state.todos.find((pagina) => pagina.codigo === codigopagina)
     },
+    // Verifica si existe
 
+    verificarExistencia: (state) => (codigopagina) => {
+      return state.todos.some((pagina) => pagina.codigo === codigopagina)
+    },
     // Obtiene los datos completos de una página
     obtenerPagina: (state) => (codigopagina) => {
       const pagina = state.permitidos.find((pagina) => pagina.codigo === codigopagina)
@@ -134,6 +143,13 @@ export const useMenuStore = defineStore('menu', {
     },
     permisoPagina: (state) => (codigopagina) => {
       return state.permisos[codigopagina]
+    },
+    obtenerPrimerSubmenu: (state) => (codigoMenu) => {
+      const menu = state.modulo.find((m) => m.codigo === codigoMenu)
+      if (menu && menu.submenu && menu.submenu.length > 0) {
+        return menu.submenu[0]
+      }
+      return null
     },
   },
 })

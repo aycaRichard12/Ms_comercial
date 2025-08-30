@@ -19,6 +19,19 @@
           @click="verComprobante(props.row)"
           title="VER COMPROBANTE"
         />
+        <q-btn
+          v-if="props.row.tipoventa == 1"
+          icon="receipt_long"
+          dense
+          color="blue"
+          @click="ir_a_factura(props.row)"
+        />
+        <q-btn
+          v-if="props.row.tipoventa == 1"
+          icon="policy"
+          color="warning"
+          @click="ir_a_impuestos(props.row)"
+        />
       </q-td>
     </template>
     <template v-slot:bottom-row>
@@ -86,6 +99,7 @@ async function loadRows() {
 
   const fechaInicio = `${yyyy}-${mm}-${dd}`
   const fechaFin = `${yyyy}-${mm}-${dd}`
+  console.log(fechaInicio, fechaFin)
   try {
     const response = await api.get(`reporteventas/${idusuario}/${fechaInicio}/${fechaFin}`) // Cambia a tu ruta real
     rows.value = response.data.sort((a, b) => b.idventa - a.idventa)
@@ -134,7 +148,15 @@ const verComprobante = async (id) => {
     })
   }
 }
-
+const ir_a_factura = (row) => {
+  console.log(row)
+  // const urlPDF = 'https://example.com/factura.pdf'
+  window.open(row.shortlink, '_blank')
+}
+const ir_a_impuestos = (row) => {
+  console.log(row)
+  window.open(row.urlsin, '_blank')
+}
 async function imprimirReporte() {
   console.log(detalleVenta.value)
 

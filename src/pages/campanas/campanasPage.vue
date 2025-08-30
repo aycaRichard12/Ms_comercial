@@ -1,159 +1,199 @@
 <template>
-  <q-page class="q-pa-md">
+  <q-page padding>
+    <div class="titulo">Campañas</div>
     <!-- Formulario principal de campañas -->
-    <div v-if="formularioActivo === 0">
-      <q-form @submit="registrarCampana">
-        <div class="row q-col-gutter-md">
-          <div class="col-md-3">
-            <q-select
-              v-model="formData.idalmacen"
-              :options="almacenesOptions"
-              label="Elija un Almacén"
-              option-value="idalmacen"
-              option-label="almacen"
-              emit-value
-              map-options
-              required
-            />
-          </div>
+    <q-dialog v-model="formularioActivo">
+      <q-card class="responsive-dialog">
+        <q-card-section class="bg-primary text-white text-h6 flex justify-between">
+          <div>Registrar Nueva Campaña</div>
+          <q-btn icon="close" flat dense round @click="formularioActivo = false" />
+        </q-card-section>
+        <q-card-section>
+          <q-form @submit="registrarCampana">
+            <div class="row q-col-gutter-x-md q-mb-md">
+              <div class="col-12 col-md-3">
+                <label for="nombre">Nombre</label>
+                <q-input v-model="formData.campana" id="nombre" dense outlined required />
+              </div>
 
-          <div class="col-md-2">
-            <q-input v-model="formData.fechai" label="Fecha Inicio" type="date" required />
-          </div>
+              <div class="col-12 col-md-2">
+                <label for="fechaini">Fecha Inicio</label>
+                <q-input
+                  v-model="formData.fechai"
+                  id="fechaini"
+                  type="date"
+                  required
+                  dense
+                  outlined
+                />
+              </div>
 
-          <div class="col-md-2">
-            <q-input v-model="formData.fechaf" label="Fecha Final" type="date" required />
-          </div>
+              <div class="col-12 col-md-2">
+                <label for="fechafin">Fecha Final</label>
+                <q-input
+                  v-model="formData.fechaf"
+                  id="fechafin"
+                  type="date"
+                  required
+                  dense
+                  outlined
+                />
+              </div>
 
-          <div class="col-md-3">
-            <q-input v-model="formData.campana" label="Nombre*" required />
-          </div>
-
-          <div class="col-md-2">
-            <q-input v-model="formData.porcentaje" label="Porcentaje" type="number" required />
-          </div>
-
-          <div class="col-12">
-            <q-btn type="submit" color="primary" label="Registrar" />
-          </div>
-        </div>
-      </q-form>
-
-      <!-- Filtros y acciones -->
-      <div class="row q-mt-md">
-        <div class="col">
-          <div class="row items-center q-gutter-md">
-            <div class="col-auto">
-              <q-select
-                v-model="idalmacenfiltro"
-                :options="almacenesOptions"
-                label="Filtrar por almacén"
-                option-value="idalmacen"
-                option-label="almacen"
-                emit-value
-                map-options
-                clearable
-                style="min-width: 200px"
-              />
+              <div class="col-12 col-md-2">
+                <label for="porcentaje">Porcentaje</label>
+                <q-input
+                  v-model="formData.porcentaje"
+                  id="porcentaje"
+                  type="number"
+                  required
+                  dense
+                  outlined
+                />
+              </div>
+              <div class="col-12 col-md-3">
+                <label for="almacenwe">Elija un Almacén</label>
+                <q-select
+                  v-model="formData.idalmacen"
+                  :options="almacenesOptions"
+                  id="almacenwe"
+                  dense
+                  outlined=""
+                  option-value="idalmacen"
+                  option-label="almacen"
+                  emit-value
+                  map-options
+                  required
+                />
+              </div>
             </div>
-
-            <div class="col-auto">
-              <q-btn
-                color="primary"
-                icon="picture_as_pdf"
-                label="Reporte Campaña"
-                @click="crearFormularioRDCA()"
-              />
+            <div class="row flex justify-start">
+              <q-btn type="submit" color="primary" class="btn-res">
+                <q-icon name="save" class="icono" />
+                <span class="texto">Registrar</span>
+              </q-btn>
+              <q-btn label="Cancelar" flat color="negative" @click="formularioActivo = false" />
             </div>
+          </q-form>
+        </q-card-section>
+      </q-card>
+    </q-dialog>
 
-            <div class="col-auto">
-              <q-btn
-                color="primary"
-                icon="picture_as_pdf"
-                label="Reporte por Ventas"
-                @click="crearFormularioRDCAV()"
-              />
-            </div>
+    <q-btn color="primary" class="btn-res" @click="formularioActivo = true">
+      <q-icon name="add" class="icono" />
+      <span class="texto">Registrar</span>
+    </q-btn>
+    <!-- Filtros y acciones -->
 
-            <div class="col">
-              <q-input v-model="busqueda" placeholder="Buscar" dense>
-                <template v-slot:append>
-                  <q-icon name="search" />
-                </template>
-              </q-input>
-            </div>
-          </div>
-        </div>
+    <div class="row q-col-gutter-x-md">
+      <div class="col-12 col-md-2">
+        <label for="almacen">Filtrar por almacén</label>
+        <q-select
+          v-model="idalmacenfiltro"
+          :options="almacenesOptions"
+          id="almacen"
+          option-value="idalmacen"
+          option-label="almacen"
+          dense
+          outlined=""
+          emit-value
+          map-options
+          clearable
+        />
       </div>
 
-      <!-- Tabla de campañas -->
-      <q-table
-        class="q-mt-md"
-        :rows="campanasFiltradas"
-        :columns="columns"
-        row-key="id"
-        :filter="busqueda"
-        v-model:pagination="pagination"
-      >
-        <template v-slot:body-cell-estado="props">
-          <q-td :props="props">
-            <q-btn
-              :color="Number(props.row.estado) === 1 ? 'blue' : 'negative'"
-              size="sm"
-              :icon="Number(props.row.estado) === 1 ? 'thumb_up' : 'thumb_down'"
-              @click="cambiarEstado(props.row.id, Number(props.row.estado) === 1 ? 2 : 1)"
-              dense
-            >
-              <q-tooltip>
-                {{ props.row.estado === 1 ? 'Desactivar esta Campaña' : 'Activar esta Campaña' }}
-              </q-tooltip>
-            </q-btn>
-          </q-td>
-        </template>
+      <div class="col-12 col-md-1">
+        <q-btn color="primary" @click="crearFormularioRDCA()" class="btn-res q-mt-lg">
+          <q-icon name="bar_chart" class="icono" />
+          <span class="texto">Rep. Campañas</span>
+        </q-btn>
+      </div>
+      <div lass="col-12 col-md-1">
+        <q-btn color="primary" @click="crearFormularioRDCAV()" class="btn-res q-mt-lg">
+          <q-icon name="summarize" class="icono" />
+          <span class="texto">Rep. Ventas</span>
+        </q-btn>
+      </div>
 
-        <template v-slot:body-cell-detalles="props">
-          <q-td :props="props">
-            <q-btn
-              color="primary"
-              size="sm"
-              icon="add_circle"
-              @click="cargarcategoria(props.row.id, props.row.idalmacen)"
-              dense
-            >
-              <q-tooltip>Agregar Categorias a la Campaña</q-tooltip>
-            </q-btn>
-            <q-btn
-              color="primary"
-              size="sm"
-              icon="add_shopping_cart"
-              @click="cargarPrecios(props.row.id)"
-              class="q-ml-sm"
-              dense
-            >
-              <q-tooltip>Agregar Productos a la Campaña</q-tooltip>
-            </q-btn>
-          </q-td>
-        </template>
-
-        <template v-slot:body-cell-acciones="props">
-          <q-td :props="props">
-            <q-btn color="primary" size="sm" icon="edit" @click="editarCampana(props.row)" dense>
-              <q-tooltip>Modificar</q-tooltip>
-            </q-btn>
-            <q-btn
-              color="negative"
-              size="sm"
-              icon="delete"
-              @click="eliminar(props.row.id)"
-              class="q-ml-sm"
-              dense
-            >
-              <q-tooltip>Eliminar</q-tooltip>
-            </q-btn>
-          </q-td>
-        </template>
-      </q-table>
+      <div class="col-12 col-md-7 flex justify-end">
+        <div>
+          <label for="buscar">Buscar...</label>
+          <q-input v-model="busqueda" outlined dense debounce="300">
+            <template v-slot:append>
+              <q-icon name="search" />
+            </template>
+          </q-input>
+        </div>
+      </div>
     </div>
+
+    <!-- Tabla de campañas -->
+    <q-table
+      class="q-mt-md"
+      :rows="campanasFiltradas"
+      :columns="columns"
+      row-key="id"
+      :filter="busqueda"
+      v-model:pagination="pagination"
+    >
+      <template v-slot:body-cell-estado="props">
+        <q-td :props="props">
+          <q-btn
+            :color="Number(props.row.estado) === 1 ? 'blue' : 'negative'"
+            size="sm"
+            :icon="Number(props.row.estado) === 1 ? 'thumb_up' : 'thumb_down'"
+            @click="cambiarEstado(props.row.id, Number(props.row.estado) === 1 ? 2 : 1)"
+            dense
+          >
+            <q-tooltip>
+              {{ props.row.estado === 1 ? 'Desactivar esta Campaña' : 'Activar esta Campaña' }}
+            </q-tooltip>
+          </q-btn>
+        </q-td>
+      </template>
+
+      <template v-slot:body-cell-detalles="props">
+        <q-td :props="props">
+          <q-btn
+            color="primary"
+            size="sm"
+            icon="add_circle"
+            @click="cargarcategoria(props.row.id, props.row.idalmacen)"
+            dense
+          >
+            <q-tooltip>Agregar Categorias a la Campaña</q-tooltip>
+          </q-btn>
+          <q-btn
+            color="primary"
+            size="sm"
+            icon="add_shopping_cart"
+            @click="cargarPrecios(props.row.id)"
+            class="q-ml-sm"
+            dense
+          >
+            <q-tooltip>Agregar Productos a la Campaña</q-tooltip>
+          </q-btn>
+        </q-td>
+      </template>
+
+      <template v-slot:body-cell-acciones="props">
+        <q-td :props="props">
+          <q-btn color="primary" size="sm" icon="edit" @click="editarCampana(props.row)" dense>
+            <q-tooltip>Modificar</q-tooltip>
+          </q-btn>
+          <q-btn
+            color="negative"
+            size="sm"
+            icon="delete"
+            @click="eliminar(props.row.id)"
+            class="q-ml-sm"
+            dense
+          >
+            <q-tooltip>Eliminar</q-tooltip>
+          </q-btn>
+        </q-td>
+      </template>
+    </q-table>
 
     <!-- Diálogo para categorías de precios -->
     <q-dialog v-model="dialogoCategorias" persistent>
@@ -275,7 +315,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import { useQuasar } from 'quasar'
 import { peticionGET, peticionPOST } from 'src/composables/peticionesFetch.js'
 import { URL_APICM } from 'src/composables/services'
@@ -287,7 +327,7 @@ const idempresa = contenidousuario[0]?.empresa?.idempresa
 const idusuario = contenidousuario[0]?.idusuario
 
 // Estados reactivos
-const formularioActivo = ref(0)
+const formularioActivo = ref(false)
 const idalmacenfiltro = ref(null)
 const busqueda = ref('')
 const filtroPrecioCampania = ref(0)
@@ -392,10 +432,13 @@ const preciosCampanaFiltrados = computed(() => {
 const campanasFiltradas = computed(() => {
   let filtered = campanas.value
 
-  if (idalmacenfiltro.value) {
-    filtered = filtered.filter((camp) => camp.idalmacen == idalmacenfiltro.value)
-  } else {
-    return []
+  const almacen = idalmacenfiltro.value
+  if (almacen) {
+    if (almacen.idalmacen) {
+      filtered = filtered.filter((camp) => camp.idalmacen == almacen.idalmacen)
+    } else {
+      filtered = filtered.filter((camp) => camp.idalmacen == almacen)
+    }
   }
 
   return filtered.map((item, index) => ({
@@ -784,7 +827,18 @@ const crearFormularioRDCAV = () => {
   // Implementar lógica para crear formulario de reporte de ventas
   console.log('Crear formulario RDCAV')
 }
+function handleKeydown(e) {
+  if (e.key === 'Escape') {
+    formularioActivo.value = false
+  }
+}
 
+onMounted(() => {
+  window.addEventListener('keydown', handleKeydown)
+})
+onBeforeUnmount(() => {
+  window.removeEventListener('keydown', handleKeydown)
+})
 // Inicialización
 onMounted(async () => {
   formData.value.fechai = obtenerFechaActual()

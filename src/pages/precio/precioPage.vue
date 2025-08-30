@@ -1,13 +1,23 @@
 <template>
   <q-page class="q-pa-md q-pa-md-md q-pa-lg-lg">
-    <div v-if="showForm" class="q-mx-auto q-mt-md">
-      <form-costo-unitario
-        :isEditing="isEditing"
-        :modalValue="ProductoSeleccionado"
-        @submit="guardarPrecioBase"
-        @cancel="toggleForm"
-      />
-    </div>
+    <q-dialog v-model="showForm">
+      <q-card class="responsive-dialog">
+        <q-card-section class="bg-primary text-white text-h6 flex justify-between">
+          <div>Registrar Costo Unitario</div>
+          <q-btn icon="close" dense flat round @click="showForm = false" />
+        </q-card-section>
+        <q-card-section>
+          <form-costo-unitario
+            :isEditing="isEditing"
+            :modalValue="ProductoSeleccionado"
+            @submit="guardarPrecioBase"
+            @cancel="toggleForm"
+          />
+        </q-card-section>
+      </q-card>
+    </q-dialog>
+
+    <div v-if="showForm" class="q-mx-auto q-mt-md"></div>
 
     <table-costo-unitario
       :rows="productos"

@@ -1,12 +1,15 @@
 <template>
-  <q-card>
+  <q-page padding>
+    <div class="titulo">Caducidad Producto</div>
     <q-card-section>
       <div class="row justify-center q-mb-md">
-        <div class="col-md-4">
+        <div class="col-12 col-md-4">
+          <label for="fechafinal">Fecha Final*</label>
           <q-input
-            filled
             label="Fecha Final*"
             type="date"
+            dense
+            outlined=""
             v-model="fechaFinal"
             class="fecha-actualFT"
           />
@@ -15,14 +18,18 @@
 
       <div class="row justify-center q-mb-md">
         <q-btn color="primary" label="Generar reporte" @click="generarReporte" class="q-mr-sm" />
-        <q-btn color="primary" label="Exportar reporte a Excel" @click="exportarTablaAExcel" />
+        <q-btn color="primary" @click="exportarTablaAExcel" class="btn-res">
+          <q-icon name="mdi-file-excel" class="icono" />
+          <span class="texto">Exportar a Excel</span>
+        </q-btn>
       </div>
 
-      <div class="row q-mt-md">
-        <div class="col-md-4 q-pr-sm">
+      <div class="row q-col-gutter-x-md">
+        <div class="col-12 col-md-4">
+          <label for="almacen">Almacén</label>
           <q-select
-            filled
-            label="Almacén*"
+            dense
+            outlined
             v-model="almacenSeleccionado"
             :options="almacenesOptions"
             option-value="idalmacen"
@@ -31,10 +38,11 @@
             @update:model-value="filtrarYOrdenarDatos"
           />
         </div>
-        <div class="col-md-4">
+        <div class="col-12 col-md-8">
+          <label for="razonSocial">Razón Social*</label>
           <q-select
-            filled
-            label="Razón Social*"
+            dense
+            outlined
             v-model="clienteSeleccionado"
             :options="clientesFiltrados"
             option-value="id"
@@ -43,6 +51,7 @@
             input-debounce="300"
             @filter="filtrarClientes"
             @update:model-value="filtrarYOrdenarDatos"
+            clearable
           >
             <template v-slot:option="scope">
               <q-item v-bind="scope.itemProps">
@@ -56,12 +65,12 @@
         </div>
       </div>
 
-      <div class="row q-mt-md">
-        <div class="col-md-8">
+      <div class="row q-col-gutter-x-md q-mt-md">
+        <div class="col-12 col-md-8">
           <div style="max-height: 60vh; overflow-y: auto">
             <q-table
-              flat
-              bordered
+              title="Inventario Externo"
+              dense
               :rows="datosTablaPrincipal"
               :columns="columnasTablaPrincipal"
               row-key="index"
@@ -76,11 +85,11 @@
             </q-table>
           </div>
         </div>
-        <div class="col-md-4">
+        <div class="col-12 col-md-4">
           <div style="max-height: 60vh; overflow-y: auto">
             <q-table
-              flat
-              bordered
+              title="Resumen"
+              dense
               :rows="datosTablaResumen"
               :columns="columnasTablaResumen"
               row-key="index"
@@ -108,7 +117,7 @@
         </div>
       </div>
     </q-card-section>
-  </q-card>
+  </q-page>
 </template>
 
 <script setup>
@@ -386,13 +395,13 @@ const cargarDatos = () => {
 
   // Procesar datos para la tabla resumen
   const columnasResumen = [{ name: 'index', label: 'N°', field: 'index', align: 'left' }]
-
+  console.log(data1)
   data1.forEach((item) => {
     columnasResumen.push({
       name: item.nombre,
       label: item.nombre,
-      field: item.nombre,
-      align: 'left',
+      field: nombrecolores[item.color],
+      align: 'right',
       color: item.color,
     })
   })
@@ -402,7 +411,7 @@ const cargarDatos = () => {
   // Agrupar y sumar por número
   const resultado = []
   const mapeo = {}
-
+  console.log(objtablamedidor)
   for (const item of objtablamedidor) {
     const nro = item.nro
     const nombre = item.nombre
