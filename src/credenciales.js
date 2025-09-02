@@ -1495,6 +1495,11 @@ const menumanfret104 = [
             codigo: 'movimientosdeinventario-96da2f590cd7246bbde0051047b0d6f7',
             permiso: '1111',
           },
+          {
+            titulo: 'Compras a Crédito',
+            codigo: 'ingresocredito-96da2f590cd7246bbde0051047b0d6f7',
+            permiso: '1111',
+          },
         ],
       },
       {

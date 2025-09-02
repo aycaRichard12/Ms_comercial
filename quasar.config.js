@@ -28,7 +28,6 @@ export default defineConfig((ctx) => {
       // 'themify',
       // 'line-awesome',
       // 'roboto-font-latin-ext', // this or either 'roboto-font', NEVER both!
-
       'roboto-font', // optional, you are not bound to it
       'material-icons', // optional, you are not bound to it
     ],
@@ -115,6 +114,8 @@ export default defineConfig((ctx) => {
       // directives: [],
 
       // Quasar plugins
+      iconSet: 'material-icons', // <-- set de iconos
+
       plugins: ['Notify', 'Loading', 'Dialog'],
       defaults: {
         QInput: { outlined: true },

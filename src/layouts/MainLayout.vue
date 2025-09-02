@@ -168,8 +168,8 @@ const updateExpandedMenu = (currentMenuCode, isExpanded) => {
     }
   }
   expandedMenu[currentMenuCode] = isExpanded
-  const primerPaginaMenu = menuStore.obtenerPrimerSubmenu(currentMenuCode)
-  emitter.emit('abrir-submenu', primerPaginaMenu)
+  // const primerPaginaMenu = menuStore.obtenerPrimerSubmenu(currentMenuCode)
+  // emitter.emit('abrir-submenu', primerPaginaMenu)
 }
 
 // --- Drawer auto-open/close logic ---

@@ -284,8 +284,10 @@ function resetForm() {
 const editUnit = async (row) => {
   console.log(row)
   const contenidousuario = validarUsuario()
-  const token = contenidousuario[0]?.factura?.access_token
-  const tipo = contenidousuario[0]?.factura?.tipo
+  const token = contenidousuario[0]?.factura?.access_token || ''
+  const tipo = contenidousuario[0]?.factura?.tipo || ''
+  console.log(token)
+  console.log(tipo)
   const response = await api.get(`verificarExistenciaProducto/${row.id}/${token}/${tipo}`) // Cambia a tu ruta real
   console.log(response.data)
   const item = response.data.datos

@@ -270,7 +270,11 @@ if ($ver[0] == "datosusuario") {
     $controlador->listadoConfigParametricas($ver[1],$ver[2], $ver[3],1);
 } elseif ($ver[0] == "verificarExistenciaProducto") {
     $controlador = new mantenimiento();
-    $controlador->verificarIdProducto($ver[1], $ver[2], $ver[3]);
+    $ver1 = $ver[1] ?? '';
+    $ver2 = $ver[2] ?? '';
+    $ver3 = $ver[3] ?? '';
+
+    $controlador->verificarIdProducto($ver1, $ver2, $ver3);
 } elseif ($ver[0] == "eliminarProducto") {
     $controlador = new mantenimiento();
     $controlador->eliminarProducto($ver[1]);

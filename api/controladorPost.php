@@ -9,6 +9,7 @@ require_once "sendIvoiceEmail.php";
 require_once "useVenta.php";
 require_once "useCotizacion.php";
 require_once "arqueoPuntoVenta.php";
+require_once "pagosCompra.php";
 
 $input = file_get_contents("php://input");
 $data = json_decode($input, true);
@@ -592,6 +593,10 @@ elseif ($ver == "AutorizacionCierre") {
     $controlador->AutorizacionCierre($data);
   
     
+}
+elseif ($ver == "registrarCompraCredito") {
+    $controlador = new PagosCompra(); 
+    $controlador->registrarCompraCredito($data);
 }
 
 

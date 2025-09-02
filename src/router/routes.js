@@ -288,6 +288,10 @@ const routes = [
         path: '/generartokensapis',
         component: () => import('src/pages/token/ManualApisPage.vue'),
       },
+      {
+        path: '/ingresocredito',
+        component: () => import('src/pages/compra/RcompraCreditoPage.vue'),
+      },
     ],
   },
   {

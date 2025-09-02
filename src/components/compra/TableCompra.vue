@@ -81,19 +81,29 @@
         </template>
 
         <template v-slot:body-cell-detalle="props">
-          <q-td>
+          <q-td :props="props">
             <q-btn
+              title="Añadir Carrito "
               icon="shopping_cart"
               color="primary"
               dense
               flat
               @click="$emit('detalleCompra', props.row)"
             />
+            <q-btn
+              v-if="Number(props.row.tipocompra) === 1"
+              title="Detelle Credito"
+              icon="payment"
+              color="blue"
+              flat=""
+              @click="FormularioCredito(props.row)"
+              label=""
+            />
           </q-td>
         </template>
 
         <template v-slot:body-cell-opciones="props">
-          <q-td :props="props" class="text-nowrap">
+          <q-td :props="props">
             <div v-if="Number(props.row.autorizacion) === 2">
               <q-btn icon="edit" color="primary" dense flat @click="$emit('edit', props.row)" />
               <q-btn
@@ -134,6 +144,17 @@
         </q-card-section>
       </q-card>
     </q-dialog>
+    <q-dialog v-model="credito">
+      <q-card class="responsive-dialog">
+        <q-card-section class="bg-primary text-white text-h6 flex justify-between">
+          <div class="text-h6">Registrar Datos para Credito</div>
+          <q-btn icon="close" dense flat round @click="credito = false" />
+        </q-card-section>
+        <q-card-section>
+          <pagos-credito :compra="compra" @cerrar="closeModalCredito"></pagos-credito>
+        </q-card-section>
+      </q-card>
+    </q-dialog>
   </q-page>
 </template>
 
@@ -145,7 +166,11 @@ import { validarUsuario } from 'src/composables/FuncionesGenerales'
 import { cambiarFormatoFecha, obtenerFechaActualDato } from 'src/composables/FuncionesG'
 import { URL_APIE } from 'src/composables/services'
 import { decimas, redondear } from 'src/composables/FuncionesG'
+import pagosCredito from './pagosCredito.vue'
+import { useQuasar } from 'quasar'
+import { showDialog } from 'src/utils/dialogs'
 
+const $q = useQuasar()
 const props = defineProps({
   rows: {
     type: Array,
@@ -166,7 +191,8 @@ const pdfData = ref(null)
 const busqueda = ref('')
 const filtroAlmacen = ref(null)
 const mostrarModal = ref(false)
-
+const credito = ref(false)
+const compra = ref({})
 const columnas = [
   { name: 'numero', label: 'N°', align: 'right', field: 'numero' },
   { name: 'fecha', label: 'Fecha', align: 'right', field: 'fecha' },
@@ -176,9 +202,9 @@ const columnas = [
   { name: 'nfactura', label: 'N° Factura', align: 'right', field: 'nfactura' },
   { name: 'tipocompra', label: 'Tipo compra', field: 'tipocompra', align: 'center' },
   { name: 'total', label: 'Total compra', align: 'right', field: 'total' },
-  { name: 'autorizacion', label: 'Autorización', field: 'autorizacion' },
-  { name: 'detalle', label: 'Detalle', field: 'detalle', align: 'center' },
-  { name: 'opciones', label: 'Opciones', field: 'opciones' },
+  { name: 'autorizacion', label: 'Autorización', field: 'autorizacion', align: 'center' },
+  { name: 'detalle', label: 'Detalle', field: 'detalle', align: 'right' },
+  { name: 'opciones', label: 'Opciones', field: 'opciones', align: 'center' },
 ]
 defineEmits(['add', 'repDesglosado', 'repCompras', 'edit', 'delete'])
 
@@ -206,6 +232,25 @@ watch(
   { immediate: true },
 )
 
+async function FormularioCredito(c) {
+  if (Number(c.autorizacion) == 1) {
+    console.log(c)
+    compra.value = c
+    credito.value = true
+  } else {
+    // Dialog con iconos correctos
+
+    const result = await showDialog(
+      $q,
+      'W',
+      'Advertencia: La compra está en espera de autorización. Debe validarse antes de proceder.',
+    )
+    console.log('Warning dialog result:', result)
+  }
+}
+function closeModalCredito() {
+  credito.value = false
+}
 function imprimirReporte() {
   console.log(filtroAlmacen.value)
   const contenidousuario = validarUsuario()

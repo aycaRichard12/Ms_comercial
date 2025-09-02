@@ -258,7 +258,6 @@
       :columns="columnasCarrito"
       row-key="id"
       flat
-      hide-pagination
       title="Productos seleccionados"
       no-data-label="Aún no se han añadido productos"
     >

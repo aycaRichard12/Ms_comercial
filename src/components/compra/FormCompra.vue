@@ -147,7 +147,10 @@ const isIngresoConPedido = computed({
     verificar()
   },
 })
-const tiposCompra = [{ label: 'Al contado', value: '2' }]
+const tiposCompra = [
+  { label: 'Al contado', value: '2' },
+  { label: 'Credito', value: '1' },
+]
 
 const onSubmit = () => {
   emit('submit', localData.value)
