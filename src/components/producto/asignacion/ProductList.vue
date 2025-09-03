@@ -54,14 +54,14 @@
     <!-- Acciones -->
     <template v-slot:body-cell-opciones="props">
       <q-td :props="props" class="text-nowrap">
-        <q-btn
+        <!-- <q-btn
           dense
           round
           flat
           icon="edit"
           color="primary"
           @click="$emit('edit-item', props.row)"
-        />
+        /> -->
         <q-btn icon="delete" color="negative" dense @click="$emit('delete-item', props.row)" flat />
       </q-td>
     </template>
@@ -125,7 +125,7 @@ const filter = ref('') // texto del buscador
 
 // Paginación
 const pagination = ref({
-  rowsPerPage: 10,
+  rowsPerPage: 5,
 })
 watch(
   () => props.opciones,

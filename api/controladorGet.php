@@ -12,6 +12,7 @@ require_once "useVenta.php";
 require_once "notificaciones.php";
 require_once "arqueoPuntoVenta.php";
 require_once "funciones.php";
+require_once "pagosCompra.php";
 $ver = explode("/", $_GET['ver']);
 
 $controlador = null;  //Facturacion
@@ -803,6 +804,18 @@ elseif($ver[0]== "cierres_registrados"){
 elseif($ver[0]== "reporteCierrePorId"){
     $controlador = new ArqueoPuntoVenta();
     $controlador->reporteCierrePorId($ver[1],$ver[2]); // idventaND, idproductoalmacen, listaPuntoVentaFactura
+}
+elseif($ver[0]== "generarReportePagos"){
+    $controlador = new PagosCompra();
+    $controlador->generarReportePagos($ver[1],$ver[2],$ver[3]); // idventaND, idproductoalmacen, listaPuntoVentaFactura
+}
+elseif($ver[0]== "obtenerCuotasPorPago"){
+    $controlador = new PagosCompra();
+    $controlador->obtenerCuotasPorPago($ver[1]); // idventaND, idproductoalmacen, listaPuntoVentaFactura
+}
+elseif($ver[0]== "obtenerTransaccionesPorPago"){
+    $controlador = new PagosCompra();
+    $controlador->obtenerTransaccionesPorPago($ver[1]); // idventaND, idproductoalmacen, listaPuntoVentaFactura
 }
 
 if ($controlador === null) {

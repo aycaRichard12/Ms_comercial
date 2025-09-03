@@ -598,6 +598,10 @@ elseif ($ver == "registrarCompraCredito") {
     $controlador = new PagosCompra(); 
     $controlador->registrarCompraCredito($data);
 }
+elseif ($ver == "RegistrarPagos"){
+    $controlador = new PagosCompra();
+    $controlador->handleRegistrarPago($_POST['id_cuota']);
+}
 
 
 if ($controlador === null) {

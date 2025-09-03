@@ -28,7 +28,7 @@
 
     $method = $_SERVER['REQUEST_METHOD'];
     if (isset($method)) {
-       
+      
        
 
         require_once "../db/conexion.php";

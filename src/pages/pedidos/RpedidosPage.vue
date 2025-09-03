@@ -237,7 +237,7 @@ const onVerDetalle = (item) => {
   }
 }
 const onVerimagen = (item) => {
-  imagenSeleccionada.value = item.ruta
+  imagenSeleccionada.value = item
   mostrarImagen.value = true
 }
 

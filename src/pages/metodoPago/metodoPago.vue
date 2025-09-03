@@ -25,10 +25,9 @@
                 :rules="[(val) => !!val || 'El nombre es requerido']"
               />
             </div>
-            <div class="col-12 col-md-6">
+            <div class="col-12 col-md-6" v-if="tipoFactura">
               <label for="descripcion">Descripción SIN</label>
               <q-select
-                v-if="tipoFactura"
                 v-model="form.descripcionSIN"
                 :options="filteredMetodosPagoSin"
                 id="descripcion"
@@ -368,7 +367,7 @@ const handleSubmit = async () => {
   }
   formData.append('nombre', form.nombre)
   formData.append('ver', form.verMPF)
-  formData.append('codigosin', form.descripcionSIN.codigo)
+  formData.append('codigosin', form.descripcionSIN ? form.descripcionSIN.codigo : '')
   formData.append('idempresa', idempresa)
 
   try {
