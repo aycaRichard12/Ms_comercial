@@ -12,7 +12,8 @@
 
     $method = $_SERVER['REQUEST_METHOD'];
     
-
+    require_once "outProductos.php";
+    require_once "outVenta.php";
     if($method == "GET"){
         
             require_once "routersGet.php";

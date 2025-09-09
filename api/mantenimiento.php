@@ -1120,6 +1120,8 @@ class mantenimiento
     }
 
     public function editarProducto($idproducto,$nombre,$codigo,$descripcion,$codigobarras,$categoria,$medida,$estadoproductos,$unidad,$caracteristica,$url,$codigosin,$actividadsin,$unidadsin,$codigonandina){
+        
+        // echo json_encode([$idproducto,$nombre,$codigo,$descripcion,$codigobarras,$categoria,$medida,$estadoproductos,$unidad,$caracteristica,$url,$codigosin,$actividadsin,$unidadsin,$codigonandina]);
         $registro = false;
         $res = [];
 

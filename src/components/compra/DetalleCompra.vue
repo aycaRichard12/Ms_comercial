@@ -144,7 +144,7 @@ const props = defineProps({
   compra: { type: Object, required: true },
 })
 console.log(props.compra)
-const emit = defineEmits(['close', 'update'])
+const emit = defineEmits(['close', 'update', 'submit'])
 
 // --- ESTADO REACTIVO ---
 const formRef = ref(null) // Referencia al QForm

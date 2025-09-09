@@ -387,7 +387,6 @@
                   map-options
                   required
                   @update:model-value="calculateDueDate"
-                  :rules="[(val) => !!val || 'Campo Obligatorio']"
                 >
                   <template v-slot:prepend>
                     <q-icon name="calendar_today" color="purple" />
@@ -961,24 +960,26 @@ const onSubmit = async () => {
     form.append('periodopersonalizado', plazoPersonalizado)
     form.append('jsonDetalles', JSON.stringify(cartData))
 
-    form.forEach((valor, clave) => console.log(`${clave}: ${valor}`))
     const jsonObject = Object.fromEntries(form.entries())
+    cartData.listaFactura.codigoMetodoPago = metodoPago?.id
     jsonObject['jsonDetalles'] = cartData
-
     const json = Object.fromEntries(form.entries())
     json.jsonDetalles = cartData
-    console.log(json)
     //  Enviar al backend
-    const response = await api.post('', form, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-    })
+    if (process.env.NODE_ENV === 'production') {
+      const response = await api.post('', form, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      })
 
-    console.log('Respuesta de la API:', response)
-
-    if (!response.data || response.data.estado !== 'exito') {
-      throw { message: response.data?.mensaje || 'Error al procesar la venta', response }
+      console.log('Respuesta de la API:', response)
+      if (!response.data || response.data.estado !== 'exito') {
+        throw { message: response.data?.mensaje || 'Error al procesar la venta', response }
+      }
+    } else {
+      form.forEach((valor, clave) => console.log(`${clave}: ${valor}`))
+      console.log(json)
     }
 
     //  Éxito
@@ -1098,7 +1099,7 @@ const handleRecordCreated = async (newRecordData) => {
   const formData = objectToFormData(newRecordData) // Use newRecordData directly
 
   for (let [k, v] of formData.entries()) {
-    // Good practice to disable eslint for console.log in production
+    // Good practice to disable eslint for console.log in production emailCliente
     console.log(`${k}: ${v}`)
   }
 

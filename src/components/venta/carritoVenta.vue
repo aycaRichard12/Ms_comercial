@@ -495,7 +495,7 @@ async function cargarAlmacenes() {
     const { data } = await api.get(endpoint)
 
     if (data[0] === 'error') throw new Error(data.error || 'Error al cargar almacenes')
-
+    console.log(data)
     // Filtrar por usuario y mapear
     almacenes.value = data
       .filter((item) => item.idusuario == usuario.value.idusuario)

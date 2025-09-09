@@ -283,8 +283,122 @@ class configuracion
         }
         echo json_encode($res);  
     }
+    public function listaAlmacenesResponsable($idmd5, $respuesta = null, $codigo = null, $idusuario = null)
+    {
+        try {
+            $lista = [];
+            $idempresa = $this->verificar->verificarIDEMPRESAMD5($idmd5);
 
-    public function listaAlmacenesResponsable($idmd5)
+            if ($idempresa === "false") {
+                echo json_encode(["estado" => "error", "mensaje" => "El id de empresa no existe"]);
+                return;
+            }
+
+            // Obtener sucursales
+            $sucursales = $this->em->query("SELECT idsucursalcontable, nombre, codigosucursal FROM sucursalcontable WHERE idorganizacion='$idempresa'");
+
+            $sucursalInfo = [];
+            $sucursalInfoVacia = [];
+
+            if ($this->em->rows($sucursales) > 0) {
+                while ($sucursal = $this->em->fetch($sucursales)) {
+                    $sucursalInfo[$sucursal['idsucursalcontable']] = [
+                        "idsucursal" => $sucursal['idsucursalcontable'],
+                        "nombre" => $sucursal['nombre'],
+                        "codigosin" => $sucursal['codigosucursal']
+                    ];
+                }
+            } else {
+                $sucursalInfoVacia[0] = [
+                    "idsucursal" => 0,
+                    "nombre" => "Sin sucursales",
+                    "codigosin" => "Sin sucursales"
+                ];
+            }
+
+            // Query base como string (no ejecutar todavía)
+            $sql = "SELECT 
+                        ra.idresponsablealmacen AS id,
+                        ra.responsable_id_responsable AS idresponsable,
+                        ra.almacen_id_almacen AS idalmacen,
+                        a.nombre AS almacen,
+                        ra.fecha AS fecha,
+                        MD5(r.id_usuario) AS idusuario,
+                        MD5(ra.almacen_id_almacen) AS idalmacenM,
+                        a.idsucursal AS idsucursal
+                    FROM responsablealmacen ra
+                    LEFT JOIN responsable r ON ra.responsable_id_responsable = r.id_responsable
+                    LEFT JOIN almacen a ON ra.almacen_id_almacen = a.id_almacen";
+
+            $where = [];
+            $params = [];
+            $types = "";
+
+            if (!empty($codigo)) {
+                $where[] = "a.codigo = ?";
+                $params[] = $codigo;
+                $types .= 's';
+            }
+            if (!empty($idusuario)) {
+                $where[] = "r.id_usuario = ?";
+                $params[] = $idusuario;
+                $types .= 'i';
+            }
+            if (!empty($idempresa)) {
+                $where[] = "r.id_empresa = ?";
+                $params[] = $idempresa;
+                $types .= 'i';
+            }
+
+            if (!empty($where)) {
+                $sql .= " WHERE " . implode(" AND ", $where);
+            }
+
+            $sql .= " ORDER BY ra.idresponsablealmacen DESC";
+
+
+            $stmt = $this->cm->prepare($sql);
+            if (!empty($params)) {
+                $stmt->bind_param($types, ...$params);
+            }
+            $stmt->execute();
+            $result = $stmt->get_result();
+
+            while ($qwe = $result->fetch_assoc()) {
+                $res = [
+                    "id" => $qwe['id'],
+                    "idresponsable" => $qwe['idresponsable'],
+                    "idalmacen" => $qwe['idalmacen'],
+                    "almacen" => $qwe['almacen'],
+                    "fecha" => $qwe['fecha'],
+                    "idusuario" => $qwe['idusuario'],
+                    "idalmacenM" => $qwe['idalmacenM'],
+                    "sucursales" => []
+                ];
+
+                if ($qwe['idsucursal'] == 0) {
+                    $res['sucursales'][] = [
+                        "idsucursal" => 0,
+                        "nombre" => "Sin sucursales"
+                    ];
+                } elseif (isset($sucursalInfo[$qwe['idsucursal']])) {
+                    $res['sucursales'][] = $sucursalInfo[$qwe['idsucursal']];
+                }
+
+                $lista[] = $res;
+            }
+            if($respuesta == null){
+                echo json_encode($lista, JSON_UNESCAPED_UNICODE);
+            }elseif($respuesta == 1){
+                return  $lista;
+            }
+            
+        } catch (Exception $e) {
+            echo json_encode(["estado" => "error", "mensaje" => $e->getMessage()]);
+        }
+    }
+
+    public function listaAlmacenesResponsable_($idmd5, $respuesta = null, $idalmacen = null)
     {
         try {
             $lista = [];
@@ -318,23 +432,56 @@ class configuracion
                 );
             }
     
-            $consulta = $this->cm->query("SELECT ra.idresponsablealmacen, ra.responsable_id_responsable, ra.almacen_id_almacen, a.nombre , ra.fecha, MD5(r.id_usuario), MD5(ra.almacen_id_almacen), a.idsucursal FROM responsablealmacen ra
+            $sql = $this->cm->query("SELECT ra.idresponsablealmacen, ra.responsable_id_responsable, ra.almacen_id_almacen, a.nombre , ra.fecha, MD5(r.id_usuario), MD5(ra.almacen_id_almacen), a.idsucursal FROM responsablealmacen ra
             LEFT JOIN responsable r on ra.responsable_id_responsable=r.id_responsable
             LEFT JOIN almacen a on ra.almacen_id_almacen=a.id_almacen
-            WHERE r.id_empresa='$idempresa'
-            ORDER BY ra.idresponsablealmacen desc");
             
-            while ($qwe = $this->cm->fetch($consulta)) {
-                $res = array("id" => $qwe[0], "idresponsable" => $qwe[1], "idalmacen" => $qwe[2], "almacen" => $qwe[3], "fecha" => $qwe[4], "idusuario" => $qwe[5], "idalmacenM" => $qwe[6], "sucursales" => []);
-                if ($qwe[7] == 0) {
-                    $res['sucursales'][] = $sucursalInfoVacia[0] = array(
-                        "idsucursal" => 0,
-                        "nombre" => "Sin sucursales"
-                    );
-                } elseif (isset($sucursalInfo[$qwe[7]])) {
-                    $res['sucursales'][] = $sucursalInfo[$qwe[7]];
+            ORDER BY ra.idresponsablealmacen desc");
+            $where = [];
+            $params = [];
+            $types = "";
+            if (!empty($idalmacen)) {
+                $where[] = "a.id_almacen = ?";
+                $params[] = $idalmacen;
+                $types .= 'i';
+            }
+            if (isset($idempresa)) {
+                $where[] = "r.id_empresa = ?";
+                $params[] = $idempresa;
+                $types .= 'i';
+            }
+
+        
+            if (!empty($where)) {
+                $sql .= " WHERE " . implode(" AND ", $where);
+            }
+            $sql .= " ORDER BY ra.idresponsablealmacen desc";
+
+            try {
+                $stmt = $this->cm->prepare($sql);
+                if (!empty($params)) {
+                    $stmt->bind_param($types, ...$params);
                 }
-                array_push($lista, $res);
+                $stmt->execute();
+                $result = $stmt->get_result();
+
+                 while ($qwe = $result->fetch_assoc()) {
+                   $res = array("id" => $qwe[0], "idresponsable" => $qwe[1], "idalmacen" => $qwe[2], "almacen" => $qwe[3], "fecha" => $qwe[4], "idusuario" => $qwe[5], "idalmacenM" => $qwe[6], "sucursales" => []);
+                    if ($qwe[7] == 0) {
+                        $res['sucursales'][] = $sucursalInfoVacia[0] = array(
+                            "idsucursal" => 0,
+                            "nombre" => "Sin sucursales"
+                        );
+                    } elseif (isset($sucursalInfo[$qwe[7]])) {
+                        $res['sucursales'][] = $sucursalInfo[$qwe[7]];
+                    }
+                    array_push($lista, $res);
+                    
+                }
+               
+            } catch (Exception $e) {
+                // $this->logger->log($e->getMessage());
+                echo json_encode(["estado" => "error", "mensaje" => "Error al generar el reporte: " . $e->getMessage()]);
             }
     
             echo json_encode($lista);
@@ -2429,7 +2576,7 @@ class configuracion
         echo  json_encode($res);
     }
 
-    public function listaMetodoPagoFactura($idmd5, $token, $tipo)
+    public function listaMetodoPagoFactura($idmd5, $token, $tipo , $respuesta = null)
     {
         $lista = [];
         $idempresa = $this->verificar->verificarIDEMPRESAMD5($idmd5);
@@ -2454,8 +2601,14 @@ class configuracion
                                 break;
                             }
                         }
-                        $res = array("id" => $qwe[0], "nombre" => $qwe[1], "estado" => $qwe[3], "metodopagosin" => array("codigo" => $codigo, "descripcion" => $descripcion));
-                        array_push($lista, $res);
+                        if($respuesta == null){
+                            $res = array("id" => $qwe[0], "nombre" => $qwe[1], "estado" => $qwe[3], "metodopagosin" => array("codigo" => $codigo, "descripcion" => $descripcion));
+                            array_push($lista, $res);
+                        }elseif($respuesta == 1){
+                            $res = array("codigo" => $qwe[0], "nombre" => $qwe[1], "estado" => $qwe[3] == '1' ? 'Activo':'Inactivo');
+                            array_push($lista, $res);
+                        }
+                        
                     }
                 }
             } else {
@@ -2463,8 +2616,14 @@ class configuracion
             }
         }else{
             while ($qwe = $this->cm->fetch($consulta)) {
-                $res = array("id" => $qwe[0], "nombre" => $qwe[1], "estado" => $qwe[3]);
-                array_push($lista, $res);        
+                if($respuesta == null){
+                    $res = array("id" => $qwe[0], "nombre" => $qwe[1], "estado" => $qwe[3]);
+                    array_push($lista, $res);    
+                }elseif($respuesta == 1){
+                    $res = array("codigo" => $qwe[0], "nombre" => $qwe[1], "estado" => $qwe[3] == '1' ? 'Activo':'Inactivo');
+                    array_push($lista, $res);
+                }
+                    
             }
         }
         echo json_encode($lista);

@@ -45,7 +45,6 @@ class Facturacion
             CURLOPT_HTTPHEADER => $headers,
             CURLOPT_RETURNTRANSFER => true,
         ));
-
         // Realizar la petición GET
         $response = curl_exec($ch);
 
@@ -335,4 +334,4 @@ class Facturacion
 }
 
 
-//86DCEAF5676FE1C8F207F23176B1BC4B1AA9830604E995006C3A1F74 encontrada
+//86DCEAF5676FE1C8F207F23176B1BC4B1AA9830604E995006C3A1F74 validarNIT

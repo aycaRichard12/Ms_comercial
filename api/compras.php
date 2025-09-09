@@ -1152,7 +1152,6 @@ class compras
     public function uploadRecibo()
     {
         $res = array();
-
         // 1. Validar datos de entrada
         $idpedido = isset($_POST['idpedido']) ? $_POST['idpedido'] : null;
         if (!$idpedido) {
@@ -1294,7 +1293,6 @@ class compras
 
     // Puedes aplicar una lógica similar a tu función `uploadFotoMovimiento`
     // public function uploadFotoMovimiento() { /* ... */ }
-
     // Y para `deleteRecibo` asegúrate de que el `unlink` se aplique al archivo con la extensión correcta (.webp, .pdf, .png, .jpg)
     public function deleteRecibo($idpedido) 
     {

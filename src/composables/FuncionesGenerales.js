@@ -1,7 +1,7 @@
 import { useFetchList } from 'src/composables/useFetchList'
 //vapp
+const contenidousuario = JSON.parse(localStorage.getItem('yofinanciero'))
 export function idempresa_md5() {
-  const contenidousuario = JSON.parse(localStorage.getItem('yofinanciero'))
   if (contenidousuario) {
     return contenidousuario?.[0]?.empresa?.idempresa
   } else {
@@ -11,7 +11,6 @@ export function idempresa_md5() {
   }
 }
 export function idusuario_md5() {
-  const contenidousuario = JSON.parse(localStorage.getItem('yofinanciero'))
   if (contenidousuario) {
     return contenidousuario?.[0]?.idusuario
   } else {
@@ -21,8 +20,6 @@ export function idusuario_md5() {
   }
 }
 export function TipoFactura() {
-  const contenidousuario = JSON.parse(localStorage.getItem('yofinanciero'))
-
   if (contenidousuario && contenidousuario[0]?.factura) {
     const tipo = contenidousuario[0].factura.tipo
 
@@ -39,13 +36,21 @@ export function TipoFactura() {
   }
 }
 
+export function expires_in() {
+  if (contenidousuario && contenidousuario[0]) {
+    return contenidousuario?.[0]?.empresa?.fex
+  } else {
+    alert('Hubo un problema con la sesión, por favor vuelva a iniciar sesión.')
+    console.log('Los elementos no existen en localStorage')
+    window.location.href = '/app/dashboard'
+  }
+}
 export function obtenerEstadoFactura() {
   const objetoDesdeLocalStorage = JSON.parse(localStorage.getItem('yofinanciero'))
   console.log(objetoDesdeLocalStorage)
   return Object.values(objetoDesdeLocalStorage[0].factura).every((valor) => valor !== '')
 }
 export function validarUsuario() {
-  const contenidousuario = JSON.parse(localStorage.getItem('yofinanciero'))
   if (contenidousuario) {
     return contenidousuario
   } else {

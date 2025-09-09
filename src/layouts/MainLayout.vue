@@ -15,6 +15,7 @@
         </div>
 
         <q-toolbar-title class="q-gutter-sm flex justify-end items-center" clearable>
+          <q-btn icon="help_outline" color="blue" flat @click="guiarInicio" />
           <notificacion-layout v-if="permitidoNotificaciones" />
           <q-btn
             flat
@@ -52,7 +53,7 @@
 
     <q-drawer v-model="leftDrawerOpen" show-if-above class="bg-white" style="position: fixed">
       <div>
-        <router-link to="/">
+        <router-link to="/" @click="ocultarTabs">
           <q-img class="absolute-top" src="../assets/fondou.jpg" style="height: 150px">
             <div class="absolute-bottom bg-transparent">
               <q-avatar size="56px" class="q-mb-sm">
@@ -67,19 +68,20 @@
       <q-scroll-area
         style="height: calc(100% - 150px); margin-top: 150px; border-right: 1px solid #ddd"
       >
-        <q-btn
-          label="Inicio"
-          icon="home"
-          to="/"
-          flat
-          unelevated
-          color="primary"
-          class="menu-header"
-          expand-icon-class="text-grey-6"
-          header-class="text-weight-medium text-grey-9"
-          @click="ocultarTabs"
-        />
-
+        <div class="row flex justify-between">
+          <q-btn
+            label="Inicio"
+            icon="home"
+            to="/"
+            flat
+            unelevated
+            color="primary"
+            class="menu-header"
+            expand-icon-class="text-grey-6"
+            header-class="text-weight-medium text-grey-9"
+            @click="ocultarTabs"
+          />
+        </div>
         <q-list padding="">
           <div
             v-for="menu in items.filter((i) => i.codigo !== 'opcionesocultas')"
@@ -139,6 +141,7 @@ import { useMenuStore } from 'src/stores/permitidos'
 import logo from 'src/assets/IMAGOTIPO-02.png'
 import NotificacionLayout from './NotificacionLayout.vue'
 import { permisoNotificaciones } from 'src/composables/FuncionesG'
+import { guiarInicio } from 'src/utils/guiasDriver'
 // NOTIFICACIONES
 const ocultarTabs = () => {
   tabsVisible.value = false

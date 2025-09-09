@@ -38,7 +38,11 @@
           <q-btn icon="close" @click="mostrarDetalleCompra = false" flat dense round />
         </q-card-section>
         <q-card-section>
-          <DetalleCompra :compra="formularioDetalleCompra" @close="cancelarDetalle" />
+          <DetalleCompra
+            :compra="formularioDetalleCompra"
+            @close="cancelarDetalle"
+            @update="iniciar"
+          />
         </q-card-section>
       </q-card>
     </q-dialog>
@@ -83,6 +87,8 @@ const registroActual = ref({
   ver: 'registrarCompra',
   idusuario: idusuario,
   factura: compras.value.length,
+  codigo: generarCodigo(),
+  nombre: 'CMP-',
   tipoRegistro: 2,
 })
 const showFormEdit = ref(false)
@@ -144,6 +150,7 @@ async function enviarFormData(endpoint, data, mensajeExito, mensajeError) {
     console.log(response.data)
     if (response.data.estado === 'exito') {
       $q.notify({ type: 'positive', message: response.data.mensaje || mensajeExito })
+      iniciar()
       return response
     } else {
       $q.notify({ type: 'negative', message: response.data.mensaje || mensajeError })
@@ -180,7 +187,11 @@ function cerrarFormulario() {
 function resetForm() {
   registroActual.value = {
     ver: 'registrarCompra',
-    idusuario,
+    idusuario: idusuario,
+    factura: compras.value.length,
+    codigo: generarCodigo(),
+    nombre: 'CMP-',
+    tipoRegistro: 2,
   }
 }
 
@@ -290,15 +301,21 @@ async function autorizarCompra(compra) {
     persistent: true,
   }).onOk(async () => {
     try {
-      const point = `actualizarEstadoCompra/${compra.id}/1/${compra.idpedido}/${compra.idalmacen}`
-      const response = await api.get(point)
-      console.log(response)
-      if (response.data.estado === 'error') {
-        $q.notify({ type: 'negative', message: response.data.mensaje })
-      } else {
-        $q.notify({ type: 'positive', message: response.data.mensaje })
+      const verificar = await api.get(`listaDetalleCompra/${compra.id}`)
+      console.log(verificar.data)
+      if (verificar.data.length > 0) {
+        const point = `actualizarEstadoCompra/${compra.id}/1/${compra.idpedido}/${compra.idalmacen}`
+        const response = await api.get(point)
+        console.log(response)
+        if (response.data.estado === 'error') {
+          $q.notify({ type: 'negative', message: response.data.mensaje })
+        } else {
+          $q.notify({ type: 'positive', message: response.data.mensaje })
 
-        loadRows()
+          iniciar()
+        }
+      } else {
+        $q.notify({ type: 'negative', message: 'No se ingreso ningun producto' })
       }
     } catch (error) {
       console.error('Error al autorizar compra:', error)
@@ -335,7 +352,7 @@ onBeforeUnmount(() => {
   window.removeEventListener('keydown', handleKeydown)
 })
 
-onMounted(async () => {
+async function iniciar() {
   await cargarAlmacenes()
   await cargarProveedores()
   await loadRows()
@@ -347,5 +364,8 @@ onMounted(async () => {
     nombre: 'CMP-',
     tipoRegistro: 2,
   }
+}
+onMounted(async () => {
+  iniciar()
 })
 </script>

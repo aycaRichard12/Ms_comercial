@@ -1,6 +1,5 @@
 <?php
-require_once "outProductos.php";
-require_once "outVenta.php";
+
 $ver = $_GET['ver'] ?? '';
 
 $segments = $ver !== '' ? array_filter(explode("/", $ver)) : [];
@@ -33,6 +32,22 @@ elseif($apiRoute== "puntos-venta"){
     $controlador = new outVenta();
     $controlador->puntos_venta($segments[2]); 
 } 
+elseif($apiRoute== "obtenerTokenEmizor_"){
+    
+    $controlador = new ApiTokens();
+    $controlador->obtenerTokenEmizor_($segments[2]); 
+} 
+elseif($apiRoute == "divisa"){
+    
+    $controlador = new outVenta();
+    $controlador->getDivisa(); 
+} 
+elseif($apiRoute == "divisa"){
+    
+    $controlador = new outVenta();
+    $controlador->getDivisa(); 
+} 
+ 
 else {
     http_response_code(404);
     echo json_encode([

@@ -160,16 +160,22 @@ if ($ver == "registrarResponsable") {
             }
         } else {
             if (empty($_POST['imagen'])) {
-                throw new Exception("Debe proporcionar una imagen.");
+                //throw new Exception("Debe proporcionar una imagen.");
             }
-            $url = $_POST['imagen'];
+            $url = null;
         }
-
+         
+        $codigoSin = $_POST['codigosin'] ?? '';
+        $codigoactividad = $_POST['codigoactividad'] ?? '';
+        $unidadsin = $_POST['unidadsin'] ?? '';
+        $codigoNandina = $_POST['codigoNandina'] ?? '';
+            
+            
         $controlador->registroProducto(
             $_POST['nombre'], $_POST['codigo'], $_POST['descripcion'], $_POST['codigobarras'],
             $_POST['categoria'], $_POST['medida'], $_POST['estadoproductos'], $_POST['unidad'],
-            $_POST['caracteristica'], $url, $_POST['codigosin'], $_POST['codigoactividad'],
-            $_POST['unidadsin'], $_POST['codigoNandina'], $_POST['idempresa']
+            $_POST['caracteristica'], $url, $codigoSin, $codigoactividad,
+            $unidadsin, $codigoNandina, $_POST['idempresa']
         );
 
         echo json_encode(["estado" => "ok", "mensaje" => "Producto registrado correctamente", "imagen" => $url]);
@@ -202,12 +208,11 @@ if ($ver == "registrarResponsable") {
                 throw new Exception("Error al guardar la imagen en el servidor.");
             }
         } else {
-            if (empty($_POST['imagen'])) {
-                        throw new Exception("Debe proporcionar una imagen.");
-            }
+            
             $url = $_POST['imagen'];
         }   
-        $controlador->editarProducto($_POST['id'], $_POST['nombre'], $_POST['codigo'], $_POST['descripcion'], $_POST['codigobarras'], $_POST['categoria'], $_POST['medida'], $_POST['estadoproductos'], $_POST['unidad'], $_POST['caracteristica'], $url, $_POST['codigosin'], $_POST['codigoactividad'], $_POST['unidadsin'],$_POST['codigoNandina']);
+        // echo json_encode([$_POST['id'], $_POST['nombre'], $_POST['codigo'], $_POST['descripcion'], $_POST['codigobarras'], $_POST['categoria'], $_POST['medida'], $_POST['estadoproductos'], $_POST['unidad'], $_POST['caracteristica'], $url, $_POST['codigosin'], $_POST['codigoactividad'], $_POST['unidadsin'],$_POST['codigoNandina']]);
+         $controlador->editarProducto($_POST['id'], $_POST['nombre'], $_POST['codigo'], $_POST['descripcion'], $_POST['codigobarras'], $_POST['categoria'], $_POST['medida'], $_POST['estadoproductos'], $_POST['unidad'], $_POST['caracteristica'], $url, $_POST['codigosin'], $_POST['codigoactividad'], $_POST['unidadsin'],$_POST['codigoNandina']);
     } catch (Exception $e) {
         echo json_encode(["estado" => "error", "mensaje" => $e->getMessage()]);
     }

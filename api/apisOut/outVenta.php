@@ -1,6 +1,5 @@
 <?php
 require_once "apiTokens.php";
-
 class outVenta
 {
     // --- CONEXIONES Y CLASES AUXILIARES ---
@@ -45,10 +44,10 @@ class outVenta
         $this->em = $this->conexion->em;
         
     }
-    public function getidAlmacen($codigo){
-        $sql = "SELECT id_almacen FROM almacen WHERE codigo = ?";
+    public function getidAlmacen($codigo,$idempresa){
+        $sql = "SELECT id_almacen FROM almacen WHERE codigo = ? AND idempresa = ?";
         $stmt = $this->cm->prepare($sql);
-        $stmt->bind_param("s", $codigo);
+        $stmt->bind_param("si", $codigo,$idempresa);
         $stmt->execute();
         $stmt->bind_result($id_almacen);  // vinculas la salida a una variable
         $stmt->fetch();                   // obtienes el valor
@@ -56,34 +55,69 @@ class outVenta
         return $id_almacen;               // retorna el id directamente
     }
      
-    public function registrarCliente($datosCliente, $idmd5E, $token, $factura) {
-        $res = 0;
+    public function verificarCliente($datosCliente, $idmd5E, $token, $factura) {
+        if (($factura == 2 || $factura == 1) && $datosCliente['tipoDocumento'] == 5) {
+
+            ob_start();  
+            $this->factura->validarNIT($datosCliente['nit'], $token, $factura);
+            $res = ob_get_clean();  
+
+            $data = json_decode($res); // objeto stdClass
+
+            if ($data->data->descripcion != "NIT ACTIVO") {
+                // solo responde en Postman si NO está activo
+                echo $res;  
+                return null;
+            }
+
+            // si está activo, simplemente no haces echo
+        }
+
+        $idempresa = $this->verificar->verificarIDEMPRESAMD5($idmd5E);
+        $res = [];
 
         //  Validar campos obligatorios
-        $obligatorios = ['nombre', 'nombreComercial', 'tipoDocumento', 'nit'];
+        $obligatorios = ['nombre','tipoDocumento', 'nit'];
         foreach ($obligatorios as $campo) {
             if (!isset($datosCliente[$campo]) || empty(trim($datosCliente[$campo]))) {
                 return 0; // o puedes lanzar una excepción si prefieres
             }
         }
-
-        //  Verificar si ya existe cliente con el mismo NIT
-        $sql = "SELECT c.id_cliente FROM cliente c WHERE c.nit = ?;";
+        $sql = "SELECT id_cliente, codigo, tipodocumento, nit, nombrecomercial FROM cliente  WHERE nit = ? AND idempresa = ?;";
         $stmt = $this->cm->prepare($sql);
-        $stmt->bind_param("s", $datosCliente['nit']);
+        $stmt->bind_param("si", $datosCliente['nit'],$idempresa);
         $stmt->execute();
-        $stmt->bind_result($id_cliente);
+        $stmt->bind_result($id_cliente, $codigo, $tipodocumento, $nit, $nombrecomercial);
         $stmt->fetch();
         $stmt->close();
+        //  Verificar si ya existe cliente con el mismo NIT
+        
 
         if ($id_cliente) {
-            $res = $id_cliente;
+            
+            $sql = "SELECT s.id_sucursal FROM sucursal s WHERE s.cliente_id_cliente = ?;";
+            $stmt = $this->cm->prepare($sql);
+            $stmt->bind_param("i", $id_cliente);
+            $stmt->execute();
+            $stmt->bind_result($id_sucursal);
+            $stmt->fetch();
+            $stmt->close();
+
+            $res = [    
+                        "idcliente" => $id_cliente,
+                        "idsucursal"=>$id_sucursal,
+                        "tipoDocumento" => $tipodocumento,
+                        "NroDocumento" => $nit,
+                        "nombreComercial" => $nombrecomercial,
+                        "codigo" => $codigo
+                    ];
+
         } else {
             
             //  Registrar cliente nuevo
-            $id_cliente_nuevo = $this->funcionesVenta->registrocliente(
-                $datosCliente['nombre'],
-                $datosCliente['nombreComercial'],
+            $res = $this->funcionesVenta->registrocliente(
+                $datosCliente['nombre'] ?? '',
+                $datosCliente['nombreComercial'] ?? $datosCliente['nombre'],
                 $datosCliente['codigoCanal']      ?? '',
                 $datosCliente['codigoTipoCliente']?? '',
                 $datosCliente['tipoDocumento'],
@@ -101,14 +135,14 @@ class outVenta
                 $idmd5E,
                 1
             );
-            $res = $id_cliente_nuevo;
+            
+           
         }
-        if(($factura == 2 || $factura == 1) && $datosCliente['tipoDocumento'] == 5 ){
-            $validar = $this->factura->validarNIT($datosCliente['nit'],$token,$factura);
-        }else{
+        
 
-        }
-
+        
+       
+        //echo json_encode([ "cliente" => $res]);
         return $res;
     }
 
@@ -128,20 +162,29 @@ class outVenta
         }
         echo json_encode($lista);
     }
-    public function verificarRegistroCliente($data){
-
-    }
-
-    public function crearSucursal($idcliente){
-
-    }
-
-    public function obtenerUsuariVendedor($id_almacen){
-
-    }
-
-    public function obtenerPuntoVentaAlmace($id_almacen){
-
+    
+    public function usuario($idempresa,$idusuario){
+        
+        try {
+            $sql = "SELECT u.idusuario, u.nombre, c.cargo FROM usuario u 
+            LEFT JOIN trabajador t ON u.trabajador_idtrabajador=t.idtrabajador
+            LEFT JOIN cargos c ON t.cargos_idcargos=c.idcargos
+            WHERE u.idempresa=? AND u.idusuario = ?";
+            $stmt = $this->rh->prepare($sql);
+            $stmt->bind_param("ii", $idempresa,$idusuario);
+            $stmt->execute();
+            $stmt->bind_result($idusuario, $nombre, $cargo);
+            $stmt->fetch();
+            $stmt->close();
+            return [
+                "idusuario" => $idusuario,
+                "nombre" => $nombre,
+                "cargo" => $cargo,
+            ];
+        } catch (Exception $e) {
+            // $this->logger->log($e->getMessage());
+            return json_encode(["estado" => "error", "mensaje" => $e->getMessage()]);
+        }
     }
 
     public function idProducto($idmd5P){
@@ -155,77 +198,147 @@ class outVenta
         }
 
     }
-
-    public function OrdenarProductos($dataproductos){
-        // [{
-        //     "id": "b17c0907e67d868b4e0feb43dbbe6f11",
-        //     "codigoProducto": "PH-001",
-        //     "codigoProductoSin": "99100",
-        //     "codigoActividadSin": "610000",
-        //     "unidadSin": "17",
-        //     "codigoNandina": null,
-        //     "codigoPorcentaje": 211,
-        //     "precioUnitario": 0,
-        //      "cantidad": 1,
-        // },.....]
-
+    public function getDivisa(){
+        $datostoken = $this->token->autenticarPeticion();
+        $idempresa = $datostoken->data->id_empresa;
+         try {
+            $sql = "SELECT id_divisas AS codigoDivisa, monedasin AS codigoDivisaSin, nombre AS divisa FROM divisas WHERE idempresa = ? AND estado = 1;";
+            $stmt = $this->cm->prepare($sql);
+            $stmt->bind_param("i", $idempresa);
+            $stmt->execute();
+            $stmt->bind_result($codigoDivisa,$codigoDivisaSin,$divisa);
+            $stmt->fetch();
+            $stmt->close();
+            echo json_encode([
+                "divisa" => $divisa,
+                "codigoDivisa" => $codigoDivisa,
+                "codigoDivisaSin" => $codigoDivisaSin,
+                "Estado" => "Activo",
+            ]);
+        } catch (Exception $e) {
+            // $this->logger->log($e->getMessage());
+            echo json_encode(["estado" => "error", "mensaje" => $e->getMessage()]);
+        }
+    }
+    public function sin_divisa($iddivisa){
         
+         try {
+            $sql = "SELECT  monedasin FROM divisas WHERE id_divisas = ?";
+            $stmt = $this->cm->prepare($sql);
+            $stmt->bind_param("i", $iddivisa);
+            $stmt->execute();
+            $stmt->bind_result($monedasin);
+            $stmt->fetch();
+            $stmt->close();
+            return $monedasin;
+        } catch (Exception $e) {
+            // $this->logger->log($e->getMessage());
+            return  0;
+        }
+    }
+
+    public function ordenar_listaProductos($dataproductos,$factura){
+        $listaProductos = [];
+        $listaProductosFactura =[];
+        $detalles = [];
+        foreach ($dataproductos as $producto) {
+            $idproducto =  $this->idProducto($producto['id']);
+            $Lp = [
+                "idproductoalmacen"=> $idproducto,
+                "cantidad"=> $producto['cantidad'],
+                "precio"=> $producto['precioUnitario'],
+                "idstock"=> $producto['codigoStock'],
+                "idporcentaje"=> $producto['codigoPorcentaje'],
+                "candiponible"=> $producto['stock'],
+                "descripcion"=> $producto['descripcionProducto'],
+                "codigo"=> $producto['codigoProducto'],
+                "subtotal"=> $producto['subTotal'],
+                "datosAdicionales"=> '',
+                "despachado"=> 1, 
+            ];
+            if($factura != 0){
+                $LPF =[
+                    "codigoProducto"=> $producto['codigoProducto'],
+                    "codigoActividadSin"=> $producto['codigoActividadSin'],
+                    "codigoProductoSin"=> $producto['codigoProductoSin'],
+                    "descripcion"=> $producto['descripcionProducto'],
+                    "unidadMedida"=> $producto['unidadSin'],
+                    "precioUnitario"=> $producto['precioUnitario'],
+                    "subTotal"=> $producto['subTotal'],
+                    "cantidad"=> $producto['cantidad'],
+                    "numeroSerie"=> $producto['numeroSerie']??"",
+                    "montoDescuento"=> $producto['montoDescuento'],
+                    "numeroImei"=> $producto['numeroImei'] ?? "",
+                    "codigoNandina"=> $producto['codigoNandina']??"",
+                ];
+
+                $d = [
+                    "codigoProducto"=> $producto['codigoProducto'],
+                    "codigoActividadSin"=> $producto['codigoActividadSin'],
+                    "codigoProductoSin"=> $producto['codigoProductoSin'],
+                    "descripcion"=>  $producto['descripcionProducto'],
+                    "unidadMedida"=>  $producto['unidadSin'],
+                    "precioUnitario"=> $producto['precioUnitario'],
+                    "subTotal"=> $producto['subTotal'],
+                    "cantidad"=> $producto['cantidad'],
+                    "numeroSerie"=> $producto['numeroSerie']??"",
+                    "montoDescuento"=>  $producto['montoDescuento'],
+                    "numeroImei"=> $producto['numeroImei'] ?? "",
+                    "codigoNandina"=> $producto['codigoNandina']??"",
+                ];
+                array_push($listaProductosFactura,$LPF );
+                array_push($detalles,$d);
+            }
+            
+            array_push($listaProductos,$Lp );
             
 
-
+        }
+        $r = array("listaProductos" => $listaProductos,"listaProductosFactura" => $listaProductosFactura, "detalles" => $detalles);
+        return $r;
     }
     public function getFormularioVenta(){
         $datos = [ 
             "jsonDetalles"=> [
-                "listaProductos"=> [
-                    [
-                        "idproductoalmacen"=> "5036",
-                        "cantidad"=> 1,
-                        "precio"=> "90",
-                        //"idstock"=> "61195",
-                        "idporcentaje"=> "212",
-                        "id"=> "5036",
-                        "subtotal"=> 90,
-                        "despachado"=> 1
-                    ]
-                ],
-                "listaProductosFactura"=> [
-                    [
-                        "codigoProducto"=> "MV-001",
-                        "codigoActividadSin"=> "620100",
-                        "codigoProductoSin"=> "991009",
-                        "unidadMedida"=> "4",
-                        "precioUnitario"=> "90",
-                        "subTotal"=> "90.00",
-                        "cantidad"=> 1,
-                        "numeroSerie"=> "",
-                        "montoDescuento"=> 0,
-                        "numeroImei"=> "",
-                        "codigoNandina"=> ""
-                    ]
+                "ver" => "registrarVenta",
+                "codigoAlmacen"=> "AAAW",
+                "idusuario" => "a8f15eda80c50adb0e71943adc8015cf",
+                "cliente" =>[
+                    "nombre" => "",
+                    "tipoDocumento" => "",
+                    "nit" => "",
+                    "nombreComercial" => "",
+                    "codigoCanal" => "",
+                    "codigoTipoCliente" => "",
+                    "direccion" => "",
+                    "telefono" => "",
+                    "mobil" => "",
+                    "email" => "",
+                    "web" => "",
+                    "pais" => "",
+                    "ciudad" => "",
+                    "zona" => "",
+                    "contacto" => "",
+
                 ],
                 "listaFactura"=> [
-                    "numeroFactura"=> "",
-                    "nombreRazonSocial"=> "Cliente De Venta",
-                    //"codigoPuntoVenta"=> "1",
+                    "codigosinsucursal" => "",
+                    "codigoDivisa" => "",
+                    
+                    "codigoPuntoVenta"=> "1",
+                    "codigoCanal" => "null",
                     "fechaEmision"=> "2025-08-22T16=>29=>05.799Z",
                     "cafc"=> "",
                     "codigoExcepcion"=> "",
                     "descuentoAdicional"=> 0,
                     "montoGiftCard"=> 0,
-                    "codigoTipoDocumentoIdentidad"=> "1",
-                    "numeroDocumento"=> "2352345",
                     "complemento"=> "",
-                    //"codigoCliente"=> "CA-500016",
                     "periodoFacturado"=> "",
                     "codigoMetodoPago"=> "21",
                     "numeroTarjeta"=> "",
                     "montoTotal"=> "90.00",
-                    //"codigoMoneda"=> 1,
+                    "codigoMoneda"=> 1,
                     "montoTotalMoneda"=> "90.00",
-                    //"usuario"=> "richard50",
-                    "emailCliente"=> "factura@yofinanciero.com",
-                    "telefonoCliente"=> "1084234",
                     "extras"=> [
                         "facturaTicket"=> ""
                     ],
@@ -233,6 +346,8 @@ class outVenta
                     "tipoCambio"=> 1,
                     "detalles"=> [
                         [
+                            "id"=> "b17c0907e67d868b4e0feb43dbbe6f11",
+                            "codigoPorcentaje"=> "212",
                             "codigoProducto"=> "MV-001",
                             "codigoActividadSin"=> "620100",
                             "codigoProductoSin"=> "991009",
@@ -248,63 +363,127 @@ class outVenta
                         ]
                     ]
                 ],
-                "idalmacen"=> "93",
-                "codigosinsucursal"=> "1",
-                "token"=> "",
-                "tipo"=> "1",
-                "iddivisa"=> 8,
-                "idcampana"=> 0,
-                "ventatotal"=> "90.00",
-                "subtotal"=> "90.00",
-                "descuento"=> 0,
-                "nropagos"=> 0,
-                "valorpagos"=> 0,
-                "dias"=> null,
-                "fechalimite"=> "",
-                "pagosDivididos"=> [
-                    [
-                        "metodoPago"=> [
-                            "label"=> "Transferencia",
-                            "id"=> null,
-                            "value"=> "21"
-                        ],
-                        "monto"=> "90.00",
-                        "porcentaje"=> 100
-                    ]
-                ],
-                "variablePago"=> "dividido"
             ]
         ];
 
 
         return $datos;
     }
+    public function sin_metodo_pago($id_metodo){
+         try {
+            $sql = "SELECT codigosin FROM metodopago WHERE idmetodopago = ?;";
+            $stmt = $this->rh->prepare($sql);
+            $stmt->bind_param("i", $id_metodo);
+            $stmt->execute();
+            $stmt->bind_result($codigosin);
+            $stmt->fetch();
+            $stmt->close();
+
+            return $codigosin;
+
+        } catch (Exception $e) {
+            // $this->logger->log($e->getMessage());
+            return 0;
+        }
+    }
+
+    /**
+     
+     *
+     * @param array $data
+     */
     public function registrarVenta($data){
+        $fecha_venta = date("Y-m-d");
+        $COD_SIN_METODO_PAGO = 0;
+        $COD_SIN_DIVISA = 0;
+        $TIPO_VENTA = 0;
+
+        /** DATOS DE EMPRESA POR EL TOKEN */
         $datostoken = $this->token->autenticarPeticion();
         $id_empresa = $datostoken->data->id_empresa;
         $factura = $datostoken->data->tipo;
-        $id_almacen = $this->getidAlmacen($data->codigoAlmacen);
-        
-        $tipoventa = "1";
-        $idusuario = "eb160de1de89d9058fcb0b968dbbbd68";
-        $idempresa = "c0c7c76d30bd3dcaefc96f40275bdc0a";
-        $idcliente= "1714";
-        $sucursal= "1437";
-        $tipodoc= "1";
-        $nrodoc= "2352345";
-        $fecha= "2025-08-22";
-        $puntoventa= "1";
-        $metodoPago= "null";
-        $canal= "37";
-        $tipopago= "contado";
-    
-        if($factura == 2){
+        $idmd5 = $datostoken->data->md5;
 
-        }else{
-
+        $tokenEmizor = "";
+        if($factura == 1 || $factura == 2){
+            $tokenEmizor = $this->token->obtenerTokenEmizor($idmd5);
+            $COD_SIN_METODO_PAGO = $this->sin_metodo_pago($data['codigoMetodoPago']);
+            $COD_SIN_DIVISA = $this->sin_divisa($data['codigoDivisa']);;
+            $TIPO_VENTA =2;
         }
+
+        $idusuario = $this->verificar->verificarIDUSERMD5($data['idusuario']);
+        
+        
+        $emailCliente = "factura@yofinanciero.com";
+        
+        $c = $this->verificarCliente($data['datosCliente'], $idmd5, $tokenEmizor, $factura);
+        $usuario = $this->usuario($id_empresa, $idusuario);
+        $almacen = $this->configuracion->listaAlmacenesResponsable($idmd5,1,$data['codigoAlmacen'],$idusuario);
+        
+        
+        
+        $r = $this->ordenar_listaProductos($data['detalle'],$factura);
+
+        $jsonDetalles = [
+            "listaProductos" => $r['listaProductos'],
+            "listaProductosFactura" => $r['listaProductosFactura'],
+            "listaFactura" => [
+                "numeroFactura"=>"",
+                "nombreRazonSocial"=>$c['nombreComercial'],
+                "codigoPuntoVenta"=> $data['codigoPuntoVentaSin'],
+                "fechaEmision"=>$data['fechaEmision'],
+                "cafc" =>"",
+                "codigoExcepcion"=>"",
+                "descuentoAdicional"=>$data['descuentoAdicional'],
+                "montoGiftCard"=>'',
+                "codigoTipoDocumentoIdentidad"=>$c['tipoDocumento'],
+                "numeroDocumento"=>$c['NroDocumento'],
+                "complemento"=>$data['complemento'],
+                "codigoCliente"=>$c['codigo'],
+                "periodoFacturado"=>"",
+                "codigoMetodoPago"=>$COD_SIN_METODO_PAGO,
+                "numeroTarjeta"=>$data['numeroTarjeta'],
+                "montoTotal"=>$data['montoTotal'],
+                "codigoMoneda"=>$COD_SIN_DIVISA,
+                "montoTotalMoneda"=>$data['montoTotal'],
+                "usuario"=>$usuario['nombre'],
+                "emailCliente"=>$emailCliente,
+                "telefonoCliente"=>'',
+                "extras"=>[ "facturaTicket" => ''],
+                "montoTotalSujetoIva"=>$data['montoTotal'],
+                "tipoCambio"=>1,
+                "detalles"=>$r['detalles'],
+                
+            ],
+            "idalmacen" => $almacen[0]['idalmacen'],
+            "codigosinsucursal" => $almacen[0]['sucursales'][0]['codigosin'],
+            "token" => $tokenEmizor,
+            "tipoFactura" => $factura,
+            "iddivisa" => $data['codigoDivisa'],
+            "idcampana" => 0,
+            "ventatotal" => $data['montoTotal'],
+            "subtotal" => floatval($data['montoTotal']) - floatval($data['descuentoAdicional']),
+            "descuento" => $data['descuentoAdicional'],
+            "nropagos" => 0,
+            "valorpagos" => 0,
+            "dias" => null,
+            "fechalimite" => '',
+            "pagosDivididos" => [
+                [
+                    "metodoPago" => [
+                        "value" => $data['codigoMetodoPago'],
+                    ],
+                    "monto" => $data['montoTotal'],
+                    "porcentaje" => 100,
+                ]
+            ],
+            "variablePago" => "dividido"
+        ];
+        //$fecha, $tipoventa, $tipopago, $idcliente, $idsucursal, $canalventa, $idmd5, $idmd5u, $jsonDetalles
+        $this->venta->registroVenta($fecha_venta,$TIPO_VENTA,'contado',$c['idcliente'],$c['idsucursal'],'0',$id_empresa,$data['idusuario'],$jsonDetalles);    
+        
     }
-    
     function tipo_documentos() {
         // Validar método permitido
         try {
@@ -372,10 +551,11 @@ class outVenta
 
             if($factura == 2 || $factura == 1){
                 $tokenEmizor = $this->token->obtenerTokenEmizor($idmd5);
+               // echo json_encode([ "token" => $tokenEmizor]);
                 //echo json_encode(['tokeemizor'=>$tokenEmizor, 'idm5' =>$idmd5,'tipo'=>$factura]);
-                $this->configuracion->listaMetodoPagoFactura($idmd5,$tokenEmizor,$factura);
+                $this->configuracion->listaMetodoPagoFactura($idmd5,$tokenEmizor,$factura,1);
             }else{
-                $this->configuracion->listaMetodoPagoFactura($idmd5,"",0);
+                $this->configuracion->listaMetodoPagoFactura($idmd5,"",0,1);
             }
             
             

@@ -22,6 +22,12 @@ export async function cargarLogoBase64(logoPath) {
   }
 }
 
+export function getPath() {
+  const route = useRoute()
+  const codigoPagina = route.path.replace(/^\//, '')
+  console.log
+  return codigoPagina
+}
 export function obtenerPermisosPagina() {
   const menuStore = useMenuStore()
   const route = useRoute()

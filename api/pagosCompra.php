@@ -174,12 +174,12 @@ class PagosCompra
     /**
      * Obtiene un pago específico por su ID.
      */
-    public function obtenerPagoPorId($id_pago)
+    public function obtenerPagoPorId($compra_id)
     {
-        $sql = "SELECT * FROM pagos WHERE id_pago = ?";
+        $sql = "SELECT * FROM pagos WHERE compra_id = ?";
         try {
             $stmt = $this->cm->prepare($sql);
-            $stmt->bind_param("i", $id_pago);
+            $stmt->bind_param("i", $compra_id);
             $stmt->execute();
             $result = $stmt->get_result();
             if ($result->num_rows > 0) {

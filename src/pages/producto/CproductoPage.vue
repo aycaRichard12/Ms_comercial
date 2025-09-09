@@ -239,6 +239,11 @@ async function loadmedidas() {
 
 const handleSubmit = async (data) => {
   console.log(data)
+  if (data.categoria || data.categoria == '') {
+    console.log('entro')
+    data.categoria = data.subcategoria
+  }
+  console.log(data)
   const formData = objectToFormData(data)
   for (let [k, v] of formData.entries()) {
     console.log(`${k}: ${v}`)
@@ -306,7 +311,8 @@ const editUnit = async (row) => {
     unidad: item.idunidad,
     medida: item.idmedida,
     caracteristica: item.caracteristica,
-    imagen: imagen + item.imagen,
+    vista: imagen + item.imagen,
+    imagen: item.imagen,
   }
   loadsubcategorias(item.idcategoria)
   isEditing.value = true

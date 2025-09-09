@@ -35,7 +35,7 @@ class ApiTokens
             echo $token;
             // === Validar parámetro ===
             if ($token === null || trim($token) === '') {
-                http_response_code(400); // Bad Request
+                http_response_code(400); // Bad Request obtenerTokenEmizor
                 echo json_encode([
                     'estado' => 'error',
                     'codigo' => 400,
@@ -112,7 +112,7 @@ class ApiTokens
         try {
             // === Validar parámetro ===
             if ($id_empresa === null) {
-                http_response_code(400); // Bad Request
+                http_response_code(400); // Bad Request encontrada
                 echo json_encode([
                     'estado' => 'error',
                     'codigo' => 400,
@@ -120,14 +120,17 @@ class ApiTokens
                 ], JSON_UNESCAPED_UNICODE);
                 return;
             }
-
+                $sql = "SELECT * 
+                    FROM facturatoken ftk";
             // === Query (sin LIMIT, siempre lista) ===
-            $sql = "SELECT * 
-                    FROM factura ft
-                    INNER JOIN facturatoken ftk ON ftk.idfactura = ft.idfactura
-                    WHERE ft.idempresa = ?
-                    ORDER BY ftk.idfacturatoken DESC";
+            // $sql = "SELECT * 
+            //         FROM factura ft
+            //         INNER JOIN facturatoken ftk ON ftk.idfactura = ft.idfactura
+            //         WHERE ft.idempresa = ?
+            //         ORDER BY ftk.idfacturatoken DESC";
 
+                // $sql = "SELECT * 
+                //      FROM factura ft";
             if (!$stmt = $this->ad->prepare($sql)) {
                 http_response_code(500);
                 echo json_encode([
@@ -138,7 +141,7 @@ class ApiTokens
                 return;
             }
 
-            $stmt->bind_param("i", $id_empresa);
+           // $stmt->bind_param("i", $id_empresa);
 
             if (!$stmt->execute()) {
                 http_response_code(500);
@@ -189,52 +192,53 @@ class ApiTokens
     public function obtenerTokenEmizor($md5)
     {
         try {
-            // === Validar parámetro ===
-            $url = $this->endpoint[3] . "/administrador/api/listartokenempresa/" . $md5;
+            // // === Validar parámetro ===
+            // $url = $this->endpoint[3] . "/administrador/api/listartokenempresa/" . $md5;
 
-            // Inicializar cURL
-            $ch = curl_init();
-            curl_setopt($ch, CURLOPT_URL, $url);
-            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-            curl_setopt($ch, CURLOPT_TIMEOUT, 10); // máximo 10 segundos
-            curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+            // // Inicializar cURL
+            // $ch = curl_init();
+            // curl_setopt($ch, CURLOPT_URL, $url);
+            // curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            // curl_setopt($ch, CURLOPT_TIMEOUT, 10); // máximo 10 segundos
+            // curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
 
-            // Ejecutar petición
-            $response = curl_exec($ch);
+            // // Ejecutar petición
+            // $response = curl_exec($ch);
 
-            // Verificar errores de cURL
-            if ($response === false) {
-                $error = curl_error($ch);
-                curl_close($ch);
-                echo json_encode(["error" => "Error en cURL", "detalle" => $error]);
-                return null;
-            }
+            // // Verificar errores de cURL
+            // if ($response === false) {
+            //     $error = curl_error($ch);
+            //     curl_close($ch);
+            //     echo json_encode(["error" => "Error en cURL", "detalle" => $error]);
+            //     return null;
+            // }
 
-            // Obtener código de respuesta HTTP
-            $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-            curl_close($ch);
+            // // Obtener código de respuesta HTTP
+            // $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            // curl_close($ch);
 
-            // Si no es 200, mostrar error
-            if ($httpCode !== 200) {
-                echo json_encode(["error" => "HTTP Code $httpCode", "response" => $response]);
-                return null;
-            }
+            // // Si no es 200, mostrar error
+            // if ($httpCode !== 200) {
+            //     echo json_encode(["error" => "HTTP Code $httpCode", "response" => $response]);
+            //     return null;
+            // }
 
-            // Decodificar JSON
-            $data = json_decode($response, true);
+            // // Decodificar JSON
+            // $data = json_decode($response, true);
 
-            // Verificar si JSON fue válido
-            if (json_last_error() !== JSON_ERROR_NONE) {
-                echo json_encode([
-                    "error" => "JSON inválido",
-                    "detalle" => json_last_error_msg(),
-                    "response" => $response
-                ], JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
-                return null;
-            }
-            // Retornar token valido
-            $ultimo = end($data);
-            return $ultimo['access_token'];
+            // // Verificar si JSON fue válido
+            // if (json_last_error() !== JSON_ERROR_NONE) {
+            //     echo json_encode([
+            //         "error" => "JSON inválido",
+            //         "detalle" => json_last_error_msg(),
+            //         "response" => $response
+            //     ], JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+            //     return null;
+            // }
+            // // Retornar token valido
+            // $ultimo = end($data);
+            // return $ultimo['access_token'];
+            return "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJhdWQiOiIzMDAyMzIiLCJqdGkiOiJiMGM2MzI0Zjc2YTdiZmIwNzliYWRiMjIxM2E3MTQzMmFjYjg2MjlhMzA2YzZmZTY0ODAxNzBlNTFmMTRlYWU4ZTkwZDk3N2NjMDM2MTdmNCIsImlhdCI6MTcyNzQ3NTUyMywibmJmIjoxNzI3NDc1NTIzLCJleHAiOjE3NTkwMTE1MjMsInN1YiI6IiIsInNjb3BlcyI6W119.llLu_9D8mxSjwd3YsvNaFf5-OJWq3IUi5OnrYpwxLd8z-TNh4KlRpAS1RSmphcnc-wtaPoUsv5IisoXCrIvlC6vgLeCFgu92p3pijETH7usOALsFIPDxAgsAvVAxRvuDWP_CdpxH_2VbpmaLLYVtWGAu3nCvCGIC5JczO0ykxli_ruEN_WtcRVDWBig6n40MgQUks__1xRXw-ZG8Y1C6_Y2xJ87xP-5nJXalFbyj6PVK_GBx1Gw6e_So5X5Fl_RLrIqJ4eCkcalkezc3GRnEswusRx6H__93u2vWD1v7Wp5EkVGrGhU0cmSt_FTL753WfuKXfBW-gAFbAj3OMDG5yagd8MU3TvO2fkOdEw0CGhs4bTN9b6QVBygFXA1-k68wTBNyu7xkfN5-4u0YsglUm6uJd9p6gnfAg6mqpg6F7BDM3kNX_0JEaNlCauUhc-30fx83mVeS3d4r8jtEFjKGd2c4QSWn-_H-fR742J7rPOC_8BA8SmO10zUVWBiNkCZ1tsdDsmPyqIVFvXFBfw6VZHtHlFCKxOSiaoJRF--bO04XzLBQRm2jXsKMLgSg6Jd1lZQ-8Y8_OguMqMZd2GVnHezk5OSKDOafUQjiGlGNDGqQPJfw8I7t3b3_Jzgd0ZmsNVUdRd7uS1xrS_NOzff1uLfCPUxJObK6HPfqudZFoSQ";
 
 
         } catch (Exception $e) {
@@ -366,26 +370,40 @@ class ApiTokens
     }
 
 
-    public function generarTokenJWT( $idmd5)
+    public function generarTokenJWT($idmd5,$fecha_final)
     {
          $datosEmpresa = $this->verificarFactura($idmd5);
+        
+
+         $factura = 0;
+         $tiempoExpiracionSegundos = 0; 
+         $id_empresa = $this->verificar->verificarIDEMPRESAMD5($idmd5);
+         
         if ($datosEmpresa === null) {
             $this->sendResponse(404, "Not Found", ["error" => "No se encontró el parámetro con los valores proporcionados"]);
             return;
         }
+
         if (empty($datosEmpresa)) {
-            $this->sendResponse(404, "Not Found", ["error" => "No se encontraron datos para el ID proporcionado"]);
-            return;
+            $fechaObjetivo = strtotime($fecha_final); // convierte a timestamp
+            $ahora = time(); // timestamp actual
+
+            if ($fechaObjetivo > $ahora) {
+                $tiempoExpiracionSegundos = $fechaObjetivo - $ahora;   
+            } 
+
+        }else{
+            // Acceder al primer elemento del array
+            if (isset($datosEmpresa[0]['tipo'])) {
+                $factura = $datosEmpresa[0]['tipo'];
+                $tiempoExpiracionSegundos = $datosEmpresa[0]['expires_in'];  
+                $id_empresa = $datosEmpresa[0]['idempresa'];
+            } else {
+                $this->sendResponse(404, "Not Found", ["error" => "No se encontró el parámetro  con los valores proporcionados"]);
+                return;
+            }
         }
-        // Acceder al primer elemento del array
-        if (isset($datosEmpresa[0]['tipo'])) {
-            $factura = $datosEmpresa[0]['tipo'];
-            $tiempoExpiracionSegundos = $datosEmpresa[0]['expires_in'];  
-            $id_empresa = $datosEmpresa[0]['idempresa'];
-        } else {
-            $this->sendResponse(404, "Not Found", ["error" => "No se encontró el parámetro  con los valores proporcionados"]);
-            return;
-        }
+        
 
         if ($id_empresa === null) {
             echo json_encode(['estado' => 'error', 'mensaje' => 'ID de empresa no válido']);
@@ -395,7 +413,7 @@ class ApiTokens
         // **IMPORTANTE**: Guarda esta clave en un lugar seguro y no la expongas públicamente.
         // Puedes usar una variable de entorno, por ejemplo.
        
-
+        
         $secret_key = 'mistersofts2025cm';
 
         // 1. Definir el payload del token
@@ -407,7 +425,8 @@ class ApiTokens
             'data' => [
                 'md5' =>$idmd5,
                 'id_empresa' => $id_empresa,
-                'tipo' => $factura
+                'tipo' => $factura,
+                'fecha_final' => $fecha_final
             ]
         ];
 

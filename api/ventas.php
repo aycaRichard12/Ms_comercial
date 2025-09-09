@@ -211,6 +211,7 @@ class ventas
             if (!$stmt->execute()) {
                 throw new Exception("Error al registrar la sucursal del cliente.");
             }
+            $newIDsucursal = $this->cm->insert_id;
             $stmt->close();
 
             // If both inserts were successful, commit the transaction
@@ -229,7 +230,19 @@ class ventas
         if ($respuesta == null) { // Correct comparison operator
             echo json_encode($res);
         } elseif($respuesta == 1) {
-            return $newClientId; // Return the new ID
+            if($newClientId){
+                return [
+                            "idcliente" => $newClientId,
+                            "codigo" => $codigo,
+                            "idsucursal" => $newIDsucursal,
+                            "tipoDocumento" => $tipodocumento,
+                            "NroDocumento" => $nit,
+                            "nombreComercial" => $nombrecomercial,
+                        ]; // Return the new ID
+            }else{
+                return [];
+            }
+           
         }
     }
     public function registroClienteMinimal_($name, $nombrecomercial, $canal, $tipo, $tipodocumento, $nit, $telefono, $idmd5)
@@ -2701,4 +2714,4 @@ class ventas
     }
 }
 
-//punto
+//validarNIT

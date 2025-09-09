@@ -2,7 +2,7 @@
   <q-page class="q-pa-md">
     <div class="row q-col-gutter-md q-mb-md">
       <template v-for="box in orderedTopBoxes" :key="box.id">
-        <div class="col-xs-12 col-sm-6 col-md-3" :class="box.colorClass">
+        <div class="col-xs-12 col-sm-6 col-md-3" :class="box.colorClass" :id="box.cardId">
           <q-card
             flat
             dense
@@ -46,11 +46,9 @@
         </div>
       </template>
     </div>
-    <div class="row flex justify-start">
-      <q-btn icon="help_outline" color="blue" flat @click="iniciarGuia" />
-    </div>
+
     <div class="row q-col-gutter-x-md">
-      <div class="col-xs-12 col-md-8" ref="componentContainer">
+      <div class="col-xs-12 col-md-8" ref="componentContainer" id="carrito">
         <component :is="componenteActivo" />
       </div>
       <div class="col-xs-12 col-md-4" id="reportes-hoy">
@@ -64,15 +62,13 @@
 import { ref, onMounted, shallowRef, markRaw, defineAsyncComponent, computed } from 'vue'
 import { useQuasar } from 'quasar'
 import ReporteVentaInicio from 'src/components/reporteVentas/ReporteVentaInicio.vue'
-import { useDriverStore } from 'src/stores/driver'
-import { getHomeTourSteps } from 'src/tours/inicioTour'
+
 // Importar los SVGs directamente. Con vite-svg-loader, se importan como componentes Vue.
 import IconVentas from 'src/assets/Ventas.png'
 import IconPedidos from 'src/assets/Compras.png'
 import IconAdmin from 'src/assets/Productos.png'
 import IconReportes from 'src/assets/Reportes.png'
 import { verificarexistenciapagina } from 'src/composables/FuncionesG'
-
 const $q = useQuasar()
 console.log('Quasar in App.vue:', $q)
 const componentContainer = ref(null)
@@ -157,6 +153,7 @@ onMounted(() => {
     console.warn('No hay datos en localStorage para "yofinanciero"')
   }
 })
+//reportes-hoy
 
 const orderedTopBoxes = computed(() => {
   const boxes = []
@@ -202,20 +199,6 @@ const orderedTopBoxes = computed(() => {
     })
   return boxes
 })
-const driverStore = useDriverStore()
-console.log('Inspeccionando driverStore:', driverStore)
-
-const iniciarGuia = () => {
-  const steps = getHomeTourSteps({
-    venta: venta.value,
-    compra: compra.value,
-    dashboard: dashboard.value,
-    producto: producto.value,
-  })
-
-  // Esto ahora funcionará
-  driverStore.startTour(steps)
-}
 </script>
 
 <style scoped>

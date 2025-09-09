@@ -150,7 +150,7 @@
         <!-- Mostrar imagen actual -->
         <div v-if="typeof localData.imagen === 'string'" class="">
           <q-img
-            :src="localData.imagen"
+            :src="localData.vista"
             style="max-height: 60px; border-radius: 8px; margin-top: auto"
             :alt="`Imagen actual`"
           />

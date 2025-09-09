@@ -9,7 +9,7 @@
             <span class="texto">Nueva Compra</span>
           </q-btn>
         </div>
-
+        <div class="col-2 q-mt-lg"></div>
         <div class="col-2 q-mt-lg">
           <q-btn color="primary" @click="$emit('repDesglosado')" class="btn-res">
             <q-icon name="picture_as_pdf" class="icono" />
@@ -233,6 +233,7 @@ watch(
 )
 
 async function FormularioCredito(c) {
+  //const response = await
   if (Number(c.autorizacion) == 1) {
     console.log(c)
     compra.value = c

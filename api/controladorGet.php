@@ -798,8 +798,6 @@ elseif($ver[0]== "getLogoBase64"){
 elseif($ver[0]== "cierres_registrados"){
     $controlador = new ArqueoPuntoVenta();
     $controlador->cierres_registrados($ver[1],$ver[2]); // idventaND, idproductoalmacen, cantidad
-    
-
 }
 elseif($ver[0]== "reporteCierrePorId"){
     $controlador = new ArqueoPuntoVenta();
@@ -817,8 +815,12 @@ elseif($ver[0]== "obtenerTransaccionesPorPago"){
     $controlador = new PagosCompra();
     $controlador->obtenerTransaccionesPorPago($ver[1]); // idventaND, idproductoalmacen, listaPuntoVentaFactura
 }
+elseif($ver[0]== "obtenerPagoPorId"){
+    $controlador = new PagosCompra();
+    $controlador->obtenerPagoPorId($ver[1]); 
+}
 
 if ($controlador === null) {
-    // Acción por defecto si no se encuentra una ruta valida detallesCotizacion calcularCrecimiento
+    // Acción por defecto si no se encuentra una ruta valida detallesCotizacion listaResponsableAlmacen
     echo json_encode(array("error" => "La ruta ".$_GET['ver']." no existe"));
 }

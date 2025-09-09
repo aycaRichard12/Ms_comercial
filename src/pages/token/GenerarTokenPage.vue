@@ -89,8 +89,9 @@ import { useQuasar, copyToClipboard } from 'quasar'
 
 import { idempresa_md5 } from 'src/composables/FuncionesGenerales'
 import { api } from 'src/boot/axios'
-
+import { expires_in } from 'src/composables/FuncionesGenerales'
 const idmd5 = idempresa_md5()
+const fecha_expriation = expires_in()
 // Referencia a Quasar para usar plugins como Notify y Clipboard
 const $q = useQuasar()
 
@@ -108,9 +109,11 @@ const mostrarToken = ref(false)
 const generarToken = async () => {
   tokenGenerado.value = '' // Resetea el token anterior
   console.log('IDMD5 del usuario:', idmd5)
+
   const datos = {
     ver: 'generarTokenJWT',
     idmd5: idmd5,
+    fecha_final: fecha_expriation,
   }
 
   const response = await api.post('out/', datos)
