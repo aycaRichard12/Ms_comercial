@@ -104,7 +104,7 @@ class compras
         }
         echo json_encode($lista);
     }
-    public function registroproveedor($nombre, $codigo, $nit, $detalle, $direccion, $telefono, $mobil, $email, $web, $pais, $ciudad, $zona, $contacto, $idmd5)
+    public function registroproveedor($nombre, $codigo, $nit, $detalle, $direccion, $telefono, $mobil, $email, $web, $pais, $ciudad, $zona, $contacto, $idmd5, $TIPORESPUESTA = NULL)
     {
         $idempresa = $this->verificar->verificarIDEMPRESAMD5($idmd5);
         if ($idempresa === "false") {
@@ -125,7 +125,13 @@ class compras
         } else {
             $res = array("estado" => "error", "mensaje" => "Error al intentar registrar. Por favor, inténtalo de nuevo");
         }
-        echo json_encode($res);
+        $proveedorID = $this->cm->insert_id;
+        if($TIPORESPUESTA == null){
+            echo json_encode($res);
+        }elseif($TIPORESPUESTA == 1){
+            return $proveedorID;
+        }
+        
     }
 
     public function verificarIdproveedor($id)
@@ -677,7 +683,7 @@ class compras
         echo json_encode($lista);
     }
 
-    public function registroCompra($nombre,$codigo,$proveedor,$pedido,$factura,$tipocompra,$idalmacen,$idmd5){
+    public function registroCompra($nombre,$codigo,$proveedor,$pedido,$factura,$tipocompra,$idalmacen,$idmd5,$TIPORESPUESTA = NULL){
         date_default_timezone_set('America/La_Paz');
         $res="";
         $idusuario = $this->verificar->verificarIDUSERMD5($idmd5);
@@ -739,10 +745,14 @@ class compras
         } else {
             $res=array("estado" => "error", "mensaje" => "Error al intentar registrar. Por favor, inténtalo de nuevo");
         }
-
+        $CompraID = $this->cm->insert_id;
+        if($TIPORESPUESTA == null){
+            echo json_encode($res);
+        }elseif($TIPORESPUESTA == 1){
+            return $CompraID;
+        }
         
-        
-        echo json_encode($res);
+       
     }
     public function eliminarCompra($dato){
         $res="";
@@ -848,7 +858,7 @@ class compras
 
     }
 
-    public function cambiarestadoCompra($ingresoId, $estadoNuevo, $pedidoId, $almacenId) {
+    public function cambiarestadoCompra($ingresoId, $estadoNuevo, $pedidoId, $almacenId,$TIPORESPUESTAESTADO = NULL) {
         // Inicializar el array de respuesta
         $response = [
             'status' => 'error',
@@ -1083,7 +1093,7 @@ class compras
         echo json_encode($lista);
     }
 
-    public function registroDetalleCompra($precio,$cantidad,$idingreso,$productoalmacen){
+    public function registroDetalleCompra($precio,$cantidad,$idingreso,$productoalmacen,$TIPORESPUESTA = null){
         $res="";
         $registro=$this->cm->query("insert into detalle_ingreso(id_detalle_ingreso,precio_unitario,cantidad,ingreso_id_ingreso,productos_almacen_id_productos_almacen)value(NULL,'$precio','$cantidad','$idingreso','$productoalmacen')");
         if($registro !== null){
@@ -1091,7 +1101,12 @@ class compras
         }else{
             $res=array("estado" => "error", "mensaje" => "Error al intentar registrar. Por favor, inténtalo de nuevo");
         }
-        echo json_encode($res);
+        if($TIPORESPUESTA == null){
+            echo json_encode($res);
+        }elseif($TIPORESPUESTA == 1){
+            return ;
+        }
+        
     }
 
     public function verificarIDdetallecompra($id)

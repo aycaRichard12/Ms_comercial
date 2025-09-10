@@ -490,4 +490,128 @@ Authorization: Bearer lajsdhflakjdshflajsdfajsdfl.sfas8d723.as3`,
       },
     ],
   },
+  {
+    groupName: 'Compras',
+    endpoints: [
+      {
+        id: 'register-provider',
+        name: 'Registrar Compra',
+        method: 'POST',
+        endpoint: '/api/out',
+        description:
+          'Registra un nuevo proveedor en el sistema junto con los detalles de la compra, lote y factura asociada.',
+        headers: [
+          {
+            name: 'Authorization',
+            type: 'String',
+            required: true,
+            example: 'Bearer lajsdhflakjdshflajsdfajsdfl.sfas8d723.as3',
+          },
+          {
+            name: 'Content-Type',
+            type: 'String',
+            required: true,
+            example: 'application/json',
+          },
+        ],
+        params: [
+          { name: 'ver', type: 'String', required: true, example: 'registrarCompra' },
+          {
+            name: 'idusuario',
+            type: 'String',
+            required: true,
+            example: '96da2f590cd7246bbde0051047b0d6f7',
+          },
+          { name: 'codigoAlmacen', type: 'String', required: true, example: 'SDKFN4' },
+          {
+            name: 'fecha_ingreso',
+            type: 'String (YYYY-MM-DD)',
+            required: true,
+            example: '2025-12-12',
+          },
+          { name: 'Lote', type: 'String', required: true, example: 'PLEn123' },
+          { name: 'codigoCompra', type: 'String', required: true, example: 'C4531D' },
+          { name: 'nfactura', type: 'String', required: true, example: '1233242' },
+          {
+            name: 'proveedor',
+            type: 'Object',
+            required: true,
+            example: {
+              nombre: 'Felix',
+              codigo: 'LSDJAOSI2',
+              nit: '1324654321',
+            },
+          },
+          {
+            name: 'detalle',
+            type: 'Array<Object>',
+            required: true,
+            example: [
+              {
+                id: '5cbba2d075f0d1648e0851e1467ba79f',
+                cantidad: 1,
+                precioUnitario: 12,
+              },
+            ],
+          },
+        ],
+        requestExample: JSON.stringify(
+          {
+            ver: 'registroproveedor',
+            idusuario: '96da2f590cd7246bbde0051047b0d6f7',
+            codigoAlmacen: 'SDKFN4',
+            fecha_ingreso: '2025-12-12',
+            Lote: 'PLEn123',
+            codigoCompra: 'C4531D',
+            nfactura: '1233242',
+            proveedor: {
+              nombre: 'Felix',
+              codigo: 'LSDJAOSI2',
+              nit: '1324654321',
+            },
+            detalle: [
+              {
+                id: '5cbba2d075f0d1648e0851e1467ba79f',
+                cantidad: 1,
+                precioUnitario: 12,
+              },
+            ],
+          },
+          null,
+          2,
+        ),
+        responseExample: JSON.stringify(
+          {
+            status: 'ok',
+            message:
+              'Compra procesada exitosamente. Se registraron 0 nuevos precios base y 0 nuevos precios sugeridos.',
+            new_prices_registered: 0,
+            new_suggested_prices_registered: 0,
+          },
+          null,
+          2,
+        ),
+        errors: [
+          {
+            code: 400,
+            message: 'Bad Request: Parámetros inválidos o faltantes.',
+          },
+          {
+            code: 401,
+            message: 'Unauthorized: Token inválido o ausente.',
+          },
+          {
+            code: 403,
+            message: 'Forbidden: No tiene permisos para acceder a este recurso.',
+          },
+          {
+            code: 500,
+            message: 'Internal Server Error: Error inesperado en el servidor.',
+          },
+        ],
+        notes:
+          'El endpoint requiere un token válido generado mediante `generarTokenJWT`. El token debe enviarse en el header `Authorization` con el formato `Bearer <TOKEN>`. El campo `detalle` debe contener al menos un producto.',
+      },
+    ],
+  },
 ]

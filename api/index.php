@@ -39,7 +39,7 @@
         require_once "useVenta.php";
         require_once "configuraciones.php";
         require_once "ventas.php";
-        
+        require_once "compras.php";
         if ($rutas[0] == "out") {
             require_once "apisOut/index.php";
             return;

@@ -31,6 +31,10 @@ elseif ($ver == "ordenar_listaProductos") {
     $controlador = new outVenta(); 
     $controlador->ordenar_listaProductos($data["productos"],$data['tipo']);
 }
+elseif ($ver == "registrarCompra") {
+    $controlador = new outCompras(); 
+    $controlador->registrarCompra($data);
+}
 
 if ($controlador === null) {
     // Acción por defecto si no se encuentra una ruta válida producto sendEmail editaralmacen registroProducto use

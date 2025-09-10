@@ -21,6 +21,7 @@
         @click="$emit('add')"
         class="btn-res q-mt-lg"
         title="registrar Tipo Almacén"
+        id="add"
       >
         <q-icon name="add" class="icono" />
         <span class="texto">Agregar</span>
@@ -52,6 +53,7 @@
       flat
       bordered
       :filter="search"
+      id="table"
     >
       <template v-slot:body-cell-estado="props">
         <q-td align="center">
@@ -69,6 +71,7 @@
             flat
             @click="$emit('edit', props.row)"
             title="Editar"
+            id="edit"
           />
           <q-btn
             icon="delete"
@@ -77,6 +80,7 @@
             color="negative"
             @click="$emit('delete', props.row)"
             title="Eliminar"
+            id="delete"
           />
           <q-btn
             title="Cambiar de estado"
@@ -85,6 +89,7 @@
             flat
             :color="Number(props.row.estado) === 1 ? 'green' : 'grey'"
             @click="$emit('toggle-status', props.row)"
+            id="status"
           />
         </q-td>
       </template>

@@ -1,72 +1,28 @@
 import { driver } from 'driver.js'
 import 'driver.js/dist/driver.css'
+import { getGuia } from 'src/tours/inicioTour'
 
-const driverObj = driver()
-export const guiarInicio = () => {
-  const posiblesSteps = [
-    {
-      element: '#venta-card',
-      popover: {
-        title: 'Módulo de Ventas',
-        description:
-          'Aquí puedes gestionar tus ventas y realizar nuevas transacciones. Haz clic para acceder.',
-        side: 'left',
-        align: 'start',
-      },
-    },
-    {
-      element: '#compra-card',
-      popover: {
-        title: 'Módulo de Compras',
-        description:
-          'Consulta y administra todas tus compras de manera sencilla. Presiona el botón para ingresar.',
-        side: 'bottom',
-        align: 'start',
-      },
-    },
-    {
-      element: '#producto-card',
-      popover: {
-        title: 'Gestión de Productos',
-        description: 'Agrega, edita y organiza tus productos. ¡Optimiza tu catálogo aquí!',
-        side: 'bottom',
-        align: 'start',
-      },
-    },
-    {
-      element: '#reportes-card',
-      popover: {
-        title: 'Reportes y Estadísticas',
-        description: 'Accede a análisis detallados y estadísticas de rendimiento en tu negocio.',
-        side: 'bottom',
-        align: 'start',
-      },
-    },
-    {
-      element: '#carrito',
-      popover: {
-        title: 'Carrito de Ventas',
-        description: 'Realiza la venta de tus productos fácilmente desde esta sección.',
-        side: 'bottom',
-        align: 'start',
-      },
-    },
-    {
-      element: '#reportes-hoy',
-      popover: {
-        title: 'Resumen de Reportes',
-        description:
-          'Visualiza rápidamente los reportes y métricas del día para mantener el control de tu negocio.',
-        side: 'bottom',
-        align: 'start',
-      },
-    },
-  ]
-  const steps = posiblesSteps.filter((steps) => document.querySelector(steps.element))
-  if (steps.length > 0) {
-    driverObj.setSteps(steps)
-    driverObj.drive()
-  } else {
-    console.log('No hay posibles elementos tour')
+export const guiarInicio = async (ruta, nombreExport = 'default') => {
+  try {
+    console.log(`Ruta solicitada: ${ruta}, export: ${nombreExport}`)
+
+    const posiblesSteps = await getGuia(ruta, nombreExport)
+
+    if (!Array.isArray(posiblesSteps)) {
+      console.warn('El módulo no devolvió un array de steps')
+      return
+    }
+
+    const steps = posiblesSteps.filter((step) => document.querySelector(step.element))
+
+    if (steps.length > 0) {
+      const driverObj = driver({ showProgress: true }) // se instancia nuevo
+      driverObj.setSteps(steps)
+      driverObj.drive()
+    } else {
+      console.log('No hay elementos disponibles para el tour')
+    }
+  } catch (error) {
+    console.error(`Error al cargar tour de ${ruta}:`, error)
   }
 }
