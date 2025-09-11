@@ -966,22 +966,31 @@ const onSubmit = async () => {
     const json = Object.fromEntries(form.entries())
     json.jsonDetalles = cartData
     //  Enviar al backend
-    if (process.env.NODE_ENV === 'production') {
-      const response = await api.post('', form, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      })
+    // if (process.env.NODE_ENV === 'production') {
+    //   const response = await api.post('', form, {
+    //     headers: {
+    //       'Content-Type': 'multipart/form-data',
+    //     },
+    //   })
 
-      console.log('Respuesta de la API:', response)
-      if (!response.data || response.data.estado !== 'exito') {
-        throw { message: response.data?.mensaje || 'Error al procesar la venta', response }
-      }
-    } else {
-      form.forEach((valor, clave) => console.log(`${clave}: ${valor}`))
-      console.log(json)
+    //   console.log('Respuesta de la API:', response)
+    //   if (!response.data || response.data.estado !== 'exito') {
+    //     throw { message: response.data?.mensaje || 'Error al procesar la venta', response }
+    //   }
+    // } else {
+    //   form.forEach((valor, clave) => console.log(`${clave}: ${valor}`))
+    //   console.log(json)
+    // }
+    const response = await api.post('', form, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    })
+
+    console.log('Respuesta de la API:', response)
+    if (!response.data || response.data.estado !== 'exito') {
+      throw { message: response.data?.mensaje || 'Error al procesar la venta', response }
     }
-
     //  Éxito
     $q.notify({ type: 'positive', message: 'Venta registrada con éxito' })
     emit('venta-registrada')

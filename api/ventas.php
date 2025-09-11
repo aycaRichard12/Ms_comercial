@@ -2488,7 +2488,7 @@ class ventas
                         if ($listaventa) {
                             if ($listaventa->num_rows > 0) {
                                 while ($qwe = $this->cm->fetch($listaventa)) {
-                                    $registroDetalle = $this->cm->query("INSERT INTO detalle_devolucion(iddetalle_devolucion, cantidad, precio, perdida, cantidadperdida, devoluciones_iddevoluciones, producto_almacen_id_producto_almacen) VALUES (NULL,'$qwe[1]','$qwe[2]','2','0','$iddev','$qwe[3]')");
+                                    $registroDetalle = $this->cm->query("INSERT INTO detalle_devolucion(iddetalle_devolucion, cantidad, precio, perdida, cantidadperdida, devoluciones_id_devoluciones, producto_almacen_id_producto_almacen) VALUES (NULL,'$qwe[1]','$qwe[2]','2','0','$iddev','$qwe[3]')");
                                 }
                                 $res = array("estado" => 100, "mensaje" => "Registro exitoso", "id" => $iddev, "codigo" => 2);
                             }
@@ -2511,7 +2511,7 @@ class ventas
         $res="";
         $registro=$this->cm->query("delete from devoluciones where id_devoluciones='$dato'");
         if($registro !== null){
-            $this->cm->query("delete from detalle_devolucion where devoluciones_iddevoluciones='$dato'");
+            $this->cm->query("delete from detalle_devolucion where devoluciones_id_devoluciones='$dato'");
             $res=array("estado" => 100, "mensaje" => "Eliminación exitosa");
         }else{
             $res=array("estado" => 99, "mensaje" => "Error al intentar eliminar. Por favor, inténtalo de nuevo");
@@ -2524,7 +2524,7 @@ class ventas
         $lista = [];
         $res = "";
     
-        $consulta = $this->cm->query("SELECT dve.iddetalle_devolucion, dve.cantidad, dve.precio, dve.perdida, dve.cantidadperdida, dve.devoluciones_iddevoluciones, dve.producto_almacen_id_producto_almacen, p.nombre, p.codigo, p.descripcion FROM detalle_devolucion dve 
+        $consulta = $this->cm->query("SELECT dve.iddetalle_devolucion, dve.cantidad, dve.precio, dve.perdida, dve.cantidadperdida, dve.devoluciones_id_devoluciones, dve.producto_almacen_id_producto_almacen, p.nombre, p.codigo, p.descripcion FROM detalle_devolucion dve 
         LEFT JOIN productos_almacen pa ON dve.producto_almacen_id_producto_almacen = pa.id_productos_almacen
         LEFT JOIN productos p ON pa.productos_id_productos = p.id_productos
         WHERE dve.iddetalle_devolucion = '$id'");
@@ -2576,7 +2576,7 @@ class ventas
                 $nuevostock = $this->cm->query("select dv.producto_almacen_id_producto_almacen, (s.cantidad + dv.cantidad) as nuevo from detalle_devolucion dv
                 LEFT JOIN  productos_almacen pa on dv.producto_almacen_id_producto_almacen = pa.id_productos_almacen
                 LEFT JOIN stock as s on pa.id_productos_almacen = s.productos_almacen_id_productos_almacen 
-                WHERE dv.devoluciones_iddevoluciones = '$id' and s.estado = '1'");
+                WHERE dv.devoluciones_id_devoluciones = '$id' and s.estado = '1'");
                 while ($stock = $this->cm->fetch($nuevostock)) {
                     $cambioestado = $this->cm->query("update stock set estado=2 where productos_almacen_id_productos_almacen='$stock[0]' and estado=1");
                     if ($cambioestado === TRUE) {
@@ -2588,7 +2588,7 @@ class ventas
             }
 
 
-            $merma = $this->cm->fetch($this->cm->query("SELECT COUNT(perdida) AS merma FROM detalle_devolucion WHERE perdida = '1' AND devoluciones_iddevoluciones = '$id'"));
+            $merma = $this->cm->fetch($this->cm->query("SELECT COUNT(perdida) AS merma FROM detalle_devolucion WHERE perdida = '1' AND devoluciones_id_devoluciones = '$id'"));
             if ($merma[0] > 0) {
 
                 $this->cm->begin_transaction();
@@ -2598,8 +2598,8 @@ class ventas
                 LEFT JOIN productos_almacen pa ON dve.productos_almacen_id_productos_almacen=pa.id_productos_almacen
                 WHERE d.id_devoluciones = '$id'"));
 
-                $detallePerdida = $this->cm->query("SELECT dv.iddetalle_devolucion, dv.cantidad, dv.precio, dv.perdida, dv.cantidadperdida, dv.devoluciones_iddevoluciones, dv.producto_almacen_id_producto_almacen FROM detalle_devolucion dv 
-                WHERE dv.devoluciones_iddevoluciones = '$id'");
+                $detallePerdida = $this->cm->query("SELECT dv.iddetalle_devolucion, dv.cantidad, dv.precio, dv.perdida, dv.cantidadperdida, dv.devoluciones_id_devoluciones, dv.producto_almacen_id_producto_almacen FROM detalle_devolucion dv 
+                WHERE dv.devoluciones_id_devoluciones = '$id'");
 
                 if ($dev) {
 
@@ -2681,10 +2681,10 @@ class ventas
     public function listadetalledevolucion($id)
     {
         $lista = [];
-        $consulta = $this->cm->query("SELECT dve.iddetalle_devolucion, dve.cantidad, dve.precio, dve.perdida, dve.cantidadperdida, dve.devoluciones_iddevoluciones, dve.producto_almacen_id_producto_almacen, p.nombre, p.codigo, p.descripcion FROM detalle_devolucion dve 
+        $consulta = $this->cm->query("SELECT dve.iddetalle_devolucion, dve.cantidad, dve.precio, dve.perdida, dve.cantidadperdida, dve.devoluciones_id_devoluciones, dve.producto_almacen_id_producto_almacen, p.nombre, p.codigo, p.descripcion FROM detalle_devolucion dve 
         LEFT JOIN productos_almacen pa ON dve.producto_almacen_id_producto_almacen = pa.id_productos_almacen
         LEFT JOIN productos p ON pa.productos_id_productos = p.id_productos
-        WHERE dve.devoluciones_iddevoluciones = '$id'
+        WHERE dve.devoluciones_id_devoluciones = '$id'
         ORDER BY dve.iddetalle_devolucion DESC");
         while ($qwe = $this->cm->fetch($consulta)) {
             $res = array("id" => $qwe[0], "cantidad" => $qwe[1], "precio" => $qwe[2], "perdida" => $qwe[3], "cantidadperdida" => $qwe[4], "iddevolucion" => $qwe[5], "idproductoalmacen" => $qwe[6], "nombre" => $qwe[7], "codigo" => $qwe[8], "descripcion" => $qwe[9]);

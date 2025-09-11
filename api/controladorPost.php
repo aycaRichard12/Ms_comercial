@@ -610,6 +610,6 @@ elseif ($ver == "RegistrarPagos"){
 
 
 if ($controlador === null) {
-    // Acción por defecto si no se encuentra una ruta válida producto sendEmail editaralmacen registroProducto use
+    // Acción por defecto si no se encuentra una ruta válida producto sendEmail editaralmacen registroProducto registrodevolucion
     echo json_encode("El formulario ".$_POST['ver']." no existe");
 }

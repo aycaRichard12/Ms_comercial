@@ -100,36 +100,36 @@
 
           <template v-slot:body-cell-ver="props">
             <q-td :props="props">
-              <div class="q-gutter-xs">
-                <template v-if="Number(props.row.tipoventa) === 0">
-                  <q-btn
-                    icon="picture_as_pdf"
-                    color="primary"
-                    dense
-                    round
-                    title="Generar Comprobante PDF"
-                    @click="generarComprobantePDF(props.row.id)"
-                  />
-                </template>
-
-                <template v-else>
-                  <q-btn
-                    icon="visibility"
-                    color="info"
-                    dense
-                    round
-                    title="Ver Factura"
-                    @click="verFactura(props.row.shortlink)"
-                  />
-                  <q-btn
-                    icon="receipt"
-                    color="info"
-                    dense
-                    round
-                    title="Ver Factura Siat"
-                    @click="verFacturaSIAT(props.row.urlsin)"
-                  />
-                </template>
+              <div>
+                <q-btn
+                  icon="picture_as_pdf"
+                  color="negative"
+                  dense
+                  round
+                  flat
+                  title="Generar Comprobante PDF"
+                  @click="generarComprobantePDF(props.row.id)"
+                />
+                <q-btn
+                  v-if="Number(props.row.tipoventa != 0)"
+                  icon="receipt_long"
+                  dense
+                  rounded=""
+                  flat=""
+                  color="blue"
+                  title="Ver Factura"
+                  @click="verFactura(props.row.shortlink)"
+                />
+                <q-btn
+                  v-if="Number(props.row.tipoventa != 0)"
+                  icon="policy"
+                  dense=""
+                  rounded=""
+                  flat=""
+                  color="warning"
+                  title="Ver Factura Siat"
+                  @click="verFacturaSIAT(props.row.urlsin)"
+                />
               </div>
             </q-td>
           </template>
@@ -228,26 +228,32 @@
                 <template v-if="Number(props.row.tipoventa) == 0">
                   <q-btn
                     icon="picture_as_pdf"
-                    color="primary"
+                    color="negative"
                     dense
                     round
+                    flat
+                    title="Generar Comprobante PDF"
                     @click="generarComprobantePDF(props.row.id)"
                   />
                 </template>
 
                 <template v-else>
                   <q-btn
-                    icon="visibility"
-                    color="info"
+                    icon="receipt_long"
                     dense
-                    round
+                    rounded=""
+                    flat=""
+                    color="blue"
+                    title="Ver Factura"
                     @click="verFactura(props.row.shortlink)"
                   />
                   <q-btn
-                    icon="receipt"
-                    color="info"
-                    dense
-                    round
+                    icon="policy"
+                    dense=""
+                    rounded=""
+                    flat=""
+                    color="warning"
+                    title="Ver Factura Siat"
                     @click="verFacturaSIAT(props.row.urlsin)"
                   />
                 </template>
@@ -348,24 +354,30 @@
                 <q-btn
                   v-if="Number(props.row.tipoventa) === 0"
                   icon="picture_as_pdf"
-                  color="primary"
+                  color="negative"
                   dense
                   round
+                  flat
+                  title="Generar Comprobante PDF"
                   @click="generarComprobantePDF(props.row.id)"
                 />
                 <template v-else>
                   <q-btn
-                    icon="visibility"
-                    color="info"
+                    icon="receipt_long"
                     dense
-                    round
+                    rounded=""
+                    flat=""
+                    color="blue"
+                    title="Ver Factura"
                     @click="verFactura(props.row.shortlink)"
                   />
                   <q-btn
-                    icon="receipt"
-                    color="info"
-                    dense
-                    round
+                    icon="policy"
+                    dense=""
+                    rounded=""
+                    flat=""
+                    color="warning"
+                    title="Ver Factura Siat"
                     @click="verFacturaSIAT(props.row.urlsin)"
                   />
                 </template>
@@ -561,129 +573,22 @@
 
     <!-- Modal para comprobante PDF -->
     <q-dialog v-model="modalComprobantePDF" full-width>
-      <q-card style="min-width: 80vw; height: 80vh">
+      <q-card class="q-pa-md" style="height: 100%; max-width: 100%">
         <q-card-section class="row items-center q-pb-none">
-          <div class="text-h6">COMPROBANTE</div>
+          <div class="text-h6">Vista previa de PDF</div>
           <q-space />
-          <q-btn icon="close" flat round dense v-close-popup />
+          <q-btn flat round icon="close" @click="modalComprobantePDF = false" />
         </q-card-section>
 
-        <q-card-section>
-          <div id="reporteCOMANU" v-if="datosComprobante">
-            <!-- Contenido del comprobante similar al original -->
-            <div class="invoice overflow-auto">
-              <div style="min-width: 600px">
-                <header>
-                  <div class="row">
-                    <div class="col company-details">
-                      <h6 class="name">
-                        <p id="nomempresa">
-                          <strong>{{ datosComprobante.empresa.nombre }}</strong>
-                        </p>
-                      </h6>
-                      <div id="dirempresa">
-                        <strong>{{ datosComprobante.empresa.direccion }}</strong>
-                      </div>
-                      <div id="celempresa">
-                        <strong>{{ datosComprobante.empresa.telefono }}</strong>
-                      </div>
-                    </div>
+        <q-separator />
 
-                    <div class="col" style="text-align: center">
-                      <h6 style="text-align: center"><strong>COMPROBANTE DE VENTA</strong></h6>
-                      <h6 style="text-align: center" id="Nro">
-                        Nro. {{ datosComprobante.nfactura }}
-                      </h6>
-                      <p style="text-align: center" id="divisa">
-                        (Expresado en {{ datosComprobante.divisa }})
-                      </p>
-                    </div>
-
-                    <div class="col" style="text-align: right">
-                      <img
-                        :src="datosComprobante.empresa.logo"
-                        width="130"
-                        height="130"
-                        data-holder-rendered="true"
-                        id="imagen"
-                      />
-                    </div>
-                  </div>
-                </header>
-                <main>
-                  <div class="row contacts">
-                    <div class="col invoice-to">
-                      <div class="text-gray-light"><strong>DATOS DEL CLIENTE:</strong></div>
-                      <div class="to text-gray-light">
-                        {{ datosComprobante.cliente }} - {{ datosComprobante.nombrecomercial }} -
-                        {{ datosComprobante.sucursal }}
-                      </div>
-                      <div class="address">{{ datosComprobante.direccion }}</div>
-                      <div class="email">{{ datosComprobante.email }}</div>
-                      <div class="date" id="feventa">
-                        <strong>Fecha de Venta:</strong> {{ formatFecha(datosComprobante.fecha) }}
-                      </div>
-                    </div>
-                    <div class="col invoice-details">
-                      <div class="text-gray-light"><strong>DATOS DEL VENDEDOR:</strong></div>
-                      <div class="text-gray-light" id="user">
-                        {{ datosComprobante.usuario.usuario }}
-                      </div>
-                      <div class="date" id="rol">{{ datosComprobante.usuario.cargo }}</div>
-                      <div class="date" id="tipoventaC">
-                        Venta a {{ datosComprobante.tipopago }}
-                      </div>
-                    </div>
-                  </div>
-
-                  <table class="table" border="0" cellspacing="0" cellpadding="0">
-                    <thead class="table-success" id="cabeceraPDF">
-                      <tr>
-                        <th>N°</th>
-                        <th class="text-left">Descripción</th>
-                        <th class="text-right" style="text-align: right">Cantidad</th>
-                        <th class="text-right" style="text-align: right">Prec. Unit</th>
-                        <th class="text-right" style="text-align: right">Total</th>
-                      </tr>
-                    </thead>
-                    <tbody id="listaproductos">
-                      <tr v-for="(item, index) in datosComprobante.detalle" :key="index">
-                        <td>{{ index + 1 }}</td>
-                        <td class="text-left">{{ item.descripcion }}</td>
-                        <td class="total">{{ formatDecimal(item.cantidad) }}</td>
-                        <td class="total">{{ formatDecimal(item.precio) }}</td>
-                        <td class="total">{{ formatDecimal(item.cantidad * item.precio) }}</td>
-                      </tr>
-                      <tr>
-                        <td class="classtd" colspan="2"></td>
-                        <td class="classtd" colspan="2">SUBTOTAL</td>
-                        <td class="classtd">{{ formatDecimal(datosComprobante.subtotal) }}</td>
-                      </tr>
-                      <tr>
-                        <td class="classtd" colspan="2"></td>
-                        <td class="classtd" colspan="2">DESCUENTO</td>
-                        <td class="classtd">{{ formatDecimal(datosComprobante.descuento) }}</td>
-                      </tr>
-                      <tr>
-                        <td style="font-size: 1em" colspan="2">
-                          Son:
-                          {{ numeroALetras(datosComprobante.montototal, datosComprobante.divisa) }}
-                        </td>
-                        <td class="classtd" colspan="2">MONTO TOTAL</td>
-                        <td class="classtd">{{ formatDecimal(datosComprobante.montototal) }}</td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </main>
-              </div>
-            </div>
-          </div>
+        <q-card-section class="q-pa-none" style="height: calc(100% - 60px)">
+          <iframe
+            v-if="pdfData"
+            :src="pdfData"
+            style="width: 100%; height: 100%; border: none"
+          ></iframe>
         </q-card-section>
-
-        <q-card-actions align="right">
-          <q-btn label="Cerrar" color="secondary" v-close-popup />
-          <q-btn label="Descargar PDF" color="primary" @click="descargarPDF" />
-        </q-card-actions>
       </q-card>
     </q-dialog>
   </q-page>
@@ -693,8 +598,8 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import { useQuasar } from 'quasar'
 import { api } from 'boot/axios'
-import html2pdf from 'html2pdf.js'
 import { validarUsuario } from 'src/composables/FuncionesG'
+import { PDFdetalleVentaInicio } from 'src/utils/pdfReportGenerator'
 
 const $q = useQuasar()
 
@@ -733,8 +638,11 @@ const ventaAAnular = ref(null)
 const modalMotivoDevolucion = ref(false)
 const motivoDevolucion = ref('')
 const ventaADevolver = ref(null)
+const pdfData = ref(null)
 const modalComprobantePDF = ref(false)
-const datosComprobante = ref(null)
+
+//DetalleVenta
+const detalleVenta = ref([])
 
 // Formulario de detalle de devolución
 const formDetalleDev = ref({
@@ -1353,8 +1261,12 @@ const confirmarDevolucion = async () => {
     formData.append('motivo', motivoDevolucion.value)
     formData.append('idusuario', idusuario)
 
-    const response = await api.post('', formData)
+    for (let [k, v] of formData.entries()) {
+      console.log(`${k}: ${v}`)
+    }
 
+    const response = await api.post('', formData)
+    console.log(response)
     if (response.data.estado === 100) {
       $q.notify({
         type: 'positive',
@@ -1390,11 +1302,12 @@ const cancelarDevolucion = () => {
 }
 
 const listarDatosDetalleDevolucion = async (id) => {
+  console.log(id)
   cargandoDetalle.value = true
 
   try {
     const response = await api.get(`listadetalledevolicion/${id}`)
-
+    console.log(response.data)
     if (response.data.estado === 'error') {
       throw new Error(response.data.error)
     }
@@ -1590,35 +1503,14 @@ const generarComprobantePDF = async (id) => {
 
     const response = await api.get(`detallesVenta/${id}/${idempresa}`)
     console.log(response)
+    detalleVenta.value = response.data
     if (response.data[0] === 'error') {
       throw new Error(response.data.error)
     }
-
-    const data = response.data[0]
-    const subtotal = data.detalle[0].reduce(
-      (sum, dato) => sum + redondear(parseFloat(dato.cantidad) * parseFloat(dato.precio)),
-      0,
-    )
-    const montototal = redondear(parseFloat(subtotal) - parseFloat(data.descuento))
-
-    datosComprobante.value = {
-      empresa: data.empresa,
-      nfactura: data.nfactura,
-      divisa: data.divisa,
-      cliente: data.cliente,
-      nombrecomercial: data.nombrecomercial,
-      sucursal: data.sucursal,
-      direccion: data.direccion,
-      email: data.email,
-      fecha: data.fecha,
-      usuario: data.usuario[0],
-      tipopago: data.tipopago,
-      detalle: data.detalle[0],
-      subtotal: subtotal,
-      descuento: data.descuento,
-      montototal: montototal,
-    }
-
+    const doc = await PDFdetalleVentaInicio(detalleVenta)
+    // doc.save('proveedores.pdf') ← comenta o elimina esta línea
+    //doc.output('dataurlnewwindow') // ← muestra el PDF en una nueva ventana del navegador
+    pdfData.value = doc.output('dataurlstring') // muestra el pdf en un modal
     modalComprobantePDF.value = true
   } catch (error) {
     console.error('Error al generar comprobante:', error)
@@ -1631,20 +1523,6 @@ const generarComprobantePDF = async (id) => {
   }
 }
 
-const descargarPDF = () => {
-  const pdf = document.querySelector('#reporteCOMANU')
-
-  const opt = {
-    margin: 0.5,
-    filename: `COMPROBANTE DE VENTA ${obtenerFechaActualDato()}.pdf`,
-    image: { type: 'jpeg', quality: 0.98 },
-    html2canvas: { scale: 3, letterRendering: true },
-    jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' },
-  }
-
-  html2pdf().set(opt).from(pdf).save()
-}
-
 const verFactura = (url) => {
   window.open(url, '_blank', 'noopener,noreferrer')
 }
@@ -1654,30 +1532,6 @@ const verFacturaSIAT = (url) => {
 }
 
 // Funciones de formato
-const formatFecha = (fecha) => {
-  // Implementar lógica de formato de fecha
-  return fecha
-}
-
-const formatDecimal = (valor) => {
-  // Implementar lógica de formato decimal
-  return parseFloat(valor).toFixed(2)
-}
-
-const redondear = (valor) => {
-  // Implementar lógica de redondeo
-  return Math.round(valor * 100) / 100
-}
-
-const numeroALetras = (numero, moneda) => {
-  // Implementar lógica de conversión a letras
-  return `Son: ${numero} ${moneda}`
-}
-
-const obtenerFechaActualDato = () => {
-  // Implementar lógica para obtener fecha actual
-  return new Date().toLocaleDateString()
-}
 
 // Watchers
 watch(filtroAlmacen, () => {
@@ -1692,7 +1546,7 @@ watch(filtroTipo, () => {
   listarDatosDEV()
 })
 
-// Cargar datos al montar el componente
+// Cargar datos al montar el componente detallesVenta
 onMounted(() => {
   cargarDatosIniciales()
 })

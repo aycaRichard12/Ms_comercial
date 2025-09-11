@@ -14,7 +14,7 @@ let logoBase64 = null
 let contenidousuario = null
 let idempresa = null
 let logoEmpresa = null
-
+let ColoEncabezadoTabla = [128, 128, 128] // Negro
 const tipo = { 1: 'Pedido Compra', 2: 'Pedido Movimiento' }
 
 async function initPdfReportGenerator() {
@@ -63,7 +63,7 @@ export default function imprimirReporte(detallePedido) {
       cellPadding: 2,
     },
     headStyles: {
-      fillColor: [22, 160, 133],
+      fillColor: ColoEncabezadoTabla,
       textColor: 255,
       halign: 'center',
     },
@@ -200,7 +200,7 @@ export function PDFreporteCuentasXCobrarPeriodo(reportData, startDate, endDate) 
       cellPadding: 1, // Reduced padding to fit more columns
     },
     headStyles: {
-      fillColor: [22, 160, 133],
+      fillColor: ColoEncabezadoTabla,
       textColor: 255,
       halign: 'center',
       fontSize: 7, // Header font size
@@ -581,7 +581,7 @@ export function PDFreporteStockProductosIndividual(processedRows) {
       cellPadding: 2,
     },
     headStyles: {
-      fillColor: [22, 160, 133],
+      fillColor: ColoEncabezadoTabla,
       textColor: 255,
       halign: 'center',
     },
@@ -739,7 +739,7 @@ export function PDFreporteStockProductosIndividual_img(processedRows) {
       cellPadding: 2,
     },
     headStyles: {
-      fillColor: [22, 160, 133],
+      fillColor: ColoEncabezadoTabla,
       textColor: 255,
       halign: 'center',
     },
@@ -898,7 +898,7 @@ export function generarPdfCotizacion(data) {
       cellPadding: 2,
     },
     headStyles: {
-      fillColor: [22, 160, 133],
+      fillColor: ColoEncabezadoTabla,
       textColor: 255,
       halign: 'center',
     },
@@ -1061,7 +1061,7 @@ export function PDFfacturaCorreo(detalleVenta) {
       cellPadding: 2,
     },
     headStyles: {
-      fillColor: [22, 160, 133],
+      fillColor: ColoEncabezadoTabla,
       textColor: 255,
       halign: 'center',
     },
@@ -1231,7 +1231,7 @@ export function PDFComprovanteVenta(detalleVenta) {
       cellPadding: 2,
     },
     headStyles: {
-      fillColor: [22, 160, 133],
+      fillColor: ColoEncabezadoTabla,
       textColor: 255,
       halign: 'center',
     },
@@ -1416,7 +1416,7 @@ export function PDFreporteVentasPeriodo(filteredCompra, almacen) {
       cellPadding: 2,
     },
     headStyles: {
-      fillColor: [22, 160, 133],
+      fillColor: ColoEncabezadoTabla,
       textColor: 255,
       halign: 'center',
     },
@@ -1687,7 +1687,7 @@ export async function PDFdetalleVentaInicio(detalleVenta) {
       cellPadding: 2,
     },
     headStyles: {
-      fillColor: [22, 160, 133],
+      fillColor: ColoEncabezadoTabla,
       textColor: 255,
       halign: 'center',
     },
@@ -1944,7 +1944,7 @@ export function DPFReporteCotizacion(cotizaciones) {
       cellPadding: 1, // Reduced padding to fit more columns
     },
     headStyles: {
-      fillColor: [22, 160, 133],
+      fillColor: ColoEncabezadoTabla,
       textColor: 255,
       halign: 'center',
       fontSize: 7, // Header font size
@@ -2074,7 +2074,7 @@ export function PDFConprovanteCotizacion(cotizacion) {
       cellPadding: 1,
     },
     headStyles: {
-      fillColor: [22, 160, 133],
+      fillColor: ColoEncabezadoTabla,
       textColor: 255,
       halign: 'center',
       fontSize: 7,
@@ -2184,7 +2184,7 @@ export function PDFextrabiosRobos(extravios) {
       cellPadding: 1, // Reduced padding to fit more columns
     },
     headStyles: {
-      fillColor: [22, 160, 133],
+      fillColor: ColoEncabezadoTabla,
       textColor: 255,
       halign: 'center',
       fontSize: 7, // Header font size
@@ -2298,7 +2298,7 @@ export function PDFComprovanteExtravio(detalleExtravio) {
       cellPadding: 2,
     },
     headStyles: {
-      fillColor: [22, 160, 133],
+      fillColor: ColoEncabezadoTabla,
       textColor: 255,
       halign: 'center',
     },
@@ -2384,7 +2384,7 @@ export function PDFreporteMermas(mermas) {
       cellPadding: 1, // Reduced padding to fit more columns
     },
     headStyles: {
-      fillColor: [22, 160, 133],
+      fillColor: ColoEncabezadoTabla,
       textColor: 255,
       halign: 'center',
       fontSize: 7, // Header font size
@@ -2498,7 +2498,7 @@ export function PDFComprovanteMerma(detallemerma) {
       cellPadding: 2,
     },
     headStyles: {
-      fillColor: [22, 160, 133],
+      fillColor: ColoEncabezadoTabla,
       textColor: 255,
       halign: 'center',
     },
@@ -2680,262 +2680,6 @@ export function PDFKardex(kardex, almacenLabel, productoLabel, fechaiR, fechafR)
   })
   return doc
 }
-
-// export function PDFCierreCaja(datosCierreCaja) {
-//   console.log(datosCierreCaja)
-
-//   const contenidousuario = validarUsuario()
-//   const doc = new jsPDF({ orientation: 'portrait' })
-
-//   const idempresa = contenidousuario[0]
-//   const nombreEmpresa = idempresa.empresa.nombre
-//   const direccionEmpresa = idempresa.empresa.direccion
-//   const telefonoEmpresa = idempresa.empresa.telefono
-//   const nombre = idempresa.nombre
-//   const cargo = idempresa.cargo
-//   const columns = [
-//     { header: '', dataKey: 'concepto' },
-//     { header: 'Según Sistema', dataKey: 'sistema' },
-//     { header: 'Según Arqueo', dataKey: 'contado' },
-//     { header: 'Diferencia', dataKey: 'diferencia' },
-//   ]
-//   // filteredCompra.value.reduce((sum, row) => sum + Number(row.total), 0)
-//   const datos = datosCierreCaja.conceptos.map((item) => ({
-//     concepto: item.concepto,
-//     sistema: item.sistema,
-//     contado: item.contado,
-//     diferencia: item.diferencia,
-//   }))
-
-//   autoTable(doc, {
-//     columns,
-//     body: datos,
-//     styles: {
-//       overflow: 'linebreak',
-//       fontSize: 5,
-//       cellPadding: 2,
-//     },
-//     headStyles: {
-//       fillColor: [128, 128, 128], // Negro
-//       textColor: 255,
-//       halign: 'center',
-//       fontSize: 7,
-//       fontStyle: 'bold',
-//     },
-//     columnStyles: {
-//       concepto: { cellWidth: 45, halign: 'right' },
-//       sistema: { cellWidth: 50, halign: 'right' },
-//       contado: { cellWidth: 50, halign: 'right' },
-//       diferencia: { cellWidth: 50, halign: 'right' },
-//     },
-//     //20 + 15 + 20 + 25 + 30 + 20 + 20 + 25 + 20 + 15 + 20 + 15 + 20 = 265 mm
-
-//     startY: 49,
-//     margin: { horizontal: 5 },
-//     theme: 'striped',
-//     didDrawPage: () => {
-//       if (doc.internal.getNumberOfPages() === 1) {
-//         // Logo (requiere base64 o ruta absoluta en servidor si usas Node)
-//         if (logoBase64) {
-//           const pageWidth = doc.internal.pageSize.getWidth() // Ancho total página
-//           const imgWidth = 20 // Ancho del logo en mm
-//           const imgHeight = 20 // Alto del logo en mm
-//           const xPos = pageWidth - imgWidth - 10 // 10mm de margen derecho
-//           const yPos = 5 // margen superior
-
-//           doc.addImage(logoBase64, 'JPEG', xPos, yPos, imgWidth, imgHeight)
-//         }
-
-//         // Nombre y datos de empresa
-//         doc.setFontSize(7)
-//         doc.setFont(undefined, 'bold')
-//         doc.text(nombreEmpresa, 5, 10)
-
-//         doc.setFontSize(6)
-//         doc.setFont(undefined, 'normal')
-//         doc.text(direccionEmpresa, 5, 13)
-//         doc.text(`Tel: ${telefonoEmpresa}`, 5, 16)
-
-//         // Título centrado
-//         doc.setFontSize(10)
-//         doc.setFont(undefined, 'bold')
-//         doc.text('CIERRE PUNTO VENTA', doc.internal.pageSize.getWidth() / 2, 15, {
-//           align: 'center',
-//         })
-
-//         doc.setFontSize(6)
-//         doc.setFont(undefined, 'normal')
-//         doc.text('Creado ' + datosCierreCaja.creado_en, doc.internal.pageSize.getWidth() / 2, 18, {
-//           align: 'center',
-//         })
-
-//         doc.setDrawColor(0) // Color negro
-//         doc.setLineWidth(0.2) // Grosor de la línea
-//         doc.line(5, 30, 200, 30) // De (x1=5, y1=25) a (x2=200, y2=25)
-
-//         doc.setFontSize(7)
-//         doc.setFont(undefined, 'bold')
-//         doc.text('DATOS DEL REPORTE', 5, 35)
-
-//         doc.setFontSize(6)
-//         doc.setFont(undefined, 'normal')
-//         doc.text('Fecha Apertura : ' + datosCierreCaja.fecha_inicio, 5, 38)
-
-//         doc.setFontSize(6)
-//         doc.setFont(undefined, 'normal')
-//         doc.text('Fecha Cierre : ' + datosCierreCaja.fecha_fin, 5, 41)
-
-//         doc.setFontSize(6)
-//         doc.setFont(undefined, 'normal')
-//         doc.text('Punto de Venta: ' + datosCierreCaja.punto_venta, 5, 44)
-
-//         doc.setFontSize(6)
-//         doc.setFont(undefined, 'normal')
-//         doc.text('Fecha de Impresion: ' + cambiarFormatoFecha(obtenerFechaActualDato()), 5, 47)
-
-//         doc.setFontSize(7)
-//         doc.setFont(undefined, 'bold')
-//         doc.text('DATOS DEL ENCARGADO:', 200, 35, { align: 'right' })
-
-//         doc.setFontSize(6)
-//         doc.setFont(undefined, 'normal')
-//         doc.text(nombre, 200, 38, { align: 'right' })
-
-//         doc.setFontSize(6)
-//         doc.setFont(undefined, 'normal')
-//         doc.text(cargo, 200, 41, { align: 'right' })
-//       }
-//     },
-//   })
-//   return doc
-// }
-
-// export function PDFCierreCaja(datosCierreCaja) {
-//   const contenidousuario = validarUsuario()
-//   const doc = new jsPDF({ orientation: 'portrait' })
-
-//   const idempresa = contenidousuario[0]
-//   const nombreEmpresa = idempresa.empresa.nombre
-//   const direccionEmpresa = idempresa.empresa.direccion
-//   const telefonoEmpresa = idempresa.empresa.telefono
-//   const nombre = idempresa.nombre
-//   const cargo = idempresa.cargo
-
-//   // === TABLA 1: Conceptos ===
-//   const conceptos = datosCierreCaja.conceptos.map((item) => ({
-//     concepto: item.concepto,
-//     sistema: item.sistema,
-//     contado: item.contado,
-//     diferencia: item.diferencia,
-//   }))
-
-//   autoTable(doc, {
-//     head: [['', 'Según Sistema', 'Según Arqueo', 'Diferencia']],
-//     body: conceptos.map((c) => [c.concepto, c.sistema, c.contado, c.diferencia]),
-//     startY: 49,
-//     margin: { horizontal: 5 },
-//     theme: 'striped',
-//     styles: { fontSize: 7, cellPadding: 2 },
-//     headStyles: { fillColor: [128, 128, 128], textColor: 255 },
-//     didDrawPage: () => {
-//       if (doc.internal.getNumberOfPages() === 1) {
-//         // Logo (requiere base64 o ruta absoluta en servidor si usas Node)
-//         if (logoBase64) {
-//           const pageWidth = doc.internal.pageSize.getWidth() // Ancho total página
-//           const imgWidth = 20 // Ancho del logo en mm
-//           const imgHeight = 20 // Alto del logo en mm
-//           const xPos = pageWidth - imgWidth - 10 // 10mm de margen derecho
-//           const yPos = 5 // margen superior
-//           doc.addImage(logoBase64, 'JPEG', xPos, yPos, imgWidth, imgHeight)
-//         }
-//         // Nombre y datos de empresa
-//         doc.setFontSize(7)
-//         doc.setFont(undefined, 'bold')
-//         doc.text(nombreEmpresa, 5, 10)
-//         doc.setFontSize(6)
-//         doc.setFont(undefined, 'normal')
-//         doc.text(direccionEmpresa, 5, 13)
-//         doc.text(`Tel: ${telefonoEmpresa}`, 5, 16)
-//         // Título centrado
-//         doc.setFontSize(10)
-//         doc.setFont(undefined, 'bold')
-//         doc.text('CIERRE PUNTO VENTA', doc.internal.pageSize.getWidth() / 2, 15, {
-//           align: 'center',
-//         })
-//         doc.setFontSize(6)
-//         doc.setFont(undefined, 'normal')
-//         doc.text('Creado ' + datosCierreCaja.creado_en, doc.internal.pageSize.getWidth() / 2, 18, {
-//           align: 'center',
-//         })
-//         doc.setDrawColor(0) // Color negro
-//         doc.setLineWidth(0.2) // Grosor de la línea
-//         doc.line(5, 30, 200, 30) // De (x1=5, y1=25) a (x2=200, y2=25)
-//         doc.setFontSize(7)
-//         doc.setFont(undefined, 'bold')
-//         doc.text('DATOS DEL REPORTE', 5, 35)
-//         doc.setFontSize(6)
-//         doc.setFont(undefined, 'normal')
-//         doc.text('Fecha Apertura : ' + datosCierreCaja.fecha_inicio, 5, 38)
-//         doc.setFontSize(6)
-//         doc.setFont(undefined, 'normal')
-//         doc.text('Fecha Cierre : ' + datosCierreCaja.fecha_fin, 5, 41)
-//         doc.setFontSize(6)
-//         doc.setFont(undefined, 'normal')
-//         doc.text('Punto de Venta: ' + datosCierreCaja.punto_venta, 5, 44)
-//         doc.setFontSize(6)
-//         doc.setFont(undefined, 'normal')
-//         doc.text('Fecha de Impresion: ' + cambiarFormatoFecha(obtenerFechaActualDato()), 5, 47)
-//         doc.setFontSize(7)
-//         doc.setFont(undefined, 'bold')
-//         doc.text('DATOS DEL ENCARGADO:', 200, 35, { align: 'right' })
-//         doc.setFontSize(6)
-//         doc.setFont(undefined, 'normal')
-//         doc.text(nombre, 200, 38, { align: 'right' })
-//         doc.setFontSize(6)
-//         doc.setFont(undefined, 'normal')
-//         doc.text(cargo, 200, 41, { align: 'right' })
-//       }
-//     },
-//   })
-
-//   // === TABLA 2: Métodos de Pago ===
-//   const metodos = datosCierreCaja.metodos_pago.map((m) => ({
-//     metodo: m.metodo + ' (' + m.tipo + ')',
-//     sistema: m.total_sistema,
-//     contado: m.total_contado,
-//     diferencia: m.diferencia,
-//   }))
-
-//   autoTable(doc, {
-//     head: [['Método', 'Total Sistema', 'Total Contado', 'Diferencia']],
-//     body: metodos.map((m) => [m.metodo, m.sistema, m.contado, m.diferencia]),
-//     startY: doc.lastAutoTable.finalY + 10,
-//     margin: { horizontal: 5 },
-//     theme: 'grid',
-//     styles: { fontSize: 7 },
-//     headStyles: { fillColor: [128, 128, 128], textColor: 255 },
-//   })
-
-//   // === TABLA 3: Arqueo Físico ===
-//   const arqueo = datosCierreCaja.arqueo_fisico.map((a) => ({
-//     label: a.label,
-//     valor: a.valor_moneda,
-//     cantidad: a.cantidad,
-//     subtotal: (parseFloat(a.valor_moneda) * parseInt(a.cantidad || 0)).toFixed(2),
-//   }))
-
-//   autoTable(doc, {
-//     head: [['Denominación', 'Valor', 'Cantidad', 'Subtotal']],
-//     body: arqueo.map((a) => [a.label, a.valor, a.cantidad, a.subtotal]),
-//     startY: doc.lastAutoTable.finalY + 10,
-//     margin: { horizontal: 5 },
-//     theme: 'striped',
-//     styles: { fontSize: 7 },
-//     headStyles: { fillColor: [128, 128, 128], textColor: 255 },
-//   })
-
-//   return doc
-// }
 
 export function PDFCierreCaja(datosCierreCaja) {
   const contenidousuario = validarUsuario()
@@ -3157,7 +2901,7 @@ export function PDFpedidos(ordenados, tipoestados, filtroAlmacen) {
       cellPadding: 2,
     },
     headStyles: {
-      fillColor: [22, 160, 133],
+      fillColor: [128, 128, 128], // Negro
       textColor: 255,
       halign: 'center',
     },

@@ -43,6 +43,10 @@ class UseVEnta
         $this->rh = $this->conexion->rh;
         $this->em = $this->conexion->em;
     }
+    public function CrearNotaCreditoDebito($data){
+        
+
+    }
 
     /**
      * Obtiene un número de factura disponible y único para una empresa y tipo de venta.

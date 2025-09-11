@@ -200,6 +200,7 @@
             v-if="props.row.tipoventa == 1"
             icon="receipt_long"
             dense
+            rounded=""
             flat=""
             color="blue"
             @click="ir_a_factura(props.row)"
@@ -207,9 +208,18 @@
           <q-btn
             v-if="props.row.tipoventa == 1"
             icon="policy"
+            dense=""
+            rounded=""
             flat=""
             color="warning"
             @click="ir_a_impuestos(props.row)"
+          />
+          <q-btn
+            v-if="props.row.tipoventa == 1"
+            icon="account_balance_wallet"
+            flat=""
+            color="orange"
+            @click="ir_a_NotaCreditoDebito(props.row)"
           />
         </q-td>
       </template>
@@ -233,6 +243,18 @@
         </q-card-section>
       </q-card>
     </q-dialog>
+
+    <q-dialog v-model="VisibleModalNotaCredito">
+      <q-card>
+        <q-card-section class="bg-primary text-white text-h6 flex justify-between">
+          <div>Registrar Nota Credito Debito</div>
+          <q-btn icon="close" flat dense round @click="toggleModal" />
+        </q-card-section>
+        <q-card-section>
+          <FormNotaCreditoDebito :nota="Factura" />
+        </q-card-section>
+      </q-card>
+    </q-dialog>
   </q-page>
 </template>
 
@@ -246,6 +268,9 @@ import { PDFComprovanteVenta } from 'src/utils/pdfReportGenerator'
 import { PDFreporteVentasPeriodo } from 'src/utils/pdfReportGenerator'
 import { PDFenviarFacturaCorreo } from 'src/utils/pdfReportGenerator'
 import { exportTOXLSX_Reporte_Ventas } from 'src/utils/XCLReportImport'
+import FormNotaCreditoDebito from './FormNotaCreditoDebito.vue'
+const VisibleModalNotaCredito = ref(false)
+const Factura = ref({})
 const pdfData = ref(null)
 const mostrarModal = ref(false)
 const tipo = {
@@ -525,6 +550,13 @@ const filteredCompra = computed(() => {
   })
 })
 
+const ir_a_NotaCreditoDebito = (factura) => {
+  toggleModal()
+  Factura.value = factura
+}
+const toggleModal = () => {
+  VisibleModalNotaCredito.value = !VisibleModalNotaCredito.value
+}
 onMounted(() => {
   cargarAlmacenes()
   getClientes()
