@@ -1,0 +1,51 @@
+[
+    {
+      id: '5784',
+      cliente: 'prueba eliminar',
+      codigoCliente: 'PR-500021',
+      tipodocumento: '1',
+      nombrecomercial: 'nombre',
+      sucursal: 'Central prueba eliminar',
+      fecha: '2025-09-09',
+      direccion: '',
+      nit: '46513234',
+      email: '',
+      montototal: '30',
+      descuento: '0',
+      tipopago: 'credito',
+      divisa: 'Bolivianos',
+      nfactura: '87',
+      ack_ticket: '68c04bb0372b2',
+      cuf: '1553FC196BEDDDA50C614F5F99713E22A62BAE06AE5F12BE403812F74',
+      fechaEmission: '2025-09-09 11:45:52',
+      numeroFactura: '1',
+      detalle: [
+        [
+          {
+            id: '21093',
+            producto: 'Pan hamburguesa',
+            descripcion: 'de harina fina importada',
+            caracteristica: 'aprox. 70g',
+            cantidad: '1',
+            precio: '30',
+            codigo: 'PH-001',
+            codigosin: '99100',
+            unidadsin: '17',
+            actividadsin: '610000',
+            subTotal: 30
+          }
+        ]
+      ],
+      usuario: [ { idusuario: '117', usuario: 'richard50', cargo: 'Soporte' } ],
+      empresa: [
+        {
+          id: '50',
+          nombre: 'Prosperidad Infinita S.R.L.',
+          celular: '+591 76548252',
+          email: 'info@yofinanciero.com',
+          logo: 'logos/yof_d67fc1b140.jpg',
+          direccion: 'Av. Ayacucho N° 218 esq. Gral Achá'
+        }
+      ]
+    }
+  ]

@@ -10,6 +10,15 @@ export function idempresa_md5() {
     window.location.href = '/app/dashboard'
   }
 }
+export function getUsuario() {
+  if (contenidousuario) {
+    return contenidousuario?.[0]?.nombre
+  } else {
+    alert('Hubo un problema con la sesion, Por favor vuelva a iniciar sesion.')
+    console.log('Los elementos no existen en localStorage')
+    window.location.href = '/app/dashboard'
+  }
+}
 export function idusuario_md5() {
   if (contenidousuario) {
     return contenidousuario?.[0]?.idusuario

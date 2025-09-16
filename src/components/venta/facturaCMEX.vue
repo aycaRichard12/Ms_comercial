@@ -1039,6 +1039,7 @@ const cargarPuntoVentas = async () => {
         puntosVenta.value = filtrados.map((item) => ({
           label: item.nombre,
           value: item.codigosin,
+          Data: item,
         }))
         formData.value.puntoventa = puntosVenta.value[0]
         console.log(puntosVenta.value)
@@ -1298,7 +1299,8 @@ const onSubmit = async () => {
     cartData.listaFactura.incotermDetalle = detalleincoterm
     cartData.listaFactura.numeroDescripcionPaquetesBultos = descripcionPB
     cartData.listaFactura.informacionAdicional = infoadicional
-
+    cartData.puntoVenta = puntoventa.Data.idpuntoventa
+    cartData.puntoVentaSin = puntoventa.value
     const form = new FormData()
     form.append('ver', CONSTANTES.ver)
     form.append('tipoventa', CONSTANTES.tipoventa)

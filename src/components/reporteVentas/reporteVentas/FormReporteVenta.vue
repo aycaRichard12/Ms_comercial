@@ -244,7 +244,7 @@
       </q-card>
     </q-dialog>
 
-    <q-dialog v-model="VisibleModalNotaCredito">
+    <q-dialog v-model="VisibleModalNotaCredito" full-width full-height>
       <q-card>
         <q-card-section class="bg-primary text-white text-h6 flex justify-between">
           <div>Registrar Nota Credito Debito</div>
@@ -269,6 +269,9 @@ import { PDFreporteVentasPeriodo } from 'src/utils/pdfReportGenerator'
 import { PDFenviarFacturaCorreo } from 'src/utils/pdfReportGenerator'
 import { exportTOXLSX_Reporte_Ventas } from 'src/utils/XCLReportImport'
 import FormNotaCreditoDebito from './FormNotaCreditoDebito.vue'
+import { getUsuario } from 'src/composables/FuncionesGenerales'
+//import { decimas } from 'src/composables/FuncionesG'
+const usuario = getUsuario()
 const VisibleModalNotaCredito = ref(false)
 const Factura = ref({})
 const pdfData = ref(null)
@@ -550,10 +553,90 @@ const filteredCompra = computed(() => {
   })
 })
 
-const ir_a_NotaCreditoDebito = (factura) => {
-  toggleModal()
-  Factura.value = factura
+const ir_a_NotaCreditoDebito = async (factura) => {
+  let jsonEmizor = {}
+  try {
+    const response = await api.get(`detallesVenta/${factura.idventa}/${idempresa}`) // Cambia a tu ruta real
+    console.log(response.data)
+    const venta = response.data[0]
+    detalleVenta.value = response.data[0]
+    const productos = cambiarDetalleProducto(detalleVenta.value.detalle)
+    console.log(productos)
+    jsonEmizor = {
+      facturaExterna: {
+        facturaExterna: 0,
+        numeroFactura: Number(venta.nfactura),
+        numeroAutorizacionCuf: venta.cuf,
+        fechaFacturaOriginal: venta.fechaEmission,
+        descuentoFacturaOriginal: parseFloat(venta.descuento),
+        montoTotalFacturaOriginal: parseFloat(venta.montototal),
+        detalleFacturaOriginal: productos.original,
+      },
+
+      numeroNota: 1,
+      codigoPuntoVenta: 0,
+      nombreRazonSocial: venta.nombrecomercial,
+      codigoTipoDocumentoIdentidad: Number(venta.tipodocumento),
+      numeroDocumento: venta.nit,
+      codigoCliente: venta.codigoCliente,
+      codigoLeyenda: venta.leyendaSin,
+      usuario: usuario,
+      montoTotalDevuelto: 0,
+      montoDescuentoCreditoDebito: 0,
+      montoEfectivoCreditoDebito: 0,
+      detalles: productos.ajuste,
+      venta: venta,
+    }
+    console.log(jsonEmizor)
+    toggleModal()
+  } catch (error) {
+    console.error('Error al cargar datos:', error)
+    $q.notify({
+      type: 'negative',
+      message: 'No se pudieron cargar los datos',
+    })
+  }
+  console.log(jsonEmizor)
+  Factura.value = jsonEmizor
 }
+const cambiarDetalleProducto = (detalle = []) => {
+  if (!Array.isArray(detalle) || detalle.length === 0) {
+    return { original: [], ajuste: [] }
+  }
+
+  const productos = detalle[0] || []
+
+  const original = []
+  const ajuste = []
+
+  productos.forEach((producto) => {
+    original.push({
+      codigoProducto: producto.codigo,
+      codigoProductoSin: producto.codigosin,
+      descripcion: producto.descripcion,
+      cantidad: producto.cantidad,
+      unidadMedida: producto.unidadsin,
+      precioUnitario: parseFloat(producto.precio),
+      subTotal: producto.subTotal,
+      montoDescuento: 0,
+    })
+
+    ajuste.push({
+      codigoProducto: producto.codigo,
+      codigoActividadSin: producto.actividadsin,
+      codigoProductoSin: producto.codigosin,
+      descripcion: producto.descripcion,
+      cantidad: Number(producto.cantidad),
+      unidadMedida: producto.unidadsin,
+      precioUnitario: parseFloat(producto.precio),
+      subTotal: producto.subTotal,
+      montoDescuento: 0,
+    })
+  })
+
+  return { original, ajuste }
+}
+
 const toggleModal = () => {
   VisibleModalNotaCredito.value = !VisibleModalNotaCredito.value
 }

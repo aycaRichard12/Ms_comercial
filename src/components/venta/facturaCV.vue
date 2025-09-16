@@ -535,7 +535,7 @@ async function crearFormularioFacturaCompraVenta() {
       complemento: '',
       codigoCliente: '',
       periodoFacturado: '',
-      //codigoLeyenda: leyendaActiva.codigosin,
+      codigoLeyenda: leyendaActiva.leyenda.codigosin,
 
       codigoMetodoPago: 0,
       numeroTarjeta: '',
@@ -712,6 +712,7 @@ const cargarPuntoVentas = async () => {
         puntosVenta.value = filtrados.map((item) => ({
           label: item.nombre,
           value: item.codigosin,
+          Data: item,
         }))
         formData.value.puntoventa = puntosVenta.value[0]
         console.log(puntosVenta.value)
@@ -926,7 +927,7 @@ const onSubmit = async () => {
     }
     $q.loading.show({ message: 'Procesando venta...', timeout: 30000 })
     loadingShown = true
-
+    console.log(puntoventa)
     //Preparar formulario para envío
     variablePago !== 'directo'
       ? (cartData.pagosDivididos = pagosDivididos)
@@ -938,6 +939,10 @@ const onSubmit = async () => {
     cartData.fechalimite = fechaLimite
     cartData.valorpagos = montoPagos
     cartData.dias = periodo
+
+    cartData.puntoVenta = puntoventa.Data.idpuntoventa
+    cartData.puntoVentaSin = puntoventa.value
+    cartData.idleyenda = leyendaActiva.leyenda.id
     cartData.listaFactura.fechaEmision = obtenerHoraISO8601()
     const form = new FormData()
     form.append('ver', CONSTANTES.ver)
@@ -981,6 +986,7 @@ const onSubmit = async () => {
     //   form.forEach((valor, clave) => console.log(`${clave}: ${valor}`))
     //   console.log(json)
     // }
+    console.log(json)
     const response = await api.post('', form, {
       headers: {
         'Content-Type': 'multipart/form-data',

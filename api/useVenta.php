@@ -172,7 +172,9 @@ class UseVEnta
                 'idcampaña' => $jsonDetalles['idcampana'],
                 'nroventa' => $nroventa,
                 'canalventa' => $canalventa,
-                'codigoVenta' => $codigoVenta
+                'codigoVenta' => $codigoVenta,
+                'punto_venta' => $jsonDetalles['puntoVenta'],
+                'leyenda' => $jsonDetalles['idleyenda'],
             ];
 
             if ($tipoventa == self::TIPO_VENTA_SIN_FACTURA) {
@@ -280,15 +282,14 @@ class UseVEnta
         $this->cm->begin_transaction();
         try {
             // --- Insertar en la tabla 'venta' ---
-            $sqlVenta = "INSERT INTO venta (fecha_venta, tipo_venta, monto_total, descuento, tipo_pago, cliente_id_cliente1, divisas_id_divisas, id_usuario, nfactura, idsucursal, idcampaña, nroventa, estado, idcanal, codigoventa) 
-                         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?)";
+            $sqlVenta = "INSERT INTO venta (fecha_venta, tipo_venta, monto_total, descuento, tipo_pago, cliente_id_cliente1, divisas_id_divisas, id_usuario, nfactura, idsucursal, idcampaña, nroventa, estado, idcanal, codigoventa,punto_venta,leyenda)VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?, ?, ?)";
             $stmtVenta = $this->cm->prepare($sqlVenta);
             $stmtVenta->bind_param(
-                "ssddsiiisiisss",
+                "ssddsiiisiisssii",
                 $datosVenta['fecha'], $datosVenta['tipoventa'], $datosVenta['ventatotal'], $datosVenta['descuento'],
                 $datosVenta['tipopago'], $datosVenta['idcliente'], $datosVenta['iddivisa'], $datosVenta['idusuario'],
                 $datosVenta['nroFactura'], $datosVenta['idsucursal'], $datosVenta['idcampaña'], $datosVenta['nroventa'],
-                $datosVenta['canalventa'], $datosVenta['codigoVenta']
+                $datosVenta['canalventa'], $datosVenta['codigoVenta'], $datosVenta['punto_venta'],$datosVenta['leyenda']
             );
             $stmtVenta->execute();
             

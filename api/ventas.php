@@ -870,7 +870,7 @@ class ventas
     }
     public function registroVenta($fecha, $tipoventa, $tipopago, $idcliente, $idsucursal, $canalventa, $idmd5, $idmd5u, $jsonDetalles)
     {
-        // echo json_encode(array("1" => $fecha, "2" =>$tipoventa, "3" =>$tipopago, "4" =>$idcliente, "5" =>$idsucursal, "6" =>$canalventa, "7" =>$idmd5, "8" =>$idmd5u, "9" =>$jsonDetalles));
+        // echo json_encode(array("1" => $fecha, "2" =>$tipoventa, "3" =>$tipopago, "4" =>$idcliente, "5" =>$idsucursal, "6" =>$canalventa, "7" =>$idmd5, "8" =>$idmd5u, "9" =>$jsonDetalles)); detalleVenta
         try {
             date_default_timezone_set('America/La_Paz');
             $lista = [];
@@ -1369,14 +1369,26 @@ class ventas
     {
         $idempresa = $this->verificar->verificarIDEMPRESAMD5($idmd5);
         $lista = [];
-        $clien = $this->cm->query("SELECT dve.id_detalle_venta, p.nombre, p.descripcion, p.caracteristicas, dve.cantidad, dve.precio_unitario FROM detalle_venta dve 
+        $clien = $this->cm->query("SELECT dve.id_detalle_venta, p.nombre, p.descripcion, p.caracteristicas, dve.cantidad, dve.precio_unitario, p.codigo, p.codigosin, p.unidadsin, p.actividadsin FROM detalle_venta dve 
         LEFT JOIN venta ve on dve.venta_id_venta=ve.id_venta
         LEFT JOIN productos_almacen pa on dve.productos_almacen_id_productos_almacen=pa.id_productos_almacen
         LEFT join productos p on pa.productos_id_productos=p.id_productos
         where dve.venta_id_venta='$id'
         order by p.nombre DESC");
         while ($qwe = $this->cm->fetch($clien)) {
-            $res = array("id" => $qwe[0], "producto" => $qwe[1], "descripcion" => $qwe[2], "caracteristica" => $qwe[3], "cantidad" => $qwe[4], "precio" => $qwe[5]);
+            $res = array(
+                "id" => $qwe['id_detalle_venta'],
+                "producto" => $qwe['nombre'],
+                "descripcion" => $qwe['descripcion'], 
+                "caracteristica" => $qwe['caracteristicas'], 
+                "cantidad" => $qwe['cantidad'], 
+                "precio" => $qwe['precio_unitario'],
+                "codigo" => $qwe['codigo'],
+                "codigosin" => $qwe['codigosin'],
+                "unidadsin" => $qwe['unidadsin'],
+                "actividadsin" => $qwe['actividadsin'],
+                "subTotal" => floatval($qwe['cantidad']) * floatval($qwe['precio_unitario']),
+            );
             array_push($lista, $res);
         }
 
@@ -1408,13 +1420,45 @@ class ventas
             );
         }
         $lista2 = [];
-        $alma = $this->cm->query("select ve.id_venta, c.nombre, c.nombrecomercial, s.nombre, ve.fecha_venta, c.direccion, c.nit, c.email, ve.monto_total, ve.descuento, ve.id_usuario, ve.tipo_pago, di.nombre, ve.nfactura from venta ve
-        inner join cliente c on ve.cliente_id_cliente1=c.id_cliente
-        inner join sucursal s on ve.idsucursal=s.id_sucursal
-        INNER JOIN divisas di on ve.divisas_id_divisas=di.id_divisas
+        $alma = $this->cm->query("SELECT ve.id_venta, c.id_cliente, c.nombre AS cliente, c.codigo AS codigoCliente, c.tipodocumento, c.nombrecomercial, s.nombre AS sucursal, ve.fecha_venta, c.direccion, c.nit, c.email, ve.monto_total, ve.descuento, ve.id_usuario, ve.tipo_pago, di.nombre AS divisa, ve.nfactura , vf.ack_ticket, vf.cuf, vf.fechaEmission, vf.numeroFactura, ve.punto_venta, pv.codigosin AS puntoVentaSin, l.idleyendas, l.codigosin AS leyendaSin FROM venta ve
+        INNER JOIN cliente c ON ve.cliente_id_cliente1=c.id_cliente
+        INNER JOIN sucursal s ON ve.idsucursal=s.id_sucursal
+        INNER JOIN divisas di ON ve.divisas_id_divisas=di.id_divisas
+        LEFT JOIN ventas_facturadas vf ON vf.venta_id_venta = ve.id_venta
+        LEFT JOIN punto_venta pv ON pv.idpunto_venta = ve.punto_venta
+        LEFT JOIN leyendas l ON l.idleyendas = ve.leyenda
+        
         where ve.id_venta='$id'");
         while ($qwe = $this->cm->fetch($alma)) {
-            $res = array("id" => $qwe[0], "cliente" => $qwe[1], "nombrecomercial" => $qwe[2], "sucursal" => $qwe[3], "fecha" => $qwe[4], "direccion" => $qwe[5], "nit" => $qwe[6], "email" => $qwe[7], "montototal" => $qwe[8], "descuento" => $qwe[9], "tipopago" => $qwe[11], "divisa" => $qwe[12], "nfactura" => $qwe[13], "detalle" => array($lista), "usuario" => array($usuarioInfo[$qwe[10]]), "empresa" => array($empresaInfo[$idempresa]));
+            $res = array(
+                "id" => $qwe['id_venta'],
+                "id_cliente" => $qwe['id_cliente'],
+                "cliente" => $qwe['cliente'],
+                "codigoCliente" => $qwe['codigoCliente'],
+                "tipodocumento" => $qwe['tipodocumento'],
+                "nombrecomercial" => $qwe['nombrecomercial'],
+                "sucursal" => $qwe['sucursal'],
+                "fecha" => $qwe['fecha_venta'], 
+                "direccion" => $qwe['direccion'], 
+                "nit" => $qwe['nit'], 
+                "email" => $qwe['email'], 
+                "montototal" => $qwe['monto_total'], 
+                "descuento" => $qwe['descuento'], 
+                "tipopago" => $qwe['tipo_pago'], 
+                "divisa" => $qwe['divisa'], 
+                "nfactura" => $qwe['nfactura'], 
+                "ack_ticket" => $qwe['ack_ticket'], 
+                "cuf" => $qwe['cuf'], 
+                "fechaEmission" => $qwe['fechaEmission'], 
+                "numeroFactura" => $qwe['numeroFactura'], 
+                "punto_venta" => $qwe['punto_venta'], 
+                "puntoVentaSin" => $qwe['puntoVentaSin'],
+                "idleyendas" => $qwe['idleyendas'],
+                "leyendaSin" => $qwe['leyendaSin'],
+                "detalle" => array($lista), 
+                "usuario" => array($usuarioInfo[$qwe['id_usuario']]), 
+                "empresa" => array($empresaInfo[$idempresa])
+            );
             array_push($lista2, $res);
         }
 
