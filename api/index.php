@@ -1,7 +1,5 @@
 <?php
     // session_start();
-    
-
     header('Access-Control-Allow-Origin:*');
     header("Access-Control-Allow-Headers: X-API-KEY, Origin, X-Requested-With, Content-Type, Accept, Access-Control-Request-Method");
     header("Access-Control-Allow-Methods: GET, POST, OPTIONS, PUT, DELETE");
@@ -40,6 +38,8 @@
         require_once "configuraciones.php";
         require_once "ventas.php";
         require_once "compras.php";
+        require_once "pagosCompra.php";
+        require_once "notaCreditoDebito.php";
         if ($rutas[0] == "out") {
             require_once "apisOut/index.php";
             return;

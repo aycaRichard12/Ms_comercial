@@ -239,6 +239,9 @@ const iconos = ref({
   reportedecaducidaddeproductos: 'event_busy',
   reporteproductosvendidosglobal: 'assessment',
   configuracionfactura: 'settings',
+  admautorizaciones: 'verified_user',
+  cierrecaja: 'request_quote',
+  generartokensapis: 'api',
 })
 
 const loadTabsForSubmenu = (submenuCodigo) => {

@@ -100,9 +100,29 @@ class UseVEnta
 
         return $nroFactura;
     }
+     /**
+     * Registra una nueva venta, maneja la facturación, stock y pagos.
+     *
+     * @param string $fecha Fecha de la venta.
+     * @param int $tipoventa Tipo de venta (con o sin factura).
+     * @param string $tipopago Tipo de pago (contado, crédito).
+     * @param int $idcliente ID del cliente.
+     * @param int $idsucursal ID de la sucursal.
+     * @param int $canalventa ID del canal de venta.
+     * @param string $idmd5 Hash MD5 del ID de la empresa.
+     * @param string $idmd5u Hash MD5 del ID del usuario.
+     * @param array $jsonDetalles Array con los detalles de la venta (productos, totales, etc.).
+     * @return void Imprime una respuesta JSON.
+     */
+    public function registroPrueba($data){
+
+        //$controlador->registroVenta($_POST['fecha'], $_POST['tipoventa'], $_POST['tipopago'], $_POST['idcliente'], $_POST['sucursal'], $_POST['canal'], $_POST['idempresa'], $_POST['idusuario'], json_decode($_POST['jsonDetalles'], true));
+        // $this->registroVenta($data['fecha'], $tipoventa, $tipopago, $idcliente, $idsucursal, $canalventa, $idmd5, $idmd5u, $jsonDetalles);
+        $this->registroVenta($data['fecha'], $data['tipoventa'], $data['tipopago'], $data['idcliente'], $data['sucursal'], $data['canal'], $data['idempresa'], $data['idusuario'], $data['jsonDetalles']);
+    }
 
     /**
-     * Registra una nueva venta, maneja la facturación, stock y pagos.
+     * Registra una nueva venta, maneja la facturación, stock y pagos. La factura no pudo ser validada por el SIN.
      *
      * @param string $fecha Fecha de la venta.
      * @param int $tipoventa Tipo de venta (con o sin factura).
@@ -117,6 +137,8 @@ class UseVEnta
      */
     public function registroVenta($fecha, $tipoventa, $tipopago, $idcliente, $idsucursal, $canalventa, $idmd5, $idmd5u, $jsonDetalles)
     {
+        //echo json_encode(["fecha"=>$fecha,"tipoventa"=>$tipoventa,"tipopago"=>$tipopago,"idcliente"=>$idcliente,"idsucursal"=>$idsucursal,"canalventa"=>$canalventa,"idmd5"=>$idmd5,"idmd5u"=>$idmd5u,"jsonDetalles"=>$jsonDetalles]);
+
         $idempresa = null;
         $idusuario = null;
 

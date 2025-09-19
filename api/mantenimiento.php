@@ -288,50 +288,114 @@ class mantenimiento
         echo json_encode($res);
     }
 
-    public function listaPuntoVenta($id)
+    // public function listaPuntoVenta($id)
+    // {
+    //     $lista = [];
+    //     $tipovacio = [
+    //             "codigo" => null,
+    //             "descripcion" => null,
+    //             "isActive" => null
+    //     ];
+    //     $tipospuntoventa = [
+    //         1 => [
+    //             "codigo" => 1,
+    //             "descripcion" => "PUNTO VENTA COMISIONISTA",
+    //             "isActive" => 1
+    //         ],
+    //         2 => [
+    //             "codigo" => 2,
+    //             "descripcion" => "PUNTO VENTA VENTANILLA DE COBRANZA",
+    //             "isActive" => 1
+    //         ],
+    //         3 => [
+    //             "codigo" => 3,
+    //             "descripcion" => "PUNTO DE VENTA MOVILES",
+    //             "isActive" => 1
+    //         ],
+    //         4 => [
+    //             "codigo" => 4,
+    //             "descripcion" => "PUNTO DE VENTA YPFB",
+    //             "isActive" => 1
+    //         ],
+    //         5 => [
+    //             "codigo" => 5,
+    //             "descripcion" => "PUNTO DE VENTA CAJEROS",
+    //             "isActive" => 1
+    //         ],
+    //         6 => [
+    //             "codigo" => 6,
+    //             "descripcion" => "PUNTO DE VENTA CONJUNTA",
+    //             "isActive" => 1
+    //         ]
+    //     ];
+    //     $qwe2 = $this->cm->fetch($this->cm->query("SELECT a.id_almacen, a.nombre, a.direccion, a.telefono, a.email, ta.tipo_almacen, a.fecha_creacion, a.estado, a.tipo_almacen_id_tipo_almacen, a.stockmin, a.stockmax, a.idsucursal FROM almacen a 
+    //         INNER JOIN tipo_almacen ta ON a.tipo_almacen_id_tipo_almacen = ta.id_tipo_almacen 
+    //         WHERE a.id_almacen = '{$id}'"));
+    //     $res1 = (object) [
+    //             "id" => $qwe2[0],
+    //             "nombre" => $qwe2[1],
+    //             "direccion" => $qwe2[2],
+    //             "telefono" => $qwe2[3],
+    //             "email" => $qwe2[4],
+    //             "tipoalmacen" => $qwe2[5],
+    //             "fecha" => $qwe2[6],
+    //             "estado" => $qwe2[7],
+    //             "idtipoalmacen" => $qwe2[8],
+    //             "stockmin" => $qwe2[9],
+    //             "stockmax" => $qwe2[10],
+    //             "idsucursal" => $qwe2[11],
+    //     ];
+    //     $query = "select * from punto_venta pv where pv.idalmacen = '$id' order by pv.idpunto_venta desc";
+    //     $alma = $this->cm->query($query);
+
+    //     while ($qwe = $this->cm->fetch($alma)) {
+
+    //         $res = (object) [
+    //             "id" => $qwe[0],
+    //             "nombre" => $qwe[1],
+    //             "descripcion" => $qwe[2],
+    //             "tipo" => $qwe[3] == null ? $tipovacio : $tipospuntoventa[$qwe[3]],
+    //             "codigoSucursal" => $qwe[4],
+    //             "almacen" => $res1,
+    //             "estadosin" => $qwe[6],
+    //             "codigosin" => $qwe[7]
+    //         ];
+    //         array_push($lista, $res);
+    //     }
+
+    //     echo json_encode($lista);
+    // }
+
+    public function listaPuntoVenta($id) 
     {
         $lista = [];
         $tipovacio = [
-                "codigo" => null,
-                "descripcion" => null,
-                "isActive" => null
+            "codigo" => null,
+            "descripcion" => null,
+            "isActive" => null
         ];
         $tipospuntoventa = [
-            1 => [
-                "codigo" => 1,
-                "descripcion" => "PUNTO VENTA COMISIONISTA",
-                "isActive" => 1
-            ],
-            2 => [
-                "codigo" => 2,
-                "descripcion" => "PUNTO VENTA VENTANILLA DE COBRANZA",
-                "isActive" => 1
-            ],
-            3 => [
-                "codigo" => 3,
-                "descripcion" => "PUNTO DE VENTA MOVILES",
-                "isActive" => 1
-            ],
-            4 => [
-                "codigo" => 4,
-                "descripcion" => "PUNTO DE VENTA YPFB",
-                "isActive" => 1
-            ],
-            5 => [
-                "codigo" => 5,
-                "descripcion" => "PUNTO DE VENTA CAJEROS",
-                "isActive" => 1
-            ],
-            6 => [
-                "codigo" => 6,
-                "descripcion" => "PUNTO DE VENTA CONJUNTA",
-                "isActive" => 1
-            ]
+            1 => ["codigo" => 1, "descripcion" => "PUNTO VENTA COMISIONISTA", "isActive" => 1],
+            2 => ["codigo" => 2, "descripcion" => "PUNTO VENTA VENTANILLA DE COBRANZA", "isActive" => 1],
+            3 => ["codigo" => 3, "descripcion" => "PUNTO DE VENTA MOVILES", "isActive" => 1],
+            4 => ["codigo" => 4, "descripcion" => "PUNTO DE VENTA YPFB", "isActive" => 1],
+            5 => ["codigo" => 5, "descripcion" => "PUNTO DE VENTA CAJEROS", "isActive" => 1],
+            6 => ["codigo" => 6, "descripcion" => "PUNTO DE VENTA CONJUNTA", "isActive" => 1]
         ];
-        $qwe2 = $this->cm->fetch($this->cm->query("SELECT a.id_almacen, a.nombre, a.direccion, a.telefono, a.email, ta.tipo_almacen, a.fecha_creacion, a.estado, a.tipo_almacen_id_tipo_almacen, a.stockmin, a.stockmax, a.idsucursal FROM almacen a 
+
+        // ---- ALMACÉN ----
+        $qwe2 = $this->cm->fetch($this->cm->query("
+            SELECT a.id_almacen, a.nombre, a.direccion, a.telefono, a.email, ta.tipo_almacen,
+                a.fecha_creacion, a.estado, a.tipo_almacen_id_tipo_almacen,
+                a.stockmin, a.stockmax, a.idsucursal
+            FROM almacen a 
             INNER JOIN tipo_almacen ta ON a.tipo_almacen_id_tipo_almacen = ta.id_tipo_almacen 
-            WHERE a.id_almacen = '{$id}'"));
-        $res1 = (object) [
+            WHERE a.id_almacen = '{$id}'
+        "));
+
+        $res1 = null;
+        if ($qwe2) {
+            $res1 = (object) [
                 "id" => $qwe2[0],
                 "nombre" => $qwe2[1],
                 "direccion" => $qwe2[2],
@@ -344,17 +408,24 @@ class mantenimiento
                 "stockmin" => $qwe2[9],
                 "stockmax" => $qwe2[10],
                 "idsucursal" => $qwe2[11],
-        ];
-        $query = "select * from punto_venta pv where pv.idalmacen = '$id' order by pv.idpunto_venta desc";
+            ];
+        }
+
+        // ---- PUNTOS DE VENTA ----
+        $query = "SELECT * FROM punto_venta pv WHERE pv.idalmacen = '$id' ORDER BY pv.idpunto_venta DESC";
         $alma = $this->cm->query($query);
 
         while ($qwe = $this->cm->fetch($alma)) {
+            $tipo = $tipovacio;
+            if ($qwe[3] !== null && isset($tipospuntoventa[$qwe[3]])) {
+                $tipo = $tipospuntoventa[$qwe[3]];
+            }
 
             $res = (object) [
                 "id" => $qwe[0],
                 "nombre" => $qwe[1],
                 "descripcion" => $qwe[2],
-                "tipo" => $qwe[3] == null ? $tipovacio : $tipospuntoventa[$qwe[3]],
+                "tipo" => $tipo,
                 "codigoSucursal" => $qwe[4],
                 "almacen" => $res1,
                 "estadosin" => $qwe[6],

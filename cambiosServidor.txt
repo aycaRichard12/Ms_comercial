@@ -1,0 +1,3 @@
+axios->cambios Url api 
+htaccess-> mistersofts y api
+configquasar -> hacer cambios

@@ -138,7 +138,7 @@ const routes = [
       },
       {
         path: '/gestionPedido',
-        component: () => import('pages/pedidos/GestionPedidoPage.vue'),
+        component: () => import('src/pages/autorizaciones/GestionPedidoPage.vue'),
       },
       {
         path: '/registrarventa',
@@ -278,7 +278,7 @@ const routes = [
       },
       {
         path: '/procesarventaspendientes',
-        component: () => import('src/pages/Venta/VentasPendientesPage.vue'),
+        component: () => import('src/pages/autorizaciones/VentasPendientesPage.vue'),
       },
       {
         path: '/cierrecaja',
@@ -291,6 +291,14 @@ const routes = [
       {
         path: '/ingresocredito',
         component: () => import('src/pages/compra/RcompraCreditoPage.vue'),
+      },
+      {
+        path: '/autorizarcompra',
+        component: () => import('src/pages/autorizaciones/autComprasPage.vue'),
+      },
+      {
+        path: '/reportedecompras',
+        component: () => import('src/pages/compra/RepComprasPage.vue'),
       },
     ],
   },

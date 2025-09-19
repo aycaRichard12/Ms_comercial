@@ -85,7 +85,7 @@
     </q-btn>
     <!-- Filtros y acciones -->
 
-    <div class="row q-col-gutter-x-md">
+    <div class="row q-col-gutter-x-md flex justify-between">
       <div class="col-12 col-md-2">
         <label for="almacen">Filtrar por almacén</label>
         <q-select
@@ -102,20 +102,7 @@
         />
       </div>
 
-      <div class="col-12 col-md-1">
-        <q-btn color="primary" @click="crearFormularioRDCA()" class="btn-res q-mt-lg">
-          <q-icon name="bar_chart" class="icono" />
-          <span class="texto">Rep. Campañas</span>
-        </q-btn>
-      </div>
-      <div lass="col-12 col-md-1">
-        <q-btn color="primary" @click="crearFormularioRDCAV()" class="btn-res q-mt-lg">
-          <q-icon name="summarize" class="icono" />
-          <span class="texto">Rep. Ventas</span>
-        </q-btn>
-      </div>
-
-      <div class="col-12 col-md-7 flex justify-end">
+      <div class="col-12 col-md-2">
         <div>
           <label for="buscar">Buscar...</label>
           <q-input v-model="busqueda" outlined dense debounce="300">
@@ -816,16 +803,6 @@ const eliminarPrecioCampana = async (id) => {
 
 const filtrarPrecios = () => {
   // La lógica de filtrado ya está en la propiedad computada preciosCampanaFiltrados
-}
-
-const crearFormularioRDCA = () => {
-  // Implementar lógica para crear formulario de reporte
-  console.log('Crear formulario RDCA')
-}
-
-const crearFormularioRDCAV = () => {
-  // Implementar lógica para crear formulario de reporte de ventas
-  console.log('Crear formulario RDCAV')
 }
 function handleKeydown(e) {
   if (e.key === 'Escape') {

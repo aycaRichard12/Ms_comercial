@@ -590,8 +590,6 @@ elseif ($ver == "registrarCierre") {
         $data['denominaciones'], 
         $data['observacion']
     );
-  
-    
 }
 elseif ($ver == "AutorizacionCierre") {
     $controlador = new ArqueoPuntoVenta(); 
@@ -607,9 +605,17 @@ elseif ($ver == "RegistrarPagos"){
     $controlador = new PagosCompra();
     $controlador->handleRegistrarPago($_POST['id_cuota']);
 }
+elseif ($ver == "pruebaVenta"){
+    $controlador = new UseVEnta();
+    $controlador->registroPrueba($data);
+}
+elseif ($ver == "registrarNotaCreditoDebito"){
+    $controlador = new Nota_Debito_Credito();
+    $controlador->registrarNotaCreditoDebito($data);
+}
 
 
 if ($controlador === null) {
-    // Acción por defecto si no se encuentra una ruta válida producto sendEmail editaralmacen registroProducto registrodevolucion
+    // Acción por defecto si no se encuentra una ruta válida producto sendEmail editaralmacen registroVenta registrodevolucion
     echo json_encode("El formulario ".$_POST['ver']." no existe");
 }

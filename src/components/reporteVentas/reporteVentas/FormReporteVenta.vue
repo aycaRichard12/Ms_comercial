@@ -250,8 +250,8 @@
           <div>Registrar Nota Credito Debito</div>
           <q-btn icon="close" flat dense round @click="toggleModal" />
         </q-card-section>
-        <q-card-section>
-          <FormNotaCreditoDebito :nota="Factura" />
+        <q-card-section style="max-height: 83vh; overflow-y: auto">
+          <FormNotaCreditoDebito :nota="Factura" @cancelar="toggleModal" />
         </q-card-section>
       </q-card>
     </q-dialog>
@@ -412,7 +412,7 @@ const columnas = [
   { name: 'total', label: 'Total', field: 'total' },
   { name: 'descuento', label: 'Dscto.', field: 'descuento' },
   { name: 'ventatotal', label: 'Monto', field: 'ventatotal' },
-  { name: 'acciones', label: 'Acciones', field: 'acciones' },
+  { name: 'acciones', label: 'Acciones', field: 'acciones', align: 'center' },
 ]
 
 const rows = ref([])
@@ -554,6 +554,7 @@ const filteredCompra = computed(() => {
 })
 
 const ir_a_NotaCreditoDebito = async (factura) => {
+  console.log(factura)
   let jsonEmizor = {}
   try {
     const response = await api.get(`detallesVenta/${factura.idventa}/${idempresa}`) // Cambia a tu ruta real
@@ -572,7 +573,7 @@ const ir_a_NotaCreditoDebito = async (factura) => {
         montoTotalFacturaOriginal: parseFloat(venta.montototal),
         detalleFacturaOriginal: productos.original,
       },
-
+      idalmacen: factura.idalmacen,
       numeroNota: 1,
       codigoPuntoVenta: 0,
       nombreRazonSocial: venta.nombrecomercial,
@@ -622,6 +623,7 @@ const cambiarDetalleProducto = (detalle = []) => {
     })
 
     ajuste.push({
+      id: producto.idproducto,
       codigoProducto: producto.codigo,
       codigoActividadSin: producto.actividadsin,
       codigoProductoSin: producto.codigosin,

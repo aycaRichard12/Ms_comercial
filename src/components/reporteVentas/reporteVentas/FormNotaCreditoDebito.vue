@@ -72,12 +72,6 @@
         <div class="col-12 col-md-6">
           <q-item dense>
             <q-item-section>
-              <q-item-label caption>Nro. Nota:</q-item-label>
-              <q-item-label class="text-weight-medium">{{ nota.numeroNota }}</q-item-label>
-            </q-item-section>
-          </q-item>
-          <q-item dense>
-            <q-item-section>
               <q-item-label caption>Código Cliente:</q-item-label>
               <q-item-label>{{ nota.codigoCliente }}</q-item-label>
             </q-item-section>
@@ -105,6 +99,8 @@
               </q-item-label>
             </q-item-section>
           </q-item>
+        </div>
+        <div class="col-12">
           <q-item dense>
             <q-item-section>
               <q-item-label caption>Leyenda:</q-item-label>
@@ -141,7 +137,7 @@
                 autofocus
                 type="number"
                 id="cantidad"
-                @keyup.enter="scope.set"
+                @keyup.enter="validar(scope, props.row)"
                 @keyup.esc="scope.cancel"
               />
             </q-popup-edit>
@@ -162,7 +158,7 @@
                 step="0.01"
                 inputmode="decimal"
                 id="preciounitario"
-                @keyup.enter="scope.set"
+                @keyup.enter="validar(scope, props.row)"
                 @keyup.esc="scope.cancel"
               />
             </q-popup-edit>
@@ -184,7 +180,7 @@
                 step="0.01"
                 inputmode="decimal"
                 id="descuento"
-                @keyup.enter="scope.set"
+                @keyup.enter="validarMontoDescuento(scope, props.row)"
                 @keyup.esc="scope.cancel"
               />
             </q-popup-edit>
@@ -199,6 +195,19 @@
                 Number(props.row.cantidad) * parseFloat(props.row.precioUnitario) -
                 parseFloat(props.row.montoDescuento)
             }}
+          </q-td>
+        </template>
+        <template v-slot:body-cell-acciones="props">
+          <q-td :props="props">
+            <q-btn
+              color="negative"
+              icon="delete"
+              dense
+              flat
+              round
+              @click="eliminarDetalleNota(props.pageIndex)"
+              title="Eliminar este ítem"
+            />
           </q-td>
         </template>
 
@@ -225,11 +234,12 @@
                       type="number"
                       step="0.01"
                       inputmode="decimal"
-                      @keyup.enter="scope.set"
+                      @keyup.enter="validarMonto(scope)"
                       @keyup.esc="scope.cancel"
                     />
                   </q-popup-edit>
                   {{ nota.montoDescuentoCreditoDebito.toFixed(2) }}
+                  <q-icon name="edit" size="16px" color="primary" class="q-ml-xs" />
                 </q-item-label>
               </q-item-section>
             </q-item>
@@ -240,7 +250,7 @@
               </q-item-section>
               <q-item-section side class="text-right">
                 <q-item-label class="text-h6 text-weight-bold">
-                  <q-popup-edit v-model.number="nota.montoDescuento" v-slot="scope">
+                  <q-popup-edit v-model.number="nota.montoTotalDevuelto" v-slot="scope">
                     <q-input
                       v-model.number="scope.value"
                       outlined
@@ -249,11 +259,12 @@
                       type="number"
                       step="0.01"
                       inputmode="decimal"
-                      @keyup.enter="scope.set"
+                      @keyup.enter="validarMonto(scope)"
                       @keyup.esc="scope.cancel"
                     />
                   </q-popup-edit>
-                  {{ nota.montoDescuento.toFixed(2) }}
+                  {{ nota.montoTotalDevuelto.toFixed(2) }}
+                  <q-icon name="edit" size="16px" color="primary" class="q-ml-xs" />
                 </q-item-label>
               </q-item-section>
             </q-item>
@@ -264,20 +275,7 @@
               </q-item-section>
               <q-item-section side class="text-right">
                 <q-item-label class="text-weight-medium">
-                  <q-popup-edit v-model.number="nota.montoEfectivoCreditoDebito" v-slot="scope">
-                    <q-input
-                      v-model.number="scope.value"
-                      outlined
-                      dense
-                      autofocus
-                      type="number"
-                      step="0.01"
-                      inputmode="decimal"
-                      @keyup.enter="scope.set"
-                      @keyup.esc="scope.cancel"
-                    />
-                  </q-popup-edit>
-                  {{ nota.montoEfectivoCreditoDebito.toFixed(2) }}
+                  {{ nota.montoEfectivoCreditoDebito = montoDescuentoCreditoDebito }}
                 </q-item-label>
               </q-item-section>
             </q-item>
@@ -302,14 +300,16 @@
 </template>
 
 <script setup>
-import { defineProps, defineEmits, ref, onMounted } from 'vue'
+import { defineProps, defineEmits, ref, onMounted, computed } from 'vue'
 import { validarUsuario } from 'src/composables/FuncionesG'
 import { peticionGET } from 'src/composables/peticionesFetch'
 import { URL_APICM } from 'src/composables/services'
 import { useQuasar } from 'quasar'
+import { showDialog } from 'src/utils/dialogs'
+import { api } from 'boot/axios'
+
 import axios from 'axios'
 const $q = useQuasar()
-
 // =============================================
 // PROPS Y EMITS
 // =============================================
@@ -347,7 +347,7 @@ const nota = ref(props.nota)
 const leyendasSINOptions = ref([])
 const puntosVenta = ref([])
 console.log(props.nota)
-defineEmits(['cancelar'])
+const emit = defineEmits(['cancelar'])
 
 // =============================================
 // CONFIGURACIÓN DE TABLA
@@ -395,6 +395,13 @@ const ColumnsDetalleAjuste = [
     align: 'right',
     field: 'subTotal',
     format: (val) => `Bs. ${val.toFixed(2)}`,
+    style: 'font-weight: 500',
+  },
+  {
+    name: 'acciones',
+    label: 'Acciones',
+    align: 'center',
+    field: 'acciones',
     style: 'font-weight: 500',
   },
 ]
@@ -546,31 +553,88 @@ const cargarLeyendaSIN = async () => {
     })
   }
 }
-const confirmarNota = () => {
-  // Aquí puedes agregar la lógica para confirmar la nota de crédito/débito
-  // Por ejemplo, enviar los datos al servidor o actualizar el estado en un store
-  console.log('Nota confirmada:', nota.value)
-  $q.notify({
-    type: 'positive',
-    message: 'Nota de Crédito/Débito confirmada exitosamente.',
-  })
-  // Emitir un evento para notificar al componente padre
-  // Puedes pasar datos adicionales si es necesario
-  // Por ejemplo, el ID de la nota creada o un mensaje de éxito
-  // Aquí simplemente emitimos el evento sin datos adicionales
-  // $emit('nota-confirmada', { id: nuevaNotaId, mensaje: 'Éxito' })
-  // En este caso, solo cerramos el formulario
-  // Puedes ajustar esto según tus necesidades
-  // Por ejemplo, podrías querer limpiar el formulario en lugar de cerrarlo
-  // O podrías querer redirigir al usuario a otra página
-  // Aquí simplemente emitimos el evento para cerrar el formulario
-  // y dejamos que el componente padre maneje lo que sucede después
-  // como mostrar una lista actualizada de notas o redirigir a otra vista
-  // Ajusta esto según la lógica de tu aplicación
-  // $emit('cerrar-formulario')
-  // En este caso, llamamos al método cancelar para cerrar el formulario
+
+const eliminarDetalleNota = async (index) => {
+  const result = await showDialog(
+    $q,
+    'Q',
+    '¿Estás seguro de que deseas eliminar este registro? Esta acción no se puede deshacer.',
+  )
+  console.log('Question dialog result:', result)
+  if (result) {
+    if (index > -1) {
+      nota.value.detalles.splice(index, 1)
+    }
+    await showDialog($q, 'I', 'La operación se completó exitosamente.')
+  } else {
+    $q.notify({ message: 'Acción cancelada', color: 'info' })
+  }
+}
+const confirmarNota = async () => {
+  const contenidousuario = validarUsuario()
+  const token = contenidousuario[0]?.factura?.access_token
+  const tipo = contenidousuario[0]?.factura?.tipo
+  const md5E = contenidousuario[0]?.empresa?.idempresa
+
+  const { facturaExterna, venta, idalmacen, ...resto } = nota.value
+  console.log(venta)
+  const notaCreditoDebito = {
+    ...facturaExterna,
+    ...resto,
+  }
+  const detalleventa = venta?.detalle[0] || []
+  console.log(detalleventa)
+  const sendData = {
+    ver: 'registrarNotaCreditoDebito',
+    token,
+    tipo,
+    numNota: 0,
+    md5E,
+    idalmacen,
+    id_punto_venta: venta?.punto_venta || 0,
+    id_cliente: venta?.id_cliente || 0,
+    id_leyenda: venta?.idleyendas || 0,
+    id_usuario: venta?.usuario[0].idusuario || 0,
+    id_venta: venta?.id || 0,
+    monto_total_devuelto: resto.montoTotalDevuelto || 0,
+    monto_descuento_credito_debito: resto.montoDescuentoCreditoDebito || 0,
+    monto_efectivo_credito_debito: resto.montoEfectivoCreditoDebito || 0,
+    detalle: resto.detalles,
+    notaCreditoDebito,
+  }
+  console.log('Datos a enviar:', sendData)
+  try {
+    const response = await api.post('', sendData)
+
+    const data = response.data
+    console.log('Respuesta del servidor:', data)
+    if (data.estado === 'error') {
+      showDialog($q, 'E', data.mensaje || 'Error al registrar la nota de crédito/débito')
+    } else {
+      showDialog($q, 'I', 'La nota de crédito/débito se registró exitosamente.')
+      emit('cancelar') // Cerrar el formulario después de confirmar
+    }
+  } catch (error) {
+    showDialog($q, 'E', error.message || 'Error inesperado al registrar la nota de crédito/débito')
+  }
 }
 
+const montoDescuentoCreditoDebito = computed(() => {
+  const total = nota.value.detalles.reduce((acc, item) => {
+    return (
+      acc +
+      Number(item.cantidad) * parseFloat(item.precioUnitario) -
+      parseFloat(item.montoDescuento || 0)
+    )
+  }, 0)
+  const total_MDCD = (
+    total -
+    Number(nota.value.montoDescuentoCreditoDebito || 0) -
+    Number(nota.value.montoTotalDevuelto || 0)
+  ).toFixed(2)
+  return total_MDCD > 0 ? total_MDCD : 0.04
+})
+console.log(montoDescuentoCreditoDebito.value)
 const getUnidadMedida = (codigo) => {
   // Simulación de unidades
   const unidades = {
@@ -579,6 +643,35 @@ const getUnidadMedida = (codigo) => {
     // ... agregar más unidades según el catálogo
   }
   return unidades[codigo] || 'N/A'
+}
+const validarMonto = async (scope) => {
+  if (scope.value >= 0 && scope.value <= montoDescuentoCreditoDebito.value) {
+    scope.set()
+  } else {
+    await showDialog(
+      $q,
+      'E',
+      'El valor debe ser menor a ' + montoDescuentoCreditoDebito.value + ' y mayor o igual a 0',
+    )
+  }
+}
+const validarMontoDescuento = async (scope, row) => {
+  console.log(row)
+  const totalFila = Number(row.cantidad) * parseFloat(row.precioUnitario)
+  if (scope.value >= 0 && scope.value <= totalFila) {
+    scope.set()
+  } else {
+    await showDialog($q, 'E', 'El valor debe ser menor a ' + totalFila + ' y mayor o igual a 0')
+  }
+}
+const validar = async (scope, row) => {
+  console.log(row)
+
+  if (scope.value > 0) {
+    scope.set()
+  } else {
+    await showDialog($q, 'E', 'El valor debe ser  mayor a 0')
+  }
 }
 onMounted(async () => {
   await cargarLeyendaSIN()

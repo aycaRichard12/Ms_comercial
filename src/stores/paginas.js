@@ -33,7 +33,13 @@ export const PAGINAS = Object.freeze({
     'reporteproductosvendidosindividual',
     'kardex',
   ]),
-  contingencias: Object.freeze(['registraranulaciones', 'registrodeextravios', 'registrodemermas']),
+  contingencias: Object.freeze([
+    'registraranulaciones',
+    'registrodeextravios',
+    'registrodemermas',
+    'reportedeextravios',
+    'reportedemermas',
+  ]),
   cuentasporcobrar: Object.freeze([
     'cuentasporcobrarocultas',
     'reportecuentasporcobrarocultas',
@@ -46,6 +52,23 @@ export const PAGINAS = Object.freeze({
     'reportedeindicederotacionporcliente',
   ]),
   registrarclienteoproveedor: Object.freeze(['registrodecliente', 'registrarproveedor']),
+  admautorizaciones: Object.freeze([
+    'gestionPedido',
+    'procesarventaspendientes',
+    'autorizarcompra',
+  ]),
+  gestioncompra: Object.freeze([
+    'registrarcompra',
+    'reporteproductoscomprados',
+    'reportedecompras',
+  ]),
+  gestioncampanas: Object.freeze([
+    'crearcampanas',
+    'reportedecampanas',
+    'reportedeventasporcampanas',
+  ]),
+  gestionmovimientos: Object.freeze(['movimientos', 'reportedemovimientos']),
+  pedidos: Object.freeze(['generarpedido', 'reportedepedidos']),
   // ... (otros grupos con el mismo formato)
 })
 
@@ -105,6 +128,18 @@ export const PAGINAS_ICONS = Object.freeze({
 
   registrodecliente: 'person_add',
   registrarproveedor: 'local_shipping',
+  //autoiriziones
+  gestionPedido: 'assignment_turned_in',
+  procesarventaspendientes: 'pending_actions',
+  autorizarcompra: 'shopping_bag',
+  //compras
+  registrarcompra: 'add_shopping_cart',
+  reporteproductoscomprados: 'receipt_long',
+  reportedecompras: 'bar_chart',
+  //Movimientos
+  movimientos: 'swap_horiz',
+  reportedemovimientos: 'assessment',
+  //pedidos
 })
 
 /**

@@ -944,6 +944,8 @@ const onSubmit = async () => {
     cartData.puntoVentaSin = puntoventa.value
     cartData.idleyenda = leyendaActiva.leyenda.id
     cartData.listaFactura.fechaEmision = obtenerHoraISO8601()
+    console.log(metodoPago?.id)
+    cartData.listaFactura.codigoMetodoPago = metodoPago?.id
     const form = new FormData()
     form.append('ver', CONSTANTES.ver)
     form.append('tipoventa', CONSTANTES.tipoventa)
@@ -966,7 +968,7 @@ const onSubmit = async () => {
     form.append('jsonDetalles', JSON.stringify(cartData))
 
     const jsonObject = Object.fromEntries(form.entries())
-    cartData.listaFactura.codigoMetodoPago = metodoPago?.id
+
     jsonObject['jsonDetalles'] = cartData
     const json = Object.fromEntries(form.entries())
     json.jsonDetalles = cartData
@@ -983,9 +985,10 @@ const onSubmit = async () => {
     //     throw { message: response.data?.mensaje || 'Error al procesar la venta', response }
     //   }
     // } else {
-    //   form.forEach((valor, clave) => console.log(`${clave}: ${valor}`))
+    //   form.forEach((valor, clave) => console.log(`${clave}: ${valor}`)) codigoMetodoPago
     //   console.log(json)
     // }
+    form.forEach((valor, clave) => console.log(`${clave}: ${valor}`))
     console.log(json)
     const response = await api.post('', form, {
       headers: {

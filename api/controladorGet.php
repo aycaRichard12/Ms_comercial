@@ -615,7 +615,7 @@ elseif ($ver[0] == "reportecreditos") {
         // All parameters are present, proceed with the call
         $controlador->reporteCreditos($idmd5, $fechai, $fechaf);
     }
-}
+}  
 elseif ($ver[0] == "reporteCreditosAlCorte") {
     // This block handles the "reportecreditos" action/route.
     $controlador = new reportes();

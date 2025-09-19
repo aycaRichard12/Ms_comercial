@@ -2,7 +2,7 @@
   <q-form @submit="submitForm" ref="formRef">
     <div class="row q-col-gutter-md">
       <div class="col-12 col-md-5">
-        <label for="nombre">Categoría del producto*</label>
+        <label for="nombre">Nombre*</label>
         <q-input
           v-model="localData.nombre"
           id="nombre"

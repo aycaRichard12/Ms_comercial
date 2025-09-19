@@ -816,7 +816,7 @@ const ventasValidasFiltradas = computed(() => {
   if (filtroAlmacen.value) {
     return ventasValidas.value
       .filter((v) => filtroAlmacen.value === 0 || v.idalmacen == filtroAlmacen.value)
-      .filter((v) => filtroTipo.value === 0 || v.tipoventa == filtroTipo.value)
+      .filter((v) => v.tipoventa == filtroTipo.value)
   } else {
     return []
   }

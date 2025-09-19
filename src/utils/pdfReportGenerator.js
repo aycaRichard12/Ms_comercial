@@ -2986,3 +2986,101 @@ export function PDFpedidos(ordenados, tipoestados, filtroAlmacen) {
   })
   return doc
 }
+
+export function PDFalmacenes(props) {
+  console.log(props.rows) // ✅ Acceso correcto a los datos reactivos
+
+  const contenidousuario = validarUsuario()
+  const doc = new jsPDF({ orientation: 'portrait' })
+
+  const idempresa = contenidousuario[0]
+  const nombreEmpresa = idempresa.empresa.nombre
+  const direccionEmpresa = idempresa.empresa.direccion
+  const telefonoEmpresa = idempresa.empresa.telefono
+
+  const columns = [
+    { header: 'N°', dataKey: 'indice' },
+    { header: 'Nombre', dataKey: 'nombre' },
+    { header: 'Codigo', dataKey: 'codigo' },
+    { header: 'Dirección', dataKey: 'direccion' },
+    { header: 'Teléfono', dataKey: 'telefono' },
+    { header: 'Email', dataKey: 'email' },
+    { header: 'Tipo almacén', dataKey: 'tipoalmacen' },
+    { header: 'Stock min', dataKey: 'stockmin' },
+    { header: 'Stock max', dataKey: 'stockmax' },
+    { header: 'Sucursal', dataKey: 'sucursal' },
+    { header: 'Estado', dataKey: 'estado' },
+  ]
+
+  const datos = props.rows.map((item, indice) => ({
+    indice: indice + 1,
+    nombre: item.nombre,
+    codigo: item.codigo,
+    direccion: item.direccion,
+    telefono: item.telefono,
+    email: item.email,
+    tipoalmacen: item.tipoalmacen,
+    stockmin: item.stockmin,
+    stockmax: item.stockmax,
+    sucursal: item.sucursales?.[0]?.nombre || '-', // en caso de tener relación
+    estado: Number(item.estado) === 1 ? 'Activo' : 'Inactivo',
+  }))
+
+  autoTable(doc, {
+    columns,
+    body: datos,
+    styles: {
+      overflow: 'linebreak',
+      fontSize: 5,
+      cellPadding: 2,
+    },
+    headStyles: {
+      fillColor: [22, 160, 133],
+      textColor: 255,
+      halign: 'center',
+    },
+    columnStyles: {
+      indice: { cellWidth: 10, halign: 'center' },
+      nombre: { cellWidth: 15, halign: 'left' },
+      codigo: { cellWidth: 15, halign: 'left' },
+      direccion: { cellWidth: 30, halign: 'left' },
+      telefono: { cellWidth: 15, halign: 'right' },
+      email: { cellWidth: 30, halign: 'left' },
+      tipoalmacen: { cellWidth: 15, halign: 'left' },
+      stockmin: { cellWidth: 15, halign: 'center' },
+      stockmax: { cellWidth: 15, halign: 'center' },
+      sucursal: { cellWidth: 25, halign: 'left' },
+      estado: { cellWidth: 15, halign: 'center' },
+    },
+    startY: 45,
+    margin: { horizontal: 5 },
+    theme: 'striped',
+    didDrawPage: () => {
+      if (doc.internal.getNumberOfPages() === 1) {
+        if (logoBase64) {
+          const pageWidth = doc.internal.pageSize.getWidth() // Ancho total página
+          const imgWidth = 20 // Ancho del logo en mm
+          const imgHeight = 20 // Alto del logo en mm
+          const xPos = pageWidth - imgWidth - 10 // 10mm de margen derecho
+          const yPos = 5 // margen superior
+          console.log(logoBase64)
+          doc.addImage(logoBase64, 'JPEG', xPos, yPos, imgWidth, imgHeight)
+        }
+        doc.setFontSize(7)
+        doc.setFont(undefined, 'bold')
+        doc.text(nombreEmpresa, 5, 10)
+
+        doc.setFontSize(6)
+        doc.setFont(undefined, 'normal')
+        doc.text(direccionEmpresa, 5, 13)
+        doc.text(`Tel: ${telefonoEmpresa}`, 5, 16)
+
+        doc.setFontSize(10)
+        doc.setFont(undefined, 'bold')
+        doc.text('ALMACENES', doc.internal.pageSize.getWidth() / 2, 15, { align: 'center' })
+      }
+    },
+  })
+
+  return doc
+}

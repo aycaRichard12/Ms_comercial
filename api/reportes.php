@@ -19,7 +19,7 @@ class reportes
         $this->cm = $this->conexion->cm;
         $this->rh = $this->conexion->rh;
         $this->numceros = 4;
-        //$this->ad = $this->conexion->ad; reportecreditos Funciones
+        //$this->ad = $this->conexion->ad; reportecreditos detalleVenta
         $this->em = $this->conexion->em;
     }
 
