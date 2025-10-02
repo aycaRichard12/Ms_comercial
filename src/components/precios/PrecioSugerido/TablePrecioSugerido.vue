@@ -91,7 +91,9 @@ import jsPDF from 'jspdf'
 import autoTable from 'jspdf-autotable'
 import { URL_APIE } from 'src/composables/services'
 import { decimas, obtenerFechaActualDato, cambiarFormatoFecha } from 'src/composables/FuncionesG'
-
+import { useCurrencyStore } from 'src/stores/currencyStore'
+const currencyStore = useCurrencyStore()
+console.log(currencyStore)
 const pdfData = ref(null)
 const mostrarModal = ref(false)
 const idempresa = idempresa_md5()
@@ -126,7 +128,13 @@ const columnas = [
   { name: 'numero', label: 'N°', field: (row) => row.numero, align: 'center' },
   { name: 'codigo', label: 'Código', field: 'codigo', align: 'center' },
   { name: 'descripcion', label: 'Descripción', field: 'descripcion', align: 'left' },
-  { name: 'precio', label: 'Precio', field: 'precio', align: 'right' },
+  {
+    name: 'precio',
+    label: 'Precio',
+    field: 'precio',
+    align: 'right',
+    format: (val) => (isNaN(val) ? '0.00' : Number(val).toFixed(2) + currencyStore.simbolo),
+  },
   { name: 'opciones', label: 'Opciones', field: 'id', align: 'center' },
 ]
 

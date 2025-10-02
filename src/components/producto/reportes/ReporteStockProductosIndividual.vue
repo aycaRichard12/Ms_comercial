@@ -3,6 +3,17 @@
     <q-form @submit.prevent>
       <div class="q-gutter-md">
         <div class="row q-col-gutter-md justify-center">
+          <div class="col-md-4">
+            <label for="fechafin">Fecha Final*</label>
+            <q-input
+              v-model="fechaFin"
+              id="fechafin"
+              type="date"
+              outlined
+              dense
+              @update:model-value="generarReporte"
+            />
+          </div>
           <div class="col-12 col-md-4">
             <label for="almacen">Almacén*</label>
             <q-select
@@ -25,7 +36,6 @@
       </div>
 
       <div class="row q-gutter-sm justify-center q-mt-lg">
-        <q-btn color="primary" label="Generar reporte" @click="generarReporte" />
         <q-btn color="primary" label="Vista previa del Reporte" @click="vistaPrevia" />
         <q-btn color="primary" label="Reporte Con imagen" @click="reporteImage" />
         <q-btn color="primary" label="Catalogo" @click="vistaCatalogo" />
@@ -128,6 +138,9 @@ import { URL_APIE } from 'src/composables/services'
 import { imagen } from 'src/boot/url'
 import { PDFreporteStockProductosIndividual } from 'src/utils/pdfReportGenerator'
 import { PDFreporteStockProductosIndividual_img } from 'src/utils/pdfReportGenerator'
+import { obtenerFechaActualDato } from 'src/composables/FuncionesG'
+
+const fechaFin = ref(obtenerFechaActualDato())
 const pdfData = ref(null)
 const mostrarModal = ref(false)
 const $q = useQuasar()
@@ -159,26 +172,25 @@ const ordenes = [
 const datos = ref([])
 
 const columnas = [
-  { name: 'numero', label: 'N°', field: 'numero', align: 'right' },
-  { name: 'fecha', label: 'Fecha registro', field: 'fecha', align: 'right' },
-  { name: 'almacen', label: 'Almacén', field: 'almacen' },
-  { name: 'codigo', label: 'Código', field: 'codigo' },
-  { name: 'producto', label: 'Producto', field: 'producto' },
-  { name: 'categoria', label: 'Categoría', field: 'categoria' },
-  { name: 'subcategoria', label: 'Sub categoría', field: 'subcategoria' },
-  { name: 'descripcion', label: 'Descripcion', field: 'descripcion' },
-  { name: 'unidad', label: 'Unidad', field: 'unidad' },
-  { name: 'pais', label: 'País', field: 'pais' },
-  { name: 'stockminimo', label: 'Stock mínimo', field: 'stockminimo', align: 'right' },
+  { name: 'numero', label: 'N°', field: 'numero', align: 'center' },
+  { name: 'fecha', label: 'Fecha registro', field: 'fecha', align: 'left' },
+  { name: 'almacen', label: 'Almacén', field: 'almacen', align: 'left' },
+  { name: 'codigo', label: 'Código', field: 'codigo', align: 'left' },
+  { name: 'producto', label: 'Producto', field: 'producto', align: 'left' },
+  { name: 'categoria', label: 'Categoría', field: 'categoria', align: 'left' },
+  { name: 'subcategoria', label: 'Sub categoría', field: 'subcategoria', align: 'left' },
+  { name: 'descripcion', label: 'Descripcion', field: 'descripcion', align: 'left' },
+  { name: 'unidad', label: 'Unidad', field: 'unidad', align: 'left' },
+  { name: 'pais', label: 'País', field: 'pais', align: 'left' },
   { name: 'stock', label: 'Stock', field: 'stock', align: 'right' },
   { name: 'costo', label: 'Costo total', field: 'costo', align: 'right' },
-  { name: 'estado', label: 'Estado', field: 'estado' },
+  { name: 'estado', label: 'Estado', field: 'estado', align: 'left' },
 ]
 
 async function cargarAlmacenes() {
   try {
     const response = await api.get(`listaResponsableAlmacen/${idempresa}`)
-
+    console.log(response)
     const filtrados = response.data.filter((obj) => obj.idusuario == idusuario)
     almacenes.value = filtrados.map((item) => ({
       label: item.almacen,
@@ -207,7 +219,9 @@ const sumatoriaCosto = computed(() => {
 const generarReporte = async () => {
   console.log('Generando reporte', form.value?.almacen, filtros.value)
   try {
-    const response = await api.get(`reporteproductoalmacen/${form.value?.almacen}/${idempresa}`)
+    const point = `reporteproductoalmacen/${form.value?.almacen}/${idempresa}/${fechaFin.value}`
+    console.log(point)
+    const response = await api.get(`${point}`)
     console.log(response)
     datos.value = response.data
   } catch (error) {

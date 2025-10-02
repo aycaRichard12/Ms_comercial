@@ -1,3 +1,6 @@
 axios->cambios Url api 
 htaccess-> mistersofts y api
+htaccess-> api
 configquasar -> hacer cambios
+services-> cambiar a mistersofts
+

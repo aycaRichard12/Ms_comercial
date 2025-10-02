@@ -3,11 +3,28 @@
     <div>
       <!-- Botones principales -->
       <div class="row items-center justify-between q-mb-sm">
-        <div class="col-2 q-mt-lg">
-          <q-btn color="primary" @click="$emit('add')" class="btn-res" id="btnNuevaCompra">
-            <q-icon name="add" class="icono" />
-            <span class="texto">Nueva Compra</span>
-          </q-btn>
+        <div class="col-4 q-mt-lg flex flex-col gap-4">
+          <!-- Botón de nueva compra -->
+          <q-btn
+            color="primary"
+            class="btn-res"
+            id="btnNuevaCompra"
+            @click="$emit('add')"
+            icon="add"
+            label="Nueva Compra"
+            no-caps
+          />
+
+          <!-- Botón de reporte -->
+          <q-btn
+            color="secondary"
+            class="btn-res"
+            id="btnReporteStockIndividual"
+            to="/reportestockdeproductosindividual"
+            icon="assessment"
+            label="Rep. Stock Producto Individual"
+            no-caps
+          />
         </div>
 
         <div class="col-2 q-mt-lg flex justify-end">
@@ -80,7 +97,7 @@
             />
             <q-btn
               v-if="Number(props.row.tipocompra) === 1"
-              title="Detelle Credito"
+              title="Generar Plan de Pagos"
               icon="payment"
               color="blue"
               flat=""

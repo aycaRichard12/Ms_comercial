@@ -30,13 +30,16 @@
 </template>
 <script setup>
 import { ref, onMounted, onBeforeUnmount } from 'vue'
-import { validarUsuario } from 'src/composables/FuncionesG'
+import { getTipoFactura, getToken } from 'src/composables/FuncionesG'
 import FormDivisa from 'src/components/general/divisa/FormDivisa.vue'
 import TableDivisa from 'src/components/general/divisa/TableDivisa.vue'
 import { objectToFormData } from 'src/composables/FuncionesGenerales'
 import { api } from 'src/boot/axios'
 import { idempresa_md5 } from 'src/composables/FuncionesGenerales'
 import { useQuasar } from 'quasar'
+const token = getToken()
+console.log('Token:', token)
+const tipoFactura = getTipoFactura()
 const idempresa = idempresa_md5()
 const showForm = ref(false)
 const listaDivisas = ref([])
@@ -85,13 +88,8 @@ const guardarDivisa = async (data) => {
 //=======================================Tabla
 async function loadRows() {
   try {
-    const contenidousuario = validarUsuario()
-    const idempresa = contenidousuario[0]?.empresa?.idempresa
-    const token = contenidousuario[0]?.factura?.access_token
-    const tipo = contenidousuario[0]?.factura?.tipo
-    console.log(idempresa, token, tipo)
-    const response = await api.get(`listaDivisa/${idempresa}/${token}/${tipo}`)
-    console.log(response.data)
+    const point = `listaDivisa/${idempresa}/${token}/${tipoFactura}`
+    const response = await api.get(`${point}`) // Cambia a tu ruta real
     listaDivisas.value = response.data
   } catch (error) {
     console.error('Error al cargar datos:', error)

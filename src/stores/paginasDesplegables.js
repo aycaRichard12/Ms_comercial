@@ -1,64 +1,9 @@
-export const PAGINAS = Object.freeze({
-  configuraciongeneral: Object.freeze(['tipodealmacen', 'divisas', 'leyendaproforma']),
-  configuracionproducto: Object.freeze([
-    'categoriadeproducto',
-    'estadodeproducto',
-    'unidaddeproducto',
-    'caracteristicadeproducto',
-    'parametrosdeobsolescencia',
-  ]),
-  configuracioncliente: Object.freeze(['tiposdeclientes', 'canalesdeventa']),
-  administracioncreacion: Object.freeze([
-    'registraralmacen',
-    'registrarpuntodeventa',
-    'registrarproductos',
-  ]),
-  administracionasignacion: Object.freeze([
-    'asignaralmacen',
-    'asignarpuntodeventa',
-    'asignarproductos',
-  ]),
-  administracionprecios: Object.freeze(['costounitario', 'categoriasdeprecio', 'preciossugeridos']),
+export const PAGINAS_SELECT = Object.freeze({
   registrarventa: Object.freeze([
-    'registrarventaoculto',
-    'registrarcotizacionoculto',
-    // 'reportedeventas',
-    // 'reportedecotizacionesocultas',
-    // 'reporteproductosvendidosindividual',
-    'kardex',
+    'reportedeventas',
+    'reportedecotizacionesocultas',
+    'reporteproductosvendidosindividual',
   ]),
-  contingencias: Object.freeze([
-    'registraranulaciones',
-    'registrodeextravios',
-    'registrodemermas',
-    'reportedeextravios',
-    'reportedemermas',
-  ]),
-  cuentasporcobrar: Object.freeze(['cuentasporcobrarocultas']),
-  reportedeindicederotacion: Object.freeze([
-    'reportedeindicederotacionporalmacen',
-    'reportedeindicederotacionglobal',
-    'reportedeindicederotacionporcliente',
-  ]),
-  registrarclienteoproveedor: Object.freeze(['registrodecliente', 'registrarproveedor']),
-  admautorizaciones: Object.freeze([
-    'gestionPedido',
-    'procesarventaspendientes',
-    'autorizarcompra',
-  ]),
-  gestioncompra: Object.freeze([
-    'registrarcompra',
-    'reporteproductoscomprados',
-    'reportedecompras',
-  ]),
-  gestioncampanas: Object.freeze([
-    'crearcampanas',
-    'reportedecampanas',
-    'reportedeventasporcampanas',
-  ]),
-  gestionmovimientos: Object.freeze(['movimientos', 'reportedemovimientos']),
-  pedidos: Object.freeze(['generarpedido', 'reportedepedidos']),
-  // ... (otros grupos con el mismo formato)
 })
 
 export const PAGINAS_ICONS = Object.freeze({
@@ -135,24 +80,14 @@ export const PAGINAS_ICONS = Object.freeze({
   reportedemovimientos: 'assessment',
   //pedidos
 })
-export const PAGINAS_SELECT = Object.freeze({
-  registrarventa: Object.freeze([
-    'reportedeventas',
-    'reportedecotizacionesocultas',
-    'reporteproductosvendidosindividual',
-  ]),
-  cuentasporcobrar: Object.freeze([
-    'reportecuentasporcobrarocultas',
-    'reportecuentasxpagarxperiodo',
-  ]),
-})
+
 /**
  * Helper para verificar si una clave existe en los atributos.
  * @param {string} grupo - Ej: 'configuraciongeneral'
  * @param {string} atributo - Ej: 'tipodealmacen'
  */
 export const tieneAtributo = (grupo, atributo) => {
-  return PAGINAS[grupo]?.includes(atributo) ?? false
+  return PAGINAS_SELECT[grupo]?.includes(atributo) ?? false
 }
 
 /**
@@ -160,7 +95,7 @@ export const tieneAtributo = (grupo, atributo) => {
  * @returns {string[]}
  */
 export const obtenerGrupos = () => {
-  return Object.keys(PAGINAS)
+  return Object.keys(PAGINAS_SELECT)
 }
 
 /**
@@ -169,7 +104,7 @@ export const obtenerGrupos = () => {
  * @returns {string[]}
  */
 export const obtenerAtributos = (grupo) => {
-  return PAGINAS[grupo] || []
+  return PAGINAS_SELECT[grupo] || []
 }
 
 /**

@@ -64,7 +64,7 @@
 
         <div class="row q-col-gutter-x-md">
           <!-- Filtro por almacén -->
-          <div class="col-12 col-md-3">
+          <div class="col-12 col-md-2">
             <label for="almacen">Filtrar por Almacén</label>
             <q-select
               v-model="selectedAlmacen"
@@ -153,7 +153,7 @@
             </q-select>
           </div>
           <!-- Filtro por estado (nuevo) -->
-          <div class="col-12 col-md-3">
+          <div class="col-12 col-md-2">
             <label for="estado">Estado crédito</label>
             <q-select
               v-model="selectedEstado"
@@ -165,6 +165,15 @@
               map-options
               clearable
               @update:model-value="updateFilter('estado', !!$event)"
+            />
+          </div>
+          <div class="col-12 col-md-1">
+            <q-btn
+              color="primary"
+              text-color="white"
+              label="Limpiar"
+              class="q-mt-lg"
+              @click="limpiarFiltro"
             />
           </div>
 
@@ -208,7 +217,7 @@
           @click="exportToXLSX"
         />
         <q-btn
-          label="Imprimir Reporte"
+          label="Reporte"
           color="info"
           icon="print"
           @click="printFilteredTable"
@@ -217,7 +226,7 @@
         />
       </div>
 
-      <q-table
+      <!-- <q-table
         title="Creditos"
         :rows="filteredReportData"
         :columns="columns"
@@ -236,7 +245,8 @@
             }}</q-badge>
           </q-td>
         </template>
-      </q-table>
+      </q-table> -->
+      <ReporteCreditosTable ref="hijoRef" :rows="filteredReportData" :loading="loading" />
     </q-card-section>
 
     <q-card-section v-else-if="!loading && !reportError && idmd5">
@@ -270,7 +280,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed, watch } from 'vue'
+import { ref, onMounted, computed, watch, nextTick } from 'vue'
 import { date, useQuasar } from 'quasar'
 import { idusuario_md5 } from 'src/composables/FuncionesGenerales'
 import { api } from 'src/boot/axios'
@@ -279,6 +289,7 @@ import { useAlmacenStore } from 'src/stores/listaResponsableAlmacen'
 import { useClienteStore } from 'stores/cliente'
 import { PDFreporteCreditos } from 'src/utils/pdfReportGenerator'
 import { exportToXLSX_Reporte_Creditos } from 'src/utils/XCLReportImport'
+import ReporteCreditosTable from 'src/components/cuentasxCobrar/Reportes/ReporteCreditosTable.vue'
 const mostrarModal = ref(false)
 const pdfData = ref(null)
 const $q = useQuasar()
@@ -297,7 +308,7 @@ const selectedEstado = ref(null)
 const loadingClientes = ref(false)
 const loadingSucursales = ref(false)
 const searchCliente = ref('')
-
+const hijoRef = ref(null)
 // Configuración de paginación
 const pagination = ref({
   sortBy: 'fechaventa',
@@ -315,22 +326,34 @@ const activeFilters = ref({
   estado: false,
 })
 
-// Definición de estados
-const keyEstado = {
-  1: 'Activo',
-  2: 'Finalizado',
-  3: 'Atrasado',
-  4: 'Anulado',
-  5: '',
-}
+async function scrollToCreditos() {
+  await nextTick()
 
-const colorEstado = {
-  1: 'green',
-  2: 'blue',
-  3: 'orange',
-  4: 'red',
-  5: '',
+  if ($q.screen.lt.md && hijoRef.value) {
+    // creditosRef.value es el componente Vue (q-table),
+    // por eso se usa .$el para obtener el DOM real
+    hijoRef.value.$el.scrollIntoView({
+      behavior: 'smooth',
+      block: 'start',
+    })
+  }
 }
+// Definición de estados
+// const keyEstado = {
+//   1: 'Activo',
+//   2: 'Finalizado',
+//   3: 'Atrasado',
+//   4: 'Anulado',
+//   5: '',
+// }
+
+// const colorEstado = {
+//   1: 'green',
+//   2: 'blue',
+//   3: 'orange',
+//   4: 'red',
+//   5: '',
+// }
 
 const estadoOptions = [
   { label: 'Activo', value: 1 },
@@ -339,115 +362,126 @@ const estadoOptions = [
   { label: 'Anulado', value: 4 },
 ]
 
-// --- Definición de columnas ---
-const columns = [
-  { name: 'numero', label: 'N°', field: 'numero', align: 'right', sortable: true },
-  {
-    name: 'fechaventa',
-    align: 'center',
-    label: 'Fecha Crédito',
-    field: 'fechaventa',
-    sortable: true,
-  },
-  {
-    name: 'razonsocial',
-    align: 'left',
-    label: 'Cliente',
-    field: 'razonsocial',
-    sortable: true,
-  },
-  {
-    name: 'sucursal',
-    align: 'left',
-    label: 'Sucursal',
-    field: 'sucursal',
-    sortable: true,
-  },
-  {
-    name: 'fechalimite',
-    align: 'center',
-    label: 'Fecha Límite',
-    field: 'fechalimite',
-    sortable: true,
-  },
-  {
-    name: 'ncuotas',
-    align: 'center',
-    label: 'Catidad Cuotas',
-    field: 'ncuotas',
-    sortable: true,
-  },
-  {
-    name: 'cuotasprocesadas',
-    align: 'center',
-    label: 'Cuotas Procesadas',
-    field: 'cuotasprocesadas',
-    sortable: true,
-  },
-  {
-    name: 'valorcuotas',
-    align: 'right',
-    label: 'Valor Cuota',
-    field: 'valorcuotas',
-    sortable: true,
-  },
-  {
-    name: 'totalventa',
-    align: 'right',
-    label: 'Total Venta',
-    field: 'totalventa',
-    sortable: true,
-  },
-  {
-    name: 'totalcobrado',
-    align: 'right',
-    label: 'Total Cobrado',
-    field: 'totalcobrado',
-    sortable: true,
-  },
-  {
-    name: 'saldo',
-    align: 'right',
-    label: 'Saldo',
-    field: 'saldo',
+// // --- Definición de columnas ---
+// const columns = [
+//   { name: 'numero', label: 'N°', field: 'numero', align: 'right', sortable: true },
+//   {
+//     name: 'fechaventa',
+//     align: 'center',
+//     label: 'Fecha Crédito',
+//     field: 'fechaventa',
+//     sortable: true,
+//   },
+//   {
+//     name: 'razonsocial',
+//     align: 'left',
+//     label: 'Cliente',
+//     field: 'razonsocial',
+//     sortable: true,
+//   },
+//   {
+//     name: 'sucursal',
+//     align: 'left',
+//     label: 'Sucursal',
+//     field: 'sucursal',
+//     sortable: true,
+//   },
+//   {
+//     name: 'fechalimite',
+//     align: 'center',
+//     label: 'Fecha Límite',
+//     field: 'fechalimite',
+//     sortable: true,
+//   },
+//   {
+//     name: 'ncuotas',
+//     align: 'center',
+//     label: 'Catidad Cuotas',
+//     field: 'ncuotas',
+//     sortable: true,
+//   },
+//   {
+//     name: 'cuotasprocesadas',
+//     align: 'center',
+//     label: 'Cuotas Procesadas',
+//     field: 'cuotasprocesadas',
+//     sortable: true,
+//   },
+//   {
+//     name: 'valorcuotas',
+//     align: 'right',
+//     label: 'Valor Cuota',
+//     field: 'valorcuotas',
+//     sortable: true,
+//   },
+//   {
+//     name: 'totalventa',
+//     align: 'right',
+//     label: 'Total Venta',
+//     field: 'totalventa',
+//     sortable: true,
+//   },
+//   {
+//     name: 'totalcobrado',
+//     align: 'right',
+//     label: 'Total Cobrado',
+//     field: 'totalcobrado',
+//     sortable: true,
+//   },
+//   {
+//     name: 'saldo',
+//     align: 'right',
+//     label: 'Saldo',
+//     field: 'saldo',
 
-    sortable: true,
-  },
-  {
-    name: 'totalatrasado',
-    align: 'right',
-    label: 'Total Atrasado',
-    field: 'totalatrasado',
-    sortable: true,
-  },
-  {
-    name: 'totalanulado',
-    align: 'right',
-    label: 'Total Anulado',
-    field: 'totalanulado',
-    sortable: true,
-  },
-  {
-    name: 'moradias',
-    align: 'right',
-    label: 'Mora Días',
-    field: 'moradias',
-    sortable: true,
-  },
-  {
-    name: 'estado',
-    align: 'center',
-    label: 'Estado',
-    field: 'estado',
-    sortable: true,
-  },
-]
+//     sortable: true,
+//   },
+//   {
+//     name: 'totalatrasado',
+//     align: 'right',
+//     label: 'Total Atrasado',
+//     field: 'totalatrasado',
+//     sortable: true,
+//   },
+//   {
+//     name: 'totalanulado',
+//     align: 'right',
+//     label: 'Total Anulado',
+//     field: 'totalanulado',
+//     sortable: true,
+//   },
+//   {
+//     name: 'moradias',
+//     align: 'right',
+//     label: 'Mora Días',
+//     field: 'moradias',
+//     sortable: true,
+//   },
+//   {
+//     name: 'estado',
+//     align: 'center',
+//     label: 'Estado',
+//     field: 'estado',
+//     sortable: true,
+//   },
+// ]
 const validateEndDate = (val) => {
   if (!val) return 'Seleccione una fecha válida'
   if (startDate.value && val < startDate.value) {
     return 'La fecha fin no puede ser menor que la fecha inicio'
   }
   return true
+}
+// dentro de <script setup>
+const limpiarFiltro = () => {
+  // Resetea filtros principales
+  selectedAlmacen.value = almacenOptions.value[0]
+  selectedEstado.value = null
+
+  // Resetea cliente y sucursal
+  clienteStore.clienteSeleccionado = null
+  clienteStore.sucursalSeleccionada = null
+  updateFilter('almacen', 0)
 }
 
 const cambiarTipoReporte = () => {
@@ -603,6 +637,7 @@ const filterClientes = (val, update) => {
 }
 
 const updateFilter = (filterName, isActive) => {
+  console.log(isActive)
   activeFilters.value[filterName] = isActive
 }
 
@@ -660,6 +695,7 @@ const generateReport = async () => {
       point = `reportecreditos/${idmd5.value}/${startDate.value}/${endDate.value}`
     }
     const response = await api.get(point)
+    await scrollToCreditos()
 
     if (response.data.estado === 'exito') {
       reportData.value = response.data.data
@@ -727,10 +763,6 @@ const exportToXLSX = () => {
     message: 'Reporte Excel generado con éxito.',
     position: 'top',
   })
-}
-
-const onTableRequest = (props) => {
-  pagination.value = props.pagination
 }
 
 // --- Lifecycle Hooks ---

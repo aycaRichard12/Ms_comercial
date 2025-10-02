@@ -14,6 +14,8 @@ class ConfiguracionInicial
     private $rh;
     private $em;
     private $logger;
+    private $endpoint;
+
     public function __construct()
     {
         $this->conexion = new Conexion();
@@ -23,6 +25,7 @@ class ConfiguracionInicial
         $this->rh = $this->conexion->rh;
         $this->em = $this->conexion->em;
         $this->logger = new LogErrores();
+        $this->endpoint = $this->conexion->endPoint;
     }
 
     // Función para crear un tipo de almacén
@@ -62,7 +65,7 @@ class ConfiguracionInicial
             return 0; // Devuelve 0 si hubo un error
         }
     }
-    public function registrarCategoriasProducto($id_empresa): int
+    public function registrarCategoriasProducto($id_empresa,$idrubro): int
     {
         // Validar ID de empresa
         if (!is_numeric($id_empresa) || $id_empresa <= 0) {
@@ -71,29 +74,29 @@ class ConfiguracionInicial
         }
 
         // Leer archivo JSON
-        $jsonString = @file_get_contents('json/Jcategorias.json');
-        if ($jsonString === false) {
-            error_log("No se pudo leer el archivo Jcategorias.json");
-            return 0;
-        }
+        // $jsonString = @file_get_contents('json/Jcategorias.json');
+        // if ($jsonString === false) {
+        //     error_log("No se pudo leer el archivo Jcategorias.json");
+        //     return 0;
+        // }
 
-        // Decodificar JSON
-        $datos = json_decode($jsonString);
-        if (json_last_error() !== JSON_ERROR_NONE) {
-            error_log("Error decodificando JSON: " . json_last_error_msg());
-            return 0;
-        }
+        // // Decodificar JSON
+        // $datos = json_decode($jsonString);
+        // if (json_last_error() !== JSON_ERROR_NONE) {
+        //     error_log("Error decodificando JSON: " . json_last_error_msg());
+        //     return 0;
+        // }
 
-        // Verificar estructura de datos
-        if (!isset($datos->categorias)) {
-            error_log("Estructura JSON inválida - no se encontró el campo 'categorias'");
-            return 0;
-        }
-
+        // // Verificar estructura de datos
+        // if (!isset($datos->categorias)) {
+        //     error_log("Estructura JSON inválida - no se encontró el campo 'categorias'");
+        //     return 0;
+        // }
+        $categorias = $this->sincronizarCategoria($idrubro);
         $success = true;
         $estado = 1; // Estado activo
 
-        foreach ($datos->categorias as $categoria) {
+        foreach ($categorias as $categoria) {
             // Validar categoría principal
             if (!isset($categoria->nombre, $categoria->descripcion, $categoria->subcategorias)) {
                 error_log("Estructura de categoría inválida");
@@ -157,31 +160,32 @@ class ConfiguracionInicial
 
         return $success ? 1 : 0;
     }
-    public function registrarEstadosProducto($id_empresa):int
+    public function registrarEstadosProducto($id_empresa,$idrubro):int
     {
         if(!is_numeric($id_empresa) || $id_empresa <=0){
             error_log("ID de empresa invalido: " . $id_empresa);
             return 0;
         }
 
-        $jsonString = @file_get_contents('json/JestadosProductos.json');
-        if($jsonString === false){
-            error_log("NO se pudo leer el archivo JestadosProductos.json");
-            return 0;
-        }
-        $datos = json_decode($jsonString);
-        if(json_last_error() !== JSON_ERROR_NONE){
-            error_log('Error decodificando Json: '. json_last_error_msg());
-            return 0;
-        }
-        if(!isset($datos->EstadosProductos)){
-            error_log("Estructura JSON inválida no se encontro el campo 'EstadosProductos'");
-            return 0;
-        }
+        // $jsonString = @file_get_contents('json/JestadosProductos.json');
+        // if($jsonString === false){
+        //     error_log("NO se pudo leer el archivo JestadosProductos.json");
+        //     return 0;
+        // }
+        // $datos = json_decode($jsonString);
+        // if(json_last_error() !== JSON_ERROR_NONE){
+        //     error_log('Error decodificando Json: '. json_last_error_msg());
+        //     return 0;
+        // }
+        // if(!isset($datos->EstadosProductos)){
+        //     error_log("Estructura JSON inválida no se encontro el campo 'EstadosProductos'");
+        //     return 0;
+        // }
+        $EstadosProductos = $this-> sincronizar_estado_productos($idrubro);
         $success = true;
         $estado = 1;
-        foreach($datos->EstadosProductos as $estProd){
-            if(!isset($estProd->tipo_estado,$estProd->descripcion)){
+        foreach($EstadosProductos as $estProd){
+            if(!isset($estProd->tipoestado,$estProd->descricpion)){
                 error_log("Estructura de Estado producto inválida");
                 $success = false;
                 break;
@@ -194,7 +198,7 @@ class ConfiguracionInicial
                 $success = false;
                 break;
             }
-            $stmt->bind_param("ssii",$estProd->tipo_estado,$estProd->descripcion,$estado,$id_empresa);
+            $stmt->bind_param("ssii",$estProd->tipoestado,$estProd->descricpion,$estado,$id_empresa);
 
             if(!$stmt->execute()){
                 error_log("Error insertando estado: ". $stmt->error);
@@ -206,30 +210,31 @@ class ConfiguracionInicial
         return $success ? 1 : 0;
 
     }
-    public function registrar_unidades_de_medidas($id_empresa):int
+    public function registrar_unidades_de_medidas($id_empresa,$idrubro):int
     {
         if(!is_numeric($id_empresa) || $id_empresa <=0){
             error_log("ID de empresa invalido: " . $id_empresa);
             return 0;
         }
 
-        $jsonString = @file_get_contents('json/Junidades.json');
-        if($jsonString === false){
-            error_log("NO se pudo leer el archivo Junidades");
-            return 0;
-        }
-        $datos = json_decode($jsonString);
-        if(json_last_error() !== JSON_ERROR_NONE){
-            error_log('Error decodificando Json: '. json_last_error_msg());
-            return 0;
-        }
-        if(!isset($datos->unidades)){
-            error_log("Estructura JSON inválida no se encontro el campo 'unidades'");
-            return 0;
-        }
+        // $jsonString = @file_get_contents('json/Junidades.json');
+        // if($jsonString === false){
+        //     error_log("NO se pudo leer el archivo Junidades");
+        //     return 0;
+        // }
+        // $datos = json_decode($jsonString);
+        // if(json_last_error() !== JSON_ERROR_NONE){
+        //     error_log('Error decodificando Json: '. json_last_error_msg());
+        //     return 0;
+        // }
+        // if(!isset($datos->unidades)){
+        //     error_log("Estructura JSON inválida no se encontro el campo 'unidades'");
+        //     return 0;
+        // }
+        $unidades = $this->sincronizarUnidadMedida($idrubro);
         $success = true;
         $estado = 1;
-        foreach($datos->unidades as $unidad){
+        foreach($unidades as $unidad){
             if(!isset($unidad->nombre,$unidad->descripcion)){
                 error_log("Estructura de unidad json inválida");
                 $success = false;
@@ -256,30 +261,31 @@ class ConfiguracionInicial
         return $success ? 1 : 0;
 
     }
-    public function registrar_caracterisitcas($id_empresa):int
+    public function registrar_caracterisitcas($id_empresa,$idrubro):int
     {
         if(!is_numeric($id_empresa) || $id_empresa <=0){
             error_log("ID de empresa invalido: " . $id_empresa);
             return 0;
         }
 
-        $jsonString = @file_get_contents('json/Jcaracteristicas.json');
-        if($jsonString === false){
-            error_log("NO se pudo leer el archivo Jcaracteristicas,json");
-            return 0;
-        }
-        $datos = json_decode($jsonString);
-        if(json_last_error() !== JSON_ERROR_NONE){
-            error_log('Error decodificando Json: '. json_last_error_msg());
-            return 0;
-        }
-        if(!isset($datos->caracteristicas_productos)){
-            error_log("Estructura JSON inválida no se encontro el campo 'caracteristicas_productos'");
-            return 0;
-        }
+        // $jsonString = @file_get_contents('json/Jcaracteristicas.json');
+        // if($jsonString === false){
+        //     error_log("NO se pudo leer el archivo Jcaracteristicas,json");
+        //     return 0;
+        // }
+        // $datos = json_decode($jsonString);
+        // if(json_last_error() !== JSON_ERROR_NONE){
+        //     error_log('Error decodificando Json: '. json_last_error_msg());
+        //     return 0;
+        // }
+        // if(!isset($datos->caracteristicas_productos)){
+        //     error_log("Estructura JSON inválida no se encontro el campo 'caracteristicas_productos'");
+        //     return 0;
+        // }
+        $caracteristicas_productos = $this->sincronizarCaracteristicas($idrubro);
         $success = true;
         $estado = 1;
-        foreach($datos->caracteristicas_productos as $caracteristica){
+        foreach($caracteristicas_productos as $caracteristica){
             if(!isset($caracteristica->nombre_medida,$caracteristica->descripcion)){
                 error_log("Estructura de caracteristicas_productos json inválida");
                 $success = false;
@@ -304,31 +310,32 @@ class ConfiguracionInicial
         return $success ? 1 : 0;
 
     }
-    public function registrar_parametros_obsolescencia($id_empresa):int
+    public function registrar_parametros_obsolescencia($id_empresa, $idrubro):int
     {
         if(!is_numeric($id_empresa) || $id_empresa <=0){
             error_log("ID de empresa invalido: " . $id_empresa);
             return 0;
         }
 
-        $jsonString = @file_get_contents('json/Jparemetros.json');
-        if($jsonString === false){
-            error_log("NO se pudo leer el archivo Jparemetros");
-            return 0;
-        }
-        $datos = json_decode($jsonString);
-        if(json_last_error() !== JSON_ERROR_NONE){
-            error_log('Error decodificando Json: '. json_last_error_msg());
-            return 0;
-        }
-        if(!isset($datos->parametros_obsolescencia)){
-            error_log("Estructura JSON inválida no se encontro el campo 'parametros_obsolescencia'");
-            return 0;
-        }
+        // $jsonString = @file_get_contents('json/Jparemetros.json');
+        // if($jsonString === false){
+        //     error_log("NO se pudo leer el archivo Jparemetros");
+        //     return 0;
+        // }
+        // $datos = json_decode($jsonString);
+        // if(json_last_error() !== JSON_ERROR_NONE){
+        //     error_log('Error decodificando Json: '. json_last_error_msg());
+        //     return 0;
+        // }
+        // if(!isset($datos->parametros_obsolescencia)){
+        //     error_log("Estructura JSON inválida no se encontro el campo 'parametros_obsolescencia'");
+        //     return 0;
+        // }
+        $parametros_obsolescencia = $this-> sincronizar_parametros_obsolescencia($idrubro);
         $success = true;
         $estado = 1;
 
-        foreach($datos->parametros_obsolescencia as $parametros){
+        foreach($parametros_obsolescencia as $parametros){
             if(!isset($parametros->nombre,$parametros->valor,$parametros->color)){
                 error_log("Estructura de parametros json inválida");
                 $success = false;
@@ -354,31 +361,32 @@ class ConfiguracionInicial
         }
         return $success ? 1 : 0;
     }
-    public function registrar_tipos_clientes($id_empresa):int
+    public function registrar_tipos_clientes($id_empresa,$idrubro):int
     {
         if(!is_numeric($id_empresa) || $id_empresa <=0){
             echo("ID de empresa invalido: " . $id_empresa);
             return 0;
         }
 
-        $jsonString = @file_get_contents('json/Jtipoclientes.json');
-        if($jsonString === false){
-            echo("NO se pudo leer el archivo Jtipoclientes");
-            return 0;
-        }
-        $datos = json_decode($jsonString);
-        if(json_last_error() !== JSON_ERROR_NONE){
-            echo('Error decodificando Json: '. json_last_error_msg());
-            return 0;
-        }
-        if(!isset($datos->tipos_clientes)){
-            echo("Estructura JSON inválida no se encontro el campo 'tipos_clientes'");
-            return 0;
-        }
+        // $jsonString = @file_get_contents('json/Jtipoclientes.json');
+        // if($jsonString === false){
+        //     echo("NO se pudo leer el archivo Jtipoclientes");
+        //     return 0;
+        // }
+        // $datos = json_decode($jsonString);
+        // if(json_last_error() !== JSON_ERROR_NONE){
+        //     echo('Error decodificando Json: '. json_last_error_msg());
+        //     return 0;
+        // }
+        // if(!isset($datos->tipos_clientes)){
+        //     echo("Estructura JSON inválida no se encontro el campo 'tipos_clientes'");
+        //     return 0;
+        // }
+        $tipos_clientes = $this->sincronizarTipoCliente($idrubro);
         $success = true;
         $estado = 1;
 
-        foreach($datos->tipos_clientes as $tipo_cliente){
+        foreach($tipos_clientes as $tipo_cliente){
             if(!isset($tipo_cliente->tipo,$tipo_cliente->descripcion)){
                 echo("Estructura de tipo_cliente json inválida");
                 $success = false;
@@ -408,50 +416,46 @@ class ConfiguracionInicial
         return $success ? 1 : 0;
     
     }
-    public function registrar_canales($id_empresa):int
+    public function registrar_canales($id_empresa,$idrubro):int
     {
         if(!is_numeric($id_empresa) || $id_empresa <=0){
             echo("ID de empresa invalido: " . $id_empresa);
             return 0;
         }
 
-        $jsonString = @file_get_contents('json/Jcanales.json');
-        if($jsonString === false){
-            echo("NO se pudo leer el archivo Jcanales");
-            return 0;
-        }
-        $datos = json_decode($jsonString);
-        if(json_last_error() !== JSON_ERROR_NONE){
-            echo('Error decodificando Json: '. json_last_error_msg());
-            return 0;
-        }
-        if(!isset($datos->canales)){
-            echo("Estructura JSON inválida no se encontro el campo 'canales'");
-            return 0;
-        }
+        // $jsonString = @file_get_contents('json/Jcanales.json');
+        // if($jsonString === false){
+        //     echo("NO se pudo leer el archivo Jcanales");
+        //     return 0;
+        // }
+        // $datos = json_decode($jsonString);
+        // if(json_last_error() !== JSON_ERROR_NONE){
+        //     echo('Error decodificando Json: '. json_last_error_msg());
+        //     return 0;
+        // }
+        // if(!isset($datos->canales)){
+        //     echo("Estructura JSON inválida no se encontro el campo 'canales'");
+        //     return 0;
+        // }
+        $canales = $this->sincronizarCanalVenta($idrubro);
         $success = true;
         $estado = 1;
 
-        foreach($datos->canales as $canal){
+        foreach($canales as $canal){
             if(!isset($canal->canal,$canal->descripcion)){
                 echo("Estructura de tipo_cliente json inválida");
                 $success = false;
                 break;
             }
-
-           
-           
-            
-        $query = "INSERT INTO canalventa (canal, descripcion, estado, idempresa) VALUES (?, ?, ?, ?)";
-        $stmt = $this->conexion->cm->prepare($query);
-
+            $query = "INSERT INTO canalventa (canal, descripcion, estado, idempresa) VALUES (?, ?, ?, ?)";
+            $stmt = $this->conexion->cm->prepare($query);
  
             if(!$stmt){
                 echo("Error preparando consulta de estado ".$this->conexion->cm->error);
                 $success = false;
                 break;
             }
-            $stmt->bind_param("ssii",$canal->canal,$canal->descripcion, $estado, $id_empresa);
+            $stmt->bind_param("ssii",$canal->canal,$canal->descripcion,(int)$canal->$estado, $id_empresa);
 
             if(!$stmt->execute()){
                 echo("Error insertando estado: ". $stmt->error);
@@ -1052,64 +1056,580 @@ class ConfiguracionInicial
 
         return $this->insertarPorcentaje($data);
     }
-    public function registrarConfiguracion($idempresa, $idsucursal, $idusuario): int 
+    /**
+     * Fetches data from the 'administrador' API endpoint using cURL.
+     *
+     * @param string $point The specific API endpoint segment (e.g., 'users', 'config').
+     * @param int $idrubro The ID parameter to be appended to the URL.
+     * @return array|null The decoded JSON response as an associative array, or null on failure.
+     * @throws \Exception If a cURL error occurs.
+     */
+    public function get_administrador(string $point, int $idrubro): ?array
+    {
+        // 1. Build the full API URL
+        // Use an array for endpoint segments for better readability and safety.
+        $baseUrl = $this->endpoint[3] ?? '';
+        if (empty($baseUrl)) {
+            return [];
+        }
+
+        $url = $baseUrl . "/administrador/api/" . $point . "/" . $idrubro;
+
+        // 2. Initialize and Configure cURL
+        $ch = curl_init();
+        if ($ch === false) {
+            // This is a rare, but possible, system-level failure
+           return [];
+        }
+
+        // Set standard options
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true); // Return the transfer as a string
+        curl_setopt($ch, CURLOPT_TIMEOUT, 15);         // Increased timeout to 15 seconds (better for network delays)
+        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 5);   // Max time to wait for the initial connection
+        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true); // Follow any 'Location:' header that the server sends
+
+        // Security best practice: try to solve SSL issues rather than disabling verification.
+        // However, if the environment absolutely requires it:
+        // curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+        // If you must disable verification, consider adding a comment explaining WHY.
+
+        // 3. Execute Request and Handle cURL Errors
+        $response = curl_exec($ch);
+
+        if ($response === false) {
+            
+            curl_close($ch);
+            // Throw a formal exception instead of using die() to allow calling code to handle the error
+            return [];
+        }
+
+        // 4. Get HTTP Status Code
+        $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+
+        // 5. Check for HTTP Errors (e.g., 404, 500)
+        if ($http_code >= 400) {
+            // Log the error for debugging (e.g., "API returned 404 for URL...")
+            // You might decide to throw an exception here as well, or return null/an error array
+            return [];
+        }
+
+        // 6. Decode JSON and Handle Decoding Errors
+        $respuesta = json_decode($response, true);
+
+        if (json_last_error() !== JSON_ERROR_NONE) {
+           
+            // Log or throw an error about the invalid JSON response
+            return [];
+        }
+
+        return $respuesta;
+    }
+    /**
+     * Sincroniza los tipos de almacén de una API externa con el sistema local.
+     *
+     * @param int $idempresa El ID de la empresa local.
+     * @param int $idrubro El ID de rubro para la consulta a la API.
+     * @return array Un array con el estado de la sincronización (éxito o error).
+     */
+    public function sincronizarTipoAlmacen(int $idempresa, int $idrubro): int
+    {
+        $count = 0;
+        $last_id_sincronizado = 0;
+        $point = "gettipoalmacen";
+        $result = $last_id_sincronizado;
+
+        try {
+            // 1. Obtener datos de la API
+            $tiposAlmacen = $this->get_administrador($point, $idrubro);
+            echo json_encode(["tiposAlmacen" => $tiposAlmacen]);
+            return 0;
+
+        } catch (\Exception $e) {
+            // Manejar errores de conexión/cURL lanzados por get_administrador
+            // Opcional: registrar el error en un log
+            // error_log($result['message']);
+            return $last_id_sincronizado;
+        }
+
+        // 2. Manejar errores lógicos o de respuesta (HTTP/JSON)
+        // Asumiendo que errores de API devuelven ['error' => true, ...]
+        if (is_array($tiposAlmacen) && isset($tiposAlmacen['error']) && $tiposAlmacen['error'] === true) {
+           
+            return $last_id_sincronizado;
+        }
+
+        // 3. Procesar datos (Debe ser un array de ítems)
+        if (!is_array($tiposAlmacen) || empty($tiposAlmacen)) {
+           
+            return $last_id_sincronizado;
+        }
+
+        
+
+        foreach ($tiposAlmacen as $item) {
+            // Asegurar que las claves existan para evitar errores de 'undefined index'
+            $nombre = $item['tipoalmancen'] ?? '';
+            $descripcion = $item['descripcion'] ?? '';
+            $estado = $item['estado'] ?? 0;
+
+            // Si faltan datos críticos, podrías saltar el ítem (continue) o lanzar un error
+            if (empty($nombre)) {
+                // error_log("Advertencia: Se saltó un ítem porque el nombre del tipo de almacén estaba vacío.");
+                continue;
+            }
+
+            // Llamada a la función local para crear/actualizar el registro
+            $id_tipo_almacen_local = $this->crearTipoAlmacen(
+                $idempresa,
+                $nombre,
+                $descripcion,
+                (int)$estado // Asegurar que el estado sea un entero si es necesario
+            );
+
+            if ($id_tipo_almacen_local > 0) {
+                $last_id_sincronizado = $id_tipo_almacen_local;
+                $count++;
+            }
+            // Nota: Asumimos que crearTipoAlmacen devuelve el ID del registro local creado/actualizado (> 0)
+            // y 0 o false en caso de fallo.
+        }
+
+        // 4. Devolver el resultado final
+        if ($count > 0) {
+            $result = $last_id_sincronizado;
+        } else {
+            $result = 0;
+            
+        }
+
+        return $result;
+    }
+    public function sincronizarDivisa(int $idempresa, int $idrubro): int
+    {
+        $count = 0;
+        $last_id_sincronizado = 0;
+        $point = "getlistadivisas";
+        $result = $last_id_sincronizado;
+
+        try {
+            // 1. Obtener datos de la API
+            $divisas = $this->get_administrador($point, $idrubro);
+
+        } catch (\Exception $e) {
+            // Manejar errores de conexión/cURL lanzados por get_administrador
+            // Opcional: registrar el error en un log
+            // error_log($result['message']);
+            return $last_id_sincronizado;
+        }
+
+        // 2. Manejar errores lógicos o de respuesta (HTTP/JSON)
+        // Asumiendo que errores de API devuelven ['error' => true, ...]
+        if (is_array($divisas) && isset($divisas['error']) && $divisas['error'] === true) {
+           
+            return $last_id_sincronizado;
+        }
+
+        // 3. Procesar datos (Debe ser un array de ítems)
+        if (!is_array($divisas) || empty($divisas)) {
+           
+            return $last_id_sincronizado;
+        }
+        foreach ($divisas as $item) {
+            // Asegurar que las claves existan para evitar errores de 'undefined index'
+            $nombre = $item['nombre'] ?? '';
+            $tipodivisa = $item['tipodivisa'] ?? '';
+            $estado = $item['estado'] ?? 0;
+            $monedasin = $item['monedasin'] ?? 0;
+
+            // Si faltan datos críticos, podrías saltar el ítem (continue) o lanzar un error
+            if (empty($nombre)) {
+                // error_log("Advertencia: Se saltó un ítem porque el nombre del tipo de almacén estaba vacío.");
+                continue;
+            }
+            //$id_divisa = $this->registrarDivisa('Bolivianos', 'Bs.', 1, $idempresa, null);
+            // Llamada a la función local para crear/actualizar el registro
+            $id_divisa = $this->registrarDivisa(
+                $nombre,
+                $tipodivisa,
+                $estado,
+                $idempresa,
+                $monedasin  // Asegurar que el estado sea un entero si es necesario
+            );
+
+            if ($id_divisa > 0) {
+                $last_id_sincronizado = $id_divisa;
+                $count++;
+            }
+            // Nota: Asumimos que crearTipoAlmacen devuelve el ID del registro local creado/actualizado (> 0)
+            // y 0 o false en caso de fallo.
+        }
+        // 4. Devolver el resultado final
+        if ($count > 0) {
+            $result = $last_id_sincronizado;
+        } else {
+            $result = 0;
+            
+        }
+        return $result;
+    }
+    public function sincronizarleyenda(int $idempresa, int $idrubro): int
+    {
+        $count = 0;
+        $last_id_sincronizado = 0;
+        $point = "getlitacondiciones";
+        $result = $last_id_sincronizado;
+
+        try {
+            // 1. Obtener datos de la API
+            $leyendas = $this->get_administrador($point, $idrubro);
+
+        } catch (\Exception $e) {
+            // Manejar errores de conexión/cURL lanzados por get_administrador
+            // Opcional: registrar el error en un log
+            // error_log($result['message']);
+            return $last_id_sincronizado;
+        }
+
+        // 2. Manejar errores lógicos o de respuesta (HTTP/JSON)
+        // Asumiendo que errores de API devuelven ['error' => true, ...]
+        if (is_array($leyendas) && isset($leyendas['error']) && $leyendas['error'] === true) {
+           
+            return $last_id_sincronizado;
+        }
+
+        // 3. Procesar datos (Debe ser un array de ítems)
+        if (!is_array($leyendas) || empty($leyendas)) {
+           
+            return $last_id_sincronizado;
+        }
+        foreach ($leyendas as $item) {
+            // Asegurar que las claves existan para evitar errores de 'undefined index'
+            $texto = $item['texto'] ?? '';
+            $estado = $item['estado'] ?? '';
+            
+
+            // Si faltan datos críticos, podrías saltar el ítem (continue) o lanzar un error
+            if (empty($texto)) {
+                // error_log("Advertencia: Se saltó un ítem porque el nombre del tipo de almacén estaba vacío.");
+                continue;
+            }
+            //$id_divisa = $this->registrarDivisa('Bolivianos', 'Bs.', 1, $idempresa, null);
+            // Llamada a la función local para crear/actualizar el registro
+            $id_condicion = $this->registrarLeyendaProforma(
+                $texto,
+                (int)$estado,
+                $idempresa
+            );
+
+            if ($id_condicion > 0) {
+                $last_id_sincronizado = $id_condicion;
+                $count++;
+            }
+            // Nota: Asumimos que crearTipoAlmacen devuelve el ID del registro local creado/actualizado (> 0)
+            // y 0 o false en caso de fallo.
+        }
+        // 4. Devolver el resultado final
+        if ($count > 0) {
+            $result = $last_id_sincronizado;
+        } else {
+            $result = 0;
+        }
+        return $result;
+    }
+
+    public function sincronizarCanalVenta(int $idrubro): array
+    {
+        $point = "getlistacanales";
+
+        try {
+            // 1. Obtener datos de la API
+            $canales = $this->get_administrador($point, $idrubro);
+
+        } catch (\Exception $e) {
+            // Manejar errores de conexión/cURL lanzados por get_administrador
+            // Opcional: registrar el error en un log
+            // error_log($result['message']);
+            return [];
+        }
+
+        // 2. Manejar errores lógicos o de respuesta (HTTP/JSON)
+        // Asumiendo que errores de API devuelven ['error' => true, ...]
+        if (is_array($canales) && isset($canales['error']) && $canales['error'] === true) {
+           
+            return [];
+        }
+
+        // 3. Procesar datos (Debe ser un array de ítems)
+        if (!is_array($canales) || empty($canales)) {
+           
+            return [];
+        }
+        return $canales;
+    }
+    public function sincronizarCategoria(int $idrubro): array
+    {
+        $point = "getlistacategorias";
+        try {
+            // 1. Obtener datos de la API
+            $categorias = $this->get_administrador($point, $idrubro);
+        } catch (\Exception $e) {
+            // Manejar errores de conexión/cURL lanzados por get_administrador
+            // Opcional: registrar el error en un log
+            // error_log($result['message']);
+            return [];
+        }
+        // 2. Manejar errores lógicos o de respuesta (HTTP/JSON)
+        // Asumiendo que errores de API devuelven ['error' => true, ...]
+        if (is_array($categorias) && isset($categorias['error']) && $categorias['error'] === true) {  
+            return [];
+        }
+        // 3. Procesar datos (Debe ser un array de ítems)
+        if (!is_array($categorias) || empty($categorias)){
+            return [];
+        }
+        return $categorias;
+    }
+    public function sincronizar_parametros_obsolescencia(int $idrubro): array
+    {
+        $point = "getlistamedidores";
+        try {
+            // 1. Obtener datos de la API
+            $medidores = $this->get_administrador($point, $idrubro);
+        } catch (\Exception $e) {
+            // Manejar errores de conexión/cURL lanzados por get_administrador
+            // Opcional: registrar el error en un log
+            // error_log($result['message']);
+            return [];
+        }
+        // 2. Manejar errores lógicos o de respuesta (HTTP/JSON)
+        // Asumiendo que errores de API devuelven ['error' => true, ...]
+        if (is_array($medidores) && isset($medidores['error']) && $medidores['error'] === true) {  
+            return [];
+        }
+        // 3. Procesar datos (Debe ser un array de ítems)
+        if (!is_array($medidores) || empty($medidores)){
+            return [];
+        }
+        return $medidores;
+    }
+    public function sincronizar_estado_productos(int $idrubro): array
+    {
+        $point = "getlistamedidores";
+        try {
+            // 1. Obtener datos de la API
+            $res = $this->get_administrador($point, $idrubro);
+        } catch (\Exception $e) {
+            // Manejar errores de conexión/cURL lanzados por get_administrador
+            // Opcional: registrar el error en un log
+            // error_log($result['message']);
+            return [];
+        }
+        // 2. Manejar errores lógicos o de respuesta (HTTP/JSON)
+        // Asumiendo que errores de API devuelven ['error' => true, ...]
+        if (is_array($res) && isset($res['error']) && $res['error'] === true) {  
+            return [];
+        }
+        // 3. Procesar datos (Debe ser un array de ítems)
+        if (!is_array($res) || empty($res)){
+            return [];
+        }
+        return $res;
+    }
+    public function sincronizarUnidadMedida(int $idrubro): array
+    {
+        $point = "getlistaunidades";
+        try {
+            // 1. Obtener datos de la API
+            $unidades = $this->get_administrador($point, $idrubro);
+        } catch (\Exception $e) {
+            // Manejar errores de conexión/cURL lanzados por get_administrador
+            // Opcional: registrar el error en un log
+            // error_log($result['message']);
+            return [];
+        }
+        // 2. Manejar errores lógicos o de respuesta (HTTP/JSON)
+        // Asumiendo que errores de API devuelven ['error' => true, ...]
+        if (is_array($unidades) && isset($unidades['error']) && $unidades['error'] === true) {  
+            return [];
+        }
+        // 3. Procesar datos (Debe ser un array de ítems)
+        if (!is_array($unidades) || empty($unidades)){
+            return [];
+        }
+        return $unidades;
+    }
+    public function sincronizarCaracteristicas(int $idrubro): array
+    {
+        $point = "getlistamedidas";
+        try {
+            // 1. Obtener datos de la API
+            $caracteristicas = $this->get_administrador($point, $idrubro);
+        } catch (\Exception $e) {
+            // Manejar errores de conexión/cURL lanzados por get_administrador
+            // Opcional: registrar el error en un log
+            // error_log($result['message']);
+            return [];
+        }
+        // 2. Manejar errores lógicos o de respuesta (HTTP/JSON)
+        // Asumiendo que errores de API devuelven ['error' => true, ...]
+        if (is_array($caracteristicas) && isset($caracteristicas['error']) && $caracteristicas['error'] === true) {  
+            return [];
+        }
+        // 3. Procesar datos (Debe ser un array de ítems)
+        if (!is_array($caracteristicas) || empty($caracteristicas)){
+            return [];
+        }
+        return $caracteristicas;
+    }
+    public function sincronizarTipoCliente(int $idrubro): array
+    {
+        $point = "getlistatipocliente";
+        try {
+            // 1. Obtener datos de la API
+            $tiposCliente = $this->get_administrador($point, $idrubro);
+        } catch (\Exception $e) {
+            // Manejar errores de conexión/cURL lanzados por get_administrador
+            // Opcional: registrar el error en un log
+            // error_log($result['message']);
+            return [];
+        }
+        // 2. Manejar errores lógicos o de respuesta (HTTP/JSON)
+        // Asumiendo que errores de API devuelven ['error' => true, ...]
+        if (is_array($tiposCliente) && isset($tiposCliente['error']) && $tiposCliente['error'] === true) {  
+            return [];
+        }
+        // 3. Procesar datos (Debe ser un array de ítems)
+        if (!is_array($tiposCliente) || empty($tiposCliente)){
+            return [];
+        }
+        return $tiposCliente;
+    }
+    public function sincronizarPuntoVenta(int $idrubro, $idalmacen): int
+    {
+        $count = 0;
+        $last_id_sincronizado = 0;
+        $point = "getlistapuntoventa";
+        $result = $last_id_sincronizado;
+
+        try {
+            // 1. Obtener datos de la API
+            $puntosVenta = $this->get_administrador($point, $idrubro);
+
+        } catch (\Exception $e) {
+            // Manejar errores de conexión/cURL lanzados por get_administrador
+            // Opcional: registrar el error en un log
+            // error_log($result['message']);
+            return $last_id_sincronizado;
+        }
+
+        // 2. Manejar errores lógicos o de respuesta (HTTP/JSON)
+        // Asumiendo que errores de API devuelven ['error' => true, ...]
+        if (is_array($puntosVenta) && isset($puntosVenta['error']) && $puntosVenta['error'] === true) {
+           
+            return $last_id_sincronizado;
+        }
+
+        // 3. Procesar datos (Debe ser un array de ítems)
+        if (!is_array($puntosVenta) || empty($puntosVenta)) {
+           
+            return $last_id_sincronizado;
+        }
+        foreach ($puntosVenta as $item) {
+            // Asegurar que las claves existan para evitar errores de 'undefined index'
+            $nombre = $item['nombre'] ?? '';
+            $descripcion = $item['descripcion'] ?? '';
+            $tipo = $item['tipo'] ?? 0;
+            $codigosucursal = $item['codigosucursal'] ?? 0;
+            $estadosin = $item['estadosin'] ?? 0;
+            $codigosin = $item['codigosin'] ?? 0;
+
+            // Si faltan datos críticos, podrías saltar el ítem (continue) o lanzar un error
+            if (empty($nombre)) {
+                // error_log("Advertencia: Se saltó un ítem porque el nombre del tipo de almacén estaba vacío.");
+                continue;
+            }
+            //$id_punto_venta = $this->registrarPuntoVenta('PuntoVT-1', 'Lugar de pago', null, null, $id_almacen, '', '');
+            // Llamada a la función local para crear/actualizar el registro
+            $idpunto_venta = $this->registrarPuntoVenta(
+                $nombre,
+                $descripcion,
+                $tipo,
+                $codigosucursal,
+                $idalmacen,
+                $estadosin,
+                $codigosin
+            );
+            if ($idpunto_venta > 0) {
+                $last_id_sincronizado = $idpunto_venta;
+                $count++;
+            }
+            // Nota: Asumimos que crearTipoAlmacen devuelve el ID del registro local creado/actualizado (> 0)
+            // y 0 o false en caso de fallo.
+        }
+        // 4. Devolver el resultado final
+        if ($count > 0) {
+            $result = $last_id_sincronizado;
+        } else {
+            $result = 0;
+            
+        }
+        return $result;
+    }
+    public function registrarConfiguracion($idempresa, $idsucursal, $idusuario, $idrubro): int 
     {
         try {
             $fecha = date("Y-m-d");
-
-            $id_tipo_almacen = $this->crearTipoAlmacen($idempresa, 'Espacio flexible', 'Áreas para materias primas, productos terminados y mercancías en tránsito.', 1);
+            $id_tipo_almacen = $this->sincronizarTipoAlmacen((int)$idempresa, (int)$idrubro);
             if (!$id_tipo_almacen) {
                 $this->logger->registrar("Configuracion", "Error", "Fallo al crear tipo de almacén", compact('idempresa'), $idusuario, $idempresa);
                 return -1;
             }
 
-            $id_divisa = $this->registrarDivisa('Bolivianos', 'Bs.', 1, $idempresa, null);
+            $id_divisa = $this->sincronizarDivisa((int)$idempresa, (int)$idrubro);
             if (!$id_divisa) {
                 $this->logger->registrar("Configuracion", "Error", "Fallo al registrar divisa", compact('idempresa'), $idusuario, $idempresa);
                 return -2;
             }
 
-            $id_leyenda_proforma = $this->registrarLeyendaProforma(
-                'Precios expresados en moneda local y sujetos a ajustes según el tipo de cambio', 1, $idempresa
-            );
+            $id_leyenda_proforma = $this->sincronizarleyenda((int)$idempresa, (int)$idrubro);
             if (!$id_leyenda_proforma) {
                 $this->logger->registrar("Configuracion", "Error", "Fallo al registrar leyenda proforma", compact('idempresa'), $idusuario, $idempresa);
                 return -3;
             }
 
-            if (!$this->registrar_canales($idempresa)) {
+            if (!$this->registrar_canales($idempresa,(int)$idrubro)) {
                 $this->logger->registrar("Configuracion", "Error", "Fallo al registrar canales de venta", compact('idempresa'), $idusuario, $idempresa);
                 return -4;
             }
 
-           
-
-            if (!$this->registrarCategoriasProducto($idempresa)) {
+            if (!$this->registrarCategoriasProducto($idempresa,(int)$idrubro)) {
                 $this->logger->registrar("Configuracion", "Error", "Fallo al registrar categorías de producto", compact('idempresa'), $idusuario, $idempresa);
                 return -41;
             }
 
-            if(!$this->registrar_parametros_obsolescencia($idempresa)){
+            if(!$this->registrar_parametros_obsolescencia($idempresa, (int)$idrubro)){
                 $this->logger->registrar("Configuracion", "Error", "Fallo al registrar parametros obsolescencia", compact('idempresa'), $idusuario, $idempresa);
                 return -45;
             }
             
-            if (!$this->registrarEstadosProducto($idempresa)) {
+            if (!$this->registrarEstadosProducto($idempresa,(int)$idrubro)) {
                 $this->logger->registrar("Configuracion", "Error", "Fallo al registrar estados de producto", compact('idempresa'), $idusuario, $idempresa);
                 return -42;
             }
 
-            if (!$this->registrar_unidades_de_medidas($idempresa)) {
+            if (!$this->registrar_unidades_de_medidas($idempresa,(int)$idrubro)) {
                 $this->logger->registrar("Configuracion", "Error", "Fallo al registrar unidades de medida", compact('idempresa'), $idusuario, $idempresa);
                 return -43;
             }
 
-            if (!$this->registrar_caracterisitcas($idempresa)) {
+            if (!$this->registrar_caracterisitcas($idempresa, (int)$idrubro)) {
                 $this->logger->registrar("Configuracion", "Error", "Fallo al registrar características de producto", compact('idempresa'), $idusuario, $idempresa);
                 return -44;
             }
 
-            if (!$this->registrar_tipos_clientes($idempresa)) {
+            if (!$this->registrar_tipos_clientes($idempresa, (int)$idrubro)) {
                 $this->logger->registrar("Configuracion", "Error", "Fallo al registrar tipos de clientes", compact('idempresa'), $idusuario, $idempresa);
                 return -46;
             }
@@ -1123,7 +1643,7 @@ class ConfiguracionInicial
             }
             //Jcanales
 
-            $id_punto_venta = $this->registrarPuntoVenta('PuntoVT-1', 'Lugar de pago', null, null, $id_almacen, '', '');
+            $id_punto_venta = $this->sincronizarPuntoVenta((int)$idrubro,(int) $id_almacen);
             $id_porcentaje = $this->prepararPorcentage($id_almacen);
             if (!$id_punto_venta) {
                 $this->logger->registrar("Configuracion", "Error", "Fallo al registrar punto de venta", compact('id_almacen'), $idusuario, $idempresa);
@@ -1148,13 +1668,13 @@ class ConfiguracionInicial
             return 0; // Error general parametros_obsolescencia
         }
     }
-    public function control($idmd5, $idsucursal, $idusuario)
+    public function control($idmd5, $idsucursal, $idusuario, $idrubro = null)
     {
         $respuesta = [];
         $idempresa = $this->verificar->verificarIDEMPRESAMD5($idmd5);
 
         if (!$this->empresaRegistrada($idempresa)) {
-            $registro = $this->registrarConfiguracion($idempresa, $idsucursal, $idusuario);
+            $registro = $this->registrarConfiguracion($idempresa, $idsucursal, $idusuario, $idrubro);
 
             // Verifica si el registro ha fallado (código distinto a 1)
             if ($registro !== 1) {

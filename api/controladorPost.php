@@ -526,7 +526,7 @@ elseif ($ver == "editarCliente") {
     }
 }elseif ($ver == "control") {
     $controlador = new ConfiguracionInicial();
-    $controlador->control($_POST['empresa'],$_POST['sucursal'],$_POST['usuario']);
+    $controlador->control($_POST['empresa'],$_POST['sucursal'],$_POST['usuario'], $_POST['idrubro']);
 }
 elseif($ver == "subir_pdf"){
     $controlador = new ConfiguracionInicial();
@@ -616,6 +616,6 @@ elseif ($ver == "registrarNotaCreditoDebito"){
 
 
 if ($controlador === null) {
-    // Acción por defecto si no se encuentra una ruta válida producto sendEmail editaralmacen registroVenta registrodevolucion
+    // Acción por defecto si no se encuentra una ruta válida producto sendEmail ConfiguracionInicial registroPrueba registrarConfiguracion
     echo json_encode("El formulario ".$_POST['ver']." no existe");
 }

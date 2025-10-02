@@ -130,7 +130,7 @@ class reportes
         }
         echo json_encode($lista);
     }
-    public function reporteproductoalmacen($idalmacen, $idmd5) {
+    public function reporteproductoalmacen($idalmacen, $idmd5, $fecha = null) {
         try {
             // Validación de entradas
             $idempresa = $this->verificar->verificarIDEMPRESAMD5($idmd5);
@@ -183,7 +183,7 @@ class reportes
                     cantidad,
                     ROW_NUMBER() OVER(PARTITION BY productos_almacen_id_productos_almacen ORDER BY id_stock DESC) AS rn
                 FROM stock
-                WHERE estado = '1'
+                WHERE (estado = '1' OR estado = '2') AND fecha <= ?
             ) AS s ON pa.id_productos_almacen = s.productos_almacen_id_productos_almacen AND s.rn = 1 AND pb.estado = 1
             WHERE p.idempresa = ? AND pa.almacen_id_almacen = ?
             ORDER BY pa.id_productos_almacen DESC";
@@ -194,7 +194,7 @@ class reportes
             }
             
             // Vincular parámetros
-            $stmt->bind_param("iiii", $idempresa, $idempresa, $idempresa, $idalmacen);
+            $stmt->bind_param("iisii", $idempresa, $idempresa, $fecha, $idempresa, $idalmacen);
             
             // Ejecutar
             if (!$stmt->execute()) {

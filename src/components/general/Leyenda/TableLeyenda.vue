@@ -54,7 +54,6 @@
       row-key="id"
       flat
       bordered
-      class="my-sticky-header-table q-mt-md"
       :filter="busqueda"
     >
       <template v-slot:top-right> </template>

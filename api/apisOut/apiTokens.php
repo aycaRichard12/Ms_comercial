@@ -192,54 +192,52 @@ class ApiTokens
     public function obtenerTokenEmizor($md5)
     {
         try {
-            // // === Validar parámetro ===
-            // $url = $this->endpoint[3] . "/administrador/api/listartokenempresa/" . $md5;
+            // === Validar parámetro ===
+            $url = $this->endpoint[3] . "/administrador/api/listartokenempresa/" . $md5;
 
-            // // Inicializar cURL
-            // $ch = curl_init();
-            // curl_setopt($ch, CURLOPT_URL, $url);
-            // curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-            // curl_setopt($ch, CURLOPT_TIMEOUT, 10); // máximo 10 segundos
-            // curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+            // Inicializar cURL
+            $ch = curl_init();
+            curl_setopt($ch, CURLOPT_URL, $url);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_TIMEOUT, 10); // máximo 10 segundos
+            curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
 
-            // // Ejecutar petición
-            // $response = curl_exec($ch);
+            // Ejecutar petición
+            $response = curl_exec($ch);
 
-            // // Verificar errores de cURL
-            // if ($response === false) {
-            //     $error = curl_error($ch);
-            //     curl_close($ch);
-            //     echo json_encode(["error" => "Error en cURL", "detalle" => $error]);
-            //     return null;
-            // }
+            // Verificar errores de cURL
+            if ($response === false) {
+                $error = curl_error($ch);
+                curl_close($ch);
+                echo json_encode(["error" => "Error en cURL", "detalle" => $error]);
+                return null;
+            }
 
-            // // Obtener código de respuesta HTTP
-            // $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-            // curl_close($ch);
+            // Obtener código de respuesta HTTP
+            $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            curl_close($ch);
 
-            // // Si no es 200, mostrar error
-            // if ($httpCode !== 200) {
-            //     echo json_encode(["error" => "HTTP Code $httpCode", "response" => $response]);
-            //     return null;
-            // }
+            // Si no es 200, mostrar error
+            if ($httpCode !== 200) {
+                echo json_encode(["error" => "HTTP Code $httpCode", "response" => $response]);
+                return null;
+            }
 
-            // // Decodificar JSON
-            // $data = json_decode($response, true);
+            // Decodificar JSON
+            $data = json_decode($response, true);
 
-            // // Verificar si JSON fue válido
-            // if (json_last_error() !== JSON_ERROR_NONE) {
-            //     echo json_encode([
-            //         "error" => "JSON inválido",
-            //         "detalle" => json_last_error_msg(),
-            //         "response" => $response
-            //     ], JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
-            //     return null;
-            // }
-            // // Retornar token valido
-            // $ultimo = end($data);
-            // return $ultimo['access_token'];
-            return "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJhdWQiOiIzMDAyMzIiLCJqdGkiOiJiMGM2MzI0Zjc2YTdiZmIwNzliYWRiMjIxM2E3MTQzMmFjYjg2MjlhMzA2YzZmZTY0ODAxNzBlNTFmMTRlYWU4ZTkwZDk3N2NjMDM2MTdmNCIsImlhdCI6MTcyNzQ3NTUyMywibmJmIjoxNzI3NDc1NTIzLCJleHAiOjE3NTkwMTE1MjMsInN1YiI6IiIsInNjb3BlcyI6W119.llLu_9D8mxSjwd3YsvNaFf5-OJWq3IUi5OnrYpwxLd8z-TNh4KlRpAS1RSmphcnc-wtaPoUsv5IisoXCrIvlC6vgLeCFgu92p3pijETH7usOALsFIPDxAgsAvVAxRvuDWP_CdpxH_2VbpmaLLYVtWGAu3nCvCGIC5JczO0ykxli_ruEN_WtcRVDWBig6n40MgQUks__1xRXw-ZG8Y1C6_Y2xJ87xP-5nJXalFbyj6PVK_GBx1Gw6e_So5X5Fl_RLrIqJ4eCkcalkezc3GRnEswusRx6H__93u2vWD1v7Wp5EkVGrGhU0cmSt_FTL753WfuKXfBW-gAFbAj3OMDG5yagd8MU3TvO2fkOdEw0CGhs4bTN9b6QVBygFXA1-k68wTBNyu7xkfN5-4u0YsglUm6uJd9p6gnfAg6mqpg6F7BDM3kNX_0JEaNlCauUhc-30fx83mVeS3d4r8jtEFjKGd2c4QSWn-_H-fR742J7rPOC_8BA8SmO10zUVWBiNkCZ1tsdDsmPyqIVFvXFBfw6VZHtHlFCKxOSiaoJRF--bO04XzLBQRm2jXsKMLgSg6Jd1lZQ-8Y8_OguMqMZd2GVnHezk5OSKDOafUQjiGlGNDGqQPJfw8I7t3b3_Jzgd0ZmsNVUdRd7uS1xrS_NOzff1uLfCPUxJObK6HPfqudZFoSQ";
-
+            // Verificar si JSON fue válido
+            if (json_last_error() !== JSON_ERROR_NONE) {
+                echo json_encode([
+                    "error" => "JSON inválido",
+                    "detalle" => json_last_error_msg(),
+                    "response" => $response
+                ], JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+                return null;
+            }
+            // Retornar token valido
+            $ultimo = end($data);
+            return $ultimo['access_token'];
 
         } catch (Exception $e) {
             http_response_code(500);

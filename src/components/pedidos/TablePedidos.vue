@@ -264,6 +264,7 @@ watch(
 filtroAlmacen.value = props.almacenes[0]
 console.log(filtroAlmacen.value)
 const filtrados = computed(() => {
+  console.log(props.pedidos)
   return props.pedidos.filter((p) => {
     const coincideAlmacen = filtroAlmacen.value?.value
       ? String(p.idalmacen).includes(filtroAlmacen.value?.value)

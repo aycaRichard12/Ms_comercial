@@ -3035,7 +3035,7 @@ export function PDFalmacenes(props) {
       cellPadding: 2,
     },
     headStyles: {
-      fillColor: [22, 160, 133],
+      fillColor: ColoEncabezadoTabla,
       textColor: 255,
       halign: 'center',
     },
@@ -3078,6 +3078,1157 @@ export function PDFalmacenes(props) {
         doc.setFontSize(10)
         doc.setFont(undefined, 'bold')
         doc.text('ALMACENES', doc.internal.pageSize.getWidth() / 2, 15, { align: 'center' })
+      }
+    },
+  })
+
+  return doc
+}
+export function PDF_REPORTE_DE_ROTACION_POR_ALMACEN(reporte, datosFormulario) {
+  // ✅ Acceso correcto a los datos reactivos
+  console.log(reporte)
+  console.log(datosFormulario)
+
+  const contenidousuario = validarUsuario()
+  const doc = new jsPDF({ orientation: 'portrait' })
+
+  const idempresa = contenidousuario[0]
+  const nombreEmpresa = idempresa.empresa.nombre
+  const direccionEmpresa = idempresa.empresa.direccion
+  const telefonoEmpresa = idempresa.empresa.telefono
+
+  const columns = [
+    { header: 'N°', dataKey: 'index' },
+    { header: 'Codigo', dataKey: 'codigo' },
+    { header: 'Producto', dataKey: 'producto' },
+    { header: 'Categoría', dataKey: 'categoria' },
+    { header: 'Descripción', dataKey: 'descripcion' },
+    { header: 'Unidad', dataKey: 'unidad' },
+    { header: 'Cant. Ventas', dataKey: 'cantidadventas' },
+    { header: 'Inv. Externo', dataKey: 'cantidadIE' },
+    { header: 'Rotación', dataKey: 'r' },
+  ]
+
+  const datos = reporte.map((item) => ({
+    index: item.index,
+    codigo: item.codigo,
+    producto: item.producto,
+    categoria: item.categoria,
+    descripcion: item.descripcion,
+    unidad: item.unidad,
+    cantidadventas: item.cantidadventas,
+    cantidadIE: item.cantidadIE,
+    r: item.r,
+  }))
+
+  autoTable(doc, {
+    columns,
+    body: datos,
+    styles: {
+      overflow: 'linebreak',
+      fontSize: 5,
+      cellPadding: 2,
+    },
+    headStyles: {
+      fillColor: ColoEncabezadoTabla,
+      textColor: 255,
+      halign: 'center',
+    },
+    columnStyles: {
+      index: { cellWidth: 10, halign: 'center' },
+      codigo: { cellWidth: 20, halign: 'left' },
+      producto: { cellWidth: 30, halign: 'left' },
+      categoria: { cellWidth: 20, halign: 'left' },
+      descripcion: { cellWidth: 40, halign: 'left' },
+      unidad: { cellWidth: 20, halign: 'left' },
+      cantidadventas: { cellWidth: 20, halign: 'right' },
+      cantidadIE: { cellWidth: 20, halign: 'right' },
+      r: { cellWidth: 20, halign: 'right' },
+    },
+    startY: 45,
+    margin: { horizontal: 5 },
+    theme: 'striped',
+    didDrawPage: () => {
+      if (doc.internal.getNumberOfPages() === 1) {
+        if (logoBase64) {
+          const pageWidth = doc.internal.pageSize.getWidth() // Ancho total página
+          const imgWidth = 20 // Ancho del logo en mm
+          const imgHeight = 20 // Alto del logo en mm
+          const xPos = pageWidth - imgWidth - 5 // 10mm de margen derecho
+          const yPos = 5 // margen superior
+          console.log(logoBase64)
+          doc.addImage(logoBase64, 'JPEG', xPos, yPos, imgWidth, imgHeight)
+        }
+        doc.setFontSize(7)
+        doc.setFont(undefined, 'bold')
+        doc.text(nombreEmpresa, 5, 10)
+
+        doc.setFontSize(6)
+        doc.setFont(undefined, 'normal')
+        doc.text(direccionEmpresa, 5, 13)
+        doc.text(`Tel: ${telefonoEmpresa}`, 5, 16)
+
+        doc.setFontSize(10)
+        doc.setFont(undefined, 'bold')
+        doc.text(
+          'REPORTE DE INDICE DE ROTACION POR ALMACEN',
+          doc.internal.pageSize.getWidth() / 2,
+          15,
+          { align: 'center' },
+        )
+        doc.setFontSize(6)
+        doc.setFont(undefined, 'normal')
+        doc.text(
+          'ENTRE ' + datosFormulario.fechaInicio + ' Y ' + datosFormulario.fechaFin,
+          doc.internal.pageSize.getWidth() / 2,
+          18,
+          {
+            align: 'center',
+          },
+        )
+
+        doc.setDrawColor(0) // Color negro
+        doc.setLineWidth(0.2) // Grosor de la línea
+        doc.line(5, 30, 205, 30) // De (x1=5, y1=25) a (x2=200, y2=25)
+
+        doc.setFontSize(7)
+        doc.setFont(undefined, 'bold')
+        doc.text('DATOS DEL REPORTE', 5, 35)
+        doc.setFontSize(6)
+        doc.setFont(undefined, 'normal')
+        doc.text('Almacén: ' + datosFormulario.almacen, 5, 38)
+
+        doc.setFontSize(6)
+        doc.setFont(undefined, 'normal')
+        doc.text('Fecha de Impresion: ' + cambiarFormatoFecha(obtenerFechaActualDato()), 5, 41)
+
+        doc.setFontSize(7)
+        doc.setFont(undefined, 'bold')
+        doc.text('DATOS DEL ENCARGADO:', 205, 35, { align: 'right' })
+
+        doc.setFontSize(6)
+        doc.setFont(undefined, 'normal')
+        doc.text(datosFormulario.usuario.nombre, 205, 38, { align: 'right' })
+
+        doc.setFontSize(6)
+        doc.setFont(undefined, 'normal')
+        doc.text(datosFormulario.usuario.cargo, 205, 41, { align: 'right' })
+      }
+    },
+  })
+
+  return doc
+}
+
+export function PDF_REPORTE_DE_ROTACION_POR_CLIENTE(reporte, datosFormulario) {
+  // ✅ Acceso correcto a los datos reactivos
+  console.log(reporte)
+  console.log(datosFormulario)
+
+  const contenidousuario = validarUsuario()
+  const doc = new jsPDF({ orientation: 'portrait' })
+
+  const idempresa = contenidousuario[0]
+  const nombreEmpresa = idempresa.empresa.nombre
+  const direccionEmpresa = idempresa.empresa.direccion
+  const telefonoEmpresa = idempresa.empresa.telefono
+
+  const columns = [
+    { header: 'N°', dataKey: 'index' },
+    { header: 'Codigo', dataKey: 'codigo' },
+    { header: 'Producto', dataKey: 'producto' },
+    { header: 'Categoría', dataKey: 'categoria' },
+    { header: 'Descripción', dataKey: 'descripcion' },
+    { header: 'Unidad', dataKey: 'unidad' },
+    { header: 'Cant. Ventas', dataKey: 'cantidadventas' },
+    { header: 'Inv. Externo', dataKey: 'cantidadIE' },
+    { header: 'Rotación', dataKey: 'r' },
+  ]
+
+  const datos = reporte.map((item) => ({
+    index: item.index,
+    codigo: item.codigo,
+    producto: item.producto,
+    categoria: item.categoria,
+    descripcion: item.descripcion,
+    unidad: item.unidad,
+    cantidadventas: item.cantidadventas,
+    cantidadIE: item.cantidadIE,
+    r: item.r,
+  }))
+
+  autoTable(doc, {
+    columns,
+    body: datos,
+    styles: {
+      overflow: 'linebreak',
+      fontSize: 5,
+      cellPadding: 2,
+    },
+    headStyles: {
+      fillColor: ColoEncabezadoTabla,
+      textColor: 255,
+      halign: 'center',
+    },
+    columnStyles: {
+      index: { cellWidth: 10, halign: 'center' },
+      codigo: { cellWidth: 20, halign: 'left' },
+      producto: { cellWidth: 30, halign: 'left' },
+      categoria: { cellWidth: 20, halign: 'left' },
+      descripcion: { cellWidth: 40, halign: 'left' },
+      unidad: { cellWidth: 20, halign: 'left' },
+      cantidadventas: { cellWidth: 20, halign: 'right' },
+      cantidadIE: { cellWidth: 20, halign: 'right' },
+      r: { cellWidth: 20, halign: 'right' },
+    },
+    startY: 45,
+    margin: { horizontal: 5 },
+    theme: 'striped',
+    didDrawPage: () => {
+      if (doc.internal.getNumberOfPages() === 1) {
+        if (logoBase64) {
+          const pageWidth = doc.internal.pageSize.getWidth() // Ancho total página
+          const imgWidth = 20 // Ancho del logo en mm
+          const imgHeight = 20 // Alto del logo en mm
+          const xPos = pageWidth - imgWidth - 5 // 10mm de margen derecho
+          const yPos = 5 // margen superior
+          console.log(logoBase64)
+          doc.addImage(logoBase64, 'JPEG', xPos, yPos, imgWidth, imgHeight)
+        }
+        doc.setFontSize(7)
+        doc.setFont(undefined, 'bold')
+        doc.text(nombreEmpresa, 5, 10)
+
+        doc.setFontSize(6)
+        doc.setFont(undefined, 'normal')
+        doc.text(direccionEmpresa, 5, 13)
+        doc.text(`Tel: ${telefonoEmpresa}`, 5, 16)
+
+        doc.setFontSize(10)
+        doc.setFont(undefined, 'bold')
+        doc.text(
+          'REPORTE DE INDICE DE ROTACION POR CLIENTE',
+          doc.internal.pageSize.getWidth() / 2,
+          15,
+          { align: 'center' },
+        )
+        doc.setFontSize(6)
+        doc.setFont(undefined, 'normal')
+        doc.text(
+          'ENTRE ' + datosFormulario.fechaInicio + ' Y ' + datosFormulario.fechaFin,
+          doc.internal.pageSize.getWidth() / 2,
+          18,
+          {
+            align: 'center',
+          },
+        )
+
+        doc.setDrawColor(0) // Color negro
+        doc.setLineWidth(0.2) // Grosor de la línea
+        doc.line(5, 30, 205, 30) // De (x1=5, y1=25) a (x2=200, y2=25)
+
+        doc.setFontSize(7)
+        doc.setFont(undefined, 'bold')
+        doc.text('DATOS DEL REPORTE', 5, 35)
+        doc.setFontSize(6)
+        doc.setFont(undefined, 'normal')
+        doc.text(
+          'Razon Social: ' + datosFormulario.cliente + ' / ' + datosFormulario.sucursal,
+          5,
+          38,
+        )
+
+        doc.setFontSize(6)
+        doc.setFont(undefined, 'normal')
+        doc.text('Fecha de Impresion: ' + cambiarFormatoFecha(obtenerFechaActualDato()), 5, 41)
+
+        doc.setFontSize(7)
+        doc.setFont(undefined, 'bold')
+        doc.text('DATOS DEL ENCARGADO:', 205, 35, { align: 'right' })
+
+        doc.setFontSize(6)
+        doc.setFont(undefined, 'normal')
+        doc.text(datosFormulario.usuario.nombre, 205, 38, { align: 'right' })
+
+        doc.setFontSize(6)
+        doc.setFont(undefined, 'normal')
+        doc.text(datosFormulario.usuario.cargo, 205, 41, { align: 'right' })
+      }
+    },
+  })
+
+  return doc
+}
+
+export function PDF_REPORTE_DE_ROTACION_POR_GLOBAL(reporte, datosFormulario) {
+  // ✅ Acceso correcto a los datos reactivos
+  console.log(reporte)
+  console.log(datosFormulario)
+
+  const contenidousuario = validarUsuario()
+  const doc = new jsPDF({ orientation: 'portrait' })
+
+  const idempresa = contenidousuario[0]
+  const nombreEmpresa = idempresa.empresa.nombre
+  const direccionEmpresa = idempresa.empresa.direccion
+  const telefonoEmpresa = idempresa.empresa.telefono
+
+  const columns = [
+    { header: 'N°', dataKey: 'index' },
+    { header: 'Codigo', dataKey: 'codigo' },
+    { header: 'Producto', dataKey: 'producto' },
+    { header: 'Categoría', dataKey: 'categoria' },
+    { header: 'Descripción', dataKey: 'descripcion' },
+    { header: 'Unidad', dataKey: 'unidad' },
+    { header: 'Cant. Ventas', dataKey: 'cantidadventas' },
+    { header: 'Inv. Externo', dataKey: 'cantidadIE' },
+    { header: 'Rotación', dataKey: 'r' },
+  ]
+
+  const datos = reporte.map((item) => ({
+    index: item.index,
+    codigo: item.codigo,
+    producto: item.producto,
+    categoria: item.categoria,
+    descripcion: item.descripcion,
+    unidad: item.unidad,
+    cantidadventas: item.cantidadventas,
+    cantidadIE: item.cantidadIE,
+    r: item.r,
+  }))
+
+  autoTable(doc, {
+    columns,
+    body: datos,
+    styles: {
+      overflow: 'linebreak',
+      fontSize: 5,
+      cellPadding: 2,
+    },
+    headStyles: {
+      fillColor: ColoEncabezadoTabla,
+      textColor: 255,
+      halign: 'center',
+    },
+    columnStyles: {
+      index: { cellWidth: 10, halign: 'center' },
+      codigo: { cellWidth: 20, halign: 'left' },
+      producto: { cellWidth: 30, halign: 'left' },
+      categoria: { cellWidth: 20, halign: 'left' },
+      descripcion: { cellWidth: 40, halign: 'left' },
+      unidad: { cellWidth: 20, halign: 'left' },
+      cantidadventas: { cellWidth: 20, halign: 'right' },
+      cantidadIE: { cellWidth: 20, halign: 'right' },
+      r: { cellWidth: 20, halign: 'right' },
+    },
+    startY: 45,
+    margin: { horizontal: 5 },
+    theme: 'striped',
+    didDrawPage: () => {
+      if (doc.internal.getNumberOfPages() === 1) {
+        if (logoBase64) {
+          const pageWidth = doc.internal.pageSize.getWidth() // Ancho total página
+          const imgWidth = 20 // Ancho del logo en mm
+          const imgHeight = 20 // Alto del logo en mm
+          const xPos = pageWidth - imgWidth - 5 // 10mm de margen derecho
+          const yPos = 5 // margen superior
+          console.log(logoBase64)
+          doc.addImage(logoBase64, 'JPEG', xPos, yPos, imgWidth, imgHeight)
+        }
+        doc.setFontSize(7)
+        doc.setFont(undefined, 'bold')
+        doc.text(nombreEmpresa, 5, 10)
+
+        doc.setFontSize(6)
+        doc.setFont(undefined, 'normal')
+        doc.text(direccionEmpresa, 5, 13)
+        doc.text(`Tel: ${telefonoEmpresa}`, 5, 16)
+
+        doc.setFontSize(10)
+        doc.setFont(undefined, 'bold')
+        doc.text('REPORTE DE INDICE DE ROTACION GLOBAL', doc.internal.pageSize.getWidth() / 2, 15, {
+          align: 'center',
+        })
+        doc.setFontSize(6)
+        doc.setFont(undefined, 'normal')
+        doc.text(
+          'ENTRE ' + datosFormulario.fechaInicio + ' Y ' + datosFormulario.fechaFin,
+          doc.internal.pageSize.getWidth() / 2,
+          18,
+          {
+            align: 'center',
+          },
+        )
+
+        doc.setDrawColor(0) // Color negro
+        doc.setLineWidth(0.2) // Grosor de la línea
+        doc.line(5, 30, 205, 30) // De (x1=5, y1=25) a (x2=200, y2=25)
+
+        doc.setFontSize(7)
+        doc.setFont(undefined, 'bold')
+        doc.text('DATOS DEL REPORTE', 5, 35)
+        doc.setFontSize(6)
+        doc.setFont(undefined, 'normal')
+        doc.text('Almacen: ' + datosFormulario.almacen, 5, 38)
+
+        doc.setFontSize(6)
+        doc.setFont(undefined, 'normal')
+        doc.text('Fecha de Impresion: ' + cambiarFormatoFecha(obtenerFechaActualDato()), 5, 41)
+
+        doc.setFontSize(7)
+        doc.setFont(undefined, 'bold')
+        doc.text('DATOS DEL ENCARGADO:', 205, 35, { align: 'right' })
+
+        doc.setFontSize(6)
+        doc.setFont(undefined, 'normal')
+        doc.text(datosFormulario.usuario.nombre, 205, 38, { align: 'right' })
+
+        doc.setFontSize(6)
+        doc.setFont(undefined, 'normal')
+        doc.text(datosFormulario.usuario.cargo, 205, 41, { align: 'right' })
+      }
+    },
+  })
+
+  return doc
+}
+export function PDF_REPORTE_CAMPANAS(reporte, datosFormulario) {
+  // ✅ Acceso correcto a los datos reactivos
+  console.log(reporte)
+  console.log(datosFormulario)
+
+  const contenidousuario = validarUsuario()
+  const doc = new jsPDF({ orientation: 'portrait' })
+
+  const idempresa = contenidousuario[0]
+  const nombreEmpresa = idempresa.empresa.nombre
+  const direccionEmpresa = idempresa.empresa.direccion
+  const telefonoEmpresa = idempresa.empresa.telefono
+
+  const columns = [
+    { header: 'N°', dataKey: 'n' },
+    { header: 'Almacén', dataKey: 'almacen' },
+    { header: 'Campaña', dataKey: 'nombre' },
+    { header: 'Porcentaje', dataKey: 'porcentaje' },
+    { header: 'Fecha Inicio', dataKey: 'fechainicio' },
+    { header: 'Fecha Final', dataKey: 'fechafinal' },
+    { header: 'Estado', dataKey: 'est' },
+  ]
+
+  const datos = reporte.map((item) => ({
+    n: item.n,
+    almacen: item.almacen,
+    nombre: item.nombre,
+    porcentaje: item.porcentaje,
+    fechainicio: item.fechainicio,
+    fechafinal: item.fechafinal,
+    est: item.est,
+  }))
+
+  autoTable(doc, {
+    columns,
+    body: datos,
+    styles: {
+      overflow: 'linebreak',
+      fontSize: 5,
+      cellPadding: 2,
+    },
+    headStyles: {
+      fillColor: ColoEncabezadoTabla,
+      textColor: 255,
+      halign: 'center',
+    },
+    columnStyles: {
+      n: { cellWidth: 10, halign: 'center' },
+      almacen: { cellWidth: 30, halign: 'left' },
+      nombre: { cellWidth: 40, halign: 'left' },
+      porcentaje: { cellWidth: 30, halign: 'left' },
+      fechainicio: { cellWidth: 30, halign: 'left' },
+      fechafinal: { cellWidth: 30, halign: 'left' },
+      est: { cellWidth: 30, halign: 'right' },
+    },
+    startY: 45,
+    margin: { horizontal: 5 },
+    theme: 'striped',
+    didDrawPage: () => {
+      if (doc.internal.getNumberOfPages() === 1) {
+        if (logoBase64) {
+          const pageWidth = doc.internal.pageSize.getWidth() // Ancho total página
+          const imgWidth = 20 // Ancho del logo en mm
+          const imgHeight = 20 // Alto del logo en mm
+          const xPos = pageWidth - imgWidth - 5 // 10mm de margen derecho
+          const yPos = 5 // margen superior
+          console.log(logoBase64)
+          doc.addImage(logoBase64, 'JPEG', xPos, yPos, imgWidth, imgHeight)
+        }
+        doc.setFontSize(7)
+        doc.setFont(undefined, 'bold')
+        doc.text(nombreEmpresa, 5, 10)
+
+        doc.setFontSize(6)
+        doc.setFont(undefined, 'normal')
+        doc.text(direccionEmpresa, 5, 13)
+        doc.text(`Tel: ${telefonoEmpresa}`, 5, 16)
+
+        doc.setFontSize(10)
+        doc.setFont(undefined, 'bold')
+        doc.text('REPORTE DE INDICE DE ROTACION GLOBAL', doc.internal.pageSize.getWidth() / 2, 15, {
+          align: 'center',
+        })
+        doc.setFontSize(6)
+        doc.setFont(undefined, 'normal')
+        doc.text(
+          'ENTRE ' + datosFormulario.fechaInicio + ' Y ' + datosFormulario.fechaFin,
+          doc.internal.pageSize.getWidth() / 2,
+          18,
+          {
+            align: 'center',
+          },
+        )
+
+        doc.setDrawColor(0) // Color negro
+        doc.setLineWidth(0.2) // Grosor de la línea
+        doc.line(5, 30, 205, 30) // De (x1=5, y1=25) a (x2=200, y2=25)
+
+        doc.setFontSize(7)
+        doc.setFont(undefined, 'bold')
+        doc.text('DATOS DEL REPORTE', 5, 35)
+        doc.setFontSize(6)
+        doc.setFont(undefined, 'normal')
+        doc.text('Almacen: ' + datosFormulario.almacen, 5, 38)
+
+        doc.setFontSize(6)
+        doc.setFont(undefined, 'normal')
+        doc.text('Fecha de Impresion: ' + cambiarFormatoFecha(obtenerFechaActualDato()), 5, 41)
+
+        doc.setFontSize(7)
+        doc.setFont(undefined, 'bold')
+        doc.text('DATOS DEL ENCARGADO:', 205, 35, { align: 'right' })
+
+        doc.setFontSize(6)
+        doc.setFont(undefined, 'normal')
+        doc.text(datosFormulario.usuario.nombre, 205, 38, { align: 'right' })
+
+        doc.setFontSize(6)
+        doc.setFont(undefined, 'normal')
+        doc.text(datosFormulario.usuario.cargo, 205, 41, { align: 'right' })
+      }
+    },
+  })
+
+  return doc
+}
+export function PDF_REPORTE_CAMPANAS_VENTAS(reporte, datosFormulario) {
+  // ✅ Acceso correcto a los datos reactivos
+  console.log(reporte)
+  console.log(datosFormulario)
+
+  const contenidousuario = validarUsuario()
+  const doc = new jsPDF({ orientation: 'portrait' })
+
+  const idempresa = contenidousuario[0]
+  const nombreEmpresa = idempresa.empresa.nombre
+  const direccionEmpresa = idempresa.empresa.direccion
+  const telefonoEmpresa = idempresa.empresa.telefono
+
+  const columns = [
+    { header: 'N°', dataKey: 'n' },
+    { header: 'Almacén', dataKey: 'almacen' },
+    { header: 'Campaña', dataKey: 'nombre' },
+    { header: 'Fecha Inicio', dataKey: 'fechainicio' },
+    { header: 'Fecha Final', dataKey: 'fechafinal' },
+    { header: 'Cantidad de Ventas', dataKey: 'nventas' },
+  ]
+
+  const datos = reporte.map((item) => ({
+    n: item.n,
+    almacen: item.almacen,
+    nombre: item.nombre,
+    fechainicio: item.fechainicio,
+    fechafinal: item.fechafinal,
+    nventas: item.nventas,
+  }))
+
+  autoTable(doc, {
+    columns,
+    body: datos,
+    styles: {
+      overflow: 'linebreak',
+      fontSize: 5,
+      cellPadding: 2,
+    },
+    headStyles: {
+      fillColor: ColoEncabezadoTabla,
+      textColor: 255,
+      halign: 'center',
+    },
+    columnStyles: {
+      n: { cellWidth: 10, halign: 'center' },
+      almacen: { cellWidth: 40, halign: 'left' },
+      nombre: { cellWidth: 40, halign: 'left' },
+      fechainicio: { cellWidth: 40, halign: 'left' },
+      fechafinal: { cellWidth: 30, halign: 'left' },
+      nventas: { cellWidth: 40, halign: 'right' },
+    },
+    startY: 45,
+    margin: { horizontal: 5 },
+    theme: 'striped',
+    didDrawPage: () => {
+      if (doc.internal.getNumberOfPages() === 1) {
+        if (logoBase64) {
+          const pageWidth = doc.internal.pageSize.getWidth() // Ancho total página
+          const imgWidth = 20 // Ancho del logo en mm
+          const imgHeight = 20 // Alto del logo en mm
+          const xPos = pageWidth - imgWidth - 5 // 10mm de margen derecho
+          const yPos = 5 // margen superior
+          console.log(logoBase64)
+          doc.addImage(logoBase64, 'JPEG', xPos, yPos, imgWidth, imgHeight)
+        }
+        doc.setFontSize(7)
+        doc.setFont(undefined, 'bold')
+        doc.text(nombreEmpresa, 5, 10)
+
+        doc.setFontSize(6)
+        doc.setFont(undefined, 'normal')
+        doc.text(direccionEmpresa, 5, 13)
+        doc.text(`Tel: ${telefonoEmpresa}`, 5, 16)
+
+        doc.setFontSize(10)
+        doc.setFont(undefined, 'bold')
+        doc.text('REPORTE DE INDICE DE ROTACION GLOBAL', doc.internal.pageSize.getWidth() / 2, 15, {
+          align: 'center',
+        })
+        doc.setFontSize(6)
+        doc.setFont(undefined, 'normal')
+        doc.text(
+          'ENTRE ' + datosFormulario.fechaInicio + ' Y ' + datosFormulario.fechaFin,
+          doc.internal.pageSize.getWidth() / 2,
+          18,
+          {
+            align: 'center',
+          },
+        )
+
+        doc.setDrawColor(0) // Color negro
+        doc.setLineWidth(0.2) // Grosor de la línea
+        doc.line(5, 30, 205, 30) // De (x1=5, y1=25) a (x2=200, y2=25)nventas
+
+        doc.setFontSize(7)
+        doc.setFont(undefined, 'bold')
+        doc.text('DATOS DEL REPORTE', 5, 35)
+        doc.setFontSize(6)
+        doc.setFont(undefined, 'normal')
+        doc.text('Almacen: ' + datosFormulario.almacen, 5, 38)
+
+        doc.setFontSize(6)
+        doc.setFont(undefined, 'normal')
+        doc.text('Fecha de Impresion: ' + cambiarFormatoFecha(obtenerFechaActualDato()), 5, 41)
+
+        doc.setFontSize(7)
+        doc.setFont(undefined, 'bold')
+        doc.text('DATOS DEL ENCARGADO:', 205, 35, { align: 'right' })
+
+        doc.setFontSize(6)
+        doc.setFont(undefined, 'normal')
+        doc.text(datosFormulario.usuario.nombre, 205, 38, { align: 'right' })
+
+        doc.setFontSize(6)
+        doc.setFont(undefined, 'normal')
+        doc.text(datosFormulario.usuario.cargo, 205, 41, { align: 'right' })
+      }
+    },
+  })
+
+  return doc
+}
+export function PDF_REPORTE_MOVIMIENTOS(reporte, datosFormulario) {
+  // ✅ Acceso correcto a los datos reactivos
+  console.log(reporte)
+  console.log(datosFormulario)
+
+  const contenidousuario = validarUsuario()
+  const doc = new jsPDF({ orientation: 'portrait' })
+
+  const idempresa = contenidousuario[0]
+  const nombreEmpresa = idempresa.empresa.nombre
+  const direccionEmpresa = idempresa.empresa.direccion
+  const telefonoEmpresa = idempresa.empresa.telefono
+
+  const columns = [
+    { header: 'N°', dataKey: 'n' },
+    { header: 'Fecha', dataKey: 'fecha' },
+    { header: 'Almacén Origen', dataKey: 'almacenorigen' },
+    { header: 'Almacén Destino', dataKey: 'almacendestino' },
+    { header: 'Descripción', dataKey: 'descripcion' },
+    { header: 'Autorizacion', dataKey: 'aut' },
+  ]
+
+  const datos = reporte.map((item) => ({
+    n: item.n,
+    fecha: item.fecha,
+    almacenorigen: item.almacenorigen,
+    almacendestino: item.almacendestino,
+    descripcion: item.descripcion,
+    aut: item.aut,
+  }))
+
+  autoTable(doc, {
+    columns,
+    body: datos,
+    styles: {
+      overflow: 'linebreak',
+      fontSize: 5,
+      cellPadding: 2,
+    },
+    headStyles: {
+      fillColor: ColoEncabezadoTabla,
+      textColor: 255,
+      halign: 'center',
+    },
+    columnStyles: {
+      n: { cellWidth: 10, halign: 'center' },
+      fecha: { cellWidth: 40, halign: 'left' },
+      almacenorigen: { cellWidth: 40, halign: 'left' },
+      almacendestino: { cellWidth: 40, halign: 'left' },
+      descripcion: { cellWidth: 30, halign: 'left' },
+      aut: { cellWidth: 40, halign: 'right' },
+    },
+    startY: 45,
+    margin: { horizontal: 5 },
+    theme: 'striped',
+    didDrawPage: () => {
+      if (doc.internal.getNumberOfPages() === 1) {
+        if (logoBase64) {
+          const pageWidth = doc.internal.pageSize.getWidth() // Ancho total página
+          const imgWidth = 20 // Ancho del logo en mm
+          const imgHeight = 20 // Alto del logo en mm
+          const xPos = pageWidth - imgWidth - 5 // 10mm de margen derecho
+          const yPos = 5 // margen superior
+          console.log(logoBase64)
+          doc.addImage(logoBase64, 'JPEG', xPos, yPos, imgWidth, imgHeight)
+        }
+        doc.setFontSize(7)
+        doc.setFont(undefined, 'bold')
+        doc.text(nombreEmpresa, 5, 10)
+
+        doc.setFontSize(6)
+        doc.setFont(undefined, 'normal')
+        doc.text(direccionEmpresa, 5, 13)
+        doc.text(`Tel: ${telefonoEmpresa}`, 5, 16)
+
+        doc.setFontSize(10)
+        doc.setFont(undefined, 'bold')
+        doc.text('REPORTE DE INDICE DE ROTACION GLOBAL', doc.internal.pageSize.getWidth() / 2, 15, {
+          align: 'center',
+        })
+        doc.setFontSize(6)
+        doc.setFont(undefined, 'normal')
+        doc.text(
+          'ENTRE ' + datosFormulario.fechaInicio + ' Y ' + datosFormulario.fechaFin,
+          doc.internal.pageSize.getWidth() / 2,
+          18,
+          {
+            align: 'center',
+          },
+        )
+
+        doc.setDrawColor(0) // Color negro
+        doc.setLineWidth(0.2) // Grosor de la línea
+        doc.line(5, 30, 205, 30) // De (x1=5, y1=25) a (x2=200, y2=25)nventas
+
+        doc.setFontSize(7)
+        doc.setFont(undefined, 'bold')
+        doc.text('DATOS DEL REPORTE', 5, 35)
+        doc.setFontSize(6)
+        doc.setFont(undefined, 'normal')
+        doc.text('Almacen: ' + datosFormulario.almacen, 5, 38)
+
+        doc.setFontSize(6)
+        doc.setFont(undefined, 'normal')
+        doc.text('Fecha de Impresion: ' + cambiarFormatoFecha(obtenerFechaActualDato()), 5, 41)
+
+        doc.setFontSize(7)
+        doc.setFont(undefined, 'bold')
+        doc.text('DATOS DEL ENCARGADO:', 205, 35, { align: 'right' })
+
+        doc.setFontSize(6)
+        doc.setFont(undefined, 'normal')
+        doc.text(datosFormulario.usuario.nombre, 205, 38, { align: 'right' })
+
+        doc.setFontSize(6)
+        doc.setFont(undefined, 'normal')
+        doc.text(datosFormulario.usuario.cargo, 205, 41, { align: 'right' })
+      }
+    },
+  })
+
+  return doc
+}
+export function PDF_REPORTE_PEDIDOS(reporte, datosFormulario) {
+  // ✅ Acceso correcto a los datos reactivos
+  console.log(reporte)
+  console.log(datosFormulario)
+
+  const contenidousuario = validarUsuario()
+  const doc = new jsPDF({ orientation: 'portrait' })
+
+  const idempresa = contenidousuario[0]
+  const nombreEmpresa = idempresa.empresa.nombre
+  const direccionEmpresa = idempresa.empresa.direccion
+  const telefonoEmpresa = idempresa.empresa.telefono
+
+  const columns = [
+    { header: 'N°', dataKey: 'n' },
+    { header: 'Fecha', dataKey: 'fecha' },
+    { header: 'Codigo', dataKey: 'codigo' },
+    { header: 'Nro.Pedido', dataKey: 'nropedido' },
+    { header: 'Tipo', dataKey: 'tipopedido' },
+    { header: 'Almacen Origen', dataKey: 'almacenorigen' },
+    { header: 'Almacen', dataKey: 'almacen' },
+    { header: 'Observación', dataKey: 'observacion' },
+    { header: 'Estado', dataKey: 'estado' },
+  ]
+
+  const datos = reporte.map((item) => ({
+    n: item.n,
+    fecha: item.fecha,
+    codigo: item.codigo,
+    nropedido: item.nropedido,
+    tipopedido: item.tipopedido,
+    almacenorigen: item.almacenorigen,
+    almacen: item.almacen,
+    observacion: item.observacion,
+    estado: item.estado,
+  }))
+
+  autoTable(doc, {
+    columns,
+    body: datos,
+    styles: {
+      overflow: 'linebreak',
+      fontSize: 5,
+      cellPadding: 2,
+    },
+    headStyles: {
+      fillColor: ColoEncabezadoTabla,
+      textColor: 255,
+      halign: 'center',
+    },
+    columnStyles: {
+      n: { cellWidth: 10, halign: 'center' },
+      fecha: { cellWidth: 15, halign: 'left' },
+      codigo: { cellWidth: 20, halign: 'left' },
+      nropedido: { cellWidth: 20, halign: 'center' },
+      tipopedido: { cellWidth: 20, halign: 'left' },
+      almacenorigen: { cellWidth: 20, halign: 'right' },
+      almacen: { cellWidth: 20, halign: 'right' },
+      observacion: { cellWidth: 55, halign: 'right' },
+      estado: { cellWidth: 20, halign: 'right' },
+    },
+    startY: 45,
+    margin: { horizontal: 5 },
+    theme: 'striped',
+    didDrawPage: () => {
+      if (doc.internal.getNumberOfPages() === 1) {
+        if (logoBase64) {
+          const pageWidth = doc.internal.pageSize.getWidth() // Ancho total página
+          const imgWidth = 20 // Ancho del logo en mm
+          const imgHeight = 20 // Alto del logo en mm
+          const xPos = pageWidth - imgWidth - 5 // 10mm de margen derecho
+          const yPos = 5 // margen superior
+          console.log(logoBase64)
+          doc.addImage(logoBase64, 'JPEG', xPos, yPos, imgWidth, imgHeight)
+        }
+        doc.setFontSize(7)
+        doc.setFont(undefined, 'bold')
+        doc.text(nombreEmpresa, 5, 10)
+
+        doc.setFontSize(6)
+        doc.setFont(undefined, 'normal')
+        doc.text(direccionEmpresa, 5, 13)
+        doc.text(`Tel: ${telefonoEmpresa}`, 5, 16)
+
+        doc.setFontSize(10)
+        doc.setFont(undefined, 'bold')
+        doc.text('REPORTE PEDIDOS', doc.internal.pageSize.getWidth() / 2, 15, {
+          align: 'center',
+        })
+        doc.setFontSize(6)
+        doc.setFont(undefined, 'normal')
+        doc.text(
+          'ENTRE ' + datosFormulario.fechaInicio + ' Y ' + datosFormulario.fechaFin,
+          doc.internal.pageSize.getWidth() / 2,
+          18,
+          {
+            align: 'center',
+          },
+        )
+
+        doc.setDrawColor(0) // Color negro
+        doc.setLineWidth(0.2) // Grosor de la línea
+        doc.line(5, 30, 205, 30) // De (x1=5, y1=25) a (x2=200, y2=25)nventas
+
+        doc.setFontSize(7)
+        doc.setFont(undefined, 'bold')
+        doc.text('DATOS DEL REPORTE', 5, 35)
+        doc.setFontSize(6)
+        doc.setFont(undefined, 'normal')
+        doc.text('Almacen: ' + datosFormulario.almacen, 5, 38)
+
+        doc.setFontSize(6)
+        doc.setFont(undefined, 'normal')
+        doc.text('Fecha de Impresion: ' + cambiarFormatoFecha(obtenerFechaActualDato()), 5, 41)
+
+        doc.setFontSize(7)
+        doc.setFont(undefined, 'bold')
+        doc.text('DATOS DEL ENCARGADO:', 205, 35, { align: 'right' })
+
+        doc.setFontSize(6)
+        doc.setFont(undefined, 'normal')
+        doc.text(datosFormulario.usuario.nombre, 205, 38, { align: 'right' })
+
+        doc.setFontSize(6)
+        doc.setFont(undefined, 'normal')
+        doc.text(datosFormulario.usuario.cargo, 205, 41, { align: 'right' })
+      }
+    },
+  })
+
+  return doc
+}
+export function PDF_REPORTE_PRECIO_BASE(reporte, datosFormulario) {
+  // ✅ Acceso correcto a los datos reactivos
+  console.log(reporte)
+  console.log(datosFormulario)
+
+  const contenidousuario = validarUsuario()
+  const doc = new jsPDF({ orientation: 'portrait' })
+
+  const idempresa = contenidousuario[0]
+  const nombreEmpresa = idempresa.empresa.nombre
+  const direccionEmpresa = idempresa.empresa.direccion
+  const telefonoEmpresa = idempresa.empresa.telefono
+
+  const columns = [
+    { header: 'N°', dataKey: 'n' },
+    { header: 'Fecha', dataKey: 'fecha' },
+    { header: 'Codigo', dataKey: 'codigo' },
+    { header: 'producto', dataKey: 'producto' },
+    { header: 'categoria', dataKey: 'categoria' },
+    { header: 'Caracteristica', dataKey: 'caracteristica' },
+    { header: 'Medida', dataKey: 'medida' },
+    { header: 'Descripcion', dataKey: 'descripcion' },
+    { header: 'Unidad', dataKey: 'unidad' },
+    { header: 'Precio Base', dataKey: 'preciobase' },
+  ]
+
+  const datos = reporte.map((item) => ({
+    n: item.n,
+    fecha: item.fecha,
+    codigo: item.codigo,
+    producto: item.producto,
+    categoria: item.categoria,
+    caracteristica: item.caracteristica,
+    medida: item.medida,
+    descripcion: item.descripcion,
+    unidad: item.unidad,
+    preciobase: item.preciobase,
+  }))
+
+  autoTable(doc, {
+    columns,
+    body: datos,
+    styles: {
+      overflow: 'linebreak',
+      fontSize: 5,
+      cellPadding: 2,
+    },
+    headStyles: {
+      fillColor: ColoEncabezadoTabla,
+      textColor: 255,
+      halign: 'center',
+    },
+    columnStyles: {
+      n: { cellWidth: 10, halign: 'center' },
+      fecha: { cellWidth: 15, halign: 'left' },
+      codigo: { cellWidth: 20, halign: 'left' },
+      producto: { cellWidth: 20, halign: 'center' },
+      categoria: { cellWidth: 20, halign: 'left' },
+      caracteristica: { cellWidth: 20, halign: 'right' },
+      medida: { cellWidth: 20, halign: 'right' },
+      descripcion: { cellWidth: 35, halign: 'right' },
+      unidad: { cellWidth: 20, halign: 'right' },
+      preciobase: { cellWidth: 20, halign: 'right' },
+    },
+    startY: 45,
+    margin: { horizontal: 5 },
+    theme: 'striped',
+    didDrawPage: () => {
+      if (doc.internal.getNumberOfPages() === 1) {
+        if (logoBase64) {
+          const pageWidth = doc.internal.pageSize.getWidth() // Ancho total página
+          const imgWidth = 20 // Ancho del logo en mm
+          const imgHeight = 20 // Alto del logo en mm
+          const xPos = pageWidth - imgWidth - 5 // 10mm de margen derecho
+          const yPos = 5 // margen superior
+          console.log(logoBase64)
+          doc.addImage(logoBase64, 'JPEG', xPos, yPos, imgWidth, imgHeight)
+        }
+        doc.setFontSize(7)
+        doc.setFont(undefined, 'bold')
+        doc.text(nombreEmpresa, 5, 10)
+
+        doc.setFontSize(6)
+        doc.setFont(undefined, 'normal')
+        doc.text(direccionEmpresa, 5, 13)
+        doc.text(`Tel: ${telefonoEmpresa}`, 5, 16)
+
+        doc.setFontSize(10)
+        doc.setFont(undefined, 'bold')
+        doc.text('REPORTE DE COSTO UNITARIO', doc.internal.pageSize.getWidth() / 2, 15, {
+          align: 'center',
+        })
+        doc.setFontSize(6)
+        doc.setFont(undefined, 'normal')
+
+        doc.setDrawColor(0) // Color negro
+        doc.setLineWidth(0.2) // Grosor de la línea
+        doc.line(5, 30, 205, 30) // De (x1=5, y1=25) a (x2=200, y2=25)nventas
+
+        doc.setFontSize(7)
+        doc.setFont(undefined, 'bold')
+        doc.text('DATOS DEL REPORTE', 5, 35)
+        doc.setFontSize(6)
+        doc.setFont(undefined, 'normal')
+        doc.text('Almacen: ' + datosFormulario.almacen, 5, 38)
+
+        doc.setFontSize(6)
+        doc.setFont(undefined, 'normal')
+        doc.text('Fecha de Impresion: ' + cambiarFormatoFecha(obtenerFechaActualDato()), 5, 41)
+
+        doc.setFontSize(7)
+        doc.setFont(undefined, 'bold')
+        doc.text('DATOS DEL ENCARGADO:', 205, 35, { align: 'right' })
+
+        doc.setFontSize(6)
+        doc.setFont(undefined, 'normal')
+        doc.text(datosFormulario.usuario.nombre, 205, 38, { align: 'right' })
+
+        doc.setFontSize(6)
+        doc.setFont(undefined, 'normal')
+        doc.text(datosFormulario.usuario.cargo, 205, 41, { align: 'right' })
+      }
+    },
+  })
+
+  return doc
+}
+export function PDF_REPORTE_CATEGORIA_PRECIO(reporte, datosFormulario) {
+  // ✅ Acceso correcto a los datos reactivos
+  console.log(reporte)
+  console.log(datosFormulario)
+
+  const contenidousuario = validarUsuario()
+  const doc = new jsPDF({ orientation: 'portrait' })
+
+  const idempresa = contenidousuario[0]
+  const nombreEmpresa = idempresa.empresa.nombre
+  const direccionEmpresa = idempresa.empresa.direccion
+  const telefonoEmpresa = idempresa.empresa.telefono
+
+  const columns = [
+    { header: 'N°', dataKey: 'n' },
+    { header: 'Categoria', dataKey: 'nombre' },
+    { header: 'Porcentaje', dataKey: 'porcentaje' },
+    { header: 'Almacén', dataKey: 'almacen' },
+    { header: 'Estado', dataKey: 'estado' },
+  ]
+
+  const datos = reporte.map((item) => ({
+    n: item.n,
+    nombre: item.nombre,
+    porcentaje: item.porcentaje,
+    almacen: item.almacen,
+    estado: item.estado,
+  }))
+
+  autoTable(doc, {
+    columns,
+    body: datos,
+    styles: {
+      overflow: 'linebreak',
+      fontSize: 5,
+      cellPadding: 2,
+    },
+    headStyles: {
+      fillColor: ColoEncabezadoTabla,
+      textColor: 255,
+      halign: 'center',
+    },
+    columnStyles: {
+      n: { cellWidth: 10, halign: 'center' },
+      nombre: { cellWidth: 60, halign: 'left' },
+      porcentaje: { cellWidth: 40, halign: 'right' },
+      almacen: { cellWidth: 60, halign: 'LEFT' },
+      estado: { cellWidth: 30, halign: 'center' },
+    },
+    startY: 45,
+    margin: { horizontal: 5 },
+    theme: 'striped',
+    didDrawPage: () => {
+      if (doc.internal.getNumberOfPages() === 1) {
+        if (logoBase64) {
+          const pageWidth = doc.internal.pageSize.getWidth() // Ancho total página
+          const imgWidth = 20 // Ancho del logo en mm
+          const imgHeight = 20 // Alto del logo en mm
+          const xPos = pageWidth - imgWidth - 5 // 10mm de margen derecho
+          const yPos = 5 // margen superior
+          console.log(logoBase64)
+          doc.addImage(logoBase64, 'JPEG', xPos, yPos, imgWidth, imgHeight)
+        }
+        doc.setFontSize(7)
+        doc.setFont(undefined, 'bold')
+        doc.text(nombreEmpresa, 5, 10)
+
+        doc.setFontSize(6)
+        doc.setFont(undefined, 'normal')
+        doc.text(direccionEmpresa, 5, 13)
+        doc.text(`Tel: ${telefonoEmpresa}`, 5, 16)
+
+        doc.setFontSize(10)
+        doc.setFont(undefined, 'bold')
+        doc.text('REPORTE DE PRECIOS BASE', doc.internal.pageSize.getWidth() / 2, 15, {
+          align: 'center',
+        })
+        doc.setFontSize(6)
+        doc.setFont(undefined, 'normal')
+
+        doc.setDrawColor(0) // Color negro
+        doc.setLineWidth(0.2) // Grosor de la línea
+        doc.line(5, 30, 205, 30) // De (x1=5, y1=25) a (x2=200, y2=25)nventas
+
+        doc.setFontSize(7)
+        doc.setFont(undefined, 'bold')
+        doc.text('DATOS DEL REPORTE', 5, 35)
+        doc.setFontSize(6)
+        doc.setFont(undefined, 'normal')
+        doc.text('Almacen: ' + datosFormulario.almacen, 5, 38)
+
+        doc.setFontSize(6)
+        doc.setFont(undefined, 'normal')
+        doc.text('Fecha de Impresion: ' + cambiarFormatoFecha(obtenerFechaActualDato()), 5, 41)
+
+        doc.setFontSize(7)
+        doc.setFont(undefined, 'bold')
+        doc.text('DATOS DEL ENCARGADO:', 205, 35, { align: 'right' })
+
+        doc.setFontSize(6)
+        doc.setFont(undefined, 'normal')
+        doc.text(datosFormulario.usuario.nombre, 205, 38, { align: 'right' })
+
+        doc.setFontSize(6)
+        doc.setFont(undefined, 'normal')
+        doc.text(datosFormulario.usuario.cargo, 205, 41, { align: 'right' })
       }
     },
   })

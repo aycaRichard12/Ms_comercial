@@ -36,7 +36,7 @@
         <q-btn
           label="Vista previa del Reporte"
           color="primary"
-          @click="handleVerReporte"
+          @click="descargarPDF"
           class="q-mx-sm"
         />
       </div>
@@ -77,6 +77,7 @@
         </template>
       </q-table>
     </div>
+
     <q-card-section>
       <q-dialog v-model="mostrarModal" persistent full-width full-height>
         <q-card class="q-pa-md" style="height: 100%; max-width: 100%">
@@ -107,13 +108,12 @@ import { useQuasar } from 'quasar'
 import { api } from 'src/boot/axios'
 import { cambiarFormatoFecha, obtenerFechaActualDato } from 'src/composables/FuncionesG.js'
 import { validarUsuario } from 'src/composables/FuncionesG.js'
-import { PDF_REPORTE_CAMPANAS_VENTAS } from 'src/utils/pdfReportGenerator'
+import { PDF_REPORTE_CAMPANAS } from 'src/utils/pdfReportGenerator'
+const $q = useQuasar()
 
-//pedf
+//pdf
 const pdfData = ref(null)
 const mostrarModal = ref(false)
-
-const $q = useQuasar()
 
 // --- Estados Reactivos ---
 const fechaInicio = ref(obtenerFechaActualDato())
@@ -135,6 +135,7 @@ const columnasTabla = [
   { name: 'n', label: 'N°', field: 'n', align: 'left', format: (val, row, index) => index + 1 },
   { name: 'almacen', label: 'Almacén', field: 'almacen', align: 'left' },
   { name: 'nombre', label: 'Campaña', field: 'nombre', align: 'left' },
+  { name: 'porcentaje', label: 'Porcentaje', field: 'porcentaje', align: 'left' },
   {
     name: 'fechainicio',
     label: 'Fecha Inicio',
@@ -149,7 +150,7 @@ const columnasTabla = [
     align: 'left',
     format: (val) => cambiarFormatoFecha(val),
   },
-  { name: 'nventas', label: 'Cantidad de Ventas', field: 'nventas', align: 'left' },
+  { name: 'est', label: 'Estado', field: 'est', align: 'left' },
 ]
 
 // --- Watchers ---
@@ -239,12 +240,13 @@ async function generarReporte() {
 
   try {
     const idusuario = datosUsuario.idusuario
-    const point = `reporteventacampaña/${idusuario}/${fechaInicio.value}/${fechaFin.value}`
+    const point = `reportecampaña/${idusuario}/${fechaInicio.value}/${fechaFin.value}`
     const response = await api.get(point)
     console.log(response.status)
     const data = response.data.map((item, index) => ({
       ...item,
       n: index + 1,
+      est: item.est === 1 ? 'Activa' : 'Inactiva',
     }))
 
     if (response.status === 200) {
@@ -299,31 +301,20 @@ async function handleGenerarReporte() {
 }
 
 /**
- * Maneja el clic en el botón "Vista previa del Reporte".
- */
-function handleVerReporte() {
-  if (!datosFiltrados.value || datosFiltrados.value.length === 0) {
-    $q.notify({
-      type: 'info',
-      message: 'No se ha generado ningún reporte o el reporte está vacío.',
-      position: 'top',
-    })
-  } else {
-    const doc = PDF_REPORTE_CAMPANAS_VENTAS(datosFiltrados.value, {
-      fechaInicio: fechaInicio.value,
-      fechaFin: fechaFin.value,
-      almacen: almacenSeleccionadoTexto.value,
-      usuario: validarUsuario()[0],
-    })
-    console.log(doc)
-    pdfData.value = doc.output('dataurlstring')
-    mostrarModal.value = true
-  }
-}
-
-/**
  * Descarga el PDF del reporte.
  */
+function descargarPDF() {
+  const datosFormulario = {
+    fechaInicio: fechaInicio.value,
+    fechaFin: fechaFin.value,
+    almacen: almacenSeleccionadoTexto.value,
+    usuario: datosUsuario,
+  }
+  console.log(datosFormulario)
+  const doc = PDF_REPORTE_CAMPANAS(datosFiltrados.value, datosFormulario)
+  pdfData.value = doc.output('dataurlstring')
+  mostrarModal.value = true
+}
 
 // --- Ciclo de Vida ---
 onMounted(async () => {

@@ -46,7 +46,8 @@ class Conexion extends BDyofinanciero {
             $this->endPoint = array(
                 1 => "https://sinfel.emizor.com",
                 2 => "https://fel.emizor.com",
-                3 => "https://mistersofts.com"
+                3 => "https://mistersofts.com",
+                
             );
         } catch (Exception $e) {
             echo "Error al conectar con la base de datos: " . $e->getMessage();

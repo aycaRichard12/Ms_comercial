@@ -1,16 +1,29 @@
 <template>
   <div class="row flex justify-between">
     <!-- Filtro por almacén -->
-    <div class="col-12 col-md-4">
-      <label for="almacen">Almacén</label>
-      <q-select
-        v-model="filtroAlmacen"
-        :options="almacenes"
-        id="almacen"
-        emit-value
-        map-options
-        dense
-        outlined
+
+    <div class="col-auto flex flex-col gap-3">
+      <div class="col-12 col-md-4">
+        <label for="almacen">Almacén</label>
+        <q-select
+          v-model="filtroAlmacen"
+          :options="almacenes"
+          id="almacen"
+          emit-value
+          map-options
+          dense
+          outlined
+        />
+      </div>
+
+      <q-btn
+        color="secondary"
+        class="btn-res q-mt-lg"
+        id="reportedepreciosbase"
+        to="/reportedepreciosbase"
+        icon="assessment"
+        label="Reporte de Costos"
+        no-caps
       />
     </div>
 
@@ -88,7 +101,9 @@ import jsPDF from 'jspdf'
 import autoTable from 'jspdf-autotable'
 import { URL_APIE } from 'src/composables/services'
 import { decimas, obtenerFechaActualDato, cambiarFormatoFecha } from 'src/composables/FuncionesG'
-
+import { useCurrencyStore } from 'src/stores/currencyStore'
+const currencyStore = useCurrencyStore()
+console.log(currencyStore)
 const pdfData = ref(null)
 const mostrarModal = ref(false)
 const props = defineProps({
@@ -135,17 +150,20 @@ const columnas = [
     label: 'Costo',
     align: 'right',
     field: 'precio',
-    format: (val) => (isNaN(val) ? '0.00' : Number(val).toFixed(2)),
+    format: (val) => (isNaN(val) ? '0.00' : Number(val).toFixed(2) + currencyStore.simbolo),
   },
   { name: 'opciones', label: 'Opciones', align: 'center' },
 ]
 
 // Filtro combinado por búsqueda y almacén
 const filtrados = computed(() => {
+  console.log(props.rows)
+  console.log(filtroAlmacen.value)
   const res = props.rows.filter((p) => {
     console.log(filtroAlmacen.value)
     const matchesAlmacen =
-      (!filtroAlmacen.value || p.idalmacen === filtroAlmacen.value) && filtroAlmacen.value !== null
+      (!filtroAlmacen.value || Number(p.idalmacen) === Number(filtroAlmacen.value)) &&
+      filtroAlmacen.value !== null
     const matchesCodigo =
       !filter.value ||
       p.codigo.toLowerCase().includes(filter.value.toLowerCase()) ||

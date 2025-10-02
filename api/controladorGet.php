@@ -575,7 +575,7 @@ if ($ver[0] == "datosusuario") {
     $controlador->eliminarrobo($ver[1]);
 } elseif ($ver[0] == "reporteproductoalmacen") {
     $controlador = new reportes();
-    $controlador->reporteproductoalmacen($ver[1], $ver[2]);
+    $controlador->reporteproductoalmacen($ver[1], $ver[2], $ver[3]);
 } elseif ($ver[0] == "reportepedidos") {
     $controlador = new reportes();
     $controlador->reportepedidos($ver[1], $ver[2], $ver[3]);
@@ -649,8 +649,17 @@ elseif ($ver[0] == "reportecreditosatrasados") {
     $controlador = new reportes();
     $controlador->reporteventacampañas($ver[1], $ver[2], $ver[3]);
 } elseif ($ver[0] == "reporteindicerotacioncliente") {
+    echo "<pre>Parámetros recibidos en \$ver:\n";
+    print_r($ver);
+    echo "</pre>";
+
     $controlador = new reportes();
-    $controlador->reporterotacionxcliente($ver[1], $ver[2], $ver[3], $ver[4]);
+    $controlador->reporterotacionxcliente(
+        $ver[1] ?? null,
+        $ver[2] ?? null,
+        $ver[3] ?? null,
+        $ver[4] ?? null
+    );
 } elseif ($ver[0] == "reporteindicerotacionalmacen") {
     $controlador = new reportes();
     $controlador->reporterotacionxalmacen($ver[1], $ver[2], $ver[3]);
@@ -819,8 +828,12 @@ elseif($ver[0]== "obtenerPagoPorId"){
     $controlador = new PagosCompra();
     $controlador->obtenerPagoPorId($ver[1]); 
 }
+elseif($ver[0]== "get_administrador"){
+    $controlador = new ConfiguracionInicial();
+    $controlador->get_administrador($ver[1],$ver[2]); 
+}
 
 if ($controlador === null) {
-    // Acción por defecto si no se encuentra una ruta valida detallesCotizacion detallesVenta
+    // Acción por defecto si no se encuentra una ruta valida reporteproductoalmacen empresaRegistrada
     echo json_encode(array("error" => "La ruta ".$_GET['ver']." no existe"));
 }

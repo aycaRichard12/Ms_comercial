@@ -128,7 +128,11 @@
 
         <template v-slot:body-cell-cantidad="props">
           <q-td :props="props" style="cursor: pointer; background-color: #f9f9f9">
-            <q-popup-edit v-model.number="props.row.cantidad" v-slot="scope">
+            <q-popup-edit
+              v-if="Number(props.row.cantidad) !== 1"
+              v-model.number="props.row.cantidad"
+              v-slot="scope"
+            >
               <label for="cantidad">Cantidad</label>
               <q-input
                 v-model.number="scope.value"
@@ -145,9 +149,46 @@
             <q-icon name="edit" size="16px" color="primary" class="q-ml-xs" />
           </q-td>
         </template>
+        <template v-slot:body-cell-esPerdida="props">
+          <q-td :props="props">
+            <q-toggle
+              v-model="props.row.esPerdida"
+              checked-icon="check"
+              unchecked-icon="close"
+              color="red"
+              @update:model-value="(val) => onTogglePerdida(props.row, val)"
+            />
+          </q-td>
+        </template>
+        <template v-slot:body-cell-cantidadPerdida="props">
+          <q-td :props="props" style="background-color: #f9f9f9">
+            <q-popup-edit v-model.number="props.row.cantidadPerdida" v-slot="scope">
+              <label for="cantidadPerdida">Cantidad Pérdida</label>
+              <q-input
+                v-model.number="scope.value"
+                outlined
+                dense
+                :disable="!props.row.esPerdida"
+                autofocus
+                type="number"
+                :max="props.row.cantidad"
+                :rules="[
+                  (val) => val >= 0 || 'Debe ser mayor o igual a 0',
+                  (val) => val <= props.row.cantidad || 'No puede superar la cantidad devuelta',
+                ]"
+                id="cantidadPerdida"
+                @keyup.enter="scope.set"
+                @keyup.esc="scope.cancel"
+              />
+            </q-popup-edit>
+            {{ props.row.cantidadPerdida }}
+            <q-icon name="edit" size="16px" color="primary" class="q-ml-xs" />
+          </q-td>
+        </template>
+
         <template v-slot:body-cell-precioUnitario="props">
           <q-td :props="props">
-            <q-popup-edit v-model.number="props.row.precioUnitario" v-slot="scope">
+            <!-- <q-popup-edit v-model.number="props.row.precioUnitario" v-slot="scope">
               <label for="preciounitario">Precio Unitario</label>
               <q-input
                 v-model.number="scope.value"
@@ -161,15 +202,15 @@
                 @keyup.enter="validar(scope, props.row)"
                 @keyup.esc="scope.cancel"
               />
-            </q-popup-edit>
+            </q-popup-edit> -->
             {{ props.row.precioUnitario }}
-            <q-icon name="edit" size="16px" color="primary" class="q-ml-xs" />
+            <!-- <q-icon name="edit" size="16px" color="primary" class="q-ml-xs" /> -->
           </q-td>
         </template>
 
         <template v-slot:body-cell-montoDescuento="props">
           <q-td :props="props">
-            <q-popup-edit v-model.number="props.row.montoDescuento" v-slot="scope">
+            <!-- <q-popup-edit v-model.number="props.row.montoDescuento" v-slot="scope">
               <label for="descuento">Descuento</label>
               <q-input
                 v-model.number="scope.value"
@@ -183,9 +224,9 @@
                 @keyup.enter="validarMontoDescuento(scope, props.row)"
                 @keyup.esc="scope.cancel"
               />
-            </q-popup-edit>
+            </q-popup-edit> -->
             {{ props.row.montoDescuento }}
-            <q-icon name="edit" size="16px" color="primary" class="q-ml-xs" />
+            <!-- <q-icon name="edit" size="16px" color="primary" class="q-ml-xs" /> -->
           </q-td>
         </template>
         <template v-slot:body-cell-subTotal="props">
@@ -250,21 +291,7 @@
               </q-item-section>
               <q-item-section side class="text-right">
                 <q-item-label class="text-h6 text-weight-bold">
-                  <q-popup-edit v-model.number="nota.montoTotalDevuelto" v-slot="scope">
-                    <q-input
-                      v-model.number="scope.value"
-                      outlined
-                      dense
-                      autofocus
-                      type="number"
-                      step="0.01"
-                      inputmode="decimal"
-                      @keyup.enter="validarMonto(scope)"
-                      @keyup.esc="scope.cancel"
-                    />
-                  </q-popup-edit>
-                  {{ nota.montoTotalDevuelto.toFixed(2) }}
-                  <q-icon name="edit" size="16px" color="primary" class="q-ml-xs" />
+                  {{ nota.montoTotalDevuelto = montoTotalDevuelto }}
                 </q-item-label>
               </q-item-section>
             </q-item>
@@ -275,7 +302,7 @@
               </q-item-section>
               <q-item-section side class="text-right">
                 <q-item-label class="text-weight-medium">
-                  {{ nota.montoEfectivoCreditoDebito = montoDescuentoCreditoDebito }}
+                  {{ nota.montoEfectivoCreditoDebito = montoefectivoCreditoDebito }}
                 </q-item-label>
               </q-item-section>
             </q-item>
@@ -300,13 +327,13 @@
 </template>
 
 <script setup>
-import { defineProps, defineEmits, ref, onMounted, computed } from 'vue'
+import { defineProps, ref, onMounted, computed } from 'vue'
 import { validarUsuario } from 'src/composables/FuncionesG'
 import { peticionGET } from 'src/composables/peticionesFetch'
 import { URL_APICM } from 'src/composables/services'
 import { useQuasar } from 'quasar'
 import { showDialog } from 'src/utils/dialogs'
-import { api } from 'boot/axios'
+//import { api } from 'boot/axios'
 
 import axios from 'axios'
 const $q = useQuasar()
@@ -347,7 +374,7 @@ const nota = ref(props.nota)
 const leyendasSINOptions = ref([])
 const puntosVenta = ref([])
 console.log(props.nota)
-const emit = defineEmits(['cancelar'])
+//const emit = defineEmits(['cancelar'])
 
 // =============================================
 // CONFIGURACIÓN DE TABLA
@@ -368,6 +395,8 @@ const ColumnsDetalleAjuste = [
     style: 'white-space: normal;',
   },
   { name: 'cantidad', label: 'Cantidad', align: 'center', field: 'cantidad' },
+  { name: 'esPerdida', label: '¿Es Pérdida?', field: 'esPerdida', align: 'center' }, // nuevo
+  { name: 'cantidadPerdida', label: 'Cantidad Pérdida', field: 'cantidadPerdida', align: 'center' }, // nuevo
   {
     name: 'unidadMedida',
     label: 'Unidad',
@@ -576,11 +605,12 @@ const confirmarNota = async () => {
   const tipo = contenidousuario[0]?.factura?.tipo
   const md5E = contenidousuario[0]?.empresa?.idempresa
 
-  const { facturaExterna, venta, idalmacen, ...resto } = nota.value
+  const { facturaExterna, venta, idalmacen, motivo, ...resto } = nota.value
   console.log(venta)
   const notaCreditoDebito = {
     ...facturaExterna,
     ...resto,
+    extras: { facturaTicket: venta.ack_ticket },
   }
   const detalleventa = venta?.detalle[0] || []
   console.log(detalleventa)
@@ -600,26 +630,29 @@ const confirmarNota = async () => {
     monto_descuento_credito_debito: resto.montoDescuentoCreditoDebito || 0,
     monto_efectivo_credito_debito: resto.montoEfectivoCreditoDebito || 0,
     detalle: resto.detalles,
+    motivo,
     notaCreditoDebito,
   }
   console.log('Datos a enviar:', sendData)
-  try {
-    const response = await api.post('', sendData)
+  // try {
+  //   const response = await api.post('', sendData)
 
-    const data = response.data
-    console.log('Respuesta del servidor:', data)
-    if (data.estado === 'error') {
-      showDialog($q, 'E', data.mensaje || 'Error al registrar la nota de crédito/débito')
-    } else {
-      showDialog($q, 'I', 'La nota de crédito/débito se registró exitosamente.')
-      emit('cancelar') // Cerrar el formulario después de confirmar
-    }
-  } catch (error) {
-    showDialog($q, 'E', error.message || 'Error inesperado al registrar la nota de crédito/débito')
-  }
+  //   const data = response.data
+  //   console.log('Respuesta del servidor:', data)
+  //   if (data.estado === 'error') {
+  //     showDialog($q, 'E', data.mensaje || 'Error al registrar la nota de crédito/débito')
+  //   } else {
+  //     showDialog($q, 'I', 'La nota de crédito/débito se registró exitosamente.')
+  //     emit('cancelar') // Cerrar el formulario después de confirmar
+  //   }
+  // } catch (error) {
+  //   showDialog($q, 'E', error.message || 'Error inesperado al registrar la nota de crédito/débito')
+  // }
 }
-
 const montoDescuentoCreditoDebito = computed(() => {
+  return nota.value.montoDescuentoCreditoDebito
+})
+const montoTotalDevuelto = computed(() => {
   const total = nota.value.detalles.reduce((acc, item) => {
     return (
       acc +
@@ -627,14 +660,16 @@ const montoDescuentoCreditoDebito = computed(() => {
       parseFloat(item.montoDescuento || 0)
     )
   }, 0)
-  const total_MDCD = (
-    total -
-    Number(nota.value.montoDescuentoCreditoDebito || 0) -
-    Number(nota.value.montoTotalDevuelto || 0)
-  ).toFixed(2)
-  return total_MDCD > 0 ? total_MDCD : 0.04
+  return total.toFixed(2) - parseFloat(montoDescuentoCreditoDebito.value)
 })
-console.log(montoDescuentoCreditoDebito.value)
+const montoefectivoCreditoDebito = computed(() => {
+  console.log(montoTotalDevuelto.value)
+  const total = montoTotalDevuelto.value
+  const total_MDCD = (parseFloat(total || 0) * 0.13).toFixed(2)
+  console.log(total_MDCD)
+  return total_MDCD > 0 ? total_MDCD : 0.0
+})
+console.log(montoefectivoCreditoDebito.value)
 const getUnidadMedida = (codigo) => {
   // Simulación de unidades
   const unidades = {
@@ -645,25 +680,40 @@ const getUnidadMedida = (codigo) => {
   return unidades[codigo] || 'N/A'
 }
 const validarMonto = async (scope) => {
-  if (scope.value >= 0 && scope.value <= montoDescuentoCreditoDebito.value) {
+  const total = nota.value.detalles.reduce((acc, item) => {
+    return (
+      acc +
+      Number(item.cantidad) * parseFloat(item.precioUnitario) -
+      parseFloat(item.montoDescuento || 0)
+    )
+  }, 0)
+  if (scope.value >= 0 && scope.value <= total) {
     scope.set()
   } else {
     await showDialog(
       $q,
       'E',
-      'El valor debe ser menor a ' + montoDescuentoCreditoDebito.value + ' y mayor o igual a 0',
+      'El valor debe ser menor a ' + montoTotalDevuelto.value + ' y mayor o igual a 0',
     )
   }
 }
-const validarMontoDescuento = async (scope, row) => {
-  console.log(row)
-  const totalFila = Number(row.cantidad) * parseFloat(row.precioUnitario)
-  if (scope.value >= 0 && scope.value <= totalFila) {
-    scope.set()
-  } else {
-    await showDialog($q, 'E', 'El valor debe ser menor a ' + totalFila + ' y mayor o igual a 0')
+// const validarMontoDescuento = async (scope, row) => {
+//   console.log(row)
+//   const totalFila = Number(row.cantidad) * parseFloat(row.precioUnitario)
+//   if (scope.value >= 0 && scope.value <= totalFila) {
+//     scope.set()
+//   } else {
+//     await showDialog($q, 'E', 'El valor debe ser menor a ' + totalFila + ' y mayor o igual a 0')
+//   }
+// }
+
+function onTogglePerdida(row, val) {
+  row.esPerdida = val
+  if (!val) {
+    row.cantidadPerdida = 0 // 🔒 bloqueamos y reseteamos
   }
 }
+
 const validar = async (scope, row) => {
   console.log(row)
 

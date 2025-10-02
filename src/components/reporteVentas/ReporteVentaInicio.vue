@@ -9,6 +9,11 @@
     :pagination="pagination"
     no-data-label="No hay ninguna venta"
   >
+    <template v-slot:body-cell-tipoventa="props">
+      <q-td :props="props">
+        {{ tipo[Number(props.row.tipoventa)] }}
+      </q-td>
+    </template>
     <template v-slot:body-cell-acciones="props">
       <q-td :props="props" class="text-nowrap">
         <q-btn
@@ -36,7 +41,7 @@
     </template>
     <template v-slot:bottom-row>
       <q-tr>
-        <q-td colspan="2" class="text-right text-bold">Total:</q-td>
+        <q-td colspan="3" class="text-right text-bold">Total:</q-td>
         <q-td class="text-right text-bold">{{ decimas(cantidadTotal) }}</q-td>
       </q-tr>
     </template>
@@ -77,6 +82,13 @@ const idempresa = contenidousuario[0]?.empresa?.idempresa
 const pdfData = ref(null)
 const mostrarModal = ref(false)
 
+const tipo = {
+  0: 's/Factura',
+  1: 'c/Factura',
+  2: 'Factura Alquileres',
+  3: 'Factura Comercial Exportación',
+  24: 'Nota de Crédito-Débido',
+}
 const columns = [
   { name: 'nfactura', label: 'N° Fact', field: 'nfactura', align: 'center' },
   {
@@ -85,6 +97,7 @@ const columns = [
     align: 'left',
     field: (row) => row.cliente.split('-')[0],
   },
+  { name: 'tipoventa', label: 'Tipo-Venta', field: 'tipoventa' },
   { name: 'ventatotal', label: 'Monto', field: (row) => decimas(row.ventatotal), align: 'right' },
   { name: 'acciones', label: '', field: 'acciones', sortable: false },
 ]

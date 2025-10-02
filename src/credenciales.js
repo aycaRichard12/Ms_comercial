@@ -9,7 +9,7 @@ const richard50 = [
   {
     ok: 'success',
     login: 'usuario',
-    idusuario: '03afdbd66e7929b125f8597834fa83a4',
+    idusuario: 'eb160de1de89d9058fcb0b968dbbbd68',
     usuario: 'richard50',
     nombre: 'Richard Ayca Acuña',
     cargo: 'Soporte',
@@ -17,10 +17,11 @@ const richard50 = [
     idcargo: '73278a4a86960eeb576a8fd4c9ec6997',
     area: 'Sistemas',
     empresa: {
-      nombre: 'Comercio e Inversiones YF SRL',
+      nombre: 'Prosperidad Infinita S.R.L.',
+      licencia: '20240101-100',
+      fex: '2035-03-31',
       idempresa: 'c0c7c76d30bd3dcaefc96f40275bdc0a',
       nit: '123456789',
-      fex: '2030-09-09',
       telefono: '+591 12345678',
       direccion: 'Av. Ayacucho N° 218 esq. Gral Achá',
       logo: 'logos/yof_d67fc1b140.jpg',
@@ -33,24 +34,79 @@ const richard50 = [
       ocelular: '+591 76548252',
       ositioweb: 'www.comercio.com',
       ocierrefiscal: '31/12',
-      onempleador: null,
-      onpatronal: null,
+      onempleador: '',
+      onpatronal: '',
       idregion: 'b6d767d2f8ed5d21a44b0e5886680cb9',
       region: 'Cochabamba',
       tiponegocio: 'Comercial',
+      idtn: '8',
       tipo: '2',
       idtiponegocio: 'c9f0f895fb98ab9159f51fd0297e236d',
     },
     factura: {
       token_type: 'Bearer',
-      expires_in: '31622400',
+      expires_in: '31536000',
       access_token:
-        'eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJhdWQiOiIzMDAzMzUiLCJqdGkiOiJjYjE2NDUzNTc4ZGRhYTgwNmFhMWEyNDcxMGYxZTI3OWQyODU1MGM5ZGE4MTAwNmVmNmIyYjU1YTI3MDc4ZDRjYzNjODkwZTU2NGIxZDVjNyIsImlhdCI6MTc0MjQ3NTY2NCwibmJmIjoxNzQyNDc1NjY0LCJleHAiOjE3NzQwMTE2NjQsInN1YiI6IiIsInNjb3BlcyI6W119.KFugkzjz4rXPCRsMl23sAIrDkYRuOwAJi9W0WUGg1XthO4ZvGJTsU-8ifEQYdudyIZ_b-zy49NL7fhbKoxtNVoBZbtuoYDTzCZN3Jb0Jsc3enVL_YezYr_5vA8qBBRvYdyihqTjvRQt9dYVP--QtrLp0qtQ8wP_vUyNTQh9POJUZhMd6EXjjxG_6tfgAzVOYbVty_WFU0xXDkReYLfphjqFRLPo-3vWlo5god5ixYMM55PWXLnz01bYlJREhJ-U-z46_klvgfAbdGs_EdIeBSUlYfXOn0NOWHP5Q6QlVt85ajFLByd1uv5jVW3IsDzrMkfvf1u-4YCeOkPFqU3WMvAia46nVjLnpfBNERqYEnlwmiMnNoZ2HDDiHDJyy7i8ADDGy_pS-i6SItZ6yE9Qk3MfX6xYO5bxBZXFpozSxLlVytk3qeq3tuBr9H_QXbW3G-yQzk2mHTK7iMRX8Lzm6uZuJed60MpnzekEiKQBNIWdYgp9v5BmvYHHRyvjoMn5cI2LV9RNJVKB11Z2tQHSeeY61bo9u3aGJ094v3BRpnRiIffJEP-7jo7zpvAxz3AS5bS_lFaOdfU2LboJSTAWVefTHw9JFnHnTRQZSBJ_EDqnOJrQhS6vjYa1zGtHti4Qs8U1U4cqcTn-pyzL0lqltfsdGbaBU5UE4RcsiB2eKzhs',
+        'eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJhdWQiOiIzMDAzMzUiLCJqdGkiOiJhYWYzYzA4NDQwZGM2ZTg1ZGI2ZDYzMWJjMjI0OTQ0N2RlZDg0ZDhmZTQzYjY3YmY3MzRhYjMyYzU0MTVmNjMyZjExZjgyYzVjZTc0ZmJiMyIsImlhdCI6MTc1NjI0NDcxMywibmJmIjoxNzU2MjQ0NzEzLCJleHAiOjE3ODc3ODA3MTMsInN1YiI6IiIsInNjb3BlcyI6W119.ZxFi5FYgSuSdpcBkISqIMi343bZF0BheFp84peMCClIpwrclGv2xgWOhuaGN7lI6UfJ8DaWZOfIREjCrKXT-e0CUCmeXiVSNcqDJH6_zRhyBrAEtR0brfyNsbdhoblqbwUnTeuNgbHmUtjzmlj7YKVsQ2Vpc4d2X8GgByn9j8ctm4P90mFcHDYgKSqytyfk8x7e1KHZqyKINS3FMEkfmBSc-P04ZF5qCmwxz5paX2ch0tbHh2PZstRVuhU0Qb8ka3XUC5kCXndorrwMcqWBg05G9BF6356dHEmm39rmEq4Xrjfk7D0wcrzSf8QMmEzaDneLy308bufBlqtjqSonTXHRwzvKUrn_zzF8vNFa_KL2UqAiDRWkj4sMKITqPWhSMGEeO5L7ySXs_Iz0iidW8Mu9qW6S1SYT_lLcnTabvyAlzSWPZEuWghEfUPR79xenRAnPRUYvcsDg7BdnCAe9oEIY-Q8pdXTVG-O9aejtVKe1CnzY9gocdmLGWZKCiHZ9Of0cfdUOBWu0yKHObG2IThRID8U8D2GrvYIGX4L3sxJ9yazcUtVJnPQgjiBPhcA1szcB6HrjDlrCx83C6SO50vFeqizgaonRK0jNiPzEvLEFl-x4D6gpK2mziTSYfKLaCyRDhfGlehgENLGxKVnGy_Iqrd0iqUuNeqEhn3V_9CBI',
       tipo: '1',
       tipof: 'PRUEBA',
     },
   },
 ]
+// const richard50 = [
+//   {
+//     ok: 'success',
+//     login: 'usuario',
+//     idusuario: '03afdbd66e7929b125f8597834fa83a4',
+//     usuario: 'richard50',
+//     nombre: 'Richard Ayca Acuña',
+//     cargo: 'Soporte',
+//     idarea: 'f0935e4cd5920aa6c7c996a5ee53a70f',
+//     idcargo: '73278a4a86960eeb576a8fd4c9ec6997',
+//     area: 'Sistemas',
+//     empresa: {
+//       nombre: 'Comercio e Inversiones YF SRL',
+//       idempresa: 'c0c7c76d30bd3dcaefc96f40275bdc0a',
+//       nit: '123456789',
+//       fex: '2030-09-09',
+//       telefono: '+591 12345678',
+//       direccion: 'Av. Ayacucho N° 218 esq. Gral Achá',
+//       logo: 'logos/yof_d67fc1b140.jpg',
+//       email: 'info@yofinanciero.com',
+//       idsucursal: 'a5bfc9e07964f8dddeb95fc584cd965d',
+//       idtn: '7',
+//       sucursal: 'Sucursal0',
+//       opais: 'Bolivia',
+//       oestado: 'Cochababma',
+//       ociudad: 'Cercado',
+//       ocelular: '+591 76548252',
+//       ositioweb: 'www.comercio.com',
+//       ocierrefiscal: '31/12',
+//       onempleador: null,
+//       onpatronal: null,
+//       idregion: 'b6d767d2f8ed5d21a44b0e5886680cb9',
+//       region: 'Cochabamba',
+//       tiponegocio: 'Comercial',
+//       tipo: '2',
+//       idtiponegocio: 'c9f0f895fb98ab9159f51fd0297e236d',
+//     },
+//     factura: {
+//       token_type: 'Bearer',
+//       expires_in: '31622400',
+//       access_token:
+//         'eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJhdWQiOiIzMDAzMzUiLCJqdGkiOiJjYjE2NDUzNTc4ZGRhYTgwNmFhMWEyNDcxMGYxZTI3OWQyODU1MGM5ZGE4MTAwNmVmNmIyYjU1YTI3MDc4ZDRjYzNjODkwZTU2NGIxZDVjNyIsImlhdCI6MTc0MjQ3NTY2NCwibmJmIjoxNzQyNDc1NjY0LCJleHAiOjE3NzQwMTE2NjQsInN1YiI6IiIsInNjb3BlcyI6W119.KFugkzjz4rXPCRsMl23sAIrDkYRuOwAJi9W0WUGg1XthO4ZvGJTsU-8ifEQYdudyIZ_b-zy49NL7fhbKoxtNVoBZbtuoYDTzCZN3Jb0Jsc3enVL_YezYr_5vA8qBBRvYdyihqTjvRQt9dYVP--QtrLp0qtQ8wP_vUyNTQh9POJUZhMd6EXjjxG_6tfgAzVOYbVty_WFU0xXDkReYLfphjqFRLPo-3vWlo5god5ixYMM55PWXLnz01bYlJREhJ-U-z46_klvgfAbdGs_EdIeBSUlYfXOn0NOWHP5Q6QlVt85ajFLByd1uv5jVW3IsDzrMkfvf1u-4YCeOkPFqU3WMvAia46nVjLnpfBNERqYEnlwmiMnNoZ2HDDiHDJyy7i8ADDGy_pS-i6SItZ6yE9Qk3MfX6xYO5bxBZXFpozSxLlVytk3qeq3tuBr9H_QXbW3G-yQzk2mHTK7iMRX8Lzm6uZuJed60MpnzekEiKQBNIWdYgp9v5BmvYHHRyvjoMn5cI2LV9RNJVKB11Z2tQHSeeY61bo9u3aGJ094v3BRpnRiIffJEP-7jo7zpvAxz3AS5bS_lFaOdfU2LboJSTAWVefTHw9JFnHnTRQZSBJ_EDqnOJrQhS6vjYa1zGtHti4Qs8U1U4cqcTn-pyzL0lqltfsdGbaBU5UE4RcsiB2eKzhs',
+//       tipo: '1',
+//       tipof: 'PRUEBA',
+//     },
+//     // factura: {
+//     //   token_type: 'undefined',
+//     //   expires_in: 'undefined',
+//     //   access_token: 'undefined',
+//     //   tipo: '0',
+//     //   tipof: 'NINGUNO',
+//     // },
+//   },
+// ]
 const test1 = [
   {
     ok: 'success',
@@ -110,9 +166,10 @@ const soporte74 = [
     area: 'Sistemas',
     empresa: {
       nombre: 'CIACNEN SRL',
+      licencia: '20240301-001',
+      fex: '2035-12-31',
       idempresa: 'ad61ab143223efbc24c7d2583be69251',
       nit: '123189023',
-      fex: '2030-09-09',
       telefono: '+591 (4) 458-8736',
       direccion: 'Calle Niceto Rodriguez Nº s/n, Zona Sarcobamba',
       logo: 'logos/yof_9ea6023fbe.jpeg',
@@ -130,6 +187,7 @@ const soporte74 = [
       idregion: 'e4da3b7fbbce2345d7772b0674a318d5',
       region: 'Bolivia',
       tiponegocio: 'Industrial',
+      idtn: '7',
       tipo: '2',
       idtiponegocio: '8f14e45fceea167a5a36dedd4bea2543',
     },
@@ -137,7 +195,7 @@ const soporte74 = [
       token_type: 'Bearer',
       expires_in: '31536000',
       access_token:
-        'eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJhdWQiOiIzMDAyMzIiLCJqdGkiOiJiMGM2MzI0Zjc2YTdiZmIwNzliYWRiMjIxM2E3MTQzMmFjYjg2MjlhMzA2YzZmZTY0ODAxNzBlNTFmMTRlYWU4ZTkwZDk3N2NjMDM2MTdmNCIsImlhdCI6MTcyNzQ3NTUyMywibmJmIjoxNzI3NDc1NTIzLCJleHAiOjE3NTkwMTE1MjMsInN1YiI6IiIsInNjb3BlcyI6W119.llLu_9D8mxSjwd3YsvNaFf5-OJWq3IUi5OnrYpwxLd8z-TNh4KlRpAS1RSmphcnc-wtaPoUsv5IisoXCrIvlC6vgLeCFgu92p3pijETH7usOALsFIPDxAgsAvVAxRvuDWP_CdpxH_2VbpmaLLYVtWGAu3nCvCGIC5JczO0ykxli_ruEN_WtcRVDWBig6n40MgQUks__1xRXw-ZG8Y1C6_Y2xJ87xP-5nJXalFbyj6PVK_GBx1Gw6e_So5X5Fl_RLrIqJ4eCkcalkezc3GRnEswusRx6H__93u2vWD1v7Wp5EkVGrGhU0cmSt_FTL753WfuKXfBW-gAFbAj3OMDG5yagd8MU3TvO2fkOdEw0CGhs4bTN9b6QVBygFXA1-k68wTBNyu7xkfN5-4u0YsglUm6uJd9p6gnfAg6mqpg6F7BDM3kNX_0JEaNlCauUhc-30fx83mVeS3d4r8jtEFjKGd2c4QSWn-_H-fR742J7rPOC_8BA8SmO10zUVWBiNkCZ1tsdDsmPyqIVFvXFBfw6VZHtHlFCKxOSiaoJRF--bO04XzLBQRm2jXsKMLgSg6Jd1lZQ-8Y8_OguMqMZd2GVnHezk5OSKDOafUQjiGlGNDGqQPJfw8I7t3b3_Jzgd0ZmsNVUdRd7uS1xrS_NOzff1uLfCPUxJObK6HPfqudZFoSQ',
+        'eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJhdWQiOiIzMDAyMzIiLCJqdGkiOiJhNjM0NjIyMDdhOThkMDVjZDkzNWJkNDdiYjgwMzQ5MTgyZTIwODRmNWEyOTUxMGJiZGI5MTVhOTEyYTk3ZDM4ODg4MTRhY2ZlODE0MzgyMSIsImlhdCI6MTc1OTE1MzkzMywibmJmIjoxNzU5MTUzOTMzLCJleHAiOjE3OTA2ODk5MzMsInN1YiI6IiIsInNjb3BlcyI6W119.SBaYAQX50-0wa1UmHSCXabfoav9tBLLB_In9yt4IeJ7_hvopXc40E5Zh8UrHxzHPdgiQxODGSAg7WxVbFKqUc4IQzg1zhGsDDhmimJqJYPuwF-Y9mNMQHY3UM3QXSl5T0822Rf41YKBiDi3wku0BMoErIyupICG7ZiCnRqwlEs_hN-KZA23v0WT1eDstcivut6ahpKu3__XpDyf4taKIQEzYQTqOMbqN7FoupQTCTUn293U6a6UPG1ZG75-qnTsVr9poJuUii9395YWA9fhoqF09LLDZP2Qj_bsF2Oxv0PE_rlIJjUyo3NnrY_stgpbnvpASgFL_qQnQVWCHS80uEH4CsDnoB0p7yR0XrlQrGKVlCZtn-VUWH92E3PGDMCgaXMcJMZvjNdnlKOcKAGnrykpsFMQEl1057D_h29L2qep7X-A8xaHXurZAtXbkqKArFv75k4ID_YM4AN_QEeTi4FovijDYOEM4g4NJHyPi9QESD1y6Vp1yh7crFT9hPxVtBoPP3o4l0UkAGvrZRb5It2cu5dXpupvXQ0Y7HkWSZX-dcT_b9hLn7H0mTQZ5A2Cl8kIWTxX5v0-yENXfPvOfWeIdVG1YyQN_fwqMvfHOBGC5s4eMqSRWROcDhNkMVz0ET0TkoiO7X6gdW_DH2mWzQWDmHCRu6dC-_ew6cwNv7MQ',
       tipo: '2',
       tipof: 'FACTURA',
     },
@@ -236,488 +294,491 @@ const test75 = [
   },
 ]
 
+const test75VSoft = [
+  {
+    ok: 'success',
+    login: 'usuario',
+    idusuario: 'f457c545a9ded88f18ecee47145a72c0',
+    usuario: 'test75',
+    nombre: 'Armando Pruebas Válidas',
+    cargo: 'Tester',
+    idarea: 'c16a5320fa475530d9583c34fd356ef5',
+    idcargo: 'a5bfc9e07964f8dddeb95fc584cd965d',
+    area: 'Sistemas',
+    empresa: {
+      nombre: 'Compañía Industrial - PRUEBA',
+      idempresa: 'd09bf41544a3365a46c9077ebb5e35c3',
+      nit: '15986325',
+      telefono: '+591 4568525',
+      direccion: 'Av. Oquendo N° 456',
+      logo: 'logos/yof_0acf518b0f.png',
+      email: 'exito@gmail.com',
+      idsucursal: '02e74f10e0327ad868d138f2b4fdd6f0',
+      sucursal: 'Central',
+      opais: 'Bolivia',
+      oestado: 'Cochabamba',
+      ociudad: 'Cercado',
+      ocelular: '72716783',
+      ositioweb: 'www.exito.com',
+      ocierrefiscal: '31/3',
+      onempleador: '1656563-023',
+      onpatronal: '135651323',
+      idregion: '6512bd43d9caa6e02c990b0a82652dca',
+      region: 'Bolivia',
+      tiponegocio: 'Industrial',
+      tipo: '2',
+      idtiponegocio: '8f14e45fceea167a5a36dedd4bea2543',
+    },
+    factura: {
+      token_type: '',
+      expires_in: '',
+      access_token: '',
+      tipo: '',
+      tipof: '',
+    },
+  },
+]
+
 const menurichard50 = [
   {
     modulo: '3',
     menu: [
       {
-        usuario: '03afdbd66e7929b125f8597834fa83a4',
-        titulo: 'Administración-Atributos',
-        codigo: 'opcionesocultas',
-        submenu: [
-          {
-            titulo: 'Administración-Asignación-Almacén',
-            codigo: 'asignaralmacen-03afdbd66e7929b125f8597834fa83a4',
-            permiso: '1111',
-          },
-          {
-            titulo: 'Administración - Asignación - Punto de Venta',
-            codigo: 'asignarpuntodeventa-03afdbd66e7929b125f8597834fa83a4',
-            permiso: '1111',
-          },
-          {
-            titulo: 'Administración - Asignación - Producto',
-            codigo: 'asignarproductos-03afdbd66e7929b125f8597834fa83a4',
-            permiso: '1111',
-          },
-          {
-            titulo: 'Administración - Creación - Almacén',
-            codigo: 'registraralmacen-03afdbd66e7929b125f8597834fa83a4',
-            permiso: '1111',
-          },
-          {
-            titulo: 'Administración - Creación - Punto de Venta',
-            codigo: 'registrarpuntodeventa-03afdbd66e7929b125f8597834fa83a4',
-            permiso: '1111',
-          },
-          {
-            titulo: 'Administración - Creación - Producto o Servic',
-            codigo: 'registrarproductos-03afdbd66e7929b125f8597834fa83a4',
-            permiso: '1111',
-          },
-          {
-            titulo: 'Administración - Precios - Costo Unitario',
-            codigo: 'costounitario-03afdbd66e7929b125f8597834fa83a4',
-            permiso: '1111',
-          },
-          {
-            titulo: 'Administración - Precios - Categorías de Prec',
-            codigo: 'categoriasdeprecio-03afdbd66e7929b125f8597834fa83a4',
-            permiso: '1111',
-          },
-          {
-            titulo: 'Administración - Precios - Precios Sugeridos',
-            codigo: 'preciossugeridos-03afdbd66e7929b125f8597834fa83a4',
-            permiso: '1111',
-          },
-          {
-            titulo: 'Administración - Precios - Reporte de Costos ',
-            codigo: 'reportedepreciosbase-03afdbd66e7929b125f8597834fa83a4',
-            permiso: '1111',
-          },
-          {
-            titulo: 'Administración - Precios - Reporte de Categor',
-            codigo: 'reportedecategoriasdeprecio-03afdbd66e7929b125f8597834fa83a4',
-            permiso: '1111',
-          },
-          {
-            titulo: 'Adm-Reg.ClProv-Registro de Clientes',
-            codigo: 'registrodecliente-03afdbd66e7929b125f8597834fa83a4',
-            permiso: '1111',
-          },
-          {
-            titulo: 'Adm-RegCliPro-Registrar Proveedor',
-            codigo: 'registrarproveedor-03afdbd66e7929b125f8597834fa83a4',
-            permiso: '1111',
-          },
-          {
-            titulo: 'Adm-Autorizar-Pedido',
-            codigo: 'gestionPedido-03afdbd66e7929b125f8597834fa83a4',
-            permiso: '1111',
-          },
-          {
-            titulo: 'Adm-Autorizar-Ventas Pendientes',
-            codigo: 'procesarventaspendientes-03afdbd66e7929b125f8597834fa83a4',
-            permiso: '1111',
-          },
-          {
-            titulo: 'Adm-Autorizar-Compras',
-            codigo: 'autorizarcompra-03afdbd66e7929b125f8597834fa83a4',
-            permiso: '1111',
-          },
-
-          {
-            titulo: 'Adm-Campana-Crear Campañas',
-            codigo: 'crearcampanas-03afdbd66e7929b125f8597834fa83a4',
-            permiso: '1111',
-          },
-          {
-            titulo: 'Adm-Campana-Rep. Campañas',
-            codigo: 'reportedecampanas-03afdbd66e7929b125f8597834fa83a4',
-            permiso: '1111',
-          },
-          {
-            titulo: 'Adm-Campana-Rep. Ventas',
-            codigo: 'reportedeventasporcampanas-03afdbd66e7929b125f8597834fa83a4',
-            permiso: '1111',
-          },
-        ],
-      },
-      {
-        usuario: '03afdbd66e7929b125f8597834fa83a4',
-        titulo: 'Ventas-Atributos',
-        codigo: 'opcionesocultas',
-        submenu: [
-          {
-            titulo: 'V-Generar Venta-Registrar Venta',
-            codigo: 'registrarventaoculto-03afdbd66e7929b125f8597834fa83a4',
-            permiso: '1111',
-          },
-          {
-            titulo: 'V-Generar Venta-Registrar Cotización',
-            codigo: 'registrarcotizacionoculto-03afdbd66e7929b125f8597834fa83a4',
-            permiso: '1111',
-          },
-          {
-            titulo: 'V - Generar Venta - Rep. de Ventas',
-            codigo: 'reportedeventas-03afdbd66e7929b125f8597834fa83a4',
-            permiso: '1111',
-          },
-          {
-            titulo: 'V-Generar Venta-Rep. de Cotizacion',
-            codigo: 'reportedecotizacionesocultas-03afdbd66e7929b125f8597834fa83a4',
-            permiso: '1111',
-          },
-          {
-            titulo: 'V-Generar Venta-Rep. Productos vendidos',
-            codigo: 'reporteproductosvendidosindividual-03afdbd66e7929b125f8597834fa83a4',
-            permiso: '1111',
-          },
-          {
-            titulo: 'V - Generar Venta - Kardex',
-            codigo: 'kardex-03afdbd66e7929b125f8597834fa83a4',
-            permiso: '1111',
-          },
-          {
-            titulo: 'V-Cuentas por Cobrar-Rep. Ctas Cobrar',
-            codigo: 'reportecuentasporcobrarocultas-03afdbd66e7929b125f8597834fa83a4',
-            permiso: '1111',
-          },
-          {
-            titulo: 'V- Cuentas por Cobra -Cobro Cuentas',
-            codigo: 'cuentasporcobrarocultas-03afdbd66e7929b125f8597834fa83a4',
-            permiso: '1111',
-          },
-          {
-            titulo: 'V - Cuentas por Cobrar - Rep. de Cobro',
-            codigo: 'reportecuentasxpagarxperiodo-03afdbd66e7929b125f8597834fa83a4',
-            permiso: '1111',
-          },
-          {
-            titulo: 'V - Contingencias - Anulaciones',
-            codigo: 'registraranulaciones-03afdbd66e7929b125f8597834fa83a4',
-            permiso: '1111',
-          },
-          {
-            titulo: 'V - Contingencias - Registro de Extravío',
-            codigo: 'registrodeextravios-03afdbd66e7929b125f8597834fa83a4',
-            permiso: '1111',
-          },
-          {
-            titulo: 'V - Contingencias - Registro de Mermas',
-            codigo: 'registrodemermas-03afdbd66e7929b125f8597834fa83a4',
-            permiso: '1111',
-          },
-          {
-            titulo: 'V-Movimiento-Movimientos',
-            codigo: 'movimientos-03afdbd66e7929b125f8597834fa83a4',
-            permiso: '1111',
-          },
-          {
-            titulo: 'V-Movimiento-Rep. Movimientos',
-            codigo: 'reportedemovimientos-03afdbd66e7929b125f8597834fa83a4',
-            permiso: '1111',
-          },
-          {
-            titulo: 'V-Contingencias-Rep. de Extravíos',
-            codigo: 'reportedeextravios-03afdbd66e7929b125f8597834fa83a4',
-            permiso: '1111',
-          },
-          {
-            titulo: 'V-Contingencias-Rep. de Mermas',
-            codigo: 'reportedemermas-03afdbd66e7929b125f8597834fa83a4',
-            permiso: '1111',
-          },
-        ],
-      },
-      {
-        usuario: '03afdbd66e7929b125f8597834fa83a4',
-        titulo: 'Configuración-Atributos',
-        codigo: 'opcionesocultas',
-        submenu: [
-          {
-            titulo: 'Configuracion-General-Tipo Almacén',
-            codigo: 'tipodealmacen-03afdbd66e7929b125f8597834fa83a4',
-            permiso: '1111',
-          },
-          {
-            titulo: 'Configuración-General-Divisas',
-            codigo: 'divisas-03afdbd66e7929b125f8597834fa83a4',
-            permiso: '1111',
-          },
-          {
-            titulo: 'Configuración-General-Leyenda Proforma',
-            codigo: 'leyendaproforma-03afdbd66e7929b125f8597834fa83a4',
-            permiso: '1111',
-          },
-          {
-            titulo: 'Configuración-Producto-Categoría',
-            codigo: 'categoriadeproducto-03afdbd66e7929b125f8597834fa83a4',
-            permiso: '1111',
-          },
-          {
-            titulo: 'Configuración-Producto-Estado',
-            codigo: 'estadodeproducto-03afdbd66e7929b125f8597834fa83a4',
-            permiso: '1111',
-          },
-          {
-            titulo: 'Configuración-Producto-Unidad',
-            codigo: 'unidaddeproducto-03afdbd66e7929b125f8597834fa83a4',
-            permiso: '1111',
-          },
-          {
-            titulo: 'Configuración-Producto-Característica',
-            codigo: 'caracteristicadeproducto-03afdbd66e7929b125f8597834fa83a4',
-            permiso: '1111',
-          },
-          {
-            titulo: 'Configuración-Producto-Parámetros de obsolesc',
-            codigo: 'parametrosdeobsolescencia-03afdbd66e7929b125f8597834fa83a4',
-            permiso: '1111',
-          },
-          {
-            titulo: 'Configuración-Cliente-Tipo de Cliente',
-            codigo: 'tiposdeclientes-03afdbd66e7929b125f8597834fa83a4',
-            permiso: '1111',
-          },
-          {
-            titulo: 'Configuración-Cliente-Canal de Venta',
-            codigo: 'canalesdeventa-03afdbd66e7929b125f8597834fa83a4',
-            permiso: '1111',
-          },
-        ],
-      },
-      {
-        usuario: '03afdbd66e7929b125f8597834fa83a4',
+        usuario: 'eb160de1de89d9058fcb0b968dbbbd68',
         titulo: 'Configuración',
         codigo: 'configuraciongeneral',
         submenu: [
           {
             titulo: 'General',
-            codigo: 'configuraciongeneral-03afdbd66e7929b125f8597834fa83a4',
+            codigo: 'configuraciongeneral-eb160de1de89d9058fcb0b968dbbbd68',
             permiso: '1111',
           },
           {
             titulo: 'Producto o Servicio',
-            codigo: 'configuracionproducto-03afdbd66e7929b125f8597834fa83a4',
+            codigo: 'configuracionproducto-eb160de1de89d9058fcb0b968dbbbd68',
             permiso: '1111',
           },
           {
             titulo: 'Cliente',
-            codigo: 'configuracioncliente-03afdbd66e7929b125f8597834fa83a4',
+            codigo: 'configuracioncliente-eb160de1de89d9058fcb0b968dbbbd68',
             permiso: '1111',
           },
           {
             titulo: 'Apis',
-            codigo: 'generartokensapis-03afdbd66e7929b125f8597834fa83a4',
+            codigo: 'generartokensapis-eb160de1de89d9058fcb0b968dbbbd68',
             permiso: '1111',
           },
         ],
       },
       {
-        usuario: '03afdbd66e7929b125f8597834fa83a4',
+        usuario: 'eb160de1de89d9058fcb0b968dbbbd68',
         titulo: 'Administración',
         codigo: 'administracion',
         submenu: [
           {
             titulo: 'Creación',
-            codigo: 'administracioncreacion-03afdbd66e7929b125f8597834fa83a4',
+            codigo: 'administracioncreacion-eb160de1de89d9058fcb0b968dbbbd68',
             permiso: '1111',
           },
           {
             titulo: 'Asignación',
-            codigo: 'administracionasignacion-03afdbd66e7929b125f8597834fa83a4',
+            codigo: 'administracionasignacion-eb160de1de89d9058fcb0b968dbbbd68',
             permiso: '1111',
           },
           {
             titulo: 'Precios',
-            codigo: 'administracionprecios-03afdbd66e7929b125f8597834fa83a4',
+            codigo: 'administracionprecios-eb160de1de89d9058fcb0b968dbbbd68',
             permiso: '1111',
           },
           {
             titulo: 'Registrar Cliente o Proveedor',
-            codigo: 'registrarclienteoproveedor-03afdbd66e7929b125f8597834fa83a4',
-            permiso: '1111',
-          },
-          {
-            titulo: 'Cierre Caja',
-            codigo: 'cierrecaja-03afdbd66e7929b125f8597834fa83a4',
+            codigo: 'registrarclienteoproveedor-eb160de1de89d9058fcb0b968dbbbd68',
             permiso: '1111',
           },
           {
             titulo: 'Autorizaciones',
-            codigo: 'admautorizaciones-03afdbd66e7929b125f8597834fa83a4',
+            codigo: 'admautorizaciones-eb160de1de89d9058fcb0b968dbbbd68',
             permiso: '1111',
           },
           {
-            titulo: 'Campañas',
-            codigo: 'gestioncampanas-03afdbd66e7929b125f8597834fa83a4',
+            titulo: 'Cierre Caja',
+            codigo: 'cierrecaja-eb160de1de89d9058fcb0b968dbbbd68',
+            permiso: '1111',
+          },
+          {
+            titulo: ' Crear Campañas',
+            codigo: 'crearcampanas-eb160de1de89d9058fcb0b968dbbbd68',
             permiso: '1111',
           },
         ],
       },
-
       {
-        usuario: '03afdbd66e7929b125f8597834fa83a4',
+        usuario: 'eb160de1de89d9058fcb0b968dbbbd68',
         titulo: 'Compras',
         codigo: 'compras',
         submenu: [
           {
-            titulo: 'Pedidos',
-            codigo: 'pedidos-03afdbd66e7929b125f8597834fa83a4',
+            titulo: 'Generar Pedido',
+            codigo: 'generarpedido-eb160de1de89d9058fcb0b968dbbbd68',
             permiso: '1111',
           },
           {
-            titulo: 'Compras',
-            codigo: 'gestioncompra-03afdbd66e7929b125f8597834fa83a4',
+            titulo: 'Registrar Compra o Producción',
+            codigo: 'registrarcompra-eb160de1de89d9058fcb0b968dbbbd68',
             permiso: '1111',
           },
         ],
       },
       {
-        usuario: '03afdbd66e7929b125f8597834fa83a4',
-        titulo: 'Compras-Atributos',
-        codigo: 'opcionesocultas',
-        submenu: [
-          {
-            titulo: '-Compras-Registrar Compras',
-            codigo: 'registrarcompra-03afdbd66e7929b125f8597834fa83a4',
-            permiso: '1111',
-          },
-          {
-            titulo: '-Compras-Compras Desglosado',
-            codigo: 'reporteproductoscomprados-03afdbd66e7929b125f8597834fa83a4',
-            permiso: '1111',
-          },
-          {
-            titulo: '-Compras-Rep. Compras',
-            codigo: 'reportedecompras-03afdbd66e7929b125f8597834fa83a4',
-            permiso: '1111',
-          },
-          {
-            titulo: '-Pedidos-Generar Pedido',
-            codigo: 'generarpedido-03afdbd66e7929b125f8597834fa83a4',
-            permiso: '1111',
-          },
-          {
-            titulo: '-Pedidos-Rep. Pedidos',
-            codigo: 'reportedepedidos-03afdbd66e7929b125f8597834fa83a4',
-            permiso: '1111',
-          },
-        ],
-      },
-      {
-        usuario: '03afdbd66e7929b125f8597834fa83a4',
+        usuario: 'eb160de1de89d9058fcb0b968dbbbd68',
         titulo: 'Ventas',
         codigo: 'ventas',
         submenu: [
           {
             titulo: 'Generar Venta',
-            codigo: 'registrarventa-03afdbd66e7929b125f8597834fa83a4',
+            codigo: 'registrarventa-eb160de1de89d9058fcb0b968dbbbd68',
             permiso: '1111',
           },
           {
             titulo: 'Contingencia',
-            codigo: 'contingencias-03afdbd66e7929b125f8597834fa83a4',
+            codigo: 'contingencias-eb160de1de89d9058fcb0b968dbbbd68',
             permiso: '1111',
           },
           {
             titulo: 'Cuentas por Cobrar',
-            codigo: 'cuentasporcobrar-03afdbd66e7929b125f8597834fa83a4',
+            codigo: 'cuentasporcobrar-eb160de1de89d9058fcb0b968dbbbd68',
             permiso: '1111',
           },
           {
             titulo: 'Movimientos',
-            codigo: 'gestionmovimientos-03afdbd66e7929b125f8597834fa83a4',
+            codigo: 'movimientos-eb160de1de89d9058fcb0b968dbbbd68',
             permiso: '1111',
           },
           {
             titulo: 'Inventario Externo',
-            codigo: 'inventarioexterno-03afdbd66e7929b125f8597834fa83a4',
+            codigo: 'inventarioexterno-eb160de1de89d9058fcb0b968dbbbd68',
             permiso: '1111',
           },
         ],
       },
       {
-        usuario: '03afdbd66e7929b125f8597834fa83a4',
+        usuario: 'eb160de1de89d9058fcb0b968dbbbd68',
         titulo: 'Reportes',
         codigo: 'reportes',
         submenu: [
           {
+            titulo: 'Compras Desglosado',
+            codigo: 'reporteproductoscomprados-eb160de1de89d9058fcb0b968dbbbd68',
+            permiso: '1111',
+          },
+          {
             titulo: 'Reporte Stock de Productos Individual',
-            codigo: 'reportestockdeproductosindividual-03afdbd66e7929b125f8597834fa83a4',
+            codigo: 'reportestockdeproductosindividual-eb160de1de89d9058fcb0b968dbbbd68',
             permiso: '1111',
           },
           {
             titulo: 'Reporte Stock de Productos Global',
-            codigo: 'reportestockdeproductosglobal-03afdbd66e7929b125f8597834fa83a4',
+            codigo: 'reportestockdeproductosglobal-eb160de1de89d9058fcb0b968dbbbd68',
             permiso: '1111',
           },
           {
             titulo: 'Reporte de Indice de Rotación',
-            codigo: 'reportedeindicederotacion-03afdbd66e7929b125f8597834fa83a4',
+            codigo: 'reportedeindicederotacion-eb160de1de89d9058fcb0b968dbbbd68',
             permiso: '1111',
           },
-
+          {
+            titulo: 'Reporte de Ventas por Campañas',
+            codigo: 'reportedeventasporcampanas-eb160de1de89d9058fcb0b968dbbbd68',
+            permiso: '1111',
+          },
           {
             titulo: 'Reporte de Caducidad de Productos',
-            codigo: 'reportedecaducidaddeproductos-03afdbd66e7929b125f8597834fa83a4',
+            codigo: 'reportedecaducidaddeproductos-eb160de1de89d9058fcb0b968dbbbd68',
             permiso: '1111',
           },
           {
             titulo: 'Reporte Productos vendidos Global',
-            codigo: 'reporteproductosvendidosglobal-03afdbd66e7929b125f8597834fa83a4',
+            codigo: 'reporteproductosvendidosglobal-eb160de1de89d9058fcb0b968dbbbd68',
             permiso: '1111',
           },
         ],
       },
       {
-        usuario: '03afdbd66e7929b125f8597834fa83a4',
+        usuario: 'eb160de1de89d9058fcb0b968dbbbd68',
         titulo: 'Atributos',
         codigo: 'opcionesocultas',
         submenu: [
           {
-            titulo: 'Rep. de Clientes',
-            codigo: 'reportedeclientes-03afdbd66e7929b125f8597834fa83a4',
+            titulo: 'Reporte de Pedidos',
+            codigo: 'reportedepedidos-eb160de1de89d9058fcb0b968dbbbd68',
             permiso: '1111',
           },
-
+          {
+            titulo: 'Reporte de Clientes',
+            codigo: 'reportedeclientes-eb160de1de89d9058fcb0b968dbbbd68',
+            permiso: '1111',
+          },
+          {
+            titulo: 'Reporte de Campañas',
+            codigo: 'reportedecampanas-eb160de1de89d9058fcb0b968dbbbd68',
+            permiso: '1111',
+          },
+          {
+            titulo: 'Reporte de Extravíos',
+            codigo: 'reportedeextravios-eb160de1de89d9058fcb0b968dbbbd68',
+            permiso: '1111',
+          },
+          {
+            titulo: 'Reporte de Mermas',
+            codigo: 'reportedemermas-eb160de1de89d9058fcb0b968dbbbd68',
+            permiso: '1111',
+          },
+          {
+            titulo: 'Reporte de Movimientos',
+            codigo: 'reportedemovimientos-eb160de1de89d9058fcb0b968dbbbd68',
+            permiso: '1111',
+          },
+          {
+            titulo: 'Reporte de Compras',
+            codigo: 'reportedecompras-eb160de1de89d9058fcb0b968dbbbd68',
+            permiso: '1111',
+          },
           {
             titulo: 'Reporte - Reporte de Índice de Rotación - Alm',
-            codigo: 'reportedeindicederotacionporalmacen-03afdbd66e7929b125f8597834fa83a4',
+            codigo: 'reportedeindicederotacionporalmacen-eb160de1de89d9058fcb0b968dbbbd68',
             permiso: '1111',
           },
           {
             titulo: 'Reporte - Reporte de Índice de Rotación - Glo',
-            codigo: 'reportedeindicederotacionglobal-03afdbd66e7929b125f8597834fa83a4',
+            codigo: 'reportedeindicederotacionglobal-eb160de1de89d9058fcb0b968dbbbd68',
             permiso: '1111',
           },
           {
             titulo: 'Reporte - Reporte de Índice de Rotación - Cli',
-            codigo: 'reportedeindicederotacionporcliente-03afdbd66e7929b125f8597834fa83a4',
+            codigo: 'reportedeindicederotacionporcliente-eb160de1de89d9058fcb0b968dbbbd68',
             permiso: '1111',
           },
-
           {
             titulo: 'Estadísticas',
-            codigo: 'dashboard-03afdbd66e7929b125f8597834fa83a4',
+            codigo: 'dashboard-eb160de1de89d9058fcb0b968dbbbd68',
             permiso: '1111',
           },
         ],
       },
       {
-        usuario: '03afdbd66e7929b125f8597834fa83a4',
+        usuario: 'eb160de1de89d9058fcb0b968dbbbd68',
         titulo: 'Configuración Factura',
         codigo: 'configuracionfactura',
         submenu: [
           {
             titulo: 'Leyendas de Facturas',
-            codigo: 'leyendasdefacturas-03afdbd66e7929b125f8597834fa83a4',
+            codigo: 'leyendasdefacturas-eb160de1de89d9058fcb0b968dbbbd68',
             permiso: '1111',
           },
           {
             titulo: 'Métodos de Pago de Facturas',
-            codigo: 'metodosdepagodefacturas-03afdbd66e7929b125f8597834fa83a4',
+            codigo: 'metodosdepagodefacturas-eb160de1de89d9058fcb0b968dbbbd68',
+            permiso: '1111',
+          },
+        ],
+      },
+      {
+        usuario: 'eb160de1de89d9058fcb0b968dbbbd68',
+        titulo: 'Configuración-Atributos',
+        codigo: 'opcionesocultas',
+        submenu: [
+          {
+            titulo: 'Configuracion-General-Tipo Almacén',
+            codigo: 'tipodealmacen-eb160de1de89d9058fcb0b968dbbbd68',
+            permiso: '1111',
+          },
+          {
+            titulo: 'Configuración-General-Divisas',
+            codigo: 'divisas-eb160de1de89d9058fcb0b968dbbbd68',
+            permiso: '1111',
+          },
+          {
+            titulo: 'Configuración-General-Leyenda Proforma',
+            codigo: 'leyendaproforma-eb160de1de89d9058fcb0b968dbbbd68',
+            permiso: '1111',
+          },
+          {
+            titulo: 'Configuración-Producto-Categoría',
+            codigo: 'categoriadeproducto-eb160de1de89d9058fcb0b968dbbbd68',
+            permiso: '1111',
+          },
+          {
+            titulo: 'Configuración-Producto-Estado',
+            codigo: 'estadodeproducto-eb160de1de89d9058fcb0b968dbbbd68',
+            permiso: '1111',
+          },
+          {
+            titulo: 'Configuración-Producto-Unidad',
+            codigo: 'unidaddeproducto-eb160de1de89d9058fcb0b968dbbbd68',
+            permiso: '1111',
+          },
+          {
+            titulo: 'Configuración-Producto-Característica',
+            codigo: 'caracteristicadeproducto-eb160de1de89d9058fcb0b968dbbbd68',
+            permiso: '1111',
+          },
+          {
+            titulo: 'Configuración-Producto-Parámetros de obsolesc',
+            codigo: 'parametrosdeobsolescencia-eb160de1de89d9058fcb0b968dbbbd68',
+            permiso: '1111',
+          },
+          {
+            titulo: 'Configuración-Cliente-Tipo de Cliente',
+            codigo: 'tiposdeclientes-eb160de1de89d9058fcb0b968dbbbd68',
+            permiso: '1111',
+          },
+          {
+            titulo: 'Configuración-Cliente-Canal de Venta',
+            codigo: 'canalesdeventa-eb160de1de89d9058fcb0b968dbbbd68',
+            permiso: '1111',
+          },
+        ],
+      },
+      {
+        usuario: 'eb160de1de89d9058fcb0b968dbbbd68',
+        titulo: 'Administración-Atributos',
+        codigo: 'opcionesocultas',
+        submenu: [
+          {
+            titulo: 'Adm-Asignación-Almacén',
+            codigo: 'asignaralmacen-eb160de1de89d9058fcb0b968dbbbd68',
+            permiso: '1111',
+          },
+          {
+            titulo: 'Adm - Asignación - Punto de Venta',
+            codigo: 'asignarpuntodeventa-eb160de1de89d9058fcb0b968dbbbd68',
+            permiso: '1111',
+          },
+          {
+            titulo: 'Adm - Asignación - Producto',
+            codigo: 'asignarproductos-eb160de1de89d9058fcb0b968dbbbd68',
+            permiso: '1111',
+          },
+          {
+            titulo: 'Adm - Creación - Almacén',
+            codigo: 'registraralmacen-eb160de1de89d9058fcb0b968dbbbd68',
+            permiso: '1111',
+          },
+          {
+            titulo: 'Adm - Creación - Punto de Venta',
+            codigo: 'registrarpuntodeventa-eb160de1de89d9058fcb0b968dbbbd68',
+            permiso: '1111',
+          },
+          {
+            titulo: 'Adm-Creación-Producto o Servicio',
+            codigo: 'registrarproductos-eb160de1de89d9058fcb0b968dbbbd68',
+            permiso: '1111',
+          },
+          {
+            titulo: 'Adm - Precios - Costo Unitario',
+            codigo: 'costounitario-eb160de1de89d9058fcb0b968dbbbd68',
+            permiso: '1111',
+          },
+          {
+            titulo: 'Adm - Precios - Categorías de Precio',
+            codigo: 'categoriasdeprecio-eb160de1de89d9058fcb0b968dbbbd68',
+            permiso: '1111',
+          },
+          {
+            titulo: 'Adm - Precios - Precios Sugeridos',
+            codigo: 'preciossugeridos-eb160de1de89d9058fcb0b968dbbbd68',
+            permiso: '1111',
+          },
+          {
+            titulo: 'Adm - Precios - Reporte de Costos ',
+            codigo: 'reportedepreciosbase-eb160de1de89d9058fcb0b968dbbbd68',
+            permiso: '1111',
+          },
+          {
+            titulo: 'Adm - Precios - Reporte de Categoría',
+            codigo: 'reportedecategoriasdeprecio-eb160de1de89d9058fcb0b968dbbbd68',
+            permiso: '1111',
+          },
+          {
+            titulo: 'Adm-Reg.ClProv-Registro de Clientes',
+            codigo: 'registrodecliente-eb160de1de89d9058fcb0b968dbbbd68',
+            permiso: '1111',
+          },
+          {
+            titulo: 'Adm-RegCliPro-Registrar Proveedor',
+            codigo: 'registrarproveedor-eb160de1de89d9058fcb0b968dbbbd68',
+            permiso: '1111',
+          },
+          {
+            titulo: 'Adm-Autorizar-Compras',
+            codigo: 'autorizarcompra-eb160de1de89d9058fcb0b968dbbbd68',
+            permiso: '1111',
+          },
+        ],
+      },
+      {
+        usuario: 'eb160de1de89d9058fcb0b968dbbbd68',
+        titulo: 'Ventas-Atributos',
+        codigo: 'opcionesocultas',
+        submenu: [
+          {
+            titulo: 'V-Generar Venta-Registrar Venta',
+            codigo: 'registrarventaoculto-eb160de1de89d9058fcb0b968dbbbd68',
+            permiso: '1111',
+          },
+          {
+            titulo: 'V-Generar Venta-Registrar Cotización',
+            codigo: 'registrarcotizacionoculto-eb160de1de89d9058fcb0b968dbbbd68',
+            permiso: '1111',
+          },
+          {
+            titulo: 'V- Generar Venta - Reporte de Ventas',
+            codigo: 'reportedeventas-eb160de1de89d9058fcb0b968dbbbd68',
+            permiso: '1111',
+          },
+          {
+            titulo: 'V- Generar Venta - Reporte de Cotizacio',
+            codigo: 'reportedecotizacionesocultas-eb160de1de89d9058fcb0b968dbbbd68',
+            permiso: '1111',
+          },
+          {
+            titulo: 'V- Generar Venta - Reporte  Productos v',
+            codigo: 'reporteproductosvendidosindividual-eb160de1de89d9058fcb0b968dbbbd68',
+            permiso: '1111',
+          },
+          {
+            titulo: 'V- Generar Venta - Kardex',
+            codigo: 'kardex-eb160de1de89d9058fcb0b968dbbbd68',
+            permiso: '1111',
+          },
+          {
+            titulo: 'V-Cuentas por Cobrar-Reporte Ctas. Cobrar',
+            codigo: 'reportecuentasporcobrarocultas-eb160de1de89d9058fcb0b968dbbbd68',
+            permiso: '1111',
+          },
+          {
+            titulo: 'V- Cuentas por Cobra -Cobro Cuentas',
+            codigo: 'cuentasporcobrarocultas-eb160de1de89d9058fcb0b968dbbbd68',
+            permiso: '1111',
+          },
+          {
+            titulo: 'V- Cuentas por Cobrar - Reporte de Cobro',
+            codigo: 'reportecuentasxpagarxperiodo-eb160de1de89d9058fcb0b968dbbbd68',
+            permiso: '1111',
+          },
+          {
+            titulo: 'V- Contingencias - Anulaciones',
+            codigo: 'registraranulaciones-eb160de1de89d9058fcb0b968dbbbd68',
+            permiso: '1111',
+          },
+          {
+            titulo: 'V- Contingencias - Registro de Extravío',
+            codigo: 'registrodeextravios-eb160de1de89d9058fcb0b968dbbbd68',
+            permiso: '1111',
+          },
+          {
+            titulo: 'V- Contingencias - Registro de Mermas',
+            codigo: 'registrodemermas-eb160de1de89d9058fcb0b968dbbbd68',
             permiso: '1111',
           },
         ],
@@ -725,6 +786,505 @@ const menurichard50 = [
     ],
   },
 ]
+// const menurichard50 = [
+//   {
+//     modulo: '3',
+//     menu: [
+//       {
+//         usuario: '03afdbd66e7929b125f8597834fa83a4',
+//         titulo: 'Administración-Atributos',
+//         codigo: 'opcionesocultas',
+//         submenu: [
+//           {
+//             titulo: 'Adm-Asignación-Almacén',
+//             codigo: 'asignaralmacen-03afdbd66e7929b125f8597834fa83a4',
+//             permiso: '1111',
+//           },
+//           {
+//             titulo: 'Adm - Asignación - Punto de Venta',
+//             codigo: 'asignarpuntodeventa-03afdbd66e7929b125f8597834fa83a4',
+//             permiso: '1111',
+//           },
+//           {
+//             titulo: 'Adm - Asignación - Producto',
+//             codigo: 'asignarproductos-03afdbd66e7929b125f8597834fa83a4',
+//             permiso: '1111',
+//           },
+//           {
+//             titulo: 'Adm - Creación - Almacén',
+//             codigo: 'registraralmacen-03afdbd66e7929b125f8597834fa83a4',
+//             permiso: '1111',
+//           },
+//           {
+//             titulo: 'Adm - Creación - Punto de Venta',
+//             codigo: 'registrarpuntodeventa-03afdbd66e7929b125f8597834fa83a4',
+//             permiso: '1111',
+//           },
+//           {
+//             titulo: 'Adm - Creación - Producto o Servic',
+//             codigo: 'registrarproductos-03afdbd66e7929b125f8597834fa83a4',
+//             permiso: '1111',
+//           },
+//           {
+//             titulo: 'Adm - Precios - Costo Unitario',
+//             codigo: 'costounitario-03afdbd66e7929b125f8597834fa83a4',
+//             permiso: '1111',
+//           },
+//           {
+//             titulo: 'Adm - Precios - Categorías de Prec',
+//             codigo: 'categoriasdeprecio-03afdbd66e7929b125f8597834fa83a4',
+//             permiso: '1111',
+//           },
+//           {
+//             titulo: 'Adm - Precios - Precios Sugeridos',
+//             codigo: 'preciossugeridos-03afdbd66e7929b125f8597834fa83a4',
+//             permiso: '1111',
+//           },
+//           {
+//             titulo: 'Adm - Precios - Reporte de Costos ',
+//             codigo: 'reportedepreciosbase-03afdbd66e7929b125f8597834fa83a4',
+//             permiso: '1111',
+//           },
+//           {
+//             titulo: 'Adm - Precios - Reporte de Categor',
+//             codigo: 'reportedecategoriasdeprecio-03afdbd66e7929b125f8597834fa83a4',
+//             permiso: '1111',
+//           },
+//           {
+//             titulo: 'Adm-Reg.ClProv-Registro de Clientes',
+//             codigo: 'registrodecliente-03afdbd66e7929b125f8597834fa83a4',
+//             permiso: '1111',
+//           },
+//           {
+//             titulo: 'Adm-RegCliPro-Registrar Proveedor',
+//             codigo: 'registrarproveedor-03afdbd66e7929b125f8597834fa83a4',
+//             permiso: '1111',
+//           },
+//           {
+//             titulo: 'Adm-Autorizar-Pedido',
+//             codigo: 'gestionPedido-03afdbd66e7929b125f8597834fa83a4',
+//             permiso: '1111',
+//           },
+//           {
+//             titulo: 'Adm-Autorizar-Ventas Pendientes',
+//             codigo: 'procesarventaspendientes-03afdbd66e7929b125f8597834fa83a4',
+//             permiso: '1111',
+//           },
+//           {
+//             titulo: 'Adm-Autorizar-Compras',
+//             codigo: 'autorizarcompra-03afdbd66e7929b125f8597834fa83a4',
+//             permiso: '1111',
+//           },
+
+//           {
+//             titulo: 'Adm-Campana-Crear Campañas',
+//             codigo: 'crearcampanas-03afdbd66e7929b125f8597834fa83a4',
+//             permiso: '1111',
+//           },
+//           {
+//             titulo: 'Adm-Campana-Rep. Campañas',
+//             codigo: 'reportedecampanas-03afdbd66e7929b125f8597834fa83a4',
+//             permiso: '1111',
+//           },
+//           {
+//             titulo: 'Adm-Campana-Rep. Ventas',
+//             codigo: 'reportedeventasporcampanas-03afdbd66e7929b125f8597834fa83a4',
+//             permiso: '1111',
+//           },
+//         ],
+//       },
+//       {
+//         usuario: '03afdbd66e7929b125f8597834fa83a4',
+//         titulo: 'Ventas-Atributos',
+//         codigo: 'opcionesocultas',
+//         submenu: [
+//           {
+//             titulo: 'V-Generar Venta-Registrar Venta',
+//             codigo: 'registrarventaoculto-03afdbd66e7929b125f8597834fa83a4',
+//             permiso: '1111',
+//           },
+//           {
+//             titulo: 'V-Generar Venta-Registrar Cotización',
+//             codigo: 'registrarcotizacionoculto-03afdbd66e7929b125f8597834fa83a4',
+//             permiso: '1111',
+//           },
+//           {
+//             titulo: 'V-Generar Venta - Rep. de Ventas',
+//             codigo: 'reportedeventas-03afdbd66e7929b125f8597834fa83a4',
+//             permiso: '1111',
+//           },
+//           {
+//             titulo: 'V-Generar Venta-Rep. de Cotizacion',
+//             codigo: 'reportedecotizacionesocultas-03afdbd66e7929b125f8597834fa83a4',
+//             permiso: '1111',
+//           },
+//           {
+//             titulo: 'V-Generar Venta-Rep. Productos vendidos',
+//             codigo: 'reporteproductosvendidosindividual-03afdbd66e7929b125f8597834fa83a4',
+//             permiso: '1111',
+//           },
+//           {
+//             titulo: 'V-Generar Venta - Kardex',
+//             codigo: 'kardex-03afdbd66e7929b125f8597834fa83a4',
+//             permiso: '1111',
+//           },
+//           {
+//             titulo: 'V-Cuentas por Cobrar-Rep. Ctas Cobrar',
+//             codigo: 'reportecuentasporcobrarocultas-03afdbd66e7929b125f8597834fa83a4',
+//             permiso: '1111',
+//           },
+//           {
+//             titulo: 'V-Cuentas por Cobra-Cobro Cuentas',
+//             codigo: 'cuentasporcobrarocultas-03afdbd66e7929b125f8597834fa83a4',
+//             permiso: '1111',
+//           },
+//           {
+//             titulo: 'V-Cuentas por Cobrar-Rep. de Cobro',
+//             codigo: 'reportecuentasxpagarxperiodo-03afdbd66e7929b125f8597834fa83a4',
+//             permiso: '1111',
+//           },
+//           {
+//             titulo: 'V-Contingencias-Anulaciones',
+//             codigo: 'registraranulaciones-03afdbd66e7929b125f8597834fa83a4',
+//             permiso: '1111',
+//           },
+//           {
+//             titulo: 'V-Contingencias-Registro de Extravío',
+//             codigo: 'registrodeextravios-03afdbd66e7929b125f8597834fa83a4',
+//             permiso: '1111',
+//           },
+//           {
+//             titulo: 'V-Contingencias-Registro de Mermas',
+//             codigo: 'registrodemermas-03afdbd66e7929b125f8597834fa83a4',
+//             permiso: '1111',
+//           },
+//           {
+//             titulo: 'V-Movimiento-Movimientos',
+//             codigo: 'movimientos-03afdbd66e7929b125f8597834fa83a4',
+//             permiso: '1111',
+//           },
+//           {
+//             titulo: 'V-Movimiento-Rep. Movimientos',
+//             codigo: 'reportedemovimientos-03afdbd66e7929b125f8597834fa83a4',
+//             permiso: '1111',
+//           },
+//           {
+//             titulo: 'V-Contingencias-Rep. de Extravíos',
+//             codigo: 'reportedeextravios-03afdbd66e7929b125f8597834fa83a4',
+//             permiso: '1111',
+//           },
+//           {
+//             titulo: 'V-Contingencias-Rep. de Mermas',
+//             codigo: 'reportedemermas-03afdbd66e7929b125f8597834fa83a4',
+//             permiso: '1111',
+//           },
+//         ],
+//       },
+//       {
+//         usuario: '03afdbd66e7929b125f8597834fa83a4',
+//         titulo: 'Configuración-Atributos',
+//         codigo: 'opcionesocultas',
+//         submenu: [
+//           {
+//             titulo: 'Configuracion-General-Tipo Almacén',
+//             codigo: 'tipodealmacen-03afdbd66e7929b125f8597834fa83a4',
+//             permiso: '1111',
+//           },
+//           {
+//             titulo: 'Configuración-General-Divisas',
+//             codigo: 'divisas-03afdbd66e7929b125f8597834fa83a4',
+//             permiso: '1111',
+//           },
+//           {
+//             titulo: 'Configuración-General-Leyenda Proforma',
+//             codigo: 'leyendaproforma-03afdbd66e7929b125f8597834fa83a4',
+//             permiso: '1111',
+//           },
+//           {
+//             titulo: 'Configuración-Producto-Categoría',
+//             codigo: 'categoriadeproducto-03afdbd66e7929b125f8597834fa83a4',
+//             permiso: '1111',
+//           },
+//           {
+//             titulo: 'Configuración-Producto-Estado',
+//             codigo: 'estadodeproducto-03afdbd66e7929b125f8597834fa83a4',
+//             permiso: '1111',
+//           },
+//           {
+//             titulo: 'Configuración-Producto-Unidad',
+//             codigo: 'unidaddeproducto-03afdbd66e7929b125f8597834fa83a4',
+//             permiso: '1111',
+//           },
+//           {
+//             titulo: 'Configuración-Producto-Característica',
+//             codigo: 'caracteristicadeproducto-03afdbd66e7929b125f8597834fa83a4',
+//             permiso: '1111',
+//           },
+//           {
+//             titulo: 'Configuración-Producto-Parámetros de obsolesc',
+//             codigo: 'parametrosdeobsolescencia-03afdbd66e7929b125f8597834fa83a4',
+//             permiso: '1111',
+//           },
+//           {
+//             titulo: 'Configuración-Cliente-Tipo de Cliente',
+//             codigo: 'tiposdeclientes-03afdbd66e7929b125f8597834fa83a4',
+//             permiso: '1111',
+//           },
+//           {
+//             titulo: 'Configuración-Cliente-Canal de Venta',
+//             codigo: 'canalesdeventa-03afdbd66e7929b125f8597834fa83a4',
+//             permiso: '1111',
+//           },
+//         ],
+//       },
+//       {
+//         usuario: '03afdbd66e7929b125f8597834fa83a4',
+//         titulo: 'Configuración',
+//         codigo: 'configuraciongeneral',
+//         submenu: [
+//           {
+//             titulo: 'General',
+//             codigo: 'configuraciongeneral-03afdbd66e7929b125f8597834fa83a4',
+//             permiso: '1111',
+//           },
+//           {
+//             titulo: 'Producto o Servicio',
+//             codigo: 'configuracionproducto-03afdbd66e7929b125f8597834fa83a4',
+//             permiso: '1111',
+//           },
+//           {
+//             titulo: 'Cliente',
+//             codigo: 'configuracioncliente-03afdbd66e7929b125f8597834fa83a4',
+//             permiso: '1111',
+//           },
+//           {
+//             titulo: 'Apis',
+//             codigo: 'generartokensapis-03afdbd66e7929b125f8597834fa83a4',
+//             permiso: '1111',
+//           },
+//         ],
+//       },
+//       {
+//         usuario: '03afdbd66e7929b125f8597834fa83a4',
+//         titulo: 'Administración',
+//         codigo: 'administracion',
+//         submenu: [
+//           {
+//             titulo: 'Creación',
+//             codigo: 'administracioncreacion-03afdbd66e7929b125f8597834fa83a4',
+//             permiso: '1111',
+//           },
+//           {
+//             titulo: 'Asignación',
+//             codigo: 'administracionasignacion-03afdbd66e7929b125f8597834fa83a4',
+//             permiso: '1111',
+//           },
+//           {
+//             titulo: 'Precios',
+//             codigo: 'administracionprecios-03afdbd66e7929b125f8597834fa83a4',
+//             permiso: '1111',
+//           },
+//           {
+//             titulo: 'Registrar Cliente o Proveedor',
+//             codigo: 'registrarclienteoproveedor-03afdbd66e7929b125f8597834fa83a4',
+//             permiso: '1111',
+//           },
+//           {
+//             titulo: 'Cierre Caja',
+//             codigo: 'cierrecaja-03afdbd66e7929b125f8597834fa83a4',
+//             permiso: '1111',
+//           },
+//           {
+//             titulo: 'Autorizaciones',
+//             codigo: 'admautorizaciones-03afdbd66e7929b125f8597834fa83a4',
+//             permiso: '1111',
+//           },
+//           {
+//             titulo: 'Campañas',
+//             codigo: 'gestioncampanas-03afdbd66e7929b125f8597834fa83a4',
+//             permiso: '1111',
+//           },
+//         ],
+//       },
+
+//       {
+//         usuario: '03afdbd66e7929b125f8597834fa83a4',
+//         titulo: 'Compras',
+//         codigo: 'compras',
+//         submenu: [
+//           {
+//             titulo: 'Pedidos',
+//             codigo: 'pedidos-03afdbd66e7929b125f8597834fa83a4',
+//             permiso: '1111',
+//           },
+//           {
+//             titulo: 'Compras',
+//             codigo: 'gestioncompra-03afdbd66e7929b125f8597834fa83a4',
+//             permiso: '1111',
+//           },
+//           {
+//             titulo: 'Cuentas por Pagar',
+//             codigo: 'ingresocredito-03afdbd66e7929b125f8597834fa83a4',
+//             permiso: '1111',
+//           },
+//         ],
+//       },
+//       {
+//         usuario: '03afdbd66e7929b125f8597834fa83a4',
+//         titulo: 'Compras-Atributos',
+//         codigo: 'opcionesocultas',
+//         submenu: [
+//           {
+//             titulo: '-Compras-Registrar Compras',
+//             codigo: 'registrarcompra-03afdbd66e7929b125f8597834fa83a4',
+//             permiso: '1111',
+//           },
+//           {
+//             titulo: '-Compras-Compras Desglosado',
+//             codigo: 'reporteproductoscomprados-03afdbd66e7929b125f8597834fa83a4',
+//             permiso: '1111',
+//           },
+//           {
+//             titulo: '-Compras-Rep. Compras',
+//             codigo: 'reportedecompras-03afdbd66e7929b125f8597834fa83a4',
+//             permiso: '1111',
+//           },
+//           {
+//             titulo: '-Compras-Rep. Stock de Productos Individual',
+//             codigo: 'reportestockdeproductosindividual-03afdbd66e7929b125f8597834fa83a4',
+//             permiso: '1111',
+//           },
+//           {
+//             titulo: '-Pedidos-Generar Pedido',
+//             codigo: 'generarpedido-03afdbd66e7929b125f8597834fa83a4',
+//             permiso: '1111',
+//           },
+//           {
+//             titulo: '-Pedidos-Rep. Pedidos',
+//             codigo: 'reportedepedidos-03afdbd66e7929b125f8597834fa83a4',
+//             permiso: '1111',
+//           },
+//           {
+//             titulo: '-Pedidos-Rep. Pedidos',
+//             codigo: 'reportedepedidos-03afdbd66e7929b125f8597834fa83a4',
+//             permiso: '1111',
+//           },
+//         ],
+//       },
+//       {
+//         usuario: '03afdbd66e7929b125f8597834fa83a4',
+//         titulo: 'Ventas',
+//         codigo: 'ventas',
+//         submenu: [
+//           {
+//             titulo: 'Generar Venta',
+//             codigo: 'registrarventa-03afdbd66e7929b125f8597834fa83a4',
+//             permiso: '1111',
+//           },
+//           {
+//             titulo: 'Contingencia',
+//             codigo: 'contingencias-03afdbd66e7929b125f8597834fa83a4',
+//             permiso: '1111',
+//           },
+//           {
+//             titulo: 'Cuentas por Cobrar',
+//             codigo: 'cuentasporcobrar-03afdbd66e7929b125f8597834fa83a4',
+//             permiso: '1111',
+//           },
+//           {
+//             titulo: 'Notas de Crédito/Débito',
+//             codigo: 'notascreditodebito-03afdbd66e7929b125f8597834fa83a4',
+//             permiso: '1111',
+//           },
+//           {
+//             titulo: 'Inventario Externo',
+//             codigo: 'inventarioexterno-03afdbd66e7929b125f8597834fa83a4',
+//             permiso: '1111',
+//           },
+//         ],
+//       },
+//       {
+//         usuario: '03afdbd66e7929b125f8597834fa83a4',
+//         titulo: 'Reportes',
+//         codigo: 'reportes',
+//         submenu: [
+//           {
+//             titulo: 'Reporte Stock de Productos Global',
+//             codigo: 'reportestockdeproductosglobal-03afdbd66e7929b125f8597834fa83a4',
+//             permiso: '1111',
+//           },
+//           {
+//             titulo: 'Reporte de Indice de Rotación',
+//             codigo: 'reportedeindicederotacion-03afdbd66e7929b125f8597834fa83a4',
+//             permiso: '1111',
+//           },
+
+//           {
+//             titulo: 'Reporte de Caducidad de Productos',
+//             codigo: 'reportedecaducidaddeproductos-03afdbd66e7929b125f8597834fa83a4',
+//             permiso: '1111',
+//           },
+//           {
+//             titulo: 'Reporte Productos vendidos Global',
+//             codigo: 'reporteproductosvendidosglobal-03afdbd66e7929b125f8597834fa83a4',
+//             permiso: '1111',
+//           },
+//         ],
+//       },
+//       {
+//         usuario: '03afdbd66e7929b125f8597834fa83a4',
+//         titulo: 'Atributos',
+//         codigo: 'opcionesocultas',
+//         submenu: [
+//           {
+//             titulo: 'Rep. de Clientes',
+//             codigo: 'reportedeclientes-03afdbd66e7929b125f8597834fa83a4',
+//             permiso: '1111',
+//           },
+
+//           {
+//             titulo: 'Reporte - Reporte de Índice de Rotación - Alm',
+//             codigo: 'reportedeindicederotacionporalmacen-03afdbd66e7929b125f8597834fa83a4',
+//             permiso: '1111',
+//           },
+//           {
+//             titulo: 'Reporte - Reporte de Índice de Rotación - Glo',
+//             codigo: 'reportedeindicederotacionglobal-03afdbd66e7929b125f8597834fa83a4',
+//             permiso: '1111',
+//           },
+//           {
+//             titulo: 'Reporte - Reporte de Índice de Rotación - Cli',
+//             codigo: 'reportedeindicederotacionporcliente-03afdbd66e7929b125f8597834fa83a4',
+//             permiso: '1111',
+//           },
+
+//           {
+//             titulo: 'Estadísticas',
+//             codigo: 'dashboard-03afdbd66e7929b125f8597834fa83a4',
+//             permiso: '1111',
+//           },
+//         ],
+//       },
+//       {
+//         usuario: '03afdbd66e7929b125f8597834fa83a4',
+//         titulo: 'Configuración Factura',
+//         codigo: 'configuracionfactura',
+//         submenu: [
+//           {
+//             titulo: 'Leyendas de Facturas',
+//             codigo: 'leyendasdefacturas-03afdbd66e7929b125f8597834fa83a4',
+//             permiso: '1111',
+//           },
+//           {
+//             titulo: 'Métodos de Pago de Facturas',
+//             codigo: 'metodosdepagodefacturas-03afdbd66e7929b125f8597834fa83a4',
+//             permiso: '1111',
+//           },
+//         ],
+//       },
+//     ],
+//   },
+// ]
 const menurichard501 = [
   {
     modulo: '3',
@@ -2451,16 +3011,518 @@ const menutest1 = [
     ],
   },
 ]
+
+const menutest75Vivasoft = [
+  {
+    modulo: '3',
+    menu: [
+      {
+        usuario: 'f457c545a9ded88f18ecee47145a72c0',
+        titulo: 'Administración-Atributos',
+        codigo: 'opcionesocultas',
+        submenu: [
+          {
+            titulo: 'Adm-Asignación-Almacén',
+            codigo: 'asignaralmacen-f457c545a9ded88f18ecee47145a72c0',
+            permiso: '1111',
+          },
+          {
+            titulo: 'Adm - Asignación - Punto de Venta',
+            codigo: 'asignarpuntodeventa-f457c545a9ded88f18ecee47145a72c0',
+            permiso: '1111',
+          },
+          {
+            titulo: 'Adm - Asignación - Producto',
+            codigo: 'asignarproductos-f457c545a9ded88f18ecee47145a72c0',
+            permiso: '1111',
+          },
+          {
+            titulo: 'Adm - Creación - Almacén',
+            codigo: 'registraralmacen-f457c545a9ded88f18ecee47145a72c0',
+            permiso: '1111',
+          },
+          {
+            titulo: 'Adm - Creación - Punto de Venta',
+            codigo: 'registrarpuntodeventa-f457c545a9ded88f18ecee47145a72c0',
+            permiso: '1111',
+          },
+          {
+            titulo: 'Adm - Creación - Producto o Servic',
+            codigo: 'registrarproductos-f457c545a9ded88f18ecee47145a72c0',
+            permiso: '1111',
+          },
+          {
+            titulo: 'Adm - Precios - Costo Unitario',
+            codigo: 'costounitario-f457c545a9ded88f18ecee47145a72c0',
+            permiso: '1111',
+          },
+          {
+            titulo: 'Adm - Precios - Categorías de Prec',
+            codigo: 'categoriasdeprecio-f457c545a9ded88f18ecee47145a72c0',
+            permiso: '1111',
+          },
+          {
+            titulo: 'Adm - Precios - Precios Sugeridos',
+            codigo: 'preciossugeridos-f457c545a9ded88f18ecee47145a72c0',
+            permiso: '1111',
+          },
+          {
+            titulo: 'Adm - Precios - Reporte de Costos ',
+            codigo: 'reportedepreciosbase-f457c545a9ded88f18ecee47145a72c0',
+            permiso: '1111',
+          },
+          {
+            titulo: 'Adm - Precios - Reporte de Categor',
+            codigo: 'reportedecategoriasdeprecio-f457c545a9ded88f18ecee47145a72c0',
+            permiso: '1111',
+          },
+          {
+            titulo: 'Adm-Reg.ClProv-Registro de Clientes',
+            codigo: 'registrodecliente-f457c545a9ded88f18ecee47145a72c0',
+            permiso: '1111',
+          },
+          {
+            titulo: 'Adm-RegCliPro-Registrar Proveedor',
+            codigo: 'registrarproveedor-f457c545a9ded88f18ecee47145a72c0',
+            permiso: '1111',
+          },
+          {
+            titulo: 'Adm-Autorizar-Pedido',
+            codigo: 'gestionPedido-f457c545a9ded88f18ecee47145a72c0',
+            permiso: '1111',
+          },
+          {
+            titulo: 'Adm-Autorizar-Ventas Pendientes',
+            codigo: 'procesarventaspendientes-f457c545a9ded88f18ecee47145a72c0',
+            permiso: '1111',
+          },
+          {
+            titulo: 'Adm-Autorizar-Compras',
+            codigo: 'autorizarcompra-f457c545a9ded88f18ecee47145a72c0',
+            permiso: '1111',
+          },
+
+          {
+            titulo: 'Adm-Campana-Crear Campañas',
+            codigo: 'crearcampanas-f457c545a9ded88f18ecee47145a72c0',
+            permiso: '1111',
+          },
+          {
+            titulo: 'Adm-Campana-Rep. Campañas',
+            codigo: 'reportedecampanas-f457c545a9ded88f18ecee47145a72c0',
+            permiso: '1111',
+          },
+          {
+            titulo: 'Adm-Campana-Rep. Ventas',
+            codigo: 'reportedeventasporcampanas-f457c545a9ded88f18ecee47145a72c0',
+            permiso: '1111',
+          },
+        ],
+      },
+      {
+        usuario: 'f457c545a9ded88f18ecee47145a72c0',
+        titulo: 'Ventas-Atributos',
+        codigo: 'opcionesocultas',
+        submenu: [
+          {
+            titulo: 'V-Generar Venta-Registrar Venta',
+            codigo: 'registrarventaoculto-f457c545a9ded88f18ecee47145a72c0',
+            permiso: '1111',
+          },
+          {
+            titulo: 'V-Generar Venta-Registrar Cotización',
+            codigo: 'registrarcotizacionoculto-f457c545a9ded88f18ecee47145a72c0',
+            permiso: '1111',
+          },
+          {
+            titulo: 'V-Generar Venta - Rep. de Ventas',
+            codigo: 'reportedeventas-f457c545a9ded88f18ecee47145a72c0',
+            permiso: '1111',
+          },
+          {
+            titulo: 'V-Generar Venta-Rep. de Cotizacion',
+            codigo: 'reportedecotizacionesocultas-f457c545a9ded88f18ecee47145a72c0',
+            permiso: '1111',
+          },
+          {
+            titulo: 'V-Generar Venta-Rep. Productos vendidos',
+            codigo: 'reporteproductosvendidosindividual-f457c545a9ded88f18ecee47145a72c0',
+            permiso: '1111',
+          },
+          {
+            titulo: 'V-Generar Venta - Kardex',
+            codigo: 'kardex-f457c545a9ded88f18ecee47145a72c0',
+            permiso: '1111',
+          },
+          {
+            titulo: 'V-Cuentas por Cobrar-Rep. Ctas Cobrar',
+            codigo: 'reportecuentasporcobrarocultas-f457c545a9ded88f18ecee47145a72c0',
+            permiso: '1111',
+          },
+          {
+            titulo: 'V-Cuentas por Cobra-Cobro Cuentas',
+            codigo: 'cuentasporcobrarocultas-f457c545a9ded88f18ecee47145a72c0',
+            permiso: '1111',
+          },
+          {
+            titulo: 'V-Cuentas por Cobrar-Rep. de Cobro',
+            codigo: 'reportecuentasxpagarxperiodo-f457c545a9ded88f18ecee47145a72c0',
+            permiso: '1111',
+          },
+          {
+            titulo: 'V-Contingencias-Anulaciones',
+            codigo: 'registraranulaciones-f457c545a9ded88f18ecee47145a72c0',
+            permiso: '1111',
+          },
+          {
+            titulo: 'V-Contingencias-Registro de Extravío',
+            codigo: 'registrodeextravios-f457c545a9ded88f18ecee47145a72c0',
+            permiso: '1111',
+          },
+          {
+            titulo: 'V-Contingencias-Registro de Mermas',
+            codigo: 'registrodemermas-f457c545a9ded88f18ecee47145a72c0',
+            permiso: '1111',
+          },
+          {
+            titulo: 'V-Movimiento-Movimientos',
+            codigo: 'movimientos-f457c545a9ded88f18ecee47145a72c0',
+            permiso: '1111',
+          },
+          {
+            titulo: 'V-Movimiento-Rep. Movimientos',
+            codigo: 'reportedemovimientos-f457c545a9ded88f18ecee47145a72c0',
+            permiso: '1111',
+          },
+          {
+            titulo: 'V-Contingencias-Rep. de Extravíos',
+            codigo: 'reportedeextravios-f457c545a9ded88f18ecee47145a72c0',
+            permiso: '1111',
+          },
+          {
+            titulo: 'V-Contingencias-Rep. de Mermas',
+            codigo: 'reportedemermas-f457c545a9ded88f18ecee47145a72c0',
+            permiso: '1111',
+          },
+        ],
+      },
+      {
+        usuario: 'f457c545a9ded88f18ecee47145a72c0',
+        titulo: 'Configuración-Atributos',
+        codigo: 'opcionesocultas',
+        submenu: [
+          {
+            titulo: 'Configuracion-General-Tipo Almacén',
+            codigo: 'tipodealmacen-f457c545a9ded88f18ecee47145a72c0',
+            permiso: '1111',
+          },
+          {
+            titulo: 'Configuración-General-Divisas',
+            codigo: 'divisas-f457c545a9ded88f18ecee47145a72c0',
+            permiso: '1111',
+          },
+          {
+            titulo: 'Configuración-General-Leyenda Proforma',
+            codigo: 'leyendaproforma-f457c545a9ded88f18ecee47145a72c0',
+            permiso: '1111',
+          },
+          {
+            titulo: 'Configuración-Producto-Categoría',
+            codigo: 'categoriadeproducto-f457c545a9ded88f18ecee47145a72c0',
+            permiso: '1111',
+          },
+          {
+            titulo: 'Configuración-Producto-Estado',
+            codigo: 'estadodeproducto-f457c545a9ded88f18ecee47145a72c0',
+            permiso: '1111',
+          },
+          {
+            titulo: 'Configuración-Producto-Unidad',
+            codigo: 'unidaddeproducto-f457c545a9ded88f18ecee47145a72c0',
+            permiso: '1111',
+          },
+          {
+            titulo: 'Configuración-Producto-Característica',
+            codigo: 'caracteristicadeproducto-f457c545a9ded88f18ecee47145a72c0',
+            permiso: '1111',
+          },
+          {
+            titulo: 'Configuración-Producto-Parámetros de obsolesc',
+            codigo: 'parametrosdeobsolescencia-f457c545a9ded88f18ecee47145a72c0',
+            permiso: '1111',
+          },
+          {
+            titulo: 'Configuración-Cliente-Tipo de Cliente',
+            codigo: 'tiposdeclientes-f457c545a9ded88f18ecee47145a72c0',
+            permiso: '1111',
+          },
+          {
+            titulo: 'Configuración-Cliente-Canal de Venta',
+            codigo: 'canalesdeventa-f457c545a9ded88f18ecee47145a72c0',
+            permiso: '1111',
+          },
+        ],
+      },
+      {
+        usuario: 'f457c545a9ded88f18ecee47145a72c0',
+        titulo: 'Configuración',
+        codigo: 'configuraciongeneral',
+        submenu: [
+          {
+            titulo: 'General',
+            codigo: 'configuraciongeneral-f457c545a9ded88f18ecee47145a72c0',
+            permiso: '1111',
+          },
+          {
+            titulo: 'Producto o Servicio',
+            codigo: 'configuracionproducto-f457c545a9ded88f18ecee47145a72c0',
+            permiso: '1111',
+          },
+          {
+            titulo: 'Cliente',
+            codigo: 'configuracioncliente-f457c545a9ded88f18ecee47145a72c0',
+            permiso: '1111',
+          },
+          {
+            titulo: 'Apis',
+            codigo: 'generartokensapis-f457c545a9ded88f18ecee47145a72c0',
+            permiso: '1111',
+          },
+        ],
+      },
+      {
+        usuario: 'f457c545a9ded88f18ecee47145a72c0',
+        titulo: 'Administración',
+        codigo: 'administracion',
+        submenu: [
+          {
+            titulo: 'Creación',
+            codigo: 'administracioncreacion-f457c545a9ded88f18ecee47145a72c0',
+            permiso: '1111',
+          },
+          {
+            titulo: 'Asignación',
+            codigo: 'administracionasignacion-f457c545a9ded88f18ecee47145a72c0',
+            permiso: '1111',
+          },
+          {
+            titulo: 'Precios',
+            codigo: 'administracionprecios-f457c545a9ded88f18ecee47145a72c0',
+            permiso: '1111',
+          },
+          {
+            titulo: 'Registrar Cliente o Proveedor',
+            codigo: 'registrarclienteoproveedor-f457c545a9ded88f18ecee47145a72c0',
+            permiso: '1111',
+          },
+          {
+            titulo: 'Cierre Caja',
+            codigo: 'cierrecaja-f457c545a9ded88f18ecee47145a72c0',
+            permiso: '1111',
+          },
+          {
+            titulo: 'Autorizaciones',
+            codigo: 'admautorizaciones-f457c545a9ded88f18ecee47145a72c0',
+            permiso: '1111',
+          },
+          {
+            titulo: 'Campañas',
+            codigo: 'gestioncampanas-f457c545a9ded88f18ecee47145a72c0',
+            permiso: '1111',
+          },
+        ],
+      },
+
+      {
+        usuario: 'f457c545a9ded88f18ecee47145a72c0',
+        titulo: 'Compras',
+        codigo: 'compras',
+        submenu: [
+          {
+            titulo: 'Pedidos',
+            codigo: 'pedidos-f457c545a9ded88f18ecee47145a72c0',
+            permiso: '1111',
+          },
+          {
+            titulo: 'Compras',
+            codigo: 'gestioncompra-f457c545a9ded88f18ecee47145a72c0',
+            permiso: '1111',
+          },
+          {
+            titulo: 'Cuentas por Pagar',
+            codigo: 'ingresocredito-f457c545a9ded88f18ecee47145a72c0',
+            permiso: '1111',
+          },
+        ],
+      },
+      {
+        usuario: 'f457c545a9ded88f18ecee47145a72c0',
+        titulo: 'Compras-Atributos',
+        codigo: 'opcionesocultas',
+        submenu: [
+          {
+            titulo: '-Compras-Registrar Compras',
+            codigo: 'registrarcompra-f457c545a9ded88f18ecee47145a72c0',
+            permiso: '1111',
+          },
+          {
+            titulo: '-Compras-Compras Desglosado',
+            codigo: 'reporteproductoscomprados-f457c545a9ded88f18ecee47145a72c0',
+            permiso: '1111',
+          },
+          {
+            titulo: '-Compras-Rep. Compras',
+            codigo: 'reportedecompras-f457c545a9ded88f18ecee47145a72c0',
+            permiso: '1111',
+          },
+          {
+            titulo: '-Compras-Rep. Stock de Productos Individual',
+            codigo: 'reportestockdeproductosindividual-f457c545a9ded88f18ecee47145a72c0',
+            permiso: '1111',
+          },
+          {
+            titulo: '-Pedidos-Generar Pedido',
+            codigo: 'generarpedido-f457c545a9ded88f18ecee47145a72c0',
+            permiso: '1111',
+          },
+          {
+            titulo: '-Pedidos-Rep. Pedidos',
+            codigo: 'reportedepedidos-f457c545a9ded88f18ecee47145a72c0',
+            permiso: '1111',
+          },
+          {
+            titulo: '-Pedidos-Rep. Pedidos',
+            codigo: 'reportedepedidos-f457c545a9ded88f18ecee47145a72c0',
+            permiso: '1111',
+          },
+        ],
+      },
+      {
+        usuario: 'f457c545a9ded88f18ecee47145a72c0',
+        titulo: 'Ventas',
+        codigo: 'ventas',
+        submenu: [
+          {
+            titulo: 'Generar Venta',
+            codigo: 'registrarventa-f457c545a9ded88f18ecee47145a72c0',
+            permiso: '1111',
+          },
+          {
+            titulo: 'Contingencia',
+            codigo: 'contingencias-f457c545a9ded88f18ecee47145a72c0',
+            permiso: '1111',
+          },
+          {
+            titulo: 'Cuentas por Cobrar',
+            codigo: 'cuentasporcobrar-f457c545a9ded88f18ecee47145a72c0',
+            permiso: '1111',
+          },
+          {
+            titulo: 'Movimientos',
+            codigo: 'gestionmovimientos-f457c545a9ded88f18ecee47145a72c0',
+            permiso: '1111',
+          },
+          {
+            titulo: 'Inventario Externo',
+            codigo: 'inventarioexterno-f457c545a9ded88f18ecee47145a72c0',
+            permiso: '1111',
+          },
+        ],
+      },
+      {
+        usuario: 'f457c545a9ded88f18ecee47145a72c0',
+        titulo: 'Reportes',
+        codigo: 'reportes',
+        submenu: [
+          {
+            titulo: 'Reporte Stock de Productos Global',
+            codigo: 'reportestockdeproductosglobal-f457c545a9ded88f18ecee47145a72c0',
+            permiso: '1111',
+          },
+          {
+            titulo: 'Reporte de Indice de Rotación',
+            codigo: 'reportedeindicederotacion-f457c545a9ded88f18ecee47145a72c0',
+            permiso: '1111',
+          },
+
+          {
+            titulo: 'Reporte de Caducidad de Productos',
+            codigo: 'reportedecaducidaddeproductos-f457c545a9ded88f18ecee47145a72c0',
+            permiso: '1111',
+          },
+          {
+            titulo: 'Reporte Productos vendidos Global',
+            codigo: 'reporteproductosvendidosglobal-f457c545a9ded88f18ecee47145a72c0',
+            permiso: '1111',
+          },
+        ],
+      },
+      {
+        usuario: 'f457c545a9ded88f18ecee47145a72c0',
+        titulo: 'Atributos',
+        codigo: 'opcionesocultas',
+        submenu: [
+          {
+            titulo: 'Rep. de Clientes',
+            codigo: 'reportedeclientes-f457c545a9ded88f18ecee47145a72c0',
+            permiso: '1111',
+          },
+
+          {
+            titulo: 'Reporte - Reporte de Índice de Rotación - Alm',
+            codigo: 'reportedeindicederotacionporalmacen-f457c545a9ded88f18ecee47145a72c0',
+            permiso: '1111',
+          },
+          {
+            titulo: 'Reporte - Reporte de Índice de Rotación - Glo',
+            codigo: 'reportedeindicederotacionglobal-f457c545a9ded88f18ecee47145a72c0',
+            permiso: '1111',
+          },
+          {
+            titulo: 'Reporte - Reporte de Índice de Rotación - Cli',
+            codigo: 'reportedeindicederotacionporcliente-f457c545a9ded88f18ecee47145a72c0',
+            permiso: '1111',
+          },
+
+          {
+            titulo: 'Estadísticas',
+            codigo: 'dashboard-f457c545a9ded88f18ecee47145a72c0',
+            permiso: '1111',
+          },
+        ],
+      },
+      {
+        usuario: 'f457c545a9ded88f18ecee47145a72c0',
+        titulo: 'Configuración Factura',
+        codigo: 'configuracionfactura',
+        submenu: [
+          {
+            titulo: 'Leyendas de Facturas',
+            codigo: 'leyendasdefacturas-f457c545a9ded88f18ecee47145a72c0',
+            permiso: '1111',
+          },
+          {
+            titulo: 'Métodos de Pago de Facturas',
+            codigo: 'metodosdepagodefacturas-f457c545a9ded88f18ecee47145a72c0',
+            permiso: '1111',
+          },
+        ],
+      },
+    ],
+  },
+]
 usuarios.push(richard50)
 usuarios.push(soporte74)
 usuarios.push(manfret104)
 usuarios.push(test75)
 usuarios.push(test1)
+usuarios.push(test75VSoft)
 console.log(menurichard501)
 menus.push(menurichard50)
 menus.push(menusoporte74)
 menus.push(menumanfret104)
 menus.push(menutest75)
 menus.push(menutest1)
+menus.push(menutest75Vivasoft)
 
 export { usuarios, menus }

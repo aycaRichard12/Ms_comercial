@@ -45,13 +45,15 @@ import { objectToFormData } from 'src/composables/FuncionesGenerales'
 import ProductoForm from 'src/components/producto/creacion/productoForm.vue'
 import ProductoTabla from 'src/components/producto/creacion/productoTable.vue'
 import { imagen } from 'src/boot/url'
-import { TipoFactura } from 'src/composables/FuncionesGenerales'
-const tipoFactura = TipoFactura()
+import { getTipoFactura, getToken } from 'src/composables/FuncionesG'
+
+const tipoFactura = getTipoFactura(true)
+console.log('Tipo Factura:', tipoFactura)
 const idempresa = idempresa_md5()
 const contenidousuario = validarUsuario()
 console.log(contenidousuario)
-const token = contenidousuario[0]?.factura?.access_token
-const tipo = contenidousuario[0]?.factura?.tipo
+const token = getToken()
+console.log('Token:', token)
 const productos = ref([])
 
 const categorias = ref([])
@@ -71,10 +73,12 @@ const ProductoSin = ref([])
 const UnidadSin = ref([])
 async function loadRows() {
   try {
+    const tipo = getTipoFactura()
     let response
-
-    response = await api.get(`listaProducto/${idempresa}/${token}/${tipo}`) // Cambia a tu ruta con factura
-
+    const point = `listaProducto/${idempresa}/${token}/${tipo}` // Ruta con factura
+    console.log('Endpoint:', point)
+    response = await api.get(`${point}`) // Cambia a tu ruta con factura
+    console.log(response)
     productos.value = response.data // Asume que la API devuelve un array
   } catch (error) {
     console.error('Error al cargar datos:', error)
@@ -359,7 +363,7 @@ onMounted(() => {
   loadsubcategorias()
   loadunidades()
   loadRows()
-  if (TipoFactura()) {
+  if (getTipoFactura(true)) {
     ListaProductoSin()
     ListaUnidadSin()
   }

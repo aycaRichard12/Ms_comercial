@@ -4,6 +4,52 @@ import { useMenuStore } from 'src/stores/permitidos'
 import { idusuario_md5 } from 'src/composables/FuncionesGenerales'
 import { api } from 'src/boot/axios'
 
+export function getIdRubro(situacion = null) {
+  //idtn
+  const contenidousuario = validarUsuario()
+  const rubro = contenidousuario?.[0]?.empresa?.idtn
+  const esVacio = validarDatoVacio(rubro)
+  if (situacion) {
+    return !esVacio
+  }
+  return esVacio ? '' : rubro
+}
+export function validarDatoVacio(dato) {
+  if (
+    dato === null ||
+    dato === undefined ||
+    dato === '' ||
+    dato === 'null' ||
+    dato === 'undefined' ||
+    dato === 0 ||
+    dato === '0'
+  ) {
+    return true
+  } else {
+    return false
+  }
+}
+
+export function getTipoFactura(situacion = null) {
+  const contenidousuario = validarUsuario()
+  const tipo = contenidousuario?.[0]?.factura?.tipo
+  const esVacio = validarDatoVacio(tipo)
+  if (situacion) {
+    return !esVacio
+  }
+  return esVacio ? '' : tipo
+}
+
+export function getToken(situacion = null) {
+  const contenidousuario = validarUsuario()
+  const token = contenidousuario[0]?.factura?.access_token
+  const esVacio = validarDatoVacio(token)
+  if (situacion) {
+    return !esVacio
+  }
+  return esVacio ? '' : token
+}
+
 export async function cargarLogoBase64(logoPath) {
   const [carpeta, imagen] = logoPath.split('/')
   try {

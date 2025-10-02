@@ -366,9 +366,15 @@ import { ref, computed, onMounted, defineExpose, watch } from 'vue'
 import { useQuasar } from 'quasar'
 import { api } from 'boot/axios'
 import { idempresa_md5, idusuario_md5 } from 'src/composables/FuncionesGenerales'
-import { useCurrencyStore } from 'src/stores/currencyStore'
+import { useCurrencyStore, useCurrencyLeyenda } from 'src/stores/currencyStore'
 import { imagen } from 'src/boot/url'
 const currencyStore = useCurrencyStore()
+const divisaActiva = useCurrencyStore()
+const leyendaActiva = useCurrencyLeyenda()
+leyendaActiva.cargarLeyendaActivo()
+
+console.log(divisaActiva)
+console.log(leyendaActiva)
 const permitirStock = ref(false)
 const idempresa = idempresa_md5()
 const idusuario = idusuario_md5()
@@ -790,7 +796,7 @@ function agregarAlCarrito() {
 function eliminarDelCarrito(item) {
   carritoPrueba.value = carritoPrueba.value.filter((i) => i.id !== item.id)
 
-  // Actualizar localStorage
+  // Actualizar localStorage montoTotalMoneda
   localStorage.setItem(
     'carritoPrueba',
     JSON.stringify({

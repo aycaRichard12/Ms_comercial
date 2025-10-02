@@ -48,6 +48,46 @@
             <q-icon :name="tab.icono" class="icono q-mt-lg" />
             <span class="texto q-mt-lg">{{ tab.titulo.split('-')[2] }}</span>
           </q-tab>
+          <q-tab
+            v-if="activeTabsReportes.length > 0"
+            class="q-ma-sm"
+            style="
+              background: linear-gradient(to right, #219286, #044e49);
+              border: 1px solid #ccc;
+              border-radius: 8px;
+              min-width: 180px;
+            "
+          >
+            <div class="row items-center justify-between q-px-sm">
+              <span class="text-white text-subtitle2">Reportes</span>
+              <q-icon name="arrow_drop_down" class="text-white" size="30px" />
+            </div>
+
+            <q-menu
+              anchor="bottom left"
+              self="top left"
+              transition-show="jump-down"
+              transition-hide="jump-up"
+            >
+              <q-list style="min-width: 200px; max-height: 250px; overflow-y: auto">
+                <q-item
+                  v-for="tab in activeTabsReportes"
+                  :key="tab.codigo"
+                  clickable
+                  v-ripple
+                  @click="navigateToTab(tab)"
+                  :class="{ 'text-weight-bold bg-grey-2': currentTab === tab.codigo }"
+                >
+                  <q-item-section avatar>
+                    <q-icon :name="tab.icono" />
+                  </q-item-section>
+                  <q-item-section>
+                    {{ tab.titulo.split('-')[2] }}
+                  </q-item-section>
+                </q-item>
+              </q-list>
+            </q-menu>
+          </q-tab>
         </q-tabs>
       </transition>
     </q-header>
@@ -137,7 +177,7 @@
 import emitter from 'src/event-bus'
 import { ref, onMounted, reactive } from 'vue'
 import { useRouter } from 'vue-router'
-import { PAGINAS, PAGINAS_ICONS } from 'src/stores/paginas'
+import { PAGINAS, PAGINAS_ICONS, PAGINAS_SELECT } from 'src/stores/paginas'
 import { useMenuStore } from 'src/stores/permitidos'
 import logo from 'src/assets/IMAGOTIPO-02.png'
 import NotificacionLayout from './NotificacionLayout.vue'
@@ -159,6 +199,7 @@ const nombreUsuario = ref('Usuario')
 const cargo = ref('Sin cargo')
 const items = ref([])
 const activeTabs = ref([])
+const activeTabsReportes = ref([])
 const currentTab = ref('')
 /// ================================================
 const permitidoNotificaciones = permisoNotificaciones()
@@ -201,7 +242,7 @@ const clearTabsTimeout = () => {
 const IniciarGuia = () => {
   guiarInicio(currentTab.value, currentTab.value)
 }
-// --- End of auto-open/close logic for both drawer and tabs ---  permitidos
+// --- End of auto-open/close logic for both drawer and tabs ---  crearcampanas
 
 const iconos = ref({
   configuraciones: 'settings',
@@ -224,7 +265,6 @@ const iconos = ref({
   registrarclienteoproveedor: 'sync_alt',
   registrarproveedor: 'local_shipping',
   crearcampanas: 'campaign',
-  generarpedido: 'add_shopping_cart',
   registrarcompra: 'shopping_basket',
   movimientos: 'swap_vert',
   registrarventa: 'point_of_sale',
@@ -242,11 +282,32 @@ const iconos = ref({
   admautorizaciones: 'verified_user',
   cierrecaja: 'request_quote',
   generartokensapis: 'api',
+  notascreditodebito: 'undo',
+  pedidos: 'assignment',
+  gestioncompra: 'shopping_basket',
+  ingresocredito: 'request_quote',
+  gestioncampanas: 'campaign',
 })
 
 const loadTabsForSubmenu = (submenuCodigo) => {
+  console.log(submenuCodigo)
   const paginasSubmenu = PAGINAS[submenuCodigo] || []
+  const paginas_reporte = PAGINAS_SELECT[submenuCodigo] || []
   const usuario = menuStore.obtenerUsuario
+
+  activeTabsReportes.value = paginas_reporte
+    .map((paginaCodigo) => {
+      const codigoCompleto = `${paginaCodigo}-${usuario}`
+      const pagina = menuStore.obtenerPagina(codigoCompleto)
+      if (!pagina || !pagina.permiso) return null
+      return {
+        codigo: paginaCodigo,
+        titulo: pagina.titulo,
+        icono: PAGINAS_ICONS[paginaCodigo] || 'help_outline',
+        permiso: pagina.permiso,
+      }
+    })
+    .filter(Boolean)
 
   activeTabs.value = paginasSubmenu
     .map((paginaCodigo) => {
@@ -264,35 +325,8 @@ const loadTabsForSubmenu = (submenuCodigo) => {
     .filter(Boolean)
 }
 
-const cargarPaginasSubMenu = (submenuCodigo) => {
-  const paginasSubmenu = PAGINAS[submenuCodigo] || []
-  const usuario = menuStore.obtenerUsuario
-  return paginasSubmenu.map((paginaCodigo) => {
-    const codigoCompleto = `${paginaCodigo}-${usuario}`
-    const pagina = menuStore.obtenerPagina(codigoCompleto)
-    if (!pagina || !pagina.permiso) return null
-
-    return {
-      codigo: paginaCodigo,
-      titulo: pagina.titulo || paginaCodigo,
-      icono: PAGINAS_ICONS[paginaCodigo] || 'help_outline',
-      permiso: pagina.permiso,
-    }
-  })
-}
-
-function llevarPrimeraPAgina(submenu) {
-  const submenuCode = submenu.codigo.split('-')[0]
-  const tabs = cargarPaginasSubMenu(submenuCode).filter((item) => item != null)
-  if (tabs.length > 0) {
-    const firstTab = tabs[0]
-    return firstTab.codigo
-  } else {
-    return submenu.codigo.split('-')[0]
-  }
-}
-
 const selectSubmenu = async (submenu) => {
+  console.log(submenu)
   const submenuCode = submenu.codigo.split('-')[0]
   subMenuSeleccionado.value = submenuCode
   loadTabsForSubmenu(submenuCode)
@@ -339,6 +373,36 @@ const navigateToTab = (tab) => {
 //   },
 //   { immediate: true }, uppercase
 // )
+const cargarPaginasSubMenu = (submenuCodigo) => {
+  console.log(submenuCodigo)
+  const paginasSubmenu = PAGINAS[submenuCodigo] || []
+  const usuario = menuStore.obtenerUsuario
+  return paginasSubmenu.map((paginaCodigo) => {
+    const codigoCompleto = `${paginaCodigo}-${usuario}`
+    const pagina = menuStore.obtenerPagina(codigoCompleto)
+    if (!pagina || !pagina.permiso) return null
+
+    return {
+      codigo: paginaCodigo,
+      titulo: pagina.titulo || paginaCodigo,
+      icono: PAGINAS_ICONS[paginaCodigo] || 'help_outline',
+      permiso: pagina.permiso,
+    }
+  })
+}
+
+function llevarPrimeraPAgina(submenu) {
+  console.log(submenu)
+  const submenuCode = submenu.codigo.split('-')[0]
+  const tabs = cargarPaginasSubMenu(submenuCode).filter((item) => item != null)
+  if (tabs.length > 0) {
+    const firstTab = tabs[0]
+    console.log(firstTab)
+    return firstTab.codigo
+  } else {
+    return submenu.codigo.split('-')[0]
+  }
+}
 
 onMounted(() => {
   const loadData = (key, defaultValue = []) => {

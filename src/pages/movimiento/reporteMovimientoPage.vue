@@ -1,6 +1,6 @@
 <template>
   <q-page padding>
-    <div class="titulo">Reporte Campañas</div>
+    <div class="titulo">Reporte Movimientos</div>
     <q-form @submit.prevent="handleGenerarReporte">
       <div class="row justify-center q-col-gutter-x-md">
         <div class="col-12 col-md-4">
@@ -107,7 +107,7 @@ import { useQuasar } from 'quasar'
 import { api } from 'src/boot/axios'
 import { cambiarFormatoFecha, obtenerFechaActualDato } from 'src/composables/FuncionesG.js'
 import { validarUsuario } from 'src/composables/FuncionesG.js'
-import { PDF_REPORTE_CAMPANAS_VENTAS } from 'src/utils/pdfReportGenerator'
+import { PDF_REPORTE_MOVIMIENTOS } from 'src/utils/pdfReportGenerator'
 
 //pedf
 const pdfData = ref(null)
@@ -132,24 +132,20 @@ const almacenSeleccionadoTexto = computed(() => {
 })
 
 const columnasTabla = [
-  { name: 'n', label: 'N°', field: 'n', align: 'left', format: (val, row, index) => index + 1 },
-  { name: 'almacen', label: 'Almacén', field: 'almacen', align: 'left' },
-  { name: 'nombre', label: 'Campaña', field: 'nombre', align: 'left' },
+  { name: 'n', label: 'N°', field: 'n', align: 'center' },
+
   {
-    name: 'fechainicio',
-    label: 'Fecha Inicio',
-    field: 'fechainicio',
+    name: 'fecha',
+    label: 'Fecha',
+    field: 'fecha',
     align: 'left',
     format: (val) => cambiarFormatoFecha(val),
   },
-  {
-    name: 'fechafinal',
-    label: 'Fecha Final',
-    field: 'fechafinal',
-    align: 'left',
-    format: (val) => cambiarFormatoFecha(val),
-  },
-  { name: 'nventas', label: 'Cantidad de Ventas', field: 'nventas', align: 'left' },
+  { name: 'almacenorigen', label: 'Almacén Origen', field: 'almacenorigen', align: 'left' },
+  { name: 'almacendestino', label: 'Almacén Destino', field: 'almacendestino', align: 'left' },
+  { name: 'descripcion', label: 'Descripción', field: 'descripcion', align: 'left' },
+
+  { name: 'aut', label: 'Autorizacion', field: 'aut', align: 'left' },
 ]
 
 // --- Watchers ---
@@ -239,12 +235,13 @@ async function generarReporte() {
 
   try {
     const idusuario = datosUsuario.idusuario
-    const point = `reporteventacampaña/${idusuario}/${fechaInicio.value}/${fechaFin.value}`
+    const point = `reportemovimiento/${idusuario}/${fechaInicio.value}/${fechaFin.value}`
     const response = await api.get(point)
     console.log(response.status)
     const data = response.data.map((item, index) => ({
       ...item,
       n: index + 1,
+      aut: item.autorizacion == 1 ? 'Autorizado' : 'No Autorizado',
     }))
 
     if (response.status === 200) {
@@ -309,7 +306,7 @@ function handleVerReporte() {
       position: 'top',
     })
   } else {
-    const doc = PDF_REPORTE_CAMPANAS_VENTAS(datosFiltrados.value, {
+    const doc = PDF_REPORTE_MOVIMIENTOS(datosFiltrados.value, {
       fechaInicio: fechaInicio.value,
       fechaFin: fechaFin.value,
       almacen: almacenSeleccionadoTexto.value,

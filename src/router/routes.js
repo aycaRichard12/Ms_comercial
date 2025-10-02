@@ -6,6 +6,7 @@ async function empresaRegistrada() {
   const contenidousuario = validarUsuario()
   const idempresa = contenidousuario[0]?.empresa?.idempresa
   const endpoint = `${URL_APICM}api/empresaRegistrada/${idempresa}`
+  console.log(endpoint)
 
   try {
     const resultado = await peticionGET(endpoint)
@@ -31,6 +32,7 @@ const routes = [
         next() // sigue normalmente a MainLayout
       } else {
         next('/configuracioninicial') // redirige a formulario de configuración
+        //next() // redirige a formulario de configuración
       }
     },
     component: () => import('layouts/MainLayout.vue'),
@@ -300,6 +302,42 @@ const routes = [
         path: '/reportedecompras',
         component: () => import('src/pages/compra/RepComprasPage.vue'),
       },
+      {
+        path: '/reportedeindicederotacionporalmacen',
+        component: () => import('src/pages/reportes/rotacionAlmacenPague.vue'),
+      },
+      {
+        path: '/reportedeindicederotacionglobal',
+        component: () => import('src/pages/reportes/rotacionGlobalPage.vue'),
+      },
+      {
+        path: '/reportedeindicederotacionporcliente',
+        component: () => import('src/pages/reportes/rotacionClientePage.vue'),
+      },
+      {
+        path: '/reportedecampanas',
+        component: () => import('src/pages/campanas/ReporteCampanasPage.vue'),
+      },
+      {
+        path: '/reportedemovimientos',
+        component: () => import('src/pages/movimiento/reporteMovimientoPage.vue'),
+      },
+      {
+        path: '/reportedepedidos',
+        component: () => import('src/pages/pedidos/reportePedidosPage.vue'),
+      },
+      {
+        path: '/reportedepreciosbase',
+        component: () => import('src/pages/precio/ReportePrecioBase.vue'),
+      },
+      {
+        path: '/reportedecategoriasdeprecio',
+        component: () => import('src/pages/precio/ReporteCategoriaPrecio.vue'),
+      },
+      {
+        path: '/notascreditodebito',
+        component: () => import('src/pages/NotasCreditoDebito/NotasCreditoDebitoPage.vue'),
+      },
     ],
   },
   {
@@ -307,7 +345,7 @@ const routes = [
     component: () => import('pages/config/FormularioConfiguracionInicial.vue'),
   },
   // Always leave this as last one,
-  // but you can also remove it registrarcotizacionoculto
+  // but you can also remove it admautorizaciones
   {
     path: '/:catchAll(.*)*',
     component: () => import('pages/ErrorNotFound.vue'),

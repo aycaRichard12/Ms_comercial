@@ -1,47 +1,71 @@
 <template>
   <!-- Encabezado de acciones -->
-  <div class="row flex justify-between">
-    <q-btn color="primary" @click="$emit('add')" class="btn-res q-mt-lg">
-      <q-icon name="add" class="icono" />
-      <span class="texto">Agregar</span>
-    </q-btn>
+  <div class="row q-mt-lg q-gutter-md items-center">
+    <!-- Columna: botones principales -->
+    <div class="col-auto flex flex-col gap-3">
+      <q-btn
+        color="primary"
+        class="btn-res"
+        icon="add"
+        label="Agregar"
+        no-caps
+        @click="$emit('add')"
+      />
 
-    <!-- Filtros -->
-    <div>
-      <label for="almacen">Seleccione un Almacén</label>
-      <q-select
-        v-model="filtroAlmacen"
-        :options="almacenes"
-        dense
-        outlined
-        map-options
-        id="almacen"
+      <q-btn
+        color="secondary"
+        class="btn-res"
+        id="reportedecategoriasdeprecio"
+        to="/reportedecategoriasdeprecio"
+        icon="assessment"
+        label="Reporte Categorías"
+        no-caps
       />
     </div>
 
-    <q-btn color="info" @click="imprimir" outline class="btn-res q-mt-lg">
-      <q-icon name="picture_as_pdf" class="icono" />
-      <span class="texto">Vista Previa PDF</span>
-    </q-btn>
-  </div>
-  <div class="row flex justify-end">
-    <div class="">
-      <label for="buscar"> Buscar...</label>
-      <q-input
-        v-model="search"
-        id="buscar"
-        dense
-        outlined
-        debounce="300"
-        class="q-mb-md"
-        style="background-color: white"
-      >
-        <template v-slot:append>
-          <q-icon name="search" />
-        </template>
-      </q-input>
+    <!-- Columna: filtro de almacén -->
+
+    <!-- Columna: acción PDF -->
+    <div class="col-auto">
+      <q-btn
+        color="info"
+        outline
+        class="btn-res"
+        icon="picture_as_pdf"
+        label="Vista Previa PDF"
+        no-caps
+        @click="imprimir"
+      />
     </div>
   </div>
+
+  <div class="row justify-between q-gutter-md q-mt-md q-mb-md">
+    <!-- Filtro de almacén -->
+    <q-select
+      v-model="filtroAlmacen"
+      :options="almacenes"
+      label="Seleccione un Almacén"
+      dense
+      outlined
+      map-options
+      class="min-w-[220px]"
+    />
+
+    <!-- Buscador -->
+    <q-input
+      v-model="search"
+      label="Buscar..."
+      dense
+      outlined
+      debounce="300"
+      class="bg-white min-w-[220px]"
+    >
+      <template v-slot:append>
+        <q-icon name="search" />
+      </template>
+    </q-input>
+  </div>
+
   <!-- Tabla -->
   <q-table
     flat
@@ -109,6 +133,9 @@ import jsPDF from 'jspdf'
 import autoTable from 'jspdf-autotable'
 import { URL_APIE } from 'src/composables/services'
 import { obtenerFechaActualDato } from 'src/composables/FuncionesG'
+import { useCurrencyStore } from 'src/stores/currencyStore'
+const currencyStore = useCurrencyStore()
+console.log(currencyStore)
 const filtroAlmacen = ref(null)
 const pdfData = ref(null)
 const mostrarModal = ref(false)

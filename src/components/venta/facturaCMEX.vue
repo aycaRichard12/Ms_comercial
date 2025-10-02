@@ -19,7 +19,6 @@
         </h4>
       </div>
       <div></div>
-
       <q-form @submit="onSubmit">
         <!-- Sección Cliente y Documentos -->
         <q-card class="q-mb-md">
@@ -836,7 +835,7 @@ async function crearFormularioFacturaExportacion() {
     console.log('Objeto leyendaFacturaActiva cargado:', leyenda.leyenda)
 
     const datos = JSON.parse(localStorage.getItem('carrito'))
-
+    console.log(datos.ventatotal)
     const formulario = {
       numeroFactura: '',
       nombreRazonSocial: '',
@@ -862,7 +861,7 @@ async function crearFormularioFacturaExportacion() {
         facturaTicket: '',
       },
       codigoLeyenda: leyendaActiva.leyenda.codigosin,
-      tipoCambio: 1,
+      tipoCambio: 6.96,
       direccionComprador: '',
       puertoDestino: '',
       lugarDestino: '',
@@ -1279,7 +1278,7 @@ const onSubmit = async () => {
     $q.loading.show({ message: 'Procesando venta...', timeout: 30000 })
     loadingShown = true
 
-    //Preparar formulario para envío
+    //Preparar formulario para envío tipoCambio
     variablePago !== 'directo'
       ? (cartData.pagosDivididos = pagosDivididos)
       : (cartData.pagosDivididos = [
@@ -1331,21 +1330,52 @@ const onSubmit = async () => {
     form.append('periodopersonalizado', plazoPersonalizado)
     form.append('jsonDetalles', JSON.stringify(cartData))
     cartData.pagosDivididos = pagosDivididos
-    console.log(cartData.pagosDivididos)
+    console.log(cartData)
     console.log('Formulario enviado:')
     form.forEach((valor, clave) => console.log(`${clave}: ${valor}`))
 
-    //  Enviar al backend
-    const response = await api.post('', form, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-    })
+    //  Enviar al backend montoTotalMoneda
+    // const response = await api.post('', form, {
+    //   headers: {
+    //     'Content-Type': 'multipart/form-data',
+    //   },
+    // })
 
-    console.log('Respuesta de la API:', response)
+    // console.log('Respuesta de la API:', response)
 
-    if (!response.data || response.data.estado !== 'exito') {
-      throw { message: response.data?.mensaje || 'Error al procesar la venta', response }
+    // if (!response.data || response.data.estado !== 'exito') {
+    //   throw { message: response.data?.mensaje || 'Error al procesar la venta', response }
+    // }
+    const jsonObject = Object.fromEntries(form.entries())
+
+    jsonObject['jsonDetalles'] = cartData
+    const json = Object.fromEntries(form.entries())
+    json.jsonDetalles = cartData
+    //Enviar al backend
+    if (process.env.NODE_ENV === 'production') {
+      console.log(json)
+      const response = await api.post('', form, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      })
+      console.log('Respuesta de la API:', response)
+      if (!response.data || response.data.estado !== 'exito') {
+        throw { message: response.data?.mensaje || 'Error al procesar la venta', response }
+      }
+    } else {
+      form.forEach((valor, clave) => console.log(`${clave}: ${valor}`))
+      console.log(json)
+      console.log(json)
+      const response = await api.post('', form, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      })
+      console.log('Respuesta de la API:', response)
+      if (!response.data || response.data.estado !== 'exito') {
+        throw { message: response.data?.mensaje || 'Error al procesar la venta', response }
+      }
     }
 
     //  Éxito

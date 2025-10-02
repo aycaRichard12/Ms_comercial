@@ -28,7 +28,7 @@
         </div>
 
         <!-- Moneda SIN (Dropdown) -->
-        <div class="col-12 col-md-4" v-if="estadoFactura">
+        <div class="col-12 col-md-4" v-if="tipoFactura">
           <label for="monedasin">Moneda (SIN)*</label>
           <q-select
             use-input
@@ -59,21 +59,16 @@
 
 <script setup>
 import { ref, onMounted, watch } from 'vue'
-import { useFacturaStore } from 'src/stores/factura'
 import { validarUsuario } from 'src/composables/FuncionesG'
 import { api } from 'src/boot/axios'
 import { useQuasar } from 'quasar'
-
+import { getTipoFactura } from 'src/composables/FuncionesG'
+const tipoFactura = getTipoFactura(true)
 const props = defineProps({
   editing: Boolean,
   modalValue: Object,
 })
 const $q = useQuasar()
-const facturaStore = useFacturaStore()
-facturaStore.cargarUsuario()
-
-const estadoFactura = facturaStore.obtenerEstadoFactura()
-console.log(estadoFactura)
 
 const localData = ref({ ...props.modalValue })
 
@@ -81,7 +76,7 @@ const opcionesMoneda = ref([])
 const emit = defineEmits(['submit', 'cancel'])
 
 const inicio = () => {
-  if (estadoFactura) {
+  if (tipoFactura) {
     getDivisasSIN()
   }
 }

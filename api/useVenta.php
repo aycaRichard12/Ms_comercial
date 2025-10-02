@@ -196,7 +196,7 @@ class UseVEnta
                 'canalventa' => $canalventa,
                 'codigoVenta' => $codigoVenta,
                 'punto_venta' => $jsonDetalles['puntoVenta'],
-                'leyenda' => $jsonDetalles['idleyenda'],
+                //'leyenda' => $jsonDetalles['idleyenda'],
             ];
 
             if ($tipoventa == self::TIPO_VENTA_SIN_FACTURA) {

@@ -61,7 +61,8 @@ import { useQuasar } from 'quasar'
 import { useRouter } from 'vue-router'
 import { api } from 'src/boot/axios'
 import { objectToFormData, validarUsuario } from 'src/composables/FuncionesGenerales'
-
+import { getIdRubro } from 'src/composables/FuncionesG'
+const idrubro = getIdRubro()
 const contenidousuario = validarUsuario()
 const idempresa = contenidousuario[0]?.empresa?.idempresa
 const $q = useQuasar()
@@ -115,6 +116,7 @@ async function enviarFormulario() {
     sucursal: sucursal.value,
     ver: 'control',
     empresa: idempresa,
+    idrubro: idrubro,
   })
   for (let [k, v] of formData.entries()) {
     console.log(`${k}:${v}`)
@@ -124,7 +126,7 @@ async function enviarFormulario() {
     let response
 
     response = await api.post(``, formData)
-
+    console.log(response)
     if (response.data.estado === 'exito') {
       $q.notify({
         type: 'positive',

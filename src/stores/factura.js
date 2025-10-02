@@ -15,6 +15,7 @@ export const useFacturaStore = defineStore('factura', {
       if (!this.usuario) this.cargarUsuario()
 
       const factura = this.usuario?.[0]?.factura
+      console.log('Estado de la factura:', factura)
       if (!factura) return false
 
       return Object.values(factura).every((valor) => valor !== '')

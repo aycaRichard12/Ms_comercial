@@ -338,10 +338,9 @@
   </q-page>
 </template>
 
-<script>
+<script setup>
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import { useQuasar } from 'quasar'
-import { peticionGET } from 'src/composables/peticionesFetch'
 import { URL_APICM } from 'src/composables/services'
 import { obtenerFechaActualDato, validarUsuario } from 'src/composables/FuncionesG'
 import { cambiarFormatoFecha } from 'src/composables/FuncionesG'
@@ -352,697 +351,608 @@ import { convertirImagenUtil } from 'src/composables/FuncionesG'
 import { api } from 'src/boot/axios'
 import emitter from 'src/event-bus'
 
-export default {
-  props: {
-    codigo: {
-      type: String,
-      required: true,
-    },
-    permisos: {
-      type: String,
-      required: true,
-    },
-    menuprimario: {
-      type: String,
-      required: true,
-    },
-    menusegundario: {
-      type: String,
-      required: true,
-    },
-    refrescar: {
-      type: String,
-      required: true,
-    },
+const $q = useQuasar()
+const privilegios = ['1', '1', '1', '1']
+const vistaActiva = ref('principal')
+const mostrarForm = ref(false)
+const cargando = ref(false)
+const mostrarDialogoImagen = ref(false)
+const imagenSeleccionada = ref('')
+const divisa = ref('$') // Se actualizará con cargarDivisas
+
+// Filtros
+const filtroAlmacen = ref({ value: 0, label: 'Todos los almacenes' })
+const filtroEstado = ref({ value: 0, label: 'Todos' })
+const columnaFiltro = ref({ value: 0, label: 'Todo' })
+const textoBusqueda = ref('')
+
+// Datos
+const datosOriginales = ref([])
+const detallesCobros = ref([])
+const opcionesAlmacenes = ref([])
+const detalleSeleccionado = ref({
+  id: null,
+  totalVenta: 0,
+  saldo: 0,
+})
+
+// Formulario
+const formulario = ref({
+  idCredito: null,
+  cliente: '',
+  sucursal: '',
+  deudaTotal: '0.00',
+  saldoPendiente: '0.00',
+  cuotasPendientes: 0,
+  valorCuota: '0.00',
+  fecha: obtenerFechaActual(),
+  numeroCobros: 0,
+  totalCobro: '0.00',
+  saldoPorCobrar: '0.00',
+  comprobante: null,
+  imagenConvertida: null,
+})
+
+// Columnas de la tabla principal
+const columnas = [
+  { name: 'numero', label: 'N°', field: 'numero', align: 'center' },
+  { name: 'cliente', label: 'Razon Social', field: 'cliente', align: 'left' },
+  { name: 'factura', label: 'N° Factura', field: 'nfactura', align: 'center' },
+  {
+    name: 'fecha',
+    label: 'Fecha Crédito',
+    field: 'fechaventa',
+    align: 'center',
+    format: (val) => (val ? cambiarFormatoFecha(val) : ''),
   },
-
-  setup() {
-    const $q = useQuasar()
-    const privilegios = ['1', '1', '1', '1']
-    const vistaActiva = ref('principal')
-    const mostrarForm = ref(false)
-    const cargando = ref(false)
-    const mostrarDialogoImagen = ref(false)
-    const imagenSeleccionada = ref('')
-    const divisa = ref('$') // Se actualizará con cargarDivisas
-
-    // Filtros
-    const filtroAlmacen = ref({ value: 0, label: 'Todos los almacenes' })
-    const filtroEstado = ref({ value: 0, label: 'Todos' })
-    const columnaFiltro = ref({ value: 0, label: 'Todo' })
-    const textoBusqueda = ref('')
-
-    // Datos
-    const datosOriginales = ref([])
-    const detallesCobros = ref([])
-    const opcionesAlmacenes = ref([])
-    const detalleSeleccionado = ref({
-      id: null,
-      totalVenta: 0,
-      saldo: 0,
-    })
-
-    // Formulario
-    const formulario = ref({
-      idCredito: null,
-      cliente: '',
-      sucursal: '',
-      deudaTotal: '0.00',
-      saldoPendiente: '0.00',
-      cuotasPendientes: 0,
-      valorCuota: '0.00',
-      fecha: obtenerFechaActual(),
-      numeroCobros: 0,
-      totalCobro: '0.00',
-      saldoPorCobrar: '0.00',
-      comprobante: null,
-      imagenConvertida: null,
-    })
-
-    // Columnas de la tabla principal
-    const columnas = [
-      { name: 'numero', label: 'N°', field: 'numero', align: 'center' },
-      { name: 'cliente', label: 'Razon Social', field: 'cliente', align: 'left' },
-      { name: 'factura', label: 'N° Factura', field: 'nfactura', align: 'center' },
-      {
-        name: 'fecha',
-        label: 'Fecha Crédito',
-        field: 'fechaventa',
-        align: 'center',
-        format: (val) => (val ? cambiarFormatoFecha(val) : ''),
-      },
-      {
-        name: 'vencimiento',
-        label: 'Vencimiento',
-        field: 'fechalimite',
-        align: 'center',
-        format: (val) => (val ? cambiarFormatoFecha(val) : ''),
-      },
-      { name: 'cuotas', label: 'N° Cuotas', field: 'ncuotas', align: 'center' },
-      {
-        name: 'cuotasProcesadas',
-        label: 'Cuotas Procesadas',
-        field: (row) => row.cuotaspagas || 0,
-        align: 'center',
-      },
-      {
-        name: 'totalVenta',
-        label: 'Total Venta',
-        field: 'ventatotal',
-        align: 'right',
-        format: (val) => decimas(redondear(parseFloat(val))),
-      },
-      {
-        name: 'totalCobrado',
-        label: 'Total Cobrado',
-        field: (row) => row.totalcobrado || 0,
-        align: 'right',
-        format: (val) => decimas(redondear(parseFloat(val))),
-      },
-      {
-        name: 'saldo',
-        label: 'Saldo',
-        field: 'saldo',
-        align: 'right',
-        format: (val) => decimas(redondear(parseFloat(val))),
-      },
-      { name: 'estado', label: 'Estado', field: (row) => estados[row.estado], align: 'center' },
-      { name: 'opciones', label: 'Opciones', field: '', align: 'center' },
-    ]
-
-    // Columnas de la tabla de detalles
-    const columnasDetalles = [
-      { name: 'numero', label: 'N°', field: 'numero', align: 'center' },
-      { name: 'fecha', label: 'Fecha de cobro', field: 'fecha', align: 'center' },
-      {
-        name: 'cuotas',
-        label: 'N° cobros',
-        field: 'ncuotas',
-        align: 'center',
-        format: (val) => decimas(val),
-      },
-      { name: 'comprobante', label: 'Comprobante', field: 'imagen', align: 'center' },
-      {
-        name: 'monto',
-        label: 'Total cobro',
-        field: 'monto',
-        align: 'right',
-        format: (val) => decimas(redondear(parseFloat(val))),
-      },
-    ]
-
-    // Opciones para filtros
-    const opcionesEstados = [
-      { value: 0, label: 'Todos' },
-      { value: 1, label: 'Activos' },
-      { value: 2, label: 'Finalizados' },
-      { value: 3, label: 'Atrasados' },
-      { value: 4, label: 'Anulados' },
-    ]
-
-    const opcionesColumnas = [
-      { value: 0, label: 'Todo' },
-      { value: 1, label: 'Cliente' },
-      { value: 2, label: 'N° factura' },
-      { value: 3, label: 'Fecha crédito' },
-      { value: 4, label: 'Vencimiento' },
-      { value: 5, label: 'N° cuotas' },
-      { value: 6, label: 'N° cuotas Procesadas' },
-      { value: 7, label: 'Total venta' },
-      { value: 8, label: 'Total cobrado' },
-      { value: 9, label: 'Saldo' },
-      { value: 10, label: 'Estado' },
-    ]
-
-    const estados = {
-      1: 'Activo',
-      2: 'Finalizado',
-      3: 'Atrasado',
-      4: 'Anulado',
-    }
-
-    const onRowClick = (evt, row, index) => {
-      alert('Click en fila', index, row.id, row)
-    }
-    console.log(onRowClick)
-    // Computed
-    // const datosFiltrados = computed(() => {
-    //   let datos = [...datosOriginales.value]
-    //   console.datos
-    //   console.log(filtroAlmacen.value?.value)
-
-    //   // Aplicar filtros
-    //   if (Number(filtroAlmacen.value?.value) !== 0) {
-    //     datos = datos.filter(
-    //       (item) => Number(item.idalmacen) === Number(filtroAlmacen.value?.value),
-    //     )
-    //   }
-
-    //   console.log(filtroEstado.value?.value)
-    //   if (Number(filtroEstado.value?.value) !== 0) {
-    //     datos = datos.filter((item) => Number(item.estado) === Number(filtroEstado.value?.value))
-    //   }
-
-    //   // Aplicar búsqueda
-    //   console.log(textoBusqueda.value)
-    //   // ... (previous code)
-
-    //   if (textoBusqueda.value && textoBusqueda.value.trim() !== '') {
-    //     const texto = textoBusqueda.value.toLowerCase()
-    //     const columna = columnaFiltro.value
-    //     console.log('Texto de búsqueda:', texto)
-    //     console.log('Columna seleccionada:', columna)
-    //     console.log('Array de columnas:', columnas) // Add this line to inspect 'columnas'
-
-    //     datos = datos.filter((item) => {
-    //       if (columna === 0) {
-    //         // Buscar en todas las columnas
-    //         return Object.values(item).some((val) => String(val).toLowerCase().includes(texto))
-    //       } else {
-    //         // Crucial check: Ensure columnas exists and the index is valid
-    //         if (!columnas || !columnas[columna]) {
-    //           console.error(
-    //             `Error: La columna con índice ${columna} no existe en el array de columnas.`,
-    //           )
-    //           // You might want to return false here or handle this gracefully
-    //           return false // Or handle this case based on your application's logic
-    //         }
-
-    //         // Buscar en la columna específica
-    //         const campo = columnas[columna].field
-    //         const value = typeof campo === 'function' ? campo(item) : item[campo]
-    //         return String(value).toLowerCase().includes(texto)
-    //       }
-    //     })
-    //   }
-
-    //   // ... (rest of the code)
-    //   // Agregar número de fila
-    //   return datos.map((item, index) => ({
-    //     ...item,
-    //     numero: index + 1,
-    //   }))
-    // })
-
-    const datosFiltrados = computed(() => {
-      let datos = [...datosOriginales.value]
-      // console.datos // This line seems like a typo, should probably be console.log(datos)
-      console.log(filtroAlmacen.value?.value)
-
-      // Aplicar filtros
-      if (Number(filtroAlmacen.value?.value) !== 0) {
-        datos = datos.filter(
-          (item) => Number(item.idalmacen) === Number(filtroAlmacen.value?.value),
-        )
-      }
-
-      console.log(filtroEstado.value?.value)
-      if (Number(filtroEstado.value?.value) !== 0) {
-        datos = datos.filter((item) => Number(item.estado) === Number(filtroEstado.value?.value))
-      }
-
-      // Aplicar búsqueda
-      console.log(textoBusqueda.value)
-      if (textoBusqueda.value && textoBusqueda.value.trim() !== '') {
-        const texto = textoBusqueda.value.toLowerCase()
-        // FIX IS HERE: Access the 'value' property
-        const columna = columnaFiltro.value?.value
-        console.log('Texto de búsqueda:', texto)
-        console.log('Columna seleccionada (index):', columna) // Log the actual index now
-        console.log('Array de columnas:', columnas) // Keep this for debugging 'columnas' array itself
-
-        datos = datos.filter((item) => {
-          if (columna === 0) {
-            // Buscar en todas las columnas
-            return Object.values(item).some((val) => String(val).toLowerCase().includes(texto))
-          } else {
-            // Add safety checks for `columnas` and `columna` just in case, though the primary issue is resolved
-            if (!columnas || !columnas[columna]) {
-              console.error(
-                `Error: La columna con índice ${columna} no existe en el array de columnas.`,
-              )
-              return false // Prevent further errors and exclude this item
-            }
-
-            // Buscar en la columna específica
-            const campo = columnas[columna].field
-            const value = typeof campo === 'function' ? campo(item) : item[campo]
-            return String(value).toLowerCase().includes(texto)
-          }
-        })
-      }
-      return processDataWithTotals(datos)
-
-      // Agregar número de fila
-    })
-
-    const processDataWithTotals = (data) => {
-      if (data.length === 0) return []
-
-      const numberedData = data.map((row, index) => ({
-        ...row,
-        numero: index + 1,
-      }))
-
-      const totales = {
-        cuotasProcesadas: numberedData.reduce((sum, u) => sum + Number(u.cuotasProcesadas || 0), 0),
-        totalVenta: numberedData.reduce((sum, u) => sum + Number(u.totalVenta || 0), 0),
-        totalCobrado: numberedData.reduce((sum, u) => sum + Number(u.totalCobrado || 0), 0),
-      }
-
-      return [...numberedData, totales]
-    }
-    const totalCobrado = computed(() => {
-      return detallesCobros.value.reduce((total, item) => {
-        return total + parseFloat(item.monto || 0)
-      }, 0)
-    })
-
-    // Métodos
-    const cargarDatos = async () => {
-      cargando.value = true
-      try {
-        const contenidousuario = validarUsuario()
-        const idempresa = contenidousuario[0]?.empresa?.idempresa
-
-        // const response = await api.get(`listacuentasxcobrar/${idempresa}`)
-        // console.log(response)
-        // const res = response.data
-        // console.log(res)
-        // const data = await response.json()
-
-        // const response = await fetch(`${URL_APICM}api/listacuentasxcobrar/${idempresa}`)
-        // if (!response.ok) throw new Error('Error al cargar datos')
-
-        //const data = await response.json()
-        const response = await api.get(`listacuentasxcobrar/${idempresa}`)
-        console.log(response)
-        const data = response.data
-        console.log(data)
-        if (data.estado === 'error') throw new Error(data.error)
-
-        await actualizarEstados(data)
-        datosOriginales.value = data
-      } catch (error) {
-        $q.notify({
-          type: 'negative',
-          message: `Error al cargar datos: ${error.message}`,
-        })
-      } finally {
-        cargando.value = false
-      }
-    }
-
-    const actualizarEstados = async (data) => {
-      const use = data.filter((u) => u.estado == 1 && u.saldo != 0 && u.estadoventa == 1)
-
-      const promises = use.map(async (key) => {
-        let fecha1 = new Date()
-        let fecha2 = new Date(key.fechalimite)
-        fecha1 = Math.floor(fecha1.getTime() / (1000 * 3600 * 24))
-        fecha2 = Math.floor(fecha2.getTime() / (1000 * 3600 * 24))
-
-        if (fecha1 > fecha2 && key.saldo > 0 && key.estado != 3 && key.estadoventa == 1) {
-          await cambiarEstado(key.id, 3)
-        }
-      })
-
-      await Promise.all(promises)
-    }
-
-    const cambiarEstado = async (id, code) => {
-      try {
-        const resp = await fetch(`${URL_APICM}api/cambiarcreditomoroso/${id}/${code}`)
-        const data = await resp.json()
-        console.log(data)
-      } catch (error) {
-        console.error('Error al cambiar estado:', error)
-      }
-    }
-
-    const cargarAlmacenes = async () => {
-      try {
-        const contenidousuario = validarUsuario()
-        const idempresa = contenidousuario[0]?.empresa?.idempresa
-        const idusuario = contenidousuario[0]?.idusuario
-
-        const resultado = await peticionGET(`${URL_APICM}api/listaResponsableAlmacen/${idempresa}`)
-
-        if (resultado[0] == 'error') {
-          throw new Error(resultado.error)
-        }
-
-        opcionesAlmacenes.value = [
-          { value: 0, label: 'Todos los almacenes' },
-          ...resultado
-            .filter((u) => u.idusuario == idusuario)
-            .map((key) => ({
-              value: key.idalmacen,
-              label: key.almacen,
-            })),
-        ]
-      } catch (error) {
-        $q.notify({
-          type: 'negative',
-          message: `Error al cargar almacenes: ${error.message}`,
-        })
-      }
-    }
-
-    const mostrarFormulario = () => {
-      formulario.value = {
-        idCredito: null,
-        cliente: '',
-        sucursal: '',
-        deudaTotal: '0.00',
-        saldoPendiente: '0.00',
-        cuotasPendientes: 0,
-        valorCuota: '0.00',
-        fecha: obtenerFechaActual(),
-        numeroCobros: 0,
-        totalCobro: '0.00',
-        saldoPorCobrar: '0.00',
-        comprobante: null,
-        imagenConvertida: null,
-      }
-      mostrarForm.value = true
-    }
-
-    const cargarFormulario = (dato) => {
-      formulario.value = {
-        idCredito: dato.id,
-        cliente: dato.cliente,
-        sucursal: dato.sucursal,
-        deudaTotal: decimas(dato.ventatotal),
-        saldoPendiente: decimas(dato.saldo),
-        cuotasPendientes: parseFloat(dato.ncuotas) - parseFloat(dato.cuotaspagas || 0),
-        valorCuota: decimas(dato.valorcuota),
-        fecha: obtenerFechaActualDato(),
-        numeroCobros: 0,
-        totalCobro: '0.00',
-        saldoPorCobrar: '0.00',
-        comprobante: null,
-        imagenConvertida: null,
-      }
-
-      // Si solo queda 1 cuota pendiente
-      if (formulario.value.cuotasPendientes === 1) {
-        formulario.value.numeroCobros = 1
-        formulario.value.totalCobro = decimas(
-          redondear(parseFloat(formulario.value.saldoPendiente)),
-        )
-        formulario.value.saldoPorCobrar = 0
-      }
-
-      mostrarForm.value = true
-    }
-
-    const calcularTotales = () => {
-      const numCobros = parseFloat(formulario.value.numeroCobros || 0)
-      const valorCuota = parseFloat(formulario.value.valorCuota || 0)
-      const saldoPendiente = parseFloat(formulario.value.saldoPendiente || 0)
-
-      if (numCobros <= formulario.value.cuotasPendientes) {
-        if (numCobros === formulario.value.cuotasPendientes) {
-          formulario.value.totalCobro = decimas(redondear(saldoPendiente))
-          formulario.value.saldoPorCobrar = 0
-        } else {
-          formulario.value.totalCobro = decimas(redondear(numCobros * valorCuota))
-          formulario.value.saldoPorCobrar = decimas(
-            redondear(saldoPendiente - numCobros * valorCuota),
-          )
-        }
-      } else {
-        $q.notify({
-          type: 'warning',
-          message: 'El N°Cobros no puede ser mayor a los cobros pendientes',
-        })
-        formulario.value.numeroCobros = 0
-        formulario.value.totalCobro = '0.00'
-      }
-    }
-
-    const calcularNumeroCobros = () => {
-      const totalCobro = parseFloat(formulario.value.totalCobro || 0)
-      const saldoPendiente = parseFloat(formulario.value.saldoPendiente || 0)
-      const valorCuota = parseFloat(formulario.value.valorCuota || 0)
-
-      if (totalCobro > saldoPendiente) {
-        formulario.value.totalCobro = '0.00'
-        formulario.value.numeroCobros = 0
-        formulario.value.saldoPorCobrar = 0
-
-        $q.notify({
-          type: 'warning',
-          message: 'El monto ingresado no puede ser mayor al saldo pendiente',
-        })
-
-        if (formulario.value.cuotasPendientes === 1) {
-          formulario.value.totalCobro = formulario.value.saldoPendiente
-          formulario.value.numeroCobros = formulario.value.cuotasPendientes
-          formulario.value.saldoPorCobrar = 0
-        }
-      } else {
-        if (totalCobro === saldoPendiente) {
-          formulario.value.totalCobro = formulario.value.saldoPendiente
-          formulario.value.saldoPorCobrar = decimas(0)
-          formulario.value.numeroCobros = formulario.value.cuotasPendientes
-        } else {
-          if (totalCobro <= valorCuota) {
-            formulario.value.saldoPorCobrar = decimas(redondear(saldoPendiente - totalCobro))
-            formulario.value.numeroCobros = 1
-          } else {
-            const nrocuotas = Math.floor(totalCobro / valorCuota)
-            formulario.value.saldoPorCobrar = decimas(redondear(saldoPendiente - totalCobro))
-            formulario.value.numeroCobros = nrocuotas
-          }
-        }
-      }
-    }
-
-    const convertirImagen = async (file) => {
-      if (!file) {
-        formulario.value.imagenConvertida = null
-        return
-      }
-
-      try {
-        const imagen = await convertirImagenUtil(file)
-        formulario.value.imagenConvertida = imagen
-      } catch (error) {
-        console.log('error al convertir en imagen', error)
-        $q.notify({
-          type: 'negative',
-          message: 'Error al procesar la imagen',
-        })
-      }
-    }
-
-    const registrarCobro = async () => {
-      if (parseFloat(formulario.value.saldoPorCobrar) < 0) {
-        $q.notify({
-          type: 'negative',
-          message: 'No se calculó el saldo por cobrar, inténtelo nuevamente',
-        })
-        return
-      }
-
-      try {
-        const datos = new FormData()
-        datos.append('ver', 'registroPagoCuentaxCobrar')
-        datos.append('idestadocobro', formulario.value.idCredito)
-        datos.append('ncuotas', formulario.value.numeroCobros)
-        datos.append('total', formulario.value.totalCobro)
-        datos.append('saldo', formulario.value.saldoPorCobrar)
-        datos.append('fecha', formulario.value.fecha)
-
-        if (formulario.value.imagenConvertida) {
-          datos.append('imagen', formulario.value.imagenConvertida)
-        } else {
-          datos.append('imagen', '')
-        }
-
-        // const response = await fetch(`${URL_APICM}api/`, {
-        //   method: 'POST',
-        //   body: datos,
-        // })
-        const response = await api.post(``, datos) // Replace with your actual API endpoint
-        console.log(response)
-
-        const data = response.data
-
-        if (data.estado === 'exito') {
-          $q.notify({
-            type: 'positive',
-            message: 'Cobro registrado correctamente',
-          })
-
-          emitter.emit('reiniciar-notificaciones')
-          cargarDatos()
-          cerrarFormulario()
-        } else {
-          throw new Error(data.mensaje || 'Error al registrar el cobro')
-        }
-      } catch (error) {
-        $q.notify({
-          type: 'negative',
-          message: `Error al registrar el cobro: ${error.message}`,
-        })
-      }
-    }
-
-    const cerrarFormulario = () => {
-      mostrarForm.value = false
-    }
-
-    const mostrarDetalles = async (dato) => {
-      detalleSeleccionado.value = {
-        id: dato.id,
-        totalVenta: dato.ventatotal,
-        saldo: dato.saldo,
-      }
-
-      try {
-        const response = await fetch(`${URL_APICM}api/listadetallecobros/${dato.id}`)
-        if (!response.ok) throw new Error('Error al cargar detalles')
-
-        const data = await response.json()
-        if (data.estado === 'error') throw new Error(data.error)
-
-        detallesCobros.value = data.map((item, index) => ({
-          ...item,
-          numero: index + 1,
-          imagen: `${URL_APICM}api/${item.imagen}`,
-        }))
-
-        vistaActiva.value = 'detalles'
-      } catch (error) {
-        $q.notify({
-          type: 'negative',
-          message: `Error al cargar detalles: ${error.message}`,
-        })
-      }
-    }
-
-    const mostrarImagen = (imagen) => {
-      imagenSeleccionada.value = imagen
-      mostrarDialogoImagen.value = true
-    }
-
-    const filtrarDatos = () => {
-      console.log(filtroAlmacen.value)
-      console.log(filtroEstado.value)
-      console.log(columnaFiltro.value)
-    }
-
-    const filtrarTabla = () => {
-      // Los computed properties ya manejan la búsqueda
-    }
-
-    const formatoMoneda = (valor) => {
-      return decimas(redondear(parseFloat(valor || 0)))
-    }
-    function handleKeydown(e) {
-      if (e.key === 'Escape') {
-        mostrarForm.value = false
-      }
-    }
-
-    onMounted(() => {
-      window.addEventListener('keydown', handleKeydown)
-
-      emitter.on('realizar-pago', (Notification) => {
-        console.log(Notification)
-        document.getElementById(`btn-${Notification.id}`).click() // accedemos al elemento real del q-btn
-      })
-    })
-    onBeforeUnmount(() => {
-      window.removeEventListener('keydown', handleKeydown)
-    })
-    // Inicialización
-    onMounted(() => {
-      cargarDatos()
-      cargarAlmacenes()
-      // Aquí deberías cargar la divisa con cargarDivisas()
-    })
-
-    return {
-      privilegios,
-      vistaActiva,
-      mostrarForm,
-      cargando,
-      mostrarDialogoImagen,
-      imagenSeleccionada,
-      divisa,
-      filtroAlmacen,
-      filtroEstado,
-      columnaFiltro,
-      textoBusqueda,
-      datosFiltrados,
-      detallesCobros,
-      opcionesAlmacenes,
-      detalleSeleccionado,
-      formulario,
-      columnas,
-      columnasDetalles,
-      opcionesEstados,
-      opcionesColumnas,
-      totalCobrado,
-      mostrarFormulario,
-      cargarFormulario,
-      calcularTotales,
-      calcularNumeroCobros,
-      convertirImagen,
-      registrarCobro,
-      cerrarFormulario,
-      mostrarDetalles,
-      mostrarImagen,
-      filtrarDatos,
-      filtrarTabla,
-      formatoMoneda,
-    }
+  {
+    name: 'vencimiento',
+    label: 'Vencimiento',
+    field: 'fechalimite',
+    align: 'center',
+    format: (val) => (val ? cambiarFormatoFecha(val) : ''),
   },
+  { name: 'cuotas', label: 'N° Cuotas', field: 'ncuotas', align: 'center' },
+  {
+    name: 'cuotasProcesadas',
+    label: 'Cuotas Procesadas',
+    field: (row) => row.cuotaspagas || 0,
+    align: 'center',
+  },
+  {
+    name: 'totalVenta',
+    label: 'Total Venta',
+    field: 'ventatotal',
+    align: 'right',
+    format: (val) => decimas(redondear(parseFloat(val))),
+  },
+  {
+    name: 'totalCobrado',
+    label: 'Total Cobrado',
+    field: (row) => row.totalcobrado || 0,
+    align: 'right',
+    format: (val) => decimas(redondear(parseFloat(val))),
+  },
+  {
+    name: 'saldo',
+    label: 'Saldo',
+    field: 'saldo',
+    align: 'right',
+    format: (val) => decimas(redondear(parseFloat(val))),
+  },
+  { name: 'estado', label: 'Estado', field: (row) => estados[row.estado], align: 'center' },
+  { name: 'opciones', label: 'Opciones', field: '', align: 'center' },
+]
+
+// Columnas de la tabla de detalles
+const columnasDetalles = [
+  { name: 'numero', label: 'N°', field: 'numero', align: 'center' },
+  { name: 'fecha', label: 'Fecha de cobro', field: 'fecha', align: 'center' },
+  {
+    name: 'cuotas',
+    label: 'N° cobros',
+    field: 'ncuotas',
+    align: 'center',
+    format: (val) => decimas(val),
+  },
+  { name: 'comprobante', label: 'Comprobante', field: 'imagen', align: 'center' },
+  {
+    name: 'monto',
+    label: 'Total cobro',
+    field: 'monto',
+    align: 'right',
+    format: (val) => decimas(redondear(parseFloat(val))),
+  },
+]
+
+// Opciones para filtros
+const opcionesEstados = [
+  { value: 0, label: 'Todos' },
+  { value: 1, label: 'Activos' },
+  { value: 2, label: 'Finalizados' },
+  { value: 3, label: 'Atrasados' },
+  { value: 4, label: 'Anulados' },
+]
+
+const opcionesColumnas = [
+  { value: 0, label: 'Todo' },
+  { value: 1, label: 'Cliente' },
+  { value: 2, label: 'N° factura' },
+  { value: 3, label: 'Fecha crédito' },
+  { value: 4, label: 'Vencimiento' },
+  { value: 5, label: 'N° cuotas' },
+  { value: 6, label: 'N° cuotas Procesadas' },
+  { value: 7, label: 'Total venta' },
+  { value: 8, label: 'Total cobrado' },
+  { value: 9, label: 'Saldo' },
+  { value: 10, label: 'Estado' },
+]
+
+const estados = {
+  1: 'Activo',
+  2: 'Finalizado',
+  3: 'Atrasado',
+  4: 'Anulado',
 }
+
+const onRowClick = (evt, row, index) => {
+  alert('Click en fila', index, row.id, row)
+}
+console.log(onRowClick)
+// Computed
+// const datosFiltrados = computed(() => {
+//   let datos = [...datosOriginales.value]
+//   console.datos
+//   console.log(filtroAlmacen.value?.value)
+
+//   // Aplicar filtros
+//   if (Number(filtroAlmacen.value?.value) !== 0) {
+//     datos = datos.filter(
+//       (item) => Number(item.idalmacen) === Number(filtroAlmacen.value?.value),
+//     )
+//   }
+
+//   console.log(filtroEstado.value?.value)
+//   if (Number(filtroEstado.value?.value) !== 0) {
+//     datos = datos.filter((item) => Number(item.estado) === Number(filtroEstado.value?.value))
+//   }
+
+//   // Aplicar búsqueda
+//   console.log(textoBusqueda.value)
+//   // ... (previous code)
+
+//   if (textoBusqueda.value && textoBusqueda.value.trim() !== '') {
+//     const texto = textoBusqueda.value.toLowerCase()
+//     const columna = columnaFiltro.value
+//     console.log('Texto de búsqueda:', texto)
+//     console.log('Columna seleccionada:', columna)
+//     console.log('Array de columnas:', columnas) // Add this line to inspect 'columnas'
+
+//     datos = datos.filter((item) => {
+//       if (columna === 0) {
+//         // Buscar en todas las columnas
+//         return Object.values(item).some((val) => String(val).toLowerCase().includes(texto))
+//       } else {
+//         // Crucial check: Ensure columnas exists and the index is valid
+//         if (!columnas || !columnas[columna]) {
+//           console.error(
+//             `Error: La columna con índice ${columna} no existe en el array de columnas.`,
+//           )
+//           // You might want to return false here or handle this gracefully
+//           return false // Or handle this case based on your application's logic
+//         }
+
+//         // Buscar en la columna específica
+//         const campo = columnas[columna].field
+//         const value = typeof campo === 'function' ? campo(item) : item[campo]
+//         return String(value).toLowerCase().includes(texto)
+//       }
+//     })
+//   }
+
+//   // ... (rest of the code)
+//   // Agregar número de fila
+//   return datos.map((item, index) => ({
+//     ...item,
+//     numero: index + 1,
+//   }))
+// })
+
+const datosFiltrados = computed(() => {
+  let datos = [...datosOriginales.value]
+  // console.datos // This line seems like a typo, should probably be console.log(datos)
+  console.log(filtroAlmacen.value?.value)
+
+  // Aplicar filtros
+  if (Number(filtroAlmacen.value?.value) !== 0) {
+    datos = datos.filter((item) => Number(item.idalmacen) === Number(filtroAlmacen.value?.value))
+  }
+
+  console.log(filtroEstado.value?.value)
+  if (Number(filtroEstado.value?.value) !== 0) {
+    datos = datos.filter((item) => Number(item.estado) === Number(filtroEstado.value?.value))
+  }
+
+  // Aplicar búsqueda
+  console.log(textoBusqueda.value)
+  if (textoBusqueda.value && textoBusqueda.value.trim() !== '') {
+    const texto = textoBusqueda.value.toLowerCase()
+    // FIX IS HERE: Access the 'value' property
+    const columna = columnaFiltro.value?.value
+    console.log('Texto de búsqueda:', texto)
+    console.log('Columna seleccionada (index):', columna) // Log the actual index now
+    console.log('Array de columnas:', columnas) // Keep this for debugging 'columnas' array itself
+
+    datos = datos.filter((item) => {
+      if (columna === 0) {
+        // Buscar en todas las columnas
+        return Object.values(item).some((val) => String(val).toLowerCase().includes(texto))
+      } else {
+        // Add safety checks for `columnas` and `columna` just in case, though the primary issue is resolved
+        if (!columnas || !columnas[columna]) {
+          console.error(
+            `Error: La columna con índice ${columna} no existe en el array de columnas.`,
+          )
+          return false // Prevent further errors and exclude this item
+        }
+
+        // Buscar en la columna específica
+        const campo = columnas[columna].field
+        const value = typeof campo === 'function' ? campo(item) : item[campo]
+        return String(value).toLowerCase().includes(texto)
+      }
+    })
+  }
+  return processDataWithTotals(datos)
+
+  // Agregar número de fila
+})
+
+const processDataWithTotals = (data) => {
+  if (data.length === 0) return []
+
+  const numberedData = data.map((row, index) => ({
+    ...row,
+    numero: index + 1,
+  }))
+
+  const totales = {
+    cuotasProcesadas: numberedData.reduce((sum, u) => sum + Number(u.cuotasProcesadas || 0), 0),
+    totalVenta: numberedData.reduce((sum, u) => sum + Number(u.totalVenta || 0), 0),
+    totalCobrado: numberedData.reduce((sum, u) => sum + Number(u.totalCobrado || 0), 0),
+  }
+
+  return [...numberedData, totales]
+}
+const totalCobrado = computed(() => {
+  return detallesCobros.value.reduce((total, item) => {
+    return total + parseFloat(item.monto || 0)
+  }, 0)
+})
+
+// Métodos
+const cargarDatos = async () => {
+  cargando.value = true
+  try {
+    const contenidousuario = validarUsuario()
+    const idempresa = contenidousuario[0]?.empresa?.idempresa
+
+    // const response = await api.get(`listacuentasxcobrar/${idempresa}`)
+    // console.log(response)
+    // const res = response.data
+    // console.log(res)
+    // const data = await response.json()
+
+    // const response = await fetch(`${URL_APICM}api/listacuentasxcobrar/${idempresa}`)
+    // if (!response.ok) throw new Error('Error al cargar datos')
+
+    //const data = await response.json()
+    const response = await api.get(`listacuentasxcobrar/${idempresa}`)
+    console.log(response)
+    const data = response.data
+    console.log(data)
+    if (data.estado === 'error') throw new Error(data.error)
+
+    await actualizarEstados(data)
+    datosOriginales.value = data
+  } catch (error) {
+    $q.notify({
+      type: 'negative',
+      message: `Error al cargar datos: ${error.message}`,
+    })
+  } finally {
+    cargando.value = false
+  }
+}
+
+const actualizarEstados = async (data) => {
+  const use = data.filter((u) => u.estado == 1 && u.saldo != 0 && u.estadoventa == 1)
+
+  const promises = use.map(async (key) => {
+    let fecha1 = new Date()
+    let fecha2 = new Date(key.fechalimite)
+    fecha1 = Math.floor(fecha1.getTime() / (1000 * 3600 * 24))
+    fecha2 = Math.floor(fecha2.getTime() / (1000 * 3600 * 24))
+
+    if (fecha1 > fecha2 && key.saldo > 0 && key.estado != 3 && key.estadoventa == 1) {
+      await cambiarEstado(key.id, 3)
+    }
+  })
+
+  await Promise.all(promises)
+}
+
+const cambiarEstado = async (id, code) => {
+  try {
+    const resp = await api.get(`cambiarcreditomoroso/${id}/${code}`)
+    const data = resp.data
+    console.log(data)
+  } catch (error) {
+    console.error('Error al cambiar estado:', error)
+  }
+}
+
+const cargarAlmacenes = async () => {
+  try {
+    const contenidousuario = validarUsuario()
+    const idempresa = contenidousuario[0]?.empresa?.idempresa
+    const idusuario = contenidousuario[0]?.idusuario
+
+    const response = await api.get(`listaResponsableAlmacen/${idempresa}`)
+    const resultado = response.data
+    if (resultado[0] == 'error') {
+      throw new Error(resultado.error)
+    }
+
+    opcionesAlmacenes.value = [
+      { value: 0, label: 'Todos los almacenes' },
+      ...resultado
+        .filter((u) => u.idusuario == idusuario)
+        .map((key) => ({
+          value: key.idalmacen,
+          label: key.almacen,
+        })),
+    ]
+  } catch (error) {
+    $q.notify({
+      type: 'negative',
+      message: `Error al cargar almacenes: ${error.message}`,
+    })
+  }
+}
+
+const cargarFormulario = (dato) => {
+  formulario.value = {
+    idCredito: dato.id,
+    cliente: dato.cliente,
+    sucursal: dato.sucursal,
+    deudaTotal: decimas(dato.ventatotal),
+    saldoPendiente: decimas(dato.saldo),
+    cuotasPendientes: parseFloat(dato.ncuotas) - parseFloat(dato.cuotaspagas || 0),
+    valorCuota: decimas(dato.valorcuota),
+    fecha: obtenerFechaActualDato(),
+    numeroCobros: 0,
+    totalCobro: '0.00',
+    saldoPorCobrar: '0.00',
+    comprobante: null,
+    imagenConvertida: null,
+  }
+
+  // Si solo queda 1 cuota pendiente
+  if (formulario.value.cuotasPendientes === 1) {
+    formulario.value.numeroCobros = 1
+    formulario.value.totalCobro = decimas(redondear(parseFloat(formulario.value.saldoPendiente)))
+    formulario.value.saldoPorCobrar = 0
+  }
+
+  mostrarForm.value = true
+}
+
+const calcularTotales = () => {
+  const numCobros = parseFloat(formulario.value.numeroCobros || 0)
+  const valorCuota = parseFloat(formulario.value.valorCuota || 0)
+  const saldoPendiente = parseFloat(formulario.value.saldoPendiente || 0)
+
+  if (numCobros <= formulario.value.cuotasPendientes) {
+    if (numCobros === formulario.value.cuotasPendientes) {
+      formulario.value.totalCobro = decimas(redondear(saldoPendiente))
+      formulario.value.saldoPorCobrar = 0
+    } else {
+      formulario.value.totalCobro = decimas(redondear(numCobros * valorCuota))
+      formulario.value.saldoPorCobrar = decimas(redondear(saldoPendiente - numCobros * valorCuota))
+    }
+  } else {
+    $q.notify({
+      type: 'warning',
+      message: 'El N°Cobros no puede ser mayor a los cobros pendientes',
+    })
+    formulario.value.numeroCobros = 0
+    formulario.value.totalCobro = '0.00'
+  }
+}
+
+const calcularNumeroCobros = () => {
+  const totalCobro = parseFloat(formulario.value.totalCobro || 0)
+  const saldoPendiente = parseFloat(formulario.value.saldoPendiente || 0)
+  const valorCuota = parseFloat(formulario.value.valorCuota || 0)
+
+  if (totalCobro > saldoPendiente) {
+    formulario.value.totalCobro = '0.00'
+    formulario.value.numeroCobros = 0
+    formulario.value.saldoPorCobrar = 0
+
+    $q.notify({
+      type: 'warning',
+      message: 'El monto ingresado no puede ser mayor al saldo pendiente',
+    })
+
+    if (formulario.value.cuotasPendientes === 1) {
+      formulario.value.totalCobro = formulario.value.saldoPendiente
+      formulario.value.numeroCobros = formulario.value.cuotasPendientes
+      formulario.value.saldoPorCobrar = 0
+    }
+  } else {
+    if (totalCobro === saldoPendiente) {
+      formulario.value.totalCobro = formulario.value.saldoPendiente
+      formulario.value.saldoPorCobrar = decimas(0)
+      formulario.value.numeroCobros = formulario.value.cuotasPendientes
+    } else {
+      if (totalCobro <= valorCuota) {
+        formulario.value.saldoPorCobrar = decimas(redondear(saldoPendiente - totalCobro))
+        formulario.value.numeroCobros = 1
+      } else {
+        const nrocuotas = Math.floor(totalCobro / valorCuota)
+        formulario.value.saldoPorCobrar = decimas(redondear(saldoPendiente - totalCobro))
+        formulario.value.numeroCobros = nrocuotas
+      }
+    }
+  }
+}
+
+const convertirImagen = async (file) => {
+  if (!file) {
+    formulario.value.imagenConvertida = null
+    return
+  }
+
+  try {
+    const imagen = await convertirImagenUtil(file)
+    formulario.value.imagenConvertida = imagen
+  } catch (error) {
+    console.log('error al convertir en imagen', error)
+    $q.notify({
+      type: 'negative',
+      message: 'Error al procesar la imagen',
+    })
+  }
+}
+
+const registrarCobro = async () => {
+  if (parseFloat(formulario.value.saldoPorCobrar) < 0) {
+    $q.notify({
+      type: 'negative',
+      message: 'No se calculó el saldo por cobrar, inténtelo nuevamente',
+    })
+    return
+  }
+
+  try {
+    const datos = new FormData()
+    datos.append('ver', 'registroPagoCuentaxCobrar')
+    datos.append('idestadocobro', formulario.value.idCredito)
+    datos.append('ncuotas', formulario.value.numeroCobros)
+    datos.append('total', formulario.value.totalCobro)
+    datos.append('saldo', formulario.value.saldoPorCobrar)
+    datos.append('fecha', formulario.value.fecha)
+
+    if (formulario.value.imagenConvertida) {
+      datos.append('imagen', formulario.value.imagenConvertida)
+    } else {
+      datos.append('imagen', '')
+    }
+
+    // const response = await fetch(`${URL_APICM}api/`, {
+    //   method: 'POST',
+    //   body: datos,
+    // })
+    const response = await api.post(``, datos) // Replace with your actual API endpoint
+    console.log(response)
+
+    const data = response.data
+
+    if (data.estado === 'exito') {
+      $q.notify({
+        type: 'positive',
+        message: 'Cobro registrado correctamente',
+      })
+
+      emitter.emit('reiniciar-notificaciones')
+      cargarDatos()
+      cerrarFormulario()
+    } else {
+      throw new Error(data.mensaje || 'Error al registrar el cobro')
+    }
+  } catch (error) {
+    $q.notify({
+      type: 'negative',
+      message: `Error al registrar el cobro: ${error.message}`,
+    })
+  }
+}
+
+const cerrarFormulario = () => {
+  mostrarForm.value = false
+}
+
+const mostrarDetalles = async (dato) => {
+  detalleSeleccionado.value = {
+    id: dato.id,
+    totalVenta: dato.ventatotal,
+    saldo: dato.saldo,
+  }
+
+  try {
+    const response = await api.get(`listadetallecobros/${dato.id}`)
+
+    const data = response.data
+    if (data.estado === 'error') throw new Error(data.error)
+
+    detallesCobros.value = data.map((item, index) => ({
+      ...item,
+      numero: index + 1,
+      imagen: `${URL_APICM}api/${item.imagen}`,
+    }))
+
+    vistaActiva.value = 'detalles'
+  } catch (error) {
+    $q.notify({
+      type: 'negative',
+      message: `Error al cargar detalles: ${error.message}`,
+    })
+  }
+}
+
+const mostrarImagen = (imagen) => {
+  imagenSeleccionada.value = imagen
+  mostrarDialogoImagen.value = true
+}
+
+const filtrarDatos = () => {
+  console.log(filtroAlmacen.value)
+  console.log(filtroEstado.value)
+  console.log(columnaFiltro.value)
+}
+
+const filtrarTabla = () => {
+  // Los computed properties ya manejan la búsqueda
+}
+
+const formatoMoneda = (valor) => {
+  return decimas(redondear(parseFloat(valor || 0)))
+}
+function handleKeydown(e) {
+  if (e.key === 'Escape') {
+    mostrarForm.value = false
+  }
+}
+
+onMounted(() => {
+  window.addEventListener('keydown', handleKeydown)
+
+  emitter.on('realizar-pago', (Notification) => {
+    console.log(Notification)
+    document.getElementById(`btn-${Notification.id}`).click() // accedemos al elemento real del q-btn
+  })
+})
+onBeforeUnmount(() => {
+  window.removeEventListener('keydown', handleKeydown)
+})
+// Inicialización
+onMounted(() => {
+  cargarDatos()
+  cargarAlmacenes()
+  // Aquí deberías cargar la divisa con cargarDivisas()
+})
 </script>
 
 <style scoped>

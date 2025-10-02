@@ -336,7 +336,7 @@ class Nota_Debito_Credito
                     $cuf= $respuestaEmizor->data->cuf ;
                     $ack_ticket= $respuestaEmizor->data->ack_ticket ;
                     $urlSin= $respuestaEmizor->data->urlSin ;
-                    $emision_type_code= $respuestaEmizor->data->emision_type_code;
+                    $emision_type_code= $respuestaEmizor->data->emission_type_code;
                     $fechaEmision= $respuestaEmizor->data->fechaEmision ;
                     $numeroFactura= $respuestaEmizor->data->numeroFactura;
                     $shortLink= $respuestaEmizor->data->shortLink ;

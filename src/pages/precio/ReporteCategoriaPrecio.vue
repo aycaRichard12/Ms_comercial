@@ -1,42 +1,35 @@
 <template>
   <q-page padding>
-    <div class="titulo">Reporte Campañas</div>
-    <q-form @submit.prevent="handleGenerarReporte">
-      <div class="row justify-center q-col-gutter-x-md">
-        <div class="col-12 col-md-4">
-          <label for="fechaIni">Fecha Inicial*</label>
-          <q-input
-            v-model="fechaInicio"
-            id="fechaIni"
-            type="date"
-            outlined
-            dense
-            @update:model-value="validarFechas"
-          />
-        </div>
-        <div class="col-12 col-md-4">
-          <label for="fechafin">Fecha Final*</label>
-          <q-input
-            v-model="fechaFin"
-            id="fechafin"
-            type="date"
-            outlined
-            dense
-            @update:model-value="validarFechas"
-          />
-        </div>
-      </div>
-      <div class="row justify-center q-pt-md">
+    <div class="col-12 q-mb-md">
+      <div class="row items-center">
+        <!-- Botón Volver -->
         <q-btn
+          color="secondary"
+          class="btn-res"
+          id="btnregistrarcompra"
+          to="/categoriasdeprecio"
+          icon="arrow_back"
+          label="Volver"
+          no-caps
+        />
+
+        <!-- Título -->
+        <div class="titulo q-ma-md">Reporte de Precios Base</div>
+      </div>
+    </div>
+
+    <q-form @submit.prevent="handleGenerarReporte">
+      <div class="row justify-center q-pt-md">
+        <!-- <q-btn
           label="Generar reporte"
           color="primary"
           @click="handleGenerarReporte"
           class="q-mx-sm"
-        />
+        /> -->
         <q-btn
           label="Vista previa del Reporte"
           color="primary"
-          @click="handleVerReporte"
+          @click="descargarPDF"
           class="q-mx-sm"
         />
       </div>
@@ -77,6 +70,7 @@
         </template>
       </q-table>
     </div>
+
     <q-card-section>
       <q-dialog v-model="mostrarModal" persistent full-width full-height>
         <q-card class="q-pa-md" style="height: 100%; max-width: 100%">
@@ -105,25 +99,24 @@
 import { ref, reactive, computed, watch, onMounted } from 'vue'
 import { useQuasar } from 'quasar'
 import { api } from 'src/boot/axios'
-import { cambiarFormatoFecha, obtenerFechaActualDato } from 'src/composables/FuncionesG.js'
+import { obtenerFechaActualDato } from 'src/composables/FuncionesG.js'
 import { validarUsuario } from 'src/composables/FuncionesG.js'
-import { PDF_REPORTE_CAMPANAS_VENTAS } from 'src/utils/pdfReportGenerator'
-
-//pedf
+import { PDF_REPORTE_CATEGORIA_PRECIO } from 'src/utils/pdfReportGenerator'
+const $q = useQuasar()
+//pdf
 const pdfData = ref(null)
 const mostrarModal = ref(false)
-
-const $q = useQuasar()
 
 // --- Estados Reactivos ---
 const fechaInicio = ref(obtenerFechaActualDato())
 const fechaFin = ref(obtenerFechaActualDato())
-const almacenSeleccionado = ref('0') // "0" para "Todos los almacenes"
+const almacenSeleccionado = ref({ label: 'Todos los almacenes', value: '0' }) // "0" para "Todos los almacenes"
 const opcionesAlmacenes = ref([])
 const datosOriginales = ref([])
 const datosFiltrados = ref([])
 const datosUsuario = reactive({})
 const reporteGenerado = ref(false)
+const autorization = { 1: 'activo', 2: 'inactivo' }
 
 // --- Propiedades Calculadas ---
 const almacenSeleccionadoTexto = computed(() => {
@@ -132,24 +125,21 @@ const almacenSeleccionadoTexto = computed(() => {
 })
 
 const columnasTabla = [
-  { name: 'n', label: 'N°', field: 'n', align: 'left', format: (val, row, index) => index + 1 },
-  { name: 'almacen', label: 'Almacén', field: 'almacen', align: 'left' },
-  { name: 'nombre', label: 'Campaña', field: 'nombre', align: 'left' },
+  { name: 'n', label: 'N°', field: 'n', align: 'center' },
+  { name: 'nombre', label: 'Categoria	', field: 'nombre', align: 'left' },
+  { name: 'porcentaje', label: 'Porcentaje', field: 'porcentaje', align: 'left' },
   {
-    name: 'fechainicio',
-    label: 'Fecha Inicio',
-    field: 'fechainicio',
+    name: 'almacen',
+    label: 'Almacén',
+    field: 'almacen',
     align: 'left',
-    format: (val) => cambiarFormatoFecha(val),
   },
   {
-    name: 'fechafinal',
-    label: 'Fecha Final',
-    field: 'fechafinal',
+    name: 'estado',
+    label: 'Estado',
+    field: 'estado',
     align: 'left',
-    format: (val) => cambiarFormatoFecha(val),
   },
-  { name: 'nventas', label: 'Cantidad de Ventas', field: 'nventas', align: 'left' },
 ]
 
 // --- Watchers ---
@@ -205,20 +195,6 @@ async function cargarListaAlmacenes() {
 /**
  * Valida que la fecha de inicio no sea mayor que la fecha final.
  */
-function validarFechas() {
-  const inicio = new Date(fechaInicio.value)
-  const fin = new Date(fechaFin.value)
-
-  if (inicio.getTime() > fin.getTime()) {
-    $q.notify({
-      type: 'info',
-      message: 'La fecha de inicio no puede ser mayor que la fecha de fin.',
-      position: 'top',
-    })
-    // Se podría resetear la fecha o ajustar para corregir el error
-    // fechaInicio.value = obtenerFechaActual(); // Ejemplo de reseteo
-  }
-}
 
 /**
  * Genera el reporte de ventas de campaña.
@@ -239,13 +215,18 @@ async function generarReporte() {
 
   try {
     const idusuario = datosUsuario.idusuario
-    const point = `reporteventacampaña/${idusuario}/${fechaInicio.value}/${fechaFin.value}`
+    const point = `reportecategoriaprecio/${idusuario}`
     const response = await api.get(point)
     console.log(response.status)
     const data = response.data.map((item, index) => ({
-      ...item,
       n: index + 1,
+      nombre: item.nombre,
+      porcentaje: item.porcentaje,
+      almacen: item.almacen,
+      estado: autorization[Number(item.estado)],
+      idalmacen: item.idalmacen,
     }))
+    console.log(data)
 
     if (response.status === 200) {
       datosOriginales.value = data
@@ -281,9 +262,11 @@ async function generarReporte() {
  * @param {string} dato - El ID del almacén o "0" para todos.
  */
 function filtrarYOrdenarDatos(dato) {
+  console.log(dato)
   if (dato === '0') {
     datosFiltrados.value = [...datosOriginales.value]
   } else {
+    console.log(datosFiltrados.value)
     datosFiltrados.value = datosOriginales.value.filter((u) => String(u.idalmacen) === String(dato))
   }
 }
@@ -299,31 +282,20 @@ async function handleGenerarReporte() {
 }
 
 /**
- * Maneja el clic en el botón "Vista previa del Reporte".
- */
-function handleVerReporte() {
-  if (!datosFiltrados.value || datosFiltrados.value.length === 0) {
-    $q.notify({
-      type: 'info',
-      message: 'No se ha generado ningún reporte o el reporte está vacío.',
-      position: 'top',
-    })
-  } else {
-    const doc = PDF_REPORTE_CAMPANAS_VENTAS(datosFiltrados.value, {
-      fechaInicio: fechaInicio.value,
-      fechaFin: fechaFin.value,
-      almacen: almacenSeleccionadoTexto.value,
-      usuario: validarUsuario()[0],
-    })
-    console.log(doc)
-    pdfData.value = doc.output('dataurlstring')
-    mostrarModal.value = true
-  }
-}
-
-/**
  * Descarga el PDF del reporte.
  */
+function descargarPDF() {
+  const datosFormulario = {
+    fechaInicio: fechaInicio.value,
+    fechaFin: fechaFin.value,
+    almacen: almacenSeleccionadoTexto.value,
+    usuario: datosUsuario,
+  }
+  console.log(datosFormulario)
+  const doc = PDF_REPORTE_CATEGORIA_PRECIO(datosFiltrados.value, datosFormulario)
+  pdfData.value = doc.output('dataurlstring')
+  mostrarModal.value = true
+}
 
 // --- Ciclo de Vida ---
 onMounted(async () => {
@@ -332,6 +304,7 @@ onMounted(async () => {
   if (contenidousuario && contenidousuario.length > 0) {
     Object.assign(datosUsuario, contenidousuario[0])
   }
+  handleGenerarReporte()
   // No cargar almacenes aquí, se cargarán después de generar el reporte
 })
 </script>

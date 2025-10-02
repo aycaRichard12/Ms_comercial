@@ -1,17 +1,12 @@
 // src/composables/useDivisa.js
 import { ref, computed } from 'vue'
 import { api } from 'boot/axios'
-
-function validarUsuario() {
-  const contenidousuario = JSON.parse(localStorage.getItem('yofinanciero'))
-  if (!contenidousuario) {
-    localStorage.clear()
-    window.location.assign('../../app/')
-    throw new Error('Sesión inválida') // Importante: lanzar error
-  }
-  return contenidousuario
-}
-
+import { getToken } from './FuncionesG'
+import { getTipoFactura } from './FuncionesG'
+import { idempresa_md5 } from './FuncionesGenerales'
+const idempresa = idempresa_md5()
+const tipoFactura = getTipoFactura()
+const token = getToken()
 export function useDivisa() {
   const divisa = ref(null)
   const loading = ref(false)
@@ -22,10 +17,7 @@ export function useDivisa() {
     error.value = null
 
     try {
-      const contenidousuario = validarUsuario()
-      const empresa = contenidousuario[0]?.empresa
-      const factura = contenidousuario[0]?.factura
-      const endpoint = `listaDivisa/${empresa.idempresa}/${factura.access_token}/${factura.tipo}`
+      const endpoint = `listaDivisa/${idempresa}/${token}/${tipoFactura}`
       console.log(endpoint)
       const response = await api.get(endpoint)
 

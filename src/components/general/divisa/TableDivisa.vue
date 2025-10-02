@@ -16,7 +16,7 @@
       bordered
       title="Divisas"
     >
-      <template v-slot:body-cell-monedaSin="props" v-if="estadoFactura">
+      <template v-slot:body-cell-monedaSin="props" v-if="tipoFactura">
         <q-td :props="props">
           {{ props.row.monedasin?.descripcion }}
         </q-td>
@@ -61,22 +61,15 @@
 
 <script setup>
 import { computed } from 'vue'
-import { useFacturaStore } from 'src/stores/factura'
-
+import { getTipoFactura } from 'src/composables/FuncionesG'
+const tipoFactura = getTipoFactura(true)
 // Initialize the Pinia store
-const facturaStore = useFacturaStore()
-facturaStore.cargarUsuario()
-
-// Get the estadoFactura value from the store.
-// Assuming obtenerEstadoFactura returns a reactive property or a ref,
-// we'll access its value using .value in the computed property.
-const estadoFactura = facturaStore.obtenerEstadoFactura()
 
 // Define component props
 const props = defineProps({
   rows: Array,
 })
-
+console.log(props.rows)
 // Reactive variable for search input
 
 // Computed property for table columns, which dynamically includes/excludes 'monedaSin'
@@ -88,7 +81,7 @@ const columns = computed(() => {
   ]
 
   // Conditionally add the 'monedaSin' column if estadoFactura is true
-  if (estadoFactura) {
+  if (tipoFactura) {
     // Access the value of the reactive property
     dynamicColumns.push({
       name: 'monedaSin',
@@ -110,7 +103,8 @@ const columns = computed(() => {
 // Computed property for filtered rows based on search input
 const filtradas = computed(() => {
   const base = props.rows || []
-
+  console.log('Filtradas - base:', base)
+  if (!base.length) return []
   // Add a 'numero' field for display purposes (N° column)
   return base.map((row, index) => ({
     ...row,

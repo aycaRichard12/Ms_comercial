@@ -65,8 +65,8 @@ tbody {
   text-align: center;
 }
 
-.q-field__native[type=number],
-.q-field__input[type=number] {
+.q-field__native[type='number'],
+.q-field__input[type='number'] {
   text-align: right;
 }
 
@@ -76,6 +76,7 @@ tbody {
   border-radius: 8px;
   font-weight: 500;
   text-transform: none;
+  height: 100px;
 }
 
 label {
@@ -89,4 +90,4 @@ label {
 
 .texto-normal {
   text-transform: none;
-}/*# sourceMappingURL=quasar.variables.css.map */
+} /*# sourceMappingURL=quasar.variables.css.map */

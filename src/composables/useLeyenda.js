@@ -1,33 +1,19 @@
 import { ref } from 'vue'
 import { api } from 'boot/axios'
-
-function validarUsuario() {
-  const contenidousuario = JSON.parse(localStorage.getItem('yofinanciero'))
-
-  if (!contenidousuario || !Array.isArray(contenidousuario) || contenidousuario.length === 0) {
-    localStorage.clear()
-    window.location.assign('../../app/')
-    throw new Error('Sesión inválida')
-  }
-
-  return contenidousuario
-}
+import { getToken } from './FuncionesG'
+import { getTipoFactura } from './FuncionesG'
+import { idempresa_md5 } from './FuncionesGenerales'
+const idempresa = idempresa_md5()
+const tipoFactura = getTipoFactura()
+const token = getToken()
 
 export function useLeyenda() {
   const leyenda = ref(null)
   const loading = ref(false)
   const error = ref(null)
 
-  let contenidousuario = null
-  let empresa = null
-  let factura = null
-
   try {
-    contenidousuario = validarUsuario()
-    empresa = contenidousuario[0]?.empresa
-    factura = contenidousuario[0]?.factura
-
-    if (!empresa || !factura || !empresa.idempresa || !factura.access_token || !factura.tipo) {
+    if (!idempresa || !tipoFactura || !token) {
       throw new Error('Datos incompletos para cargar leyenda')
     }
   } catch (err) {
@@ -50,7 +36,7 @@ export function useLeyenda() {
     error.value = null
 
     try {
-      const endpoint = `listaLeyendaFactura/${empresa.idempresa}/${factura.access_token}/${factura.tipo}`
+      const endpoint = `listaLeyendaFactura/${idempresa}/${token}/${tipoFactura}`
       console.log('Consultando endpoint:', endpoint)
 
       const response = await api.get(endpoint)

@@ -1,6 +1,6 @@
 <template>
   <q-page padding>
-    <div class="titulo">Reporte Campañas</div>
+    <div class="titulo">Reporte Pedidos</div>
     <q-form @submit.prevent="handleGenerarReporte">
       <div class="row justify-center q-col-gutter-x-md">
         <div class="col-12 col-md-4">
@@ -36,7 +36,7 @@
         <q-btn
           label="Vista previa del Reporte"
           color="primary"
-          @click="handleVerReporte"
+          @click="descargarPDF"
           class="q-mx-sm"
         />
       </div>
@@ -77,6 +77,7 @@
         </template>
       </q-table>
     </div>
+
     <q-card-section>
       <q-dialog v-model="mostrarModal" persistent full-width full-height>
         <q-card class="q-pa-md" style="height: 100%; max-width: 100%">
@@ -107,13 +108,13 @@ import { useQuasar } from 'quasar'
 import { api } from 'src/boot/axios'
 import { cambiarFormatoFecha, obtenerFechaActualDato } from 'src/composables/FuncionesG.js'
 import { validarUsuario } from 'src/composables/FuncionesG.js'
-import { PDF_REPORTE_CAMPANAS_VENTAS } from 'src/utils/pdfReportGenerator'
-
-//pedf
+import { PDF_REPORTE_PEDIDOS } from 'src/utils/pdfReportGenerator'
+const $q = useQuasar()
+const tipo = { 1: 'Pedido Compra', 2: 'Pedido Movimiento' }
+const tipoestados = { 1: 'Procesado', 2: 'Pendiente', 3: 'Descartado' }
+//pdf
 const pdfData = ref(null)
 const mostrarModal = ref(false)
-
-const $q = useQuasar()
 
 // --- Estados Reactivos ---
 const fechaInicio = ref(obtenerFechaActualDato())
@@ -132,24 +133,47 @@ const almacenSeleccionadoTexto = computed(() => {
 })
 
 const columnasTabla = [
-  { name: 'n', label: 'N°', field: 'n', align: 'left', format: (val, row, index) => index + 1 },
-  { name: 'almacen', label: 'Almacén', field: 'almacen', align: 'left' },
-  { name: 'nombre', label: 'Campaña', field: 'nombre', align: 'left' },
+  { name: 'n', label: 'N°', field: 'n', align: 'center' },
+
   {
-    name: 'fechainicio',
-    label: 'Fecha Inicio',
-    field: 'fechainicio',
+    name: 'fecha',
+    label: 'Fecha',
+    field: 'fecha',
     align: 'left',
-    format: (val) => cambiarFormatoFecha(val),
+  },
+
+  { name: 'codigo', label: 'Codigo', field: 'codigo', align: 'left' },
+  { name: 'nropedido', label: 'Nro.Pedido', field: 'nropedido', align: 'left' },
+  {
+    name: 'tipopedido',
+    label: 'Tipo',
+    field: 'tipopedido',
+    align: 'left',
   },
   {
-    name: 'fechafinal',
-    label: 'Fecha Final',
-    field: 'fechafinal',
+    name: 'almacenorigen',
+    label: 'Almacen Origen',
+    field: 'almacenorigen',
     align: 'left',
-    format: (val) => cambiarFormatoFecha(val),
   },
-  { name: 'nventas', label: 'Cantidad de Ventas', field: 'nventas', align: 'left' },
+  {
+    name: 'almacen',
+    label: 'Almacen',
+    field: 'almacen',
+    align: 'left',
+  },
+  {
+    name: 'observacion',
+    label: 'Observación',
+    field: 'observacion',
+    align: 'left',
+  },
+  {
+    name: 'estado',
+    label: 'Estado',
+    field: 'estado',
+    align: 'left',
+  },
 ]
 
 // --- Watchers ---
@@ -239,12 +263,20 @@ async function generarReporte() {
 
   try {
     const idusuario = datosUsuario.idusuario
-    const point = `reporteventacampaña/${idusuario}/${fechaInicio.value}/${fechaFin.value}`
+    const point = `reportepedidos/${idusuario}/${fechaInicio.value}/${fechaFin.value}`
     const response = await api.get(point)
     console.log(response.status)
     const data = response.data.map((item, index) => ({
-      ...item,
       n: index + 1,
+      fecha: cambiarFormatoFecha(item.fecha),
+      codigo: item.codigo,
+      nropedido: item.nropedido,
+      tipopedido: tipo[Number(item.tipopedido)],
+      almacenorigen: item.almacenorigen ? item.almacenorigen : 'N/A',
+      almacen: item.almacen,
+      idalmacen: item.idalmacen,
+      observacion: item.observacion,
+      estado: tipoestados[Number(item.estado)],
     }))
 
     if (response.status === 200) {
@@ -281,9 +313,11 @@ async function generarReporte() {
  * @param {string} dato - El ID del almacén o "0" para todos.
  */
 function filtrarYOrdenarDatos(dato) {
+  console.log(dato)
   if (dato === '0') {
     datosFiltrados.value = [...datosOriginales.value]
   } else {
+    console.log(datosFiltrados.value)
     datosFiltrados.value = datosOriginales.value.filter((u) => String(u.idalmacen) === String(dato))
   }
 }
@@ -299,31 +333,20 @@ async function handleGenerarReporte() {
 }
 
 /**
- * Maneja el clic en el botón "Vista previa del Reporte".
- */
-function handleVerReporte() {
-  if (!datosFiltrados.value || datosFiltrados.value.length === 0) {
-    $q.notify({
-      type: 'info',
-      message: 'No se ha generado ningún reporte o el reporte está vacío.',
-      position: 'top',
-    })
-  } else {
-    const doc = PDF_REPORTE_CAMPANAS_VENTAS(datosFiltrados.value, {
-      fechaInicio: fechaInicio.value,
-      fechaFin: fechaFin.value,
-      almacen: almacenSeleccionadoTexto.value,
-      usuario: validarUsuario()[0],
-    })
-    console.log(doc)
-    pdfData.value = doc.output('dataurlstring')
-    mostrarModal.value = true
-  }
-}
-
-/**
  * Descarga el PDF del reporte.
  */
+function descargarPDF() {
+  const datosFormulario = {
+    fechaInicio: fechaInicio.value,
+    fechaFin: fechaFin.value,
+    almacen: almacenSeleccionadoTexto.value,
+    usuario: datosUsuario,
+  }
+  console.log(datosFormulario)
+  const doc = PDF_REPORTE_PEDIDOS(datosFiltrados.value, datosFormulario)
+  pdfData.value = doc.output('dataurlstring')
+  mostrarModal.value = true
+}
 
 // --- Ciclo de Vida ---
 onMounted(async () => {
