@@ -7,6 +7,7 @@
 <script setup>
 import { usuarios, menus } from './credenciales'
 // NOTIFICACIONES
+
 const createInitialLocalStorage = () => {
   // Check if 'yofinanciero' exists before setting it
   const idx = 0 // Puedes cambiar el índice para seleccionar otro usuario y menú

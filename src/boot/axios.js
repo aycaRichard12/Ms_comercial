@@ -10,7 +10,7 @@ import axios from 'axios'
 // baseURL: 'https://vivasoft.link/app/cm/api/',
 //baseURL: 'https://www.mistersofts.com/app/cmv1/api/',
 const api = axios.create({
-  baseURL: 'https://vivasoft.link/app/cm/api/',
+  baseURL: process.env.VITE_API_URL,
   timeout: 10000,
 })
 
