@@ -7,10 +7,10 @@ import axios from 'axios'
 // good idea to move this instance creation inside of the
 // "export default () => {}" function below (which runs individually
 // for each client)
-// baseURL: 'https://vivasoft.link/app/cm/api/',
+// baseURL: 'https://vivasoft.link/app/cm/api/', https://mistersofts.com/app/
 //baseURL: 'https://www.mistersofts.com/app/cmv1/api/',
 const api = axios.create({
-  baseURL: 'https://vivasoft.link/app/cm/api/',
+  baseURL: process.env.VITE_API_URL,
   timeout: 10000,
 })
 
