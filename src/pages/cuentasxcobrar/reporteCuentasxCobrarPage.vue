@@ -1,5 +1,7 @@
 <template>
-  <q-page>
+  <q-page ref="pageRef">
+    <q-btn label="Ir a Créditos" @click="scrollToCreditos" />
+
     <div class="row flex justify-between q-ml-md">
       <div class="text-h6 text-primary">
         {{ tipoReporte ? 'Reporte de Crédito al Corte' : 'Reporte de Crédito en Periodo' }}
@@ -225,38 +227,11 @@
           class="q-ma-lg"
         />
       </div>
-
-      <!-- <q-table
-        title="Creditos"
-        :rows="filteredReportData"
-        :columns="columns"
-        row-key="idcredito"
-        flat
-        bordered
-        :loading="loading"
-        no-data-label="No hay datos para mostrar"
-        class="sticky-header-table"
-        @request="onTableRequest"
-      >
-        <template v-slot:body-cell-estado="props">
-          <q-td :props="props" v-if="props.row.estado !== 5">
-            <q-badge :color="colorEstado[Number(props.row.estado)]">{{
-              keyEstado[Number(props.row.estado)]
-            }}</q-badge>
-          </q-td>
-        </template>
-      </q-table> -->
-      <ReporteCreditosTable ref="hijoRef" :rows="filteredReportData" :loading="loading" />
     </q-card-section>
+    <div ref="hijoRef">
+      <ReporteCreditosTable :rows="filteredReportData" :loading="loading" />
+    </div>
 
-    <q-card-section v-else-if="!loading && !reportError && idmd5">
-      <q-banner dense rounded class="bg-blue-grey-2 text-blue-grey-10">
-        <template v-slot:avatar>
-          <q-icon name="info" color="blue-grey" />
-        </template>
-        No hay datos disponibles para el rango de fechas y filtros seleccionados.
-      </q-banner>
-    </q-card-section>
     <q-dialog v-model="mostrarModal" persistent full-width full-height>
       <q-card class="q-pa-md" style="height: 100%; max-width: 100%">
         <q-card-section class="row items-center q-pb-none">
@@ -309,6 +284,8 @@ const loadingClientes = ref(false)
 const loadingSucursales = ref(false)
 const searchCliente = ref('')
 const hijoRef = ref(null)
+const pageRef = ref(null)
+
 // Configuración de paginación
 const pagination = ref({
   sortBy: 'fechaventa',
@@ -329,31 +306,14 @@ const activeFilters = ref({
 async function scrollToCreditos() {
   await nextTick()
 
-  if ($q.screen.lt.md && hijoRef.value) {
-    // creditosRef.value es el componente Vue (q-table),
-    // por eso se usa .$el para obtener el DOM real
-    hijoRef.value.$el.scrollIntoView({
+  if ($q.screen.lt.md && pageRef.value && hijoRef.value) {
+    // mover el scroll del q-page hasta la posición del div
+    pageRef.value.$el.scrollTo({
+      top: hijoRef.value.offsetTop,
       behavior: 'smooth',
-      block: 'start',
     })
   }
 }
-// Definición de estados
-// const keyEstado = {
-//   1: 'Activo',
-//   2: 'Finalizado',
-//   3: 'Atrasado',
-//   4: 'Anulado',
-//   5: '',
-// }
-
-// const colorEstado = {
-//   1: 'green',
-//   2: 'blue',
-//   3: 'orange',
-//   4: 'red',
-//   5: '',
-// }
 
 const estadoOptions = [
   { label: 'Activo', value: 1 },
@@ -362,109 +322,6 @@ const estadoOptions = [
   { label: 'Anulado', value: 4 },
 ]
 
-// // --- Definición de columnas ---
-// const columns = [
-//   { name: 'numero', label: 'N°', field: 'numero', align: 'right', sortable: true },
-//   {
-//     name: 'fechaventa',
-//     align: 'center',
-//     label: 'Fecha Crédito',
-//     field: 'fechaventa',
-//     sortable: true,
-//   },
-//   {
-//     name: 'razonsocial',
-//     align: 'left',
-//     label: 'Cliente',
-//     field: 'razonsocial',
-//     sortable: true,
-//   },
-//   {
-//     name: 'sucursal',
-//     align: 'left',
-//     label: 'Sucursal',
-//     field: 'sucursal',
-//     sortable: true,
-//   },
-//   {
-//     name: 'fechalimite',
-//     align: 'center',
-//     label: 'Fecha Límite',
-//     field: 'fechalimite',
-//     sortable: true,
-//   },
-//   {
-//     name: 'ncuotas',
-//     align: 'center',
-//     label: 'Catidad Cuotas',
-//     field: 'ncuotas',
-//     sortable: true,
-//   },
-//   {
-//     name: 'cuotasprocesadas',
-//     align: 'center',
-//     label: 'Cuotas Procesadas',
-//     field: 'cuotasprocesadas',
-//     sortable: true,
-//   },
-//   {
-//     name: 'valorcuotas',
-//     align: 'right',
-//     label: 'Valor Cuota',
-//     field: 'valorcuotas',
-//     sortable: true,
-//   },
-//   {
-//     name: 'totalventa',
-//     align: 'right',
-//     label: 'Total Venta',
-//     field: 'totalventa',
-//     sortable: true,
-//   },
-//   {
-//     name: 'totalcobrado',
-//     align: 'right',
-//     label: 'Total Cobrado',
-//     field: 'totalcobrado',
-//     sortable: true,
-//   },
-//   {
-//     name: 'saldo',
-//     align: 'right',
-//     label: 'Saldo',
-//     field: 'saldo',
-
-//     sortable: true,
-//   },
-//   {
-//     name: 'totalatrasado',
-//     align: 'right',
-//     label: 'Total Atrasado',
-//     field: 'totalatrasado',
-//     sortable: true,
-//   },
-//   {
-//     name: 'totalanulado',
-//     align: 'right',
-//     label: 'Total Anulado',
-//     field: 'totalanulado',
-//     sortable: true,
-//   },
-//   {
-//     name: 'moradias',
-//     align: 'right',
-//     label: 'Mora Días',
-//     field: 'moradias',
-//     sortable: true,
-//   },
-//   {
-//     name: 'estado',
-//     align: 'center',
-//     label: 'Estado',
-//     field: 'estado',
-//     sortable: true,
-//   },
-// ]
 const validateEndDate = (val) => {
   if (!val) return 'Seleccione una fecha válida'
   if (startDate.value && val < startDate.value) {
@@ -658,13 +515,6 @@ const resetSucursalSelection = () => {
   activeFilters.value.sucursal = false
 }
 
-// const resetAllFilters = () => {
-//   selectedAlmacen.value = 0
-//   selectedEstado.value = null
-//   resetClientSelection()
-//   applyFilters()
-// }
-
 const generateReport = async () => {
   if (!idmd5.value) {
     $q.notify({
@@ -695,7 +545,6 @@ const generateReport = async () => {
       point = `reportecreditos/${idmd5.value}/${startDate.value}/${endDate.value}`
     }
     const response = await api.get(point)
-    await scrollToCreditos()
 
     if (response.data.estado === 'exito') {
       reportData.value = response.data.data
@@ -714,6 +563,7 @@ const generateReport = async () => {
           timeout: 1000,
         })
       }
+      scrollToCreditos()
     } else {
       reportError.value = response.data.mensaje || 'Error desconocido de la API.'
       $q.notify({

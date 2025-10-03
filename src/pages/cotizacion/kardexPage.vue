@@ -130,18 +130,16 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue'
 import { useQuasar } from 'quasar'
-import axios from 'axios'
-
-import { URL_APICM } from 'src/composables/services'
+import { api } from 'src/boot/axios'
 import { validarUsuario } from 'src/composables/FuncionesG'
 import { PDFKardex } from 'src/utils/pdfReportGenerator'
-
+import { obtenerFechaActualDato } from 'src/composables/FuncionesG'
 const usuario = validarUsuario()[0]
 const $q = useQuasar()
 
 // Variables del formulario
-const fechaiR = ref('')
-const fechafR = ref('')
+const fechaiR = ref(obtenerFechaActualDato())
+const fechafR = ref(obtenerFechaActualDato())
 const almacenR = ref(null)
 const idproductoR = ref(null)
 const metodoValoracion = ref('PEPS') // Valor por defecto
@@ -282,9 +280,11 @@ const cambiarFormatoFecha = (fecha) => {
 async function listaAlmacenes() {
   try {
     const idempresa = usuario.empresa.idempresa
-    const endpoint = `${URL_APICM}api/listaResponsableAlmacen/${idempresa}`
+    const endpoint = `listaResponsableAlmacen/${idempresa}`
 
-    const { data } = await axios.get(endpoint)
+    const response = await api.get(endpoint)
+    const data = response.data
+    console.log(data)
     if (data && data.length > 0) {
       almacenes.value = data.filter((u) => u.idusuario === usuario.idusuario)
     } else {
@@ -299,14 +299,17 @@ async function listaAlmacenes() {
 async function listaProductosDisponibles() {
   try {
     const idempresa = usuario.empresa.idempresa
-    const endpoint = `${URL_APICM}api/listaProductoAlmacen/${idempresa}`
-    const { data } = await axios.get(endpoint)
-
+    const endpoint = `listaProductoAlmacen/${idempresa}`
+    const response = await api.get(endpoint)
+    const data = response.data
+    console.log(data)
     if (data && data.length > 0) {
       if (almacenR.value === 0) {
         productosDisponibles.value = data
       } else {
-        productosDisponibles.value = data.filter((u) => u.idalmacen === almacenR.value)
+        productosDisponibles.value = data.filter(
+          (u) => Number(u.idalmacen) === Number(almacenR.value),
+        )
       }
       productosFiltrados.value = productosDisponibles.value
     } else {
@@ -334,9 +337,10 @@ async function generarReporte() {
   }
 
   try {
-    const endpoint = `${URL_APICM}api/kardex/${fechaiR.value}/${fechafR.value}/${almacenR.value}/${idproductoR.value}`
-    const { data } = await axios.get(endpoint)
-
+    const endpoint = `kardex/${fechaiR.value}/${fechafR.value}/${almacenR.value}/${idproductoR.value}`
+    const response = await api.get(endpoint)
+    const data = response.data
+    console.log(data)
     // Guardar los datos originales para recalcular con diferentes métodos
     movimientosOriginales.value = data
     datosOriginales.value = data
@@ -385,6 +389,7 @@ function calcularPEPS(movimientos) {
     RO: 'ROBOS',
     MER: 'MERMAS',
     AN: 'ANULADO',
+    EXT: 'EXTRAVIO',
   }
 
   let kardex = []
@@ -481,6 +486,7 @@ function calcularUEPS(movimientos) {
     RO: 'ROBOS',
     MER: 'MERMAS',
     AN: 'ANULADO',
+    EXT: 'EXTRAVIO',
   }
 
   let kardex = []
@@ -489,6 +495,7 @@ function calcularUEPS(movimientos) {
   // Procesar cada movimiento
   movimientos.forEach((mov, index) => {
     const descripcion = code[mov.codigo] || 'MOVIMIENTO DESCONOCIDO'
+
     const esEntrada = ['MOVIMIENTO+', 'COMPRAS'].includes(descripcion)
     const esSalida = ['VENTAS', 'MOVIMIENTO-', 'ROBOS', 'MERMAS', 'ANULADO'].includes(descripcion)
 
@@ -535,6 +542,7 @@ function calcularUEPS(movimientos) {
       } else if (esSalida) {
         // Sacar del inventario según UEPS (desde el final)
         const cantidadNecesaria = Math.abs(mov.stock - getCantidadTotalInventario(inventario))
+        console.log(cantidadNecesaria)
         let cantidadRestante = cantidadNecesaria
         let costoTotalSalida = 0
 
@@ -577,6 +585,7 @@ function calcularPromedio(movimientos) {
     RO: 'ROBOS',
     MER: 'MERMAS',
     AN: 'ANULADO',
+    EXT: 'EXTRAVIO',
   }
 
   let kardex = []

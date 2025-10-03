@@ -25,7 +25,7 @@ export const PAGINAS = Object.freeze({
     // 'reportedeventas',
     // 'reportedecotizacionesocultas',
     // 'reporteproductosvendidosindividual',
-    'kardex',
+    // 'kardex',
   ]),
   contingencias: Object.freeze([
     'registraranulaciones',
@@ -140,6 +140,7 @@ export const PAGINAS_SELECT = Object.freeze({
     'reportedeventas',
     'reportedecotizacionesocultas',
     'reporteproductosvendidosindividual',
+    'kardex',
   ]),
   cuentasporcobrar: Object.freeze([
     'reportecuentasporcobrarocultas',

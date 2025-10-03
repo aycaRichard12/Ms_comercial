@@ -9,5 +9,5 @@ RewriteCond %{REQUEST_FILENAME} -l
 
 RewriteRule ^ - [L]
 RewriteEngine on
-RewriteBase /app/cm/api
+RewriteBase /app/cmv1/api
 RewriteRule ^(.*)$ index.php?ver=$1 [QSA] 
