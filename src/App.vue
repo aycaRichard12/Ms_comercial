@@ -5,20 +5,17 @@
 </template>
 
 <script setup>
-import { usuarios, menus } from './credenciales'
-// NOTIFICACIONES
-
+import { USUARIOS } from './credenciales'
 const createInitialLocalStorage = () => {
-  // Check if 'yofinanciero' exists before setting it
-  const idx = 0 // Puedes cambiar el índice para seleccionar otro usuario y menú
-  const usuario = usuarios[idx]
-  const menu = menus[idx]
+  const idx = 0
+  const usuario = USUARIOS[idx].usuario
+  const menu = USUARIOS[idx].menu
 
   if (process.env.NODE_ENV === 'production') {
     console.log('Estamos en PRODUCCIÓN')
   } else {
     console.log('Estamos en DESARROLLO')
-    localStorage.clear() // Limpiar localStorage en desarrollo para evitar datos antiguos
+    localStorage.clear()
     if (!localStorage.getItem('yofinanciero')) {
       const userData = usuario
       localStorage.setItem('yofinanciero', JSON.stringify(userData))
@@ -27,7 +24,6 @@ const createInitialLocalStorage = () => {
       console.log("'yofinanciero' already exists.")
     }
 
-    // Check if 'yofinancieromenu' exists before setting it
     if (!localStorage.getItem('yofinancieromenu')) {
       const menuData = menu
       localStorage.setItem('yofinancieromenu', JSON.stringify(menuData))
