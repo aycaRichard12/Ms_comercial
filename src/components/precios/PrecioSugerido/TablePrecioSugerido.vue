@@ -168,19 +168,20 @@ const filtrados = computed(() => {
   }))
 })
 const cargarCategoriaPrecio = async () => {
-  console.log(filtroAlmacen.value?.value)
+  console.log(filtroAlmacen.value)
+  const almacen = filtroAlmacen.value
   try {
     const response = await api.get(`listaCategoriaPrecio/${idempresa}`)
     console.log(response.data)
     console.log(idusuario)
     const filtrado = response.data.filter(
-      (u) => u.estado == 1 && u.idalmacen == filtroAlmacen.value?.value,
+      (u) => Number(u.estado) == 1 && Number(u.idalmacen) == Number(almacen.value),
     )
     categorias.value = filtrado.map((item) => ({
       label: item.nombre,
       value: item.id,
     }))
-    filtroscategoria.value = null
+    filtroscategoria.value = categorias.value[0]
   } catch (error) {
     console.error('Error al cargar datos:', error)
     $q.notify({
@@ -198,6 +199,7 @@ watch(
     if (nuevosAlmacenes.length > 0 && !filtroAlmacen.value) {
       console.log(nuevosAlmacenes)
       filtroAlmacen.value = nuevosAlmacenes[0]
+      cargarCategoriaPrecio()
     }
   },
   { immediate: true },
