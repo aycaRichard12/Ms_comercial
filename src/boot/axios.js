@@ -13,7 +13,7 @@ const api = axios.create({
   baseURL: process.env.VITE_API_URL,
   timeout: 10000,
 })
-
+console.log(process.env.VITE_API_URL)
 export default defineBoot(({ app }) => {
   // for use inside Vue files (Options API) through this.$axios and this.$api
   app.config.globalProperties.$axios = axios

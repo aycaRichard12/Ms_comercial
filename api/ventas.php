@@ -870,7 +870,8 @@ class ventas
     }
     public function registroVenta($fecha, $tipoventa, $tipopago, $idcliente, $idsucursal, $canalventa, $idmd5, $idmd5u, $jsonDetalles)
     {
-        // echo json_encode(array("1" => $fecha, "2" =>$tipoventa, "3" =>$tipopago, "4" =>$idcliente, "5" =>$idsucursal, "6" =>$canalventa, "7" =>$idmd5, "8" =>$idmd5u, "9" =>$jsonDetalles)); detalleVenta
+        // echo json_encode(["fecha"=> $fecha, "tipo venta" => $tipoventa, "tipo pago "=> $tipopago, "id cliente" => $idcliente , "id sucursal" => $idsucursal, "canal venta"=> $canalventa, "idmd5 E"=>$idmd5, "idmd5 U"=> $idmd5u, "jsonDetalle" => $jsonDetalles]);
+        // // echo json_encode(array("1" => $fecha, "2" =>$tipoventa, "3" =>$tipopago, "4" =>$idcliente, "5" =>$idsucursal, "6" =>$canalventa, "7" =>$idmd5, "8" =>$idmd5u, "9" =>$jsonDetalles)); detalleVenta
         try {
             date_default_timezone_set('America/La_Paz');
             $lista = [];
@@ -1313,7 +1314,7 @@ class ventas
             $res = array("estado" => "error", "mensaje" => $e->getMessage());
             echo json_encode($res);
         }
-        //echo json_encode($jsonDetalles);
+        echo json_encode($jsonDetalles);
     }
     public function registrarPagosVenta($array_pagos, $idventa) 
     {
