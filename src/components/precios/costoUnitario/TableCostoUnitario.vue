@@ -9,7 +9,6 @@
           v-model="filtroAlmacen"
           :options="almacenes"
           id="almacen"
-          emit-value
           map-options
           dense
           outlined
@@ -159,10 +158,11 @@ const columnas = [
 const filtrados = computed(() => {
   console.log(props.rows)
   console.log(filtroAlmacen.value)
+  const almacen = filtroAlmacen.value
   const res = props.rows.filter((p) => {
     console.log(filtroAlmacen.value)
     const matchesAlmacen =
-      (!filtroAlmacen.value || Number(p.idalmacen) === Number(filtroAlmacen.value)) &&
+      (!filtroAlmacen.value || Number(p.idalmacen) === Number(almacen.value)) &&
       filtroAlmacen.value !== null
     const matchesCodigo =
       !filter.value ||
