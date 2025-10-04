@@ -79,6 +79,7 @@ async function loadUsuarios() {
 }
 
 function cargarTabla() {
+  toggleForm()
   loadUsuarios()
 }
 function eliminarResponsable(id) {
@@ -222,6 +223,7 @@ const handleSubmit = async (data) => {
       console.log(response)
     }
     iniciarAsignacion(responsableSeleccionado.value)
+    toggleForm()
     $q.notify({
       type: 'positive',
       message: isEditing.value ? 'Editado correctamente' : 'Registrado correctamente',

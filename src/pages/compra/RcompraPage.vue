@@ -146,6 +146,7 @@ async function enviarFormData(endpoint, data, mensajeExito, mensajeError) {
       console.log(`${k}: ${v}`)
     }
     console.log(endpoint, formData)
+    console.log(data)
     const response = await api.post('', formData)
     console.log(response.data)
     if (response.data.estado === 'exito') {

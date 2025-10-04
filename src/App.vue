@@ -34,7 +34,6 @@ const createInitialLocalStorage = () => {
 createInitialLocalStorage()
 </script>
 <style>
-.zoom-container {
-  zoom: 1; /* Escala visual de toda la app al 70% */
-}
+/* .zoom-container {
+  zoom: 90%; /* Escala visual de toda la app al 70% */
 </style>
