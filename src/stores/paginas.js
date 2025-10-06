@@ -27,13 +27,7 @@ export const PAGINAS = Object.freeze({
     // 'reporteproductosvendidosindividual',
     // 'kardex',
   ]),
-  contingencias: Object.freeze([
-    'registraranulaciones',
-    'registrodeextravios',
-    'registrodemermas',
-    'reportedeextravios',
-    'reportedemermas',
-  ]),
+  contingencias: Object.freeze(['registraranulaciones', 'registrodeextravios', 'registrodemermas']),
   cuentasporcobrar: Object.freeze(['cuentasporcobrarocultas']),
   reportedeindicederotacion: Object.freeze([
     'reportedeindicederotacionporalmacen',
@@ -133,6 +127,8 @@ export const PAGINAS_ICONS = Object.freeze({
   //Movimientos
   movimientos: 'swap_horiz',
   reportedemovimientos: 'assessment',
+  reportedeextravios: 'assignment_late',
+  reportedemermas: 'trending_down',
   //pedidos
 })
 export const PAGINAS_SELECT = Object.freeze({
@@ -146,6 +142,7 @@ export const PAGINAS_SELECT = Object.freeze({
     'reportecuentasporcobrarocultas',
     'reportecuentasxpagarxperiodo',
   ]),
+  contingencias: Object.freeze(['reportedeextravios', 'reportedemermas']),
 })
 /**
  * Helper para verificar si una clave existe en los atributos.

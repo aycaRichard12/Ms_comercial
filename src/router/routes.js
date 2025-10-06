@@ -275,6 +275,10 @@ const routes = [
         component: () => import('src/pages/leyendaFactura/LeyendaFactura.vue'),
       },
       {
+        path: '/movimientosdeinventario',
+        component: () => import('src/pages/inventario/kardexPage.vue'),
+      },
+      {
         path: '/procesarventaspendientes',
         component: () => import('src/pages/autorizaciones/VentasPendientesPage.vue'),
       },
@@ -334,6 +338,14 @@ const routes = [
         path: '/notascreditodebito',
         component: () => import('src/pages/NotasCreditoDebito/NotasCreditoDebitoPage.vue'),
       },
+      {
+        path: '/reportedeextravios',
+        component: () => import('src/pages/devoluciones/reporteExtravioPage.vue'),
+      },
+      {
+        path: '/reportedemermas',
+        component: () => import('src/pages/devoluciones/reporteMermaPage.vue'),
+      },
     ],
   },
   {
@@ -341,7 +353,7 @@ const routes = [
     component: () => import('pages/config/FormularioConfiguracionInicial.vue'),
   },
   // Always leave this as last one,
-  // but you can also remove it pruebaKardex
+  // but you can also remove it reportedecompras
   {
     path: '/:catchAll(.*)*',
     component: () => import('pages/ErrorNotFound.vue'),
