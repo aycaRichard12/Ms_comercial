@@ -275,10 +275,6 @@ const routes = [
         component: () => import('src/pages/leyendaFactura/LeyendaFactura.vue'),
       },
       {
-        path: '/movimientosdeinventario',
-        component: () => import('src/pages/inventario/kardexPage.vue'),
-      },
-      {
         path: '/procesarventaspendientes',
         component: () => import('src/pages/autorizaciones/VentasPendientesPage.vue'),
       },
