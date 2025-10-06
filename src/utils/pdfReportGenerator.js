@@ -4235,3 +4235,239 @@ export function PDF_REPORTE_CATEGORIA_PRECIO(reporte, datosFormulario) {
 
   return doc
 }
+export function PDF_REPORTE_EXTRAVIO(reporte, datosFormulario) {
+  // ✅ Acceso correcto a los datos reactivos
+  console.log(reporte)
+  console.log(datosFormulario)
+
+  const contenidousuario = validarUsuario()
+  const doc = new jsPDF({ orientation: 'portrait' })
+
+  const idempresa = contenidousuario[0]
+  const nombreEmpresa = idempresa.empresa.nombre
+  const direccionEmpresa = idempresa.empresa.direccion
+  const telefonoEmpresa = idempresa.empresa.telefono
+
+  const columns = [
+    { header: 'N°', dataKey: 'index' },
+    { header: 'Fecha', dataKey: 'fecha' },
+    { header: 'Almacén', dataKey: 'almacen' },
+    { header: 'Descripción', dataKey: 'descripcion' },
+    { header: 'Autorizacion', dataKey: 'autorizacion' },
+  ]
+
+  const datos = reporte.map((item) => ({
+    index: item.index,
+    fecha: item.fecha,
+    almacen: item.almacen,
+    descripcion: item.descripcion,
+    autorizacion: item.autorizacion,
+  }))
+
+  autoTable(doc, {
+    columns,
+    body: datos,
+    styles: {
+      overflow: 'linebreak',
+      fontSize: 5,
+      cellPadding: 2,
+    },
+    headStyles: {
+      fillColor: ColoEncabezadoTabla,
+      textColor: 255,
+      halign: 'center',
+    },
+    columnStyles: {
+      index: { cellWidth: 10, halign: 'center' },
+      fecha: { cellWidth: 20, halign: 'left' },
+      almacen: { cellWidth: 30, halign: 'left' },
+      descripcion: { cellWidth: 110, halign: 'left' },
+      autorizacion: { cellWidth: 30, halign: 'left' },
+    },
+    startY: 45,
+    margin: { horizontal: 5 },
+    theme: 'striped',
+    didDrawPage: () => {
+      if (doc.internal.getNumberOfPages() === 1) {
+        if (logoBase64) {
+          const pageWidth = doc.internal.pageSize.getWidth() // Ancho total página
+          const imgWidth = 20 // Ancho del logo en mm
+          const imgHeight = 20 // Alto del logo en mm
+          const xPos = pageWidth - imgWidth - 5 // 10mm de margen derecho
+          const yPos = 5 // margen superior
+          console.log(logoBase64)
+          doc.addImage(logoBase64, 'JPEG', xPos, yPos, imgWidth, imgHeight)
+        }
+        doc.setFontSize(7)
+        doc.setFont(undefined, 'bold')
+        doc.text(nombreEmpresa, 5, 10)
+
+        doc.setFontSize(6)
+        doc.setFont(undefined, 'normal')
+        doc.text(direccionEmpresa, 5, 13)
+        doc.text(`Tel: ${telefonoEmpresa}`, 5, 16)
+
+        doc.setFontSize(10)
+        doc.setFont(undefined, 'bold')
+        doc.text('REPORTE DE ROBOS', doc.internal.pageSize.getWidth() / 2, 15, { align: 'center' })
+        doc.setFontSize(6)
+        doc.setFont(undefined, 'normal')
+        doc.text(
+          'ENTRE ' + datosFormulario.fechaInicio + ' Y ' + datosFormulario.fechaFin,
+          doc.internal.pageSize.getWidth() / 2,
+          18,
+          {
+            align: 'center',
+          },
+        )
+
+        doc.setDrawColor(0) // Color negro
+        doc.setLineWidth(0.2) // Grosor de la línea
+        doc.line(5, 30, 205, 30) // De (x1=5, y1=25) a (x2=200, y2=25)
+
+        doc.setFontSize(7)
+        doc.setFont(undefined, 'bold')
+        doc.text('DATOS DEL REPORTE', 5, 35)
+        doc.setFontSize(6)
+        doc.setFont(undefined, 'normal')
+        doc.text('Almacén: ' + datosFormulario.almacen, 5, 38)
+
+        doc.setFontSize(6)
+        doc.setFont(undefined, 'normal')
+        doc.text('Fecha de Impresion: ' + cambiarFormatoFecha(obtenerFechaActualDato()), 5, 41)
+
+        doc.setFontSize(7)
+        doc.setFont(undefined, 'bold')
+        doc.text('DATOS DEL ENCARGADO:', 205, 35, { align: 'right' })
+
+        doc.setFontSize(6)
+        doc.setFont(undefined, 'normal')
+        doc.text(datosFormulario.usuario.nombre, 205, 38, { align: 'right' })
+
+        doc.setFontSize(6)
+        doc.setFont(undefined, 'normal')
+        doc.text(datosFormulario.usuario.cargo, 205, 41, { align: 'right' })
+      }
+    },
+  })
+
+  return doc
+}
+export function PDF_REPORTE_MERMA(reporte, datosFormulario) {
+  // ✅ Acceso correcto a los datos reactivos
+  console.log(reporte)
+  console.log(datosFormulario)
+
+  const contenidousuario = validarUsuario()
+  const doc = new jsPDF({ orientation: 'portrait' })
+
+  const idempresa = contenidousuario[0]
+  const nombreEmpresa = idempresa.empresa.nombre
+  const direccionEmpresa = idempresa.empresa.direccion
+  const telefonoEmpresa = idempresa.empresa.telefono
+
+  const columns = [
+    { header: 'N°', dataKey: 'index' },
+    { header: 'Fecha', dataKey: 'fecha' },
+    { header: 'Almacén', dataKey: 'almacen' },
+    { header: 'Descripción', dataKey: 'descripcion' },
+    { header: 'Autorizacion', dataKey: 'autorizacion' },
+  ]
+
+  const datos = reporte.map((item) => ({
+    index: item.index,
+    fecha: item.fecha,
+    almacen: item.almacen,
+    descripcion: item.descripcion,
+    autorizacion: item.autorizacion,
+  }))
+
+  autoTable(doc, {
+    columns,
+    body: datos,
+    styles: {
+      overflow: 'linebreak',
+      fontSize: 5,
+      cellPadding: 2,
+    },
+    headStyles: {
+      fillColor: ColoEncabezadoTabla,
+      textColor: 255,
+      halign: 'center',
+    },
+    columnStyles: {
+      index: { cellWidth: 10, halign: 'center' },
+      fecha: { cellWidth: 20, halign: 'left' },
+      almacen: { cellWidth: 30, halign: 'left' },
+      descripcion: { cellWidth: 110, halign: 'left' },
+      autorizacion: { cellWidth: 30, halign: 'left' },
+    },
+    startY: 45,
+    margin: { horizontal: 5 },
+    theme: 'striped',
+    didDrawPage: () => {
+      if (doc.internal.getNumberOfPages() === 1) {
+        if (logoBase64) {
+          const pageWidth = doc.internal.pageSize.getWidth() // Ancho total página
+          const imgWidth = 20 // Ancho del logo en mm
+          const imgHeight = 20 // Alto del logo en mm
+          const xPos = pageWidth - imgWidth - 5 // 10mm de margen derecho
+          const yPos = 5 // margen superior
+          console.log(logoBase64)
+          doc.addImage(logoBase64, 'JPEG', xPos, yPos, imgWidth, imgHeight)
+        }
+        doc.setFontSize(7)
+        doc.setFont(undefined, 'bold')
+        doc.text(nombreEmpresa, 5, 10)
+
+        doc.setFontSize(6)
+        doc.setFont(undefined, 'normal')
+        doc.text(direccionEmpresa, 5, 13)
+        doc.text(`Tel: ${telefonoEmpresa}`, 5, 16)
+
+        doc.setFontSize(10)
+        doc.setFont(undefined, 'bold')
+        doc.text('REPORTE DE MERMAS', doc.internal.pageSize.getWidth() / 2, 15, { align: 'center' })
+        doc.setFontSize(6)
+        doc.setFont(undefined, 'normal')
+        doc.text(
+          'ENTRE ' + datosFormulario.fechaInicio + ' Y ' + datosFormulario.fechaFin,
+          doc.internal.pageSize.getWidth() / 2,
+          18,
+          {
+            align: 'center',
+          },
+        )
+
+        doc.setDrawColor(0) // Color negro
+        doc.setLineWidth(0.2) // Grosor de la línea
+        doc.line(5, 30, 205, 30) // De (x1=5, y1=25) a (x2=200, y2=25)
+
+        doc.setFontSize(7)
+        doc.setFont(undefined, 'bold')
+        doc.text('DATOS DEL REPORTE', 5, 35)
+        doc.setFontSize(6)
+        doc.setFont(undefined, 'normal')
+        doc.text('Almacén: ' + datosFormulario.almacen, 5, 38)
+
+        doc.setFontSize(6)
+        doc.setFont(undefined, 'normal')
+        doc.text('Fecha de Impresion: ' + cambiarFormatoFecha(obtenerFechaActualDato()), 5, 41)
+
+        doc.setFontSize(7)
+        doc.setFont(undefined, 'bold')
+        doc.text('DATOS DEL ENCARGADO:', 205, 35, { align: 'right' })
+
+        doc.setFontSize(6)
+        doc.setFont(undefined, 'normal')
+        doc.text(datosFormulario.usuario.nombre, 205, 38, { align: 'right' })
+
+        doc.setFontSize(6)
+        doc.setFont(undefined, 'normal')
+        doc.text(datosFormulario.usuario.cargo, 205, 41, { align: 'right' })
+      }
+    },
+  })
+
+  return doc
+}
