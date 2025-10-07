@@ -6,6 +6,16 @@
 
 <script setup>
 import { USUARIOS } from './credenciales'
+import { useMeta } from 'quasar'
+import { getNombreEmpresa } from './composables/FuncionesGenerales'
+
+const metaData = {
+  // sets document title
+  title: getNombreEmpresa(),
+  // optional; sets final title as "Index Page - My Website", useful for multiple level meta
+  titleTemplate: (title) => `${title} - Mistersofts`,
+}
+useMeta(metaData)
 const createInitialLocalStorage = () => {
   const idx = 0
   const usuario = USUARIOS[idx].usuario

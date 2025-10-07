@@ -116,7 +116,7 @@ export default defineConfig((ctx) => {
       // Quasar plugins
       iconSet: 'material-icons', // <-- set de iconos
 
-      plugins: ['Notify', 'Loading', 'Dialog'],
+      plugins: ['Notify', 'Loading', 'Dialog', 'Meta'],
       defaults: {
         QInput: { outlined: true },
         QSelect: { outlined: true },
