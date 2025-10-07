@@ -164,7 +164,7 @@ const orderedTopBoxes = computed(() => {
       data: venta.value,
       iconComponent: IconVentas,
       title: 'VENTAS',
-      subtitle: venta.value.titulo || 'Generar venta',
+      subtitle: 'Registrar Venta',
       cardId: 'venta-card',
     })
   if (compra.value)
