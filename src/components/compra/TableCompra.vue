@@ -211,7 +211,14 @@ const columnas = [
   { name: 'detalle', label: 'Detalle', field: 'detalle', align: 'right' },
   { name: 'opciones', label: 'Opciones', field: 'opciones', align: 'center' },
 ]
-defineEmits(['add', 'repDesglosado', 'repCompras', 'edit', 'delete'])
+const emit = defineEmits([
+  'add',
+  'repDesglosado',
+  'repCompras',
+  'edit',
+  'delete',
+  'actualizarTablaPrincipal',
+])
 
 const filteredCompra = computed(() => {
   if (!filtroAlmacen.value) {
@@ -257,6 +264,7 @@ async function FormularioCredito(c) {
 }
 function closeModalCredito() {
   credito.value = false
+  emit('actualizarTablaPrincipal')
 }
 function imprimirReporte() {
   console.log(filtroAlmacen.value)

@@ -26,6 +26,7 @@
       @add="toggleForm"
       @edit="editarCompra"
       @delete="eliminarCompra"
+      @actualizarTablaPrincipal="iniciar"
       @repDesglosado="generarReporteDesglosado"
       @repCompras="generarReporteGeneral"
       @toggle-status="autorizarCompra"
