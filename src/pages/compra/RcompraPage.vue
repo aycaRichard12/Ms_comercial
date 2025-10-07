@@ -227,6 +227,7 @@ async function loadRows() {
   try {
     const response = await api.get(`listaCompra/${idempresa}`)
     compras.value = response.data
+    console.log(response.data)
   } catch (error) {
     console.error('Error al cargar compras:', error)
     $q.notify({ type: 'negative', message: 'No se pudieron cargar las compras' })

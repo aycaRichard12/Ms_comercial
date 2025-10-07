@@ -96,7 +96,7 @@
               @click="$emit('detalleCompra', props.row)"
             />
             <q-btn
-              v-if="Number(props.row.tipocompra) === 1"
+              v-if="Number(props.row.tipocompra) === 1 && Number(props.row.estado) === 1"
               title="Generar Plan de Pagos"
               icon="payment"
               color="blue"
@@ -221,6 +221,7 @@ const filteredCompra = computed(() => {
 })
 
 const processedRows = computed(() => {
+  console.log(filteredCompra.value)
   return filteredCompra.value.map((row, index) => ({
     ...row,
     numero: index + 1,

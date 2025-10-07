@@ -654,13 +654,26 @@ class compras
             echo json_encode(array("error" => "El id de empresa no existe"));
             return;
         }
-        $consulta = $this->cm->query("select i.id_ingreso,pr.nombre ,i.nombre,i.codigo,i.nfactura,i.fecha_ingreso,i.autorizacion,i.pedidos_id_pedidos,i.almacen_id_almacen,i.tipocompra, i.proveedor_id_proveedor, (SELECT SUM(di2.precio_unitario * di2.cantidad) FROM detalle_ingreso di2 WHERE di2.ingreso_id_ingreso = i.id_ingreso) as total
+        $consulta = $this->cm->query("select i.id_ingreso,pr.nombre ,i.nombre as lote,i.codigo,i.nfactura,i.fecha_ingreso,i.autorizacion, i.estado, i.pedidos_id_pedidos,i.almacen_id_almacen,i.tipocompra, i.proveedor_id_proveedor, (SELECT SUM(di2.precio_unitario * di2.cantidad) FROM detalle_ingreso di2 WHERE di2.ingreso_id_ingreso = i.id_ingreso) as total
         from ingreso as i
         left join proveedor pr on i.proveedor_id_proveedor=pr.id_proveedor
         where pr.id_empresa='$idempresa'
         order by i.fecha_ingreso desc, i.id_ingreso desc");
         while ($qwe = $this->cm->fetch($consulta)) {
-            $res = array("id"=>$qwe[0],"proveedor"=>$qwe[1],"lote"=>$qwe[2],"codigo"=>$qwe[3],"nfactura"=>$qwe[4],"fecha"=>$qwe[5],"autorizacion"=>$qwe[6],"idpedido"=>$qwe[7],"idalmacen"=>$qwe[8],"tipocompra"=>$qwe[9],"idproveedor"=>$qwe[10], "total" => $qwe[11]);
+            $res = array(
+                "id"=>$qwe["id_ingreso"],
+                "proveedor"=>$qwe["nombre"],
+                "lote"=>$qwe["lote"],
+                "codigo"=>$qwe["codigo"],
+                "nfactura"=>$qwe["nfactura"],
+                "fecha"=>$qwe["fecha_ingreso"],
+                "autorizacion"=>$qwe["autorizacion"],
+                "estado"=>$qwe["estado"],
+                "idpedido"=>$qwe["pedidos_id_pedidos"],
+                "idalmacen"=>$qwe["almacen_id_almacen"],
+                "tipocompra"=>$qwe["tipocompra"],
+                "idproveedor"=>$qwe["proveedor_id_proveedor"], 
+                "total" => $qwe["total"]);
             array_push($lista, $res);
         }
         echo json_encode($lista);
@@ -1544,7 +1557,7 @@ class compras
         $old_photo_full_url = $old_photo_data ? $old_photo_data['ruta_foto_pedido'] : null;
         $stmt_select->close();
 
-        if ($old_photo_full_url && strpos($old_photo_full_url, $baseUrl) === 0) { // Ensure it's a URL from your server
+        if ($old_photo_full_url && strpos($old_photo_full_url, $baseUrl) === 0) { // Ensure it's a URL from your listaCompra
             // Extract the local file path from the public URL
             $local_old_path = str_replace($baseUrl, '', $old_photo_full_url);
             // Ensure the local path is correct and within your uploads directory
