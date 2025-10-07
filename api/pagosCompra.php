@@ -38,6 +38,16 @@ class PagosCompra
     public function registrarCompraCredito($data){
         echo $this->crearPago($data['compra_id'],$data['monto_total'],$data['nro_cuotas'],$data['fecha_inicio'],$data['pago_cada_ciertos_dias']);
     }
+
+    /**
+     * Funcion para verificar si se creo el credito de una compra 
+     */
+    public function inabilitarParaRegistrarCredito($compra_id){
+        $sql = "UPDATE ingreso SET estado = 2 WHERE id_ingreso = ?";
+        $stmt = $this->cm->prepare($sql);
+        $stmt->bind_param("i", $compra_id);
+        $stmt->execute();
+    }
     /**
      * Crea un nuevo registro de pago a crédito y genera sus cuotas.
      */
@@ -68,6 +78,7 @@ class PagosCompra
                 $id_pago = $this->cm->insert_id;
                 // Generar las cuotas asociadas a este pago
                 $this->generarCuotas($id_pago, $nro_cuotas, $monto_total, $fecha_inicio, $pago_cada_ciertos_dias);
+                $this->inabilitarParaRegistrarCredito($compra_id);
                 $this->cm->commit();
                 return json_encode(["estado" => "exito", "mensaje" => "Pago creado y cuotas generadas correctamente.", "id_pago" => $id_pago]);
             } else {
