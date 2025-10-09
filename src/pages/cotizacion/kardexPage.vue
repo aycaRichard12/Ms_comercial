@@ -133,12 +133,12 @@ import { useQuasar } from 'quasar'
 import { api } from 'src/boot/axios'
 import { validarUsuario } from 'src/composables/FuncionesG'
 import { PDFKardex } from 'src/utils/pdfReportGenerator'
-import { obtenerFechaActualDato } from 'src/composables/FuncionesG'
+import { obtenerFechaActualDato, obtenerFechaPrimerDiaMesActual } from 'src/composables/FuncionesG'
 const usuario = validarUsuario()[0]
 const $q = useQuasar()
 
 // Variables del formulario
-const fechaiR = ref(obtenerFechaActualDato())
+const fechaiR = ref(obtenerFechaPrimerDiaMesActual())
 const fechafR = ref(obtenerFechaActualDato())
 const almacenR = ref(null)
 const idproductoR = ref(null)
@@ -338,6 +338,7 @@ async function generarReporte() {
 
   try {
     const endpoint = `kardex/${fechaiR.value}/${fechafR.value}/${almacenR.value}/${idproductoR.value}`
+    console.log(endpoint)
     const response = await api.get(endpoint)
     const data = response.data
     console.log(data)
@@ -381,6 +382,7 @@ function recalcularKardex() {
 
 // Métodos de valoración de inventarios
 function calcularPEPS(movimientos) {
+  console.log(movimientos)
   const code = {
     VE: 'VENTAS',
     MOV1: 'MOVIMIENTO+',
@@ -398,9 +400,12 @@ function calcularPEPS(movimientos) {
   // Procesar cada movimiento
   movimientos.forEach((mov, index) => {
     const descripcion = code[mov.codigo] || 'MOVIMIENTO DESCONOCIDO'
+    console.log(descripcion)
     const esEntrada = ['MOVIMIENTO+', 'COMPRAS'].includes(descripcion)
-    const esSalida = ['VENTAS', 'MOVIMIENTO-', 'ROBOS', 'MERMAS', 'ANULADO'].includes(descripcion)
-
+    const esSalida = ['VENTAS', 'MOVIMIENTO-', 'ROBOS', 'MERMAS', 'ANULADO', 'EXTRAVIO'].includes(
+      descripcion,
+    )
+    console.log(esSalida)
     let registro = {
       c: index + 1,
       fecha: mov.fecha,
@@ -429,21 +434,29 @@ function calcularPEPS(movimientos) {
       registro.saldoT = mov.stock * mov.precio
       registro.descripcion = 'SALDO INICIAL'
     } else {
+      console.log(esEntrada)
       if (esEntrada) {
         // Agregar al inventario como nuevo lote (al final)
+        console.log(mov)
         const cantidad = Math.abs(mov.stock - getCantidadTotalInventario(inventario))
         inventario.push({
           cantidad: cantidad,
           costo: mov.precio,
           fecha: mov.fecha,
         })
-
+        console.log(mov.precio)
+        console.log(cantidad)
         registro.canentrada = cantidad
         registro.costoEntrada = mov.precio
-        registro.ingreso = cantidad * mov.precio
+        registro.ingreso = cantidad * Number(mov.precio)
       } else if (esSalida) {
+        console.log(esSalida)
         // Sacar del inventario según PEPS (desde el principio)
+        console.log(mov.stock)
+        console.log(getCantidadTotalInventario(inventario))
+        console.log(inventario)
         const cantidadNecesaria = Math.abs(mov.stock - getCantidadTotalInventario(inventario))
+
         let cantidadRestante = cantidadNecesaria
         let costoTotalSalida = 0
 
@@ -470,7 +483,8 @@ function calcularPEPS(movimientos) {
       registro.costoSaldo = getCostoPromedioInventario(inventario)
       registro.saldoT = getValorTotalInventario(inventario)
     }
-
+    console.log(registro)
+    console.log(kardex)
     kardex.push(registro)
   })
 
@@ -676,7 +690,7 @@ function calcularPromedio(movimientos) {
 
 // Funciones auxiliares para manejo de inventario
 function getCantidadTotalInventario(inventario) {
-  return inventario.reduce((total, lote) => total + lote.cantidad, 0)
+  return inventario.reduce((total, lote) => Number(total) + Number(lote.cantidad), 0)
 }
 
 function getValorTotalInventario(inventario) {
