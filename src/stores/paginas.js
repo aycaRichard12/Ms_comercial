@@ -40,11 +40,7 @@ export const PAGINAS = Object.freeze({
     'procesarventaspendientes',
     'autorizarcompra',
   ]),
-  gestioncompra: Object.freeze([
-    'registrarcompra',
-    'reporteproductoscomprados',
-    'reportedecompras',
-  ]),
+  gestioncompra: Object.freeze(['registrarcompra']),
   gestioncampanas: Object.freeze([
     'crearcampanas',
     'reportedecampanas',
@@ -143,6 +139,11 @@ export const PAGINAS_SELECT = Object.freeze({
     'reportecuentasxpagarxperiodo',
   ]),
   contingencias: Object.freeze(['reportedeextravios', 'reportedemermas']),
+  gestioncompra: Object.freeze([
+    'reporteproductoscomprados',
+    'reportedecompras',
+    'reportestockdeproductosindividual',
+  ]),
 })
 /**
  * Helper para verificar si una clave existe en los atributos.
