@@ -16,7 +16,7 @@
           />
 
           <!-- Botón de reporte -->
-          <q-btn
+          <!-- <q-btn
             color="secondary"
             class="btn-res"
             id="btnReporteStockIndividual"
@@ -24,7 +24,7 @@
             icon="assessment"
             label="Rep. Stock Producto Individual"
             no-caps
-          />
+          /> -->
         </div>
 
         <div class="col-2 q-mt-lg flex justify-end">
