@@ -145,7 +145,6 @@
                   :key="submenu.codigo + '_' + submenu.permiso"
                   clickable
                   v-ripple
-                  :to="'/' + llevarPrimeraPAgina(submenu)"
                   class="submenu-item"
                   :class="{
                     'submenu-activo': subMenuSeleccionado === submenu.codigo.split('-')[0],
@@ -326,7 +325,6 @@ const loadTabsForSubmenu = (submenuCodigo) => {
 }
 
 const selectSubmenu = async (submenu) => {
-  console.log(submenu)
   const submenuCode = submenu.codigo.split('-')[0]
   subMenuSeleccionado.value = submenuCode
   loadTabsForSubmenu(submenuCode)
@@ -336,43 +334,20 @@ const selectSubmenu = async (submenu) => {
   if (activeTabs.value.length > 0) {
     const firstTab = activeTabs.value[0]
     await navigateToTab(firstTab)
+  } else {
+    if (activeTabsReportes.value.length > 0) {
+      const firstTab = activeTabsReportes.value[0]
+      await navigateToTab(firstTab)
+    }
   }
 }
 
 const navigateToTab = (tab) => {
   router.push(`/${tab.codigo}`)
   startTabsTimeout()
-
   currentTab.value = tab.codigo // Asegura que el tab actual se actualice
 }
 
-// watch(
-//   () => route.path,
-//   (newPath) => {
-//     const pathParts = newPath.split('/')
-//     if (pathParts.length > 1) {
-//       const currentPage = pathParts[1]
-//       currentTab.value = currentPage
-
-//       const grupo = Object.keys(PAGINAS).find((grupo) => PAGINAS[grupo].includes(currentPage))
-
-//       if (grupo) {
-//         loadTabsForSubmenu(grupo)
-//         subMenuSeleccionado.value = grupo
-//         // Expandir el menú principal si el submenú está dentro de él
-//         for (const menu of items.value) {
-//           if (menu.submenu && menu.submenu.some((s) => s.codigo.split('-')[0] === grupo)) {
-//             expandedMenu[menu.codigo] = true
-//             break
-//           }
-//         }
-//       } else {
-//         subMenuSeleccionado.value = null
-//       }
-//     }
-//   },
-//   { immediate: true }, uppercase
-// )
 const cargarPaginasSubMenu = (submenuCodigo) => {
   console.log(submenuCodigo)
   const paginasSubmenu = PAGINAS[submenuCodigo] || []
