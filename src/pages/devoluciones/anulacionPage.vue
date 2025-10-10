@@ -591,6 +591,12 @@
         </q-card-section>
       </q-card>
     </q-dialog>
+    <RegistrarNotaCreditoDebito
+      v-if="isVisibleNota"
+      :venta="ventaSeleccionada"
+      :key="formularioNota"
+      @reiniciar="forzarReinicioCarrito"
+    />
   </q-page>
 </template>
 
@@ -600,6 +606,7 @@ import { useQuasar } from 'quasar'
 import { api } from 'boot/axios'
 import { validarUsuario } from 'src/composables/FuncionesG'
 import { PDFdetalleVentaInicio } from 'src/utils/pdfReportGenerator'
+import RegistrarNotaCreditoDebito from 'src/pages/NotasCreditoDebito/RegistrarNotaCreditoDebito.vue'
 
 const $q = useQuasar()
 
@@ -608,7 +615,21 @@ const tab = ref('validas')
 const showDevolucionDetail = ref(false)
 const cargando = ref(false)
 const cargandoDetalle = ref(false)
-
+//NOTA CREDITO DEBITO
+const isVisibleNota = ref(false)
+const ventaSeleccionada = ref(null)
+const formularioNota = ref(0)
+const forzarReinicioCarrito = () => {
+  ventaSeleccionada.value = null
+  isVisibleNota.value = false // Esto reinicia el componente
+}
+function abrirModal(venta) {
+  console.log(venta)
+  formularioNota.value++
+  ventaSeleccionada.value = null // ⚠️ Esto reinicia el componente `carritoVenta`
+  isVisibleNota.value = true
+  ventaSeleccionada.value = venta
+}
 // Filtros
 const filtroAlmacen = ref(0)
 const filtroTipo = ref(0)
@@ -1098,7 +1119,7 @@ const handleAccion = (row) => {
   console.log(row)
   const value = row.accionSeleccionada
   const dataValue = row.id
-
+  const TipoVenta = Number(row.tipoventa)
   // Resetear la selección después de manejar la acción
   setTimeout(() => {
     row.accionSeleccionada = ''
@@ -1107,7 +1128,15 @@ const handleAccion = (row) => {
   if (value == 1) {
     anularVentas(dataValue)
   } else if (value == 2) {
-    devolucion(dataValue)
+    if (TipoVenta == 0) {
+      devolucion(dataValue)
+    } else if (TipoVenta == 1) {
+      const rowVenta = {
+        idventa: row.id,
+        ...row,
+      }
+      abrirModal(rowVenta)
+    }
   } else if (value == 3) {
     estadofactura(row.cuf)
   }
@@ -1457,11 +1486,11 @@ const autorizarDevolucion = async (id) => {
   try {
     const usuarioResponse = validarUsuario()
     const usuario = usuarioResponse[0]
-    const idusuario = usuario?.idusuario
-
-    $q.loading.show({
-      message: 'Autorizando devolución...',
-    })
+    const idusuario =
+      usuario?.idusuario +
+      $q.loading.show({
+        message: 'Autorizando devolución...',
+      })
 
     const response = await api.get(`autorizarDevolucion/${id}/1/${idusuario}`)
 
@@ -1508,7 +1537,7 @@ const generarComprobantePDF = async (id) => {
       throw new Error(response.data.error)
     }
     const doc = await PDFdetalleVentaInicio(detalleVenta)
-    // doc.save('proveedores.pdf') ← comenta o elimina esta línea
+    // doc.save('proveedores.pdf') ← comenta o elimina esta línea  autorizarDevolucion
     //doc.output('dataurlnewwindow') // ← muestra el PDF en una nueva ventana del navegador
     pdfData.value = doc.output('dataurlstring') // muestra el pdf en un modal
     modalComprobantePDF.value = true

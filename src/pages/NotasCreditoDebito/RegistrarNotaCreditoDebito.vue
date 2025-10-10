@@ -1,40 +1,44 @@
 <template>
-  <q-dialog v-model="VisibleModalJustificacion" persistent>
-    <q-card style="min-width: 400px">
-      <q-card-section class="bg-primary text-white text-h6">
-        Motivo de la Devolución
-      </q-card-section>
+  <div v-if="VisibleModalJustificacion">
+    <q-dialog v-model="VisibleModalJustificacion" persistent>
+      <q-card style="min-width: 400px">
+        <q-card-section class="bg-primary text-white text-h6">
+          Motivo de la Devolución
+        </q-card-section>
 
-      <q-card-section>
-        <label for="motivo">Escriba el motivo...</label>
-        <q-input v-model="motivo" type="textarea" outlined dense autogrow id="motivo" />
-      </q-card-section>
+        <q-card-section>
+          <label for="motivo">Escriba el motivo...</label>
+          <q-input v-model="motivo" type="textarea" outlined dense autogrow id="motivo" />
+        </q-card-section>
 
-      <q-separator />
+        <q-separator />
 
-      <q-card-actions align="right">
-        <q-btn flat label="Cancelar" color="negative" @click="cancelarJustificacion" />
-        <q-btn
-          flat
-          label="Continuar"
-          color="primary"
-          :disable="!motivo"
-          @click="confirmarJustificacion"
-        />
-      </q-card-actions>
-    </q-card>
-  </q-dialog>
-  <q-dialog v-model="VisibleModalNotaCredito" full-width full-height>
-    <q-card>
-      <q-card-section class="bg-primary text-white text-h6 flex justify-between">
-        <div>Registrar Nota Credito Debito</div>
-        <q-btn icon="close" flat dense round @click="toggleModal" />
-      </q-card-section>
-      <q-card-section style="max-height: 83vh; overflow-y: auto">
-        <FormNotaCreditoDebito :nota="Factura" @cancelar="toggleModal" />
-      </q-card-section>
-    </q-card>
-  </q-dialog>
+        <q-card-actions align="right">
+          <q-btn flat label="Cancelar" color="negative" @click="cancelarJustificacion" />
+          <q-btn
+            flat
+            label="Continuar"
+            color="primary"
+            :disable="!motivo"
+            @click="confirmarJustificacion"
+          />
+        </q-card-actions>
+      </q-card>
+    </q-dialog>
+  </div>
+  <div v-else>
+    <q-dialog v-model="VisibleModalNotaCredito" full-width full-height>
+      <q-card>
+        <q-card-section class="bg-primary text-white text-h6 flex justify-between">
+          <div>Registrar Nota Credito Debito</div>
+          <q-btn icon="close" flat dense round @click="toggleModal" />
+        </q-card-section>
+        <q-card-section style="max-height: 83vh; overflow-y: auto">
+          <FormNotaCreditoDebito :nota="Factura" @cancelar="toggleModal" />
+        </q-card-section>
+      </q-card>
+    </q-dialog>
+  </div>
 </template>
 <script setup>
 import { ref, watch } from 'vue'
@@ -52,7 +56,6 @@ const props = defineProps({
   },
 })
 const venta = ref(props.venta)
-console.log(venta.value)
 const $q = useQuasar()
 const VisibleModalNotaCredito = ref(false)
 const VisibleModalJustificacion = ref(false)
@@ -68,11 +71,10 @@ const ir_a_NotaCreditoDebito = async (factura) => {
   let jsonEmizor = {}
   try {
     const response = await api.get(`detallesVenta/${factura.idventa}/${idempresa}`) // Cambia a tu ruta real
-    console.log(response.data)
     const venta = response.data[0]
+    console.log(venta)
     detalleVenta.value = response.data[0]
     const productos = cambiarDetalleProducto(detalleVenta.value.detalle)
-    console.log(productos)
     jsonEmizor = {
       facturaExterna: {
         facturaExterna: 0,
@@ -99,8 +101,6 @@ const ir_a_NotaCreditoDebito = async (factura) => {
       motivo: motivo.value,
       venta: venta,
     }
-    console.log(jsonEmizor)
-    ModalJustificacion()
   } catch (error) {
     console.error('Error al cargar datos:', error)
     $q.notify({
@@ -110,6 +110,7 @@ const ir_a_NotaCreditoDebito = async (factura) => {
   }
   console.log(jsonEmizor)
   Factura.value = jsonEmizor
+  VisibleModalNotaCredito.value = true
 }
 const cambiarDetalleProducto = (detalle = []) => {
   if (!Array.isArray(detalle) || detalle.length === 0) {
@@ -169,7 +170,7 @@ const cancelarJustificacion = () => {
 }
 const confirmarJustificacion = () => {
   VisibleModalJustificacion.value = false
-  VisibleModalNotaCredito.value = true
+  ir_a_NotaCreditoDebito(venta.value)
 }
 watch(
   () => props.venta,
@@ -180,8 +181,7 @@ watch(
       Factura.value = {}
       VisibleModalNotaCredito.value = false
       VisibleModalJustificacion.value = false
-      console.log(nuevaVenta)
-      ir_a_NotaCreditoDebito(nuevaVenta)
+      ModalJustificacion()
     }
   },
   { immediate: true },

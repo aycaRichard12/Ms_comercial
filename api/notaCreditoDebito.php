@@ -280,13 +280,13 @@ class Nota_Debito_Credito
     // ==                  SECCIÓN DE GESTIÓN NOTAS                 ==
     // =================================================================
     public function registrarNotaCreditoDebito($data){
-         echo $this->CrearNota($data['numNota'], $data['id_punto_venta'], $data['id_cliente'], $data['id_leyenda'], $data['id_usuario'], $data['monto_total_devuelto'], $data['monto_descuento_credito_debito'], $data['monto_efectivo_credito_debito'], $data['id_venta'],$data['detalle'],$data['notaCreditoDebito'],$data['token'],$data['tipo'], $data['md5E'],$data['idalmacen']);
+         echo $this->CrearNota($data['numNota'], $data['id_punto_venta'], $data['id_cliente'], $data['id_leyenda'], $data['id_usuario'], $data['monto_total_devuelto'], $data['monto_descuento_credito_debito'], $data['monto_efectivo_credito_debito'], $data['id_venta'],$data['detalle'],$data['notaCreditoDebito'],$data['token'],$data['tipo'], $data['md5E'],$data['idalmacen'], $data['motivo']);
     }
    
     /**
      * Crea un nuevo registro de pago a crédito y genera sus cuotas.
      */
-    public function CrearNota($numNota, $id_punto_venta, $id_cliente, $id_leyenda, $id_usuario, $monto_total_devuelto, $monto_descuento_credito_debito, $monto_efectivo_credito_debito, $id_venta, $detalle, $jsonEmizor, $token, $tipo_factura, $md5E, $idalmacen)
+    public function CrearNota($numNota, $id_punto_venta, $id_cliente, $id_leyenda, $id_usuario, $monto_total_devuelto, $monto_descuento_credito_debito, $monto_efectivo_credito_debito, $id_venta, $detalle, $jsonEmizor, $token, $tipo_factura, $md5E, $idalmacen, $motivo)
     {
         // $sqlControlVenta = "select count(id_venta) as cant from nota_debito_credito where id_venta = ?";
         // $stmt = $this->cm->prepare($sqlControlVenta);
@@ -320,6 +320,15 @@ class Nota_Debito_Credito
         $shortLink = null;
         $codigoEstado = null;
         $respuestaFinal = [];
+        // $cuf= "1553FC196BEDE0BBCB02CABF81EC1EE09B53878AD79C721CF9EB12F74" ;
+        // $ack_ticket= "68d597bf1d6b5" ;
+        // $urlSin= "https://pilotosiat.impuestos.gob.bo/consulta/QR?nit=311710026&cuf=1553FC196BEDE0BBDD637C309257D1D8B6F3878AD69C721CF9EB12F74&numero=1" ;
+        // $emision_type_code= 1;
+        // $fechaEmision= "2025-09-25 17:24:59" ;
+        // $numeroFactura= 1;
+        // $shortLink= "https://sinfel.emizor.com/inv/68d5b32bc9f15" ;
+        // $codigoEstado= "609";
+        // $respuestaEmizor = [];
         $respuestaEmizor = $this->factura->crearfactura($jsonEmizor,24, $token, $tipo_factura, $sucursa['codigosin']);
         if ($respuestaEmizor->status === "success") {
                     $estadoFactura = null;
@@ -330,6 +339,7 @@ class Nota_Debito_Credito
                 }
                 sleep(1); // Esperar 1 segundo antes de reintentar
             }
+            
 
             if ($estadoFactura->data->codigoEstado == self::ESTADO_FACTURA_VALIDADA) {
 
@@ -341,9 +351,11 @@ class Nota_Debito_Credito
                     $numeroFactura= $respuestaEmizor->data->numeroFactura;
                     $shortLink= $respuestaEmizor->data->shortLink ;
                     $codigoEstado= $respuestaEmizor->data->codigoEstado;
+                    
             } else {
                 $respuestaFinal = ["estado" => "error", "mensaje" => "La factura no pudo ser validada por el SIN.", "detalles" => $estadoFactura];
             }
+
         } else {
             return json_encode(["estado" => "error", "mensaje" => "Error al crear la Nota Credito Debito: " , "detalles" => $respuestaEmizor, "respuesta Final" => $respuestaFinal]);
         }
@@ -360,8 +372,9 @@ class Nota_Debito_Credito
 
             if ($stmt->execute()) {
                 $id_nota = $this->cm->insert_id;
-                 //Generar las cuotas asociadas a este pago
-                $this->registrarDetalleNota($detalle,$id_nota);
+                //$this->registrarDetalleNota($detalle,$id_nota);
+                $iddevolucion = $this->funcionesVenta->registrodevolucion($motivo, $id_venta, $md5E, 1, $detalle);
+                $res = $this->funcionesVenta->cambiarestadodevolucion($iddevolucion, 1, $id_usuario, 1);
                 $this->cm->commit();
                 return json_encode(["estado" => "exito", "mensaje" => "Nota Credito Debito creado correctamente.", "idNota" => $id_nota,"respuestaEmizor"=>$respuestaEmizor, "sucursal"=>$sucursa, "tipo"=>$tipo_factura]);
             } else {
@@ -369,7 +382,6 @@ class Nota_Debito_Credito
             }
         } catch (Exception $e) {
             $this->cm->rollback();
-            // $this->logger->log($e->getMessage()); // Opcional: registrar el error
             return json_encode(["estado" => "error", "mensaje" => "Error al crear el pago: " . $e->getMessage()]);
         }
     }

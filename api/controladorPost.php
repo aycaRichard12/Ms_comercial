@@ -616,6 +616,6 @@ elseif ($ver == "registrarNotaCreditoDebito"){
 
 
 if ($controlador === null) {
-    // Acción por defecto si no se encuentra una ruta válida producto sendEmail ConfiguracionInicial registroPrueba registrarConfiguracion
+    // Acción por defecto si no se encuentra una ruta válida producto sendEmail ConfiguracionInicial cambiarestadodevolucion registrarConfiguracion
     echo json_encode("El formulario ".$_POST['ver']." no existe");
 }

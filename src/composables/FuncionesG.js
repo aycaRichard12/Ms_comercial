@@ -4,6 +4,19 @@ import { useMenuStore } from 'src/stores/permitidos'
 import { idusuario_md5 } from 'src/composables/FuncionesGenerales'
 import { api } from 'src/boot/axios'
 
+export function getfechaCodigo() {
+  const date = new Date()
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  const h = String(date.getHours()).padStart(2, '0')
+  const m = String(date.getMinutes()).padStart(2, '0')
+  const s = String(date.getSeconds()).padStart(2, '0')
+
+  // Retorna un código como: 20251009_142530
+  return `${year}${month}${day}${h}${m}${s}`
+}
+
 export function getIdRubro(situacion = null) {
   //idtn
   const contenidousuario = validarUsuario()

@@ -2514,44 +2514,123 @@ class ventas
         }
     }
 
-    public function registrodevolucion($motivo, $idventa, $idmd5)
-    {
+    public function registrodevolucion($motivo, $idventa, $idmd5, $tipo = NULL, $detalle = NULL){
         date_default_timezone_set('America/La_Paz');
         $fecha = date("Y-m-d H:i:s");
-        $res = "";
         $idusuario = $this->verificar->verificarIDUSERMD5($idmd5);
+        $res = [];
         try {
-            $consulta = $this->cm->query("SELECT id_devoluciones FROM devoluciones WHERE venta_id_venta = '$idventa' AND autorizacion = '2' ORDER BY id_devoluciones DESC LIMIT 1");
-            if ($consulta) {
-                if ($consulta->num_rows > 0) {
-                    $qwe = $this->cm->fetch($consulta);
-                    $res = array("estado" => 100, "codigo" => 1, "id" => $qwe[0]);
-                } else {
-                    $registro = $this->cm->query("INSERT INTO devoluciones(id_devoluciones, autorizacion, fecha_devolucion, motivo, venta_id_venta, idusuario)value(NULL,'2','$fecha','$motivo','$idventa','$idusuario')");
-                    $iddev = $this->cm->insert_id;
-                    if ($registro !== null && $iddev) {
-                        $listaventa = $this->cm->query("SELECT * FROM detalle_venta WHERE venta_id_venta = '$idventa'");
-                        if ($listaventa) {
-                            if ($listaventa->num_rows > 0) {
-                                while ($qwe = $this->cm->fetch($listaventa)) {
-                                    $registroDetalle = $this->cm->query("INSERT INTO detalle_devolucion(iddetalle_devolucion, cantidad, precio, perdida, cantidadperdida, devoluciones_id_devoluciones, producto_almacen_id_producto_almacen) VALUES (NULL,'$qwe[1]','$qwe[2]','2','0','$iddev','$qwe[3]')");
-                                }
-                                $res = array("estado" => 100, "mensaje" => "Registro exitoso", "id" => $iddev, "codigo" => 2);
-                            }
-                        } else {
-                            $res = array("estado" => 99, "mensaje" => "No se pudo encontrar la venta");
-                        }
-                    } else {
-                        $res = array("estado" => 99, "mensaje" => "Error al intentar registrar. Por favor, inténtalo de nuevo");
-                    }
-                }
-                echo json_encode($res);
+            $consulta = $this->cm->query("
+                SELECT id_devoluciones 
+                FROM devoluciones 
+                WHERE venta_id_venta = '$idventa' AND autorizacion = '2' 
+                ORDER BY id_devoluciones DESC 
+                LIMIT 1
+            ");
+            if (!$consulta) {
+                throw new Exception("Error en la consulta de verificación.");
             }
+            if ($consulta->num_rows > 0) {
+                $qwe = $this->cm->fetch($consulta);
+                $res = [
+                    "estado" => 100,
+                    "codigo" => 1,
+                    "id" => $qwe[0],
+                    "mensaje" => "Ya existe una devolución pendiente para esta venta."
+                ];
+            } else {
+                $registro = $this->cm->query("
+                    INSERT INTO devoluciones(autorizacion, fecha_devolucion, motivo, venta_id_venta, idusuario)
+                    VALUES ('2', '$fecha', '$motivo', '$idventa', '$idusuario')
+                ");
+                $iddev = $this->cm->insert_id;
+                if ($registro && $iddev) {
+                    if ($tipo == NULL) {
+                        $listaventa = $this->cm->query("
+                            SELECT * FROM detalle_venta WHERE venta_id_venta = '$idventa'
+                        ");
+                        $res = $this->registrarDetalleDevolucion($listaventa, $iddev, false);
+                    } else {
+                        if($tipo == 1){
+                            $res = $this->registrarDetalleDevolucion($detalle, $iddev, true);
+                        }
+                        
+                    }
+                } else {
+                    $res = [
+                        "estado" => 99,
+                        "mensaje" => "Error al registrar la devolución."
+                    ];
+                }
+            }
+            if ($tipo == NULL) {
+                echo json_encode($res);
+            }else{
+                if($tipo == 1){
+                    return $iddev;
+                }
+            }
+            
         } catch (Exception $e) {
-            $res = array("estado" => "error", "mensaje" => $e->getMessage());
-            echo json_encode($res);
+            if ($tipo == NULL) {
+                echo json_encode([
+                    "estado" => "error",
+                    "mensaje" => $e->getMessage()
+                ]);
+            }else{
+                if($tipo == 1){
+                    return 0;
+                }
+            }
+            
         }
     }
+
+
+    public function registrarDetalleDevolucion($listaventa, $iddev, $esArray = false)
+    {
+        if (!$listaventa) {
+            return ["estado" => 99, "mensaje" => "No se pudo encontrar la venta o los detalles."];
+        }
+
+        if ($esArray) {
+            foreach ($listaventa as $item) {
+                $idproducto = $item['id'] ?? $item->id ?? null;
+                $cantidad = $item['cantidad'] ?? $item->cantidad ?? 0;
+                $precio = $item['precioUnitario'] ?? $item->precioUnitario ?? 0;
+                $esPerdida = ($item['esPerdida'] ?? $item->esPerdida ?? false) ? 1 : 0;
+                $cantidadPerdida = $item['cantidadPerdida'] ?? $item->cantidadPerdida ?? 0;
+
+                $this->cm->query("
+                    INSERT INTO detalle_devolucion(
+                        cantidad, precio, perdida, cantidadperdida, 
+                        devoluciones_id_devoluciones, producto_almacen_id_producto_almacen
+                    ) VALUES (
+                        '$cantidad', '$precio', '$esPerdida', '$cantidadPerdida', '$iddev', '$idproducto'
+                    )
+                ");
+            }
+        } else {
+            while ($qwe = $this->cm->fetch($listaventa)) {
+                $this->cm->query("
+                    INSERT INTO detalle_devolucion(
+                        cantidad, precio, perdida, cantidadperdida, 
+                        devoluciones_id_devoluciones, producto_almacen_id_producto_almacen
+                    ) VALUES (
+                        '$qwe[1]', '$qwe[2]', '0', '0', '$iddev', '$qwe[3]'
+                    )
+                ");
+            }
+        }
+
+        return [
+            "estado" => 100,
+            "mensaje" => "Devolución registrada correctamente.",
+            "id" => $iddev,
+            "codigo" => 2
+        ];
+    }
+
 
     public function eliminardevolucion($dato){
         $res="";
@@ -2609,11 +2688,19 @@ class ventas
         }
     }
 
-    public function cambiarestadodevolucion($id, $estado, $idmd5u)
+    public function cambiarestadodevolucion($id, $estado, $idmd5u, $tipo = NULL)
     {
         date_default_timezone_set('America/La_Paz');
         $fecha = date("Y-m-d");
-        $idusuario = $this->verificar->verificarIDUSERMD5($idmd5u);
+        if($tipo == NULL){
+            $idusuario = $this->verificar->verificarIDUSERMD5($idmd5u);
+
+        }else{
+            if($tipo == 1){
+                $idusuario = $idmd5u; 
+
+            }
+        }
         $con = 0;
         $res = array("devolucion" => array(), "perdidas" => array(), "estado" => "");
         try {
@@ -2717,10 +2804,27 @@ class ventas
                 }
                 $res['estado'] = 100;
             }
-            echo json_encode($res);
+            if($tipo == NULL){
+                echo json_encode($res);
+
+            }else{
+                if($tipo == 1){
+                    return 100;
+
+                }
+            }
         } catch (Exception $e) {
-            $res = array("estado" => "error", "mensaje" => $e->getMessage());
-            echo json_encode($res);
+            if($tipo == NULL){
+                $res = array("estado" => "error", "mensaje" => $e->getMessage());
+                echo json_encode($res);
+
+            }else{
+                if($tipo == 1){
+                    return 0;
+
+                }
+            }
+            
         }
     }
 
@@ -2760,4 +2864,4 @@ class ventas
     }
 }
 
-//validarNIT
+//Firma  
