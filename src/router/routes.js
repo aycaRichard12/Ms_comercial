@@ -349,7 +349,7 @@ const routes = [
     component: () => import('pages/config/FormularioConfiguracionInicial.vue'),
   },
   // Always leave this as last one,
-  // but you can also remove it registraranulaciones
+  // but you can also remove it reportedecompras
   {
     path: '/:catchAll(.*)*',
     component: () => import('pages/ErrorNotFound.vue'),
