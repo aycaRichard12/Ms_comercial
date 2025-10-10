@@ -834,6 +834,6 @@ elseif($ver[0]== "get_administrador"){
 }
 
 if ($controlador === null) {
-    // Acción por defecto si no se encuentra una ruta valida reporteproductoalmacen empresaRegistrada
+    // Acción por defecto si no se encuentra una ruta valida reporteproductoalmacen cambiarestadodevolucion
     echo json_encode(array("error" => "La ruta ".$_GET['ver']." no existe"));
 }

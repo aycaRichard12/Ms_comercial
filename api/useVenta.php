@@ -693,7 +693,8 @@ class UseVEnta
 
             echo json_encode([$ventaInfo]);
         } else {
-            echo json_encode([]); // Venta no encontrada registrarPagosVenta
+            echo json_encode([]); // Venta no encontrada "Firma Digital caducó, por favor, actualizar."
+
         }
     }
 
