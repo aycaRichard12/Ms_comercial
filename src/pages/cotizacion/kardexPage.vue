@@ -134,6 +134,9 @@ import { api } from 'src/boot/axios'
 import { validarUsuario } from 'src/composables/FuncionesG'
 import { PDFKardex } from 'src/utils/pdfReportGenerator'
 import { obtenerFechaActualDato, obtenerFechaPrimerDiaMesActual } from 'src/composables/FuncionesG'
+import { useCurrencyStore } from 'src/stores/currencyStore'
+const divisaActiva = useCurrencyStore()
+console.log(divisaActiva)
 const usuario = validarUsuario()[0]
 const $q = useQuasar()
 
@@ -169,34 +172,36 @@ const columns = [
   { name: 'descripcion', label: 'Descripción', field: 'descripcion', align: 'left' },
   {
     name: 'canentrada',
-    label: 'Cant. Entrada',
+    label: 'Entrada',
     field: (row) => Number(row.canentrada).toFixed(3),
+    align: 'right',
+  },
+  {
+    name: 'cansalida',
+    label: 'Salida',
+    field: (row) => Number(row.cansalida).toFixed(3),
+    align: 'right',
+  },
+  {
+    name: 'cansaldo',
+    label: 'Existencia',
+    field: (row) => Number(row.cansaldo).toFixed(3),
     align: 'right',
   },
   {
     name: 'costoEntrada',
     label: 'Costo Unit. Entrada',
-    field: (row) => Number(row.costoEntrada).toFixed(2),
+    field: (row) => `${divisaActiva.simbolo}` + Number(row.costoEntrada).toFixed(2),
     align: 'right',
   },
-  {
-    name: 'cansalida',
-    label: 'Cant. Salida',
-    field: (row) => Number(row.cansalida).toFixed(3),
-    align: 'right',
-  },
+
   {
     name: 'costoSalida',
     label: 'Costo Unit. Salida',
     field: (row) => Number(row.costoSalida).toFixed(2),
     align: 'right',
   },
-  {
-    name: 'cansaldo',
-    label: 'Cant. Saldo',
-    field: (row) => Number(row.cansaldo).toFixed(3),
-    align: 'right',
-  },
+
   {
     name: 'costoSaldo',
     label: 'Costo Unit. Saldo',
@@ -392,6 +397,7 @@ function calcularPEPS(movimientos) {
     MER: 'MERMAS',
     AN: 'ANULADO',
     EXT: 'EXTRAVIO',
+    DEV: 'DEVOLUCION',
   }
 
   let kardex = []
@@ -399,9 +405,10 @@ function calcularPEPS(movimientos) {
 
   // Procesar cada movimiento
   movimientos.forEach((mov, index) => {
+    console.log(mov)
     const descripcion = code[mov.codigo] || 'MOVIMIENTO DESCONOCIDO'
     console.log(descripcion)
-    const esEntrada = ['MOVIMIENTO+', 'COMPRAS'].includes(descripcion)
+    const esEntrada = ['MOVIMIENTO+', 'COMPRAS', 'DEVOLUCION'].includes(descripcion)
     const esSalida = ['VENTAS', 'MOVIMIENTO-', 'ROBOS', 'MERMAS', 'ANULADO', 'EXTRAVIO'].includes(
       descripcion,
     )
