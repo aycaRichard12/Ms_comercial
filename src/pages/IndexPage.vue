@@ -73,6 +73,11 @@ const $q = useQuasar()
 console.log('Quasar in App.vue:', $q)
 const componentContainer = ref(null)
 
+const inicialComponent = defineAsyncComponent({
+  loader: () => import('components/welcome/welcomeComp.vue'),
+  loadingComponent: { template: '<div>Cargando inicio...</div>' },
+  errorComponent: { template: '<div>Error al cargar inicio</div>' },
+})
 const PedidoComponent = defineAsyncComponent({
   loader: () => import('pages/compra/RcompraPage.vue'),
   loadingComponent: { template: '<div>Cargando pedidos...</div>' },
@@ -98,7 +103,7 @@ const componentsMap = {
   dashboard: ReporteComponent,
 }
 
-const componenteActivo = shallowRef(VentaComponent)
+const componenteActivo = shallowRef(inicialComponent)
 
 const cambiarComponente = (id) => {
   const newComponent = componentsMap[id]
@@ -131,7 +136,6 @@ onMounted(() => {
       nombreUsuario.value = parsedData[0]?.nombre || 'Usuario desconocido'
 
       venta.value = verificarexistenciapagina('registrarventaoculto')
-      console.log(venta.value)
       compra.value = verificarexistenciapagina('registrarcompra')
       dashboard.value = verificarexistenciapagina('dashboard')
       producto.value = verificarexistenciapagina('registrarproductos')
