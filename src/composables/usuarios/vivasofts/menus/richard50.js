@@ -32,11 +32,11 @@ export const menurichard50 = [
             codigo: 'registrarpuntodeventa-03afdbd66e7929b125f8597834fa83a4',
             permiso: '1111',
           },
-          // {
-          //   titulo: 'Adm - Creación - Producto o Servic',
-          //   codigo: 'registrarproductos-03afdbd66e7929b125f8597834fa83a4',
-          //   permiso: '1111',
-          // },
+          {
+            titulo: 'Adm - Creación - Producto o Servic',
+            codigo: 'registrarproductos-03afdbd66e7929b125f8597834fa83a4',
+            permiso: '1111',
+          },
           {
             titulo: 'Adm - Precios - Costo Unitario',
             codigo: 'costounitario-03afdbd66e7929b125f8597834fa83a4',
@@ -110,16 +110,16 @@ export const menurichard50 = [
         titulo: 'Ventas-Atributos',
         codigo: 'opcionesocultas',
         submenu: [
-          // {
-          //   titulo: 'V-Generar Venta-Registrar Venta',
-          //   codigo: 'registrarventaoculto-03afdbd66e7929b125f8597834fa83a4',
-          //   permiso: '1111',
-          // },
-          // {
-          //   titulo: 'V-Generar Venta-Registrar Cotización',
-          //   codigo: 'registrarcotizacionoculto-03afdbd66e7929b125f8597834fa83a4',
-          //   permiso: '1111',
-          // },
+          {
+            titulo: 'V-Generar Venta-Registrar Venta',
+            codigo: 'registrarventaoculto-03afdbd66e7929b125f8597834fa83a4',
+            permiso: '1111',
+          },
+          {
+            titulo: 'V-Generar Venta-Registrar Cotización',
+            codigo: 'registrarcotizacionoculto-03afdbd66e7929b125f8597834fa83a4',
+            permiso: '1111',
+          },
           {
             titulo: 'V-Generar Venta - Rep. de Ventas',
             codigo: 'reportedeventas-03afdbd66e7929b125f8597834fa83a4',
@@ -346,11 +346,11 @@ export const menurichard50 = [
         titulo: 'Compras-Atributos',
         codigo: 'opcionesocultas',
         submenu: [
-          // {
-          //   titulo: '-Compras-Registrar Compras',
-          //   codigo: 'registrarcompra-03afdbd66e7929b125f8597834fa83a4',
-          //   permiso: '1111',
-          // },
+          {
+            titulo: '-Compras-Registrar Compras',
+            codigo: 'registrarcompra-03afdbd66e7929b125f8597834fa83a4',
+            permiso: '1111',
+          },
           {
             titulo: '-Compras-Compras Desglosado',
             codigo: 'reporteproductoscomprados-03afdbd66e7929b125f8597834fa83a4',
@@ -470,11 +470,11 @@ export const menurichard50 = [
             permiso: '1111',
           },
 
-          // {
-          //   titulo: 'Estadísticas',
-          //   codigo: 'dashboard-03afdbd66e7929b125f8597834fa83a4',
-          //   permiso: '1111',
-          // },
+          {
+            titulo: 'Estadísticas',
+            codigo: 'dashboard-03afdbd66e7929b125f8597834fa83a4',
+            permiso: '1111',
+          },
         ],
       },
       {

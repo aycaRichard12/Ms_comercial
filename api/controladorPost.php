@@ -617,6 +617,15 @@ elseif ($ver == "registrarSaldo"){
     $controlador = new Kardex();
     $controlador->registrarSaldo($data);
 }
+elseif ($ver == "editarSaldo") {
+    $controlador = new Kardex();
+    $input = json_decode(file_get_contents("php://input"), true);
+
+    $ok = $controlador->editarSaldo($data);
+    echo json_encode(["success" => $ok]);
+}
+
+
 
 
 if ($controlador === null) {

@@ -828,6 +828,23 @@ elseif($ver[0]== "get_administrador"){
     $controlador = new ConfiguracionInicial();
     $controlador->get_administrador($ver[1],$ver[2]); 
 }
+elseif($ver[0]== "saldoPorId"){
+    $controlador = new Kardex();
+    $data = $controlador->obtenerPorId($ver[1]); 
+    echo json_encode($data); 
+
+}
+elseif($ver[0]== "listarSaldos"){
+    $controlador = new Kardex();
+    $data = $controlador->listarSaldos($ver[1]);
+    echo json_encode($data); 
+}
+elseif ($ver[0] == "eliminarSaldo") {
+    $controlador = new Kardex();
+    $idSaldo = intval($ver[1]);
+    $ok = $controlador->eliminarSaldo($idSaldo);
+    echo json_encode(["success" => $ok]);
+}
 
 if ($controlador === null) {
     // Acción por defecto si no se encuentra una ruta valida reporteproductoalmacen Kardex

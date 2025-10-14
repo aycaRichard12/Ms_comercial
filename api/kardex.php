@@ -652,7 +652,7 @@ class Kardex
      * @param int|null $productoAlmacenId Opcional: ID para filtrar.
      * @return array Lista de registros.
      */
-    public function listarSaldos(?int $productoAlmacenId = null): array {
+    public function listarSaldos( $productoAlmacenId): array {
         $sql = "SELECT * FROM {$this->tabla}";
         $stmt = null;
         
@@ -687,7 +687,11 @@ class Kardex
      * @param float $costoUnitario Nuevo costo unitario.
      * @return bool True si la edición fue exitosa, false en caso contrario.
      */
-    public function editarSaldo(int $idSaldo, float $cantidad, float $costoUnitario): bool {
+    public function editarSaldo($data): bool {
+
+        $idSaldo = $data['idSaldo'];
+         $cantidad= $data['cantidad']; 
+         $costoUnitario = $data['precio'];
         $sql = "UPDATE {$this->tabla} SET 
                     cantidad = ?, 
                     costo_unitario = ?
@@ -711,7 +715,7 @@ class Kardex
      * @param int $idSaldo ID del registro a eliminar.
      * @return bool True si la eliminación fue exitosa, false en caso contrario.
      */
-    public function eliminarSaldo(int $idSaldo): bool {
+    public function eliminarSaldo($idSaldo): bool {
         $sql = "DELETE FROM {$this->tabla} WHERE id_saldo = ?";
         
         $stmt = $this->cm->prepare($sql);

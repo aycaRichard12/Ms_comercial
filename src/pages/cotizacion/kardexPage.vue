@@ -1,138 +1,143 @@
 <template>
   <q-page padding>
-    <q-card-section>
-      <q-form @submit="generarReporte">
-        <div class="row q-col-gutter-md">
-          <div class="col-md-3 col-sm-6 col-xs-12">
-            <label for="fechaINi">Fecha Inicial *</label>
-            <q-input
-              v-model="fechaiR"
-              type="date"
-              id="fechaINi"
-              dense
-              outlined
-              hint="Fecha de inicio para el reporte"
-              :rules="[(val) => !!val || 'Campo requerido']"
-            />
+    <div v-if="kardex">
+      <div class="titulo">Kardex de Productos</div>
+      <q-card-section>
+        <q-form @submit="generarReporte">
+          <div class="row q-col-gutter-x-lg flex justify-center">
+            <div class="col-md-4 col-12">
+              <label for="fechaINi">Fecha Inicial *</label>
+              <q-input
+                v-model="fechaiR"
+                type="date"
+                id="fechaINi"
+                dense
+                outlined
+                hint="Fecha de inicio para el reporte"
+                :rules="[(val) => !!val || 'Campo requerido']"
+              />
+            </div>
+            <div class="col-md-4 col-12">
+              <label for="fechafin">Fecha Final *</label>
+              <q-input
+                dense
+                outlined
+                v-model="fechafR"
+                type="date"
+                id="fechafin"
+                hint="Fecha de fin para el reporte"
+                :rules="[(val) => !!val || 'Campo requerido']"
+              />
+            </div>
+            <div class="col-md-4 col-sm-6 col-xs-12">
+              <label for="almacen">Almacén *</label>
+              <q-select
+                dense
+                outlined
+                v-model="almacenR"
+                :options="almacenesOptions"
+                id="almacen"
+                option-label="almacen"
+                option-value="idalmacen"
+                emit-value
+                map-options
+                :rules="[(val) => !!val || 'Campo requerido']"
+                @update:model-value="listaProductosDisponibles"
+              />
+            </div>
           </div>
-          <div class="col-md-3 col-sm-6 col-xs-12">
-            <label for="fechafin">Fecha Final *</label>
-            <q-input
-              dense
-              outlined
-              v-model="fechafR"
-              type="date"
-              id="fechafin"
-              hint="Fecha de fin para el reporte"
-              :rules="[(val) => !!val || 'Campo requerido']"
-            />
-          </div>
-          <div class="col-md-3 col-sm-6 col-xs-12">
-            <label for="almacen">Almacén *</label>
-            <q-select
-              dense
-              outlined
-              v-model="almacenR"
-              :options="almacenesOptions"
-              id="almacen"
-              option-label="almacen"
-              option-value="idalmacen"
-              emit-value
-              map-options
-              :rules="[(val) => !!val || 'Campo requerido']"
-              @update:model-value="listaProductosDisponibles"
-            />
-          </div>
-          <div class="col-md-3 col-sm-6 col-xs-12">
-            <label for="producto">Producto *</label>
-            <q-select
-              dense
-              outlined
-              v-model="idproductoR"
-              use-input
-              input-debounce="0"
-              id="producto"
-              :options="productosFiltrados"
-              option-label="descripcion"
-              option-value="id"
-              emit-value
-              map-options
-              @filter="filterProductos"
-              :rules="[(val) => !!val || 'Campo requerido']"
-            >
-              <template v-slot:no-option>
-                <q-item>
-                  <q-item-section class="text-grey"> Sin resultados </q-item-section>
-                </q-item>
-              </template>
-            </q-select>
-          </div>
-        </div>
-        <div class="row q-col-gutter-md q-mt-sm">
-          <div class="col-md-3 col-sm-6 col-xs-12">
-            <label for="metodo">Método de valoración *</label>
-            <q-select
-              dense
-              outlined
-              v-model="metodoValoracion"
-              :options="metodosValoracion"
-              id="metodo"
-              emit-value
-              map-options
-              :rules="[(val) => !!val || 'Campo requerido']"
-              @update:model-value="recalcularKardex"
-            />
-          </div>
-        </div>
-        <div class="row q-mt-md justify-center">
-          <q-btn type="submit" label="Generar reporte" color="primary" class="q-mr-sm" />
-          <q-btn
-            v-if="datosFiltrados.length > 0"
-            label="Vista previa del Reporte"
-            color="secondary"
-            @click="cargarPDF"
-          />
-        </div>
-      </q-form>
-    </q-card-section>
 
-    <q-table
-      title="Reporte Kardex"
-      :rows="datosFiltrados"
-      :columns="columns"
-      row-key="c"
-      flat
-      bordered
-      no-data-label="Aún no se ha generado ningún Reporte"
-    />
-    <q-dialog v-model="mostrarPDF" persistent full-width full-height>
-      <q-card class="q-pa-md" style="height: 100%; max-width: 100%">
-        <q-card-section class="row items-center q-pb-none">
-          <div class="text-h6">Vista previa de PDF</div>
-          <q-space />
-          <q-btn flat round icon="close" @click="mostrarPDF = false" />
-        </q-card-section>
+          <div class="row q-col-gutter-x-md flex justify-start">
+            <div class="col-md-4 col-sm-6 col-xs-12">
+              <label for="producto">Producto *</label>
+              <q-select
+                dense
+                outlined
+                v-model="idproductoR"
+                use-input
+                input-debounce="0"
+                id="producto"
+                :options="productosFiltrados"
+                option-label="descripcion"
+                option-value="id"
+                emit-value
+                map-options
+                @filter="filterProductos"
+                :rules="[(val) => !!val || 'Campo requerido']"
+              >
+                <template v-slot:no-option>
+                  <q-item>
+                    <q-item-section class="text-grey"> Sin resultados </q-item-section>
+                  </q-item>
+                </template>
+              </q-select>
+            </div>
+            <div class="col-md-4 col-sm-6 col-xs-12">
+              <label for="metodo">Método de valoración *</label>
+              <q-select
+                dense
+                outlined
+                v-model="metodoValoracion"
+                :options="metodosValoracion"
+                id="metodo"
+                emit-value
+                map-options
+                :rules="[(val) => !!val || 'Campo requerido']"
+                @update:model-value="recalcularKardex"
+              />
+            </div>
+          </div>
+          <div class="row q-mt-md justify-center">
+            <q-btn type="submit" label="Generar reporte" color="primary" class="q-mr-sm" />
+            <q-btn
+              v-if="datosFiltrados.length > 0"
+              label="Vista previa del Reporte"
+              color="secondary"
+              @click="cargarPDF"
+            />
+          </div>
+        </q-form>
+      </q-card-section>
 
-        <q-separator />
-
-        <q-card-section class="q-pa-none" style="height: calc(100% - 60px)">
-          <iframe
-            v-if="pdfData"
-            :src="pdfData"
-            style="width: 100%; height: 100%; border: none"
-          ></iframe>
-        </q-card-section>
-      </q-card>
-    </q-dialog>
-    <kardexSaldoFinal :saldo-final="saldoFinal" />
-    <div class="row flex justify-end">
-      <q-btn
-        color="green"
-        text-color="white"
-        label="Confirmar saldo final"
-        @click="registrarSaldoFinal"
+      <q-table
+        title="Reporte Kardex"
+        :rows="datosFiltrados"
+        :columns="columns"
+        row-key="c"
+        flat
+        bordered
+        no-data-label="Aún no se ha generado ningún Reporte"
       />
+      <q-dialog v-model="mostrarPDF" persistent full-width full-height>
+        <q-card class="q-pa-md" style="height: 100%; max-width: 100%">
+          <q-card-section class="row items-center q-pb-none">
+            <div class="text-h6">Vista previa de PDF</div>
+            <q-space />
+            <q-btn flat round icon="close" @click="mostrarPDF = false" />
+          </q-card-section>
+
+          <q-separator />
+
+          <q-card-section class="q-pa-none" style="height: calc(100% - 60px)">
+            <iframe
+              v-if="pdfData"
+              :src="pdfData"
+              style="width: 100%; height: 100%; border: none"
+            ></iframe>
+          </q-card-section>
+        </q-card>
+      </q-dialog>
+      <kardexSaldoFinal :saldo-final="saldoFinal" />
+      <div class="row flex justify-end">
+        <q-btn
+          color="green"
+          text-color="white"
+          label="Confirmar saldo final"
+          @click="registrarSaldoFinal"
+        />
+      </div>
     </div>
+    <div v-else></div>
   </q-page>
 </template>
 
@@ -149,7 +154,7 @@ const divisaActiva = useCurrencyStore()
 console.log(divisaActiva)
 const usuario = validarUsuario()[0]
 const $q = useQuasar()
-
+const kardex = ref(true)
 // Variables del formulario
 const fechaiR = ref(obtenerFechaPrimerDiaMesActual())
 const fechafR = ref(obtenerFechaActualDato())
