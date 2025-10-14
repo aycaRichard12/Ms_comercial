@@ -124,6 +124,15 @@
         </q-card-section>
       </q-card>
     </q-dialog>
+    <kardexSaldoFinal :saldo-final="saldoFinal" />
+    <div class="row flex justify-end">
+      <q-btn
+        color="green"
+        text-color="white"
+        label="Confirmar saldo final"
+        @click="registrarSaldoFinal"
+      />
+    </div>
   </q-page>
 </template>
 
@@ -135,6 +144,7 @@ import { validarUsuario } from 'src/composables/FuncionesG'
 import { PDFKardex } from 'src/utils/pdfReportGenerator'
 import { obtenerFechaActualDato, obtenerFechaPrimerDiaMesActual } from 'src/composables/FuncionesG'
 import { useCurrencyStore } from 'src/stores/currencyStore'
+import kardexSaldoFinal from './kardexSaldoFinal.vue'
 const divisaActiva = useCurrencyStore()
 console.log(divisaActiva)
 const usuario = validarUsuario()[0]
@@ -146,6 +156,7 @@ const fechafR = ref(obtenerFechaActualDato())
 const almacenR = ref(null)
 const idproductoR = ref(null)
 const metodoValoracion = ref('PEPS') // Valor por defecto
+const saldoFinal = ref({})
 
 // Opciones para el selector de métodos
 const metodosValoracion = [
@@ -167,67 +178,48 @@ const productosFiltrados = ref([])
 
 // Columnas de la tabla
 const columns = [
-  { name: 'c', label: 'N°', field: 'c', align: 'left' },
-  { name: 'fecha', label: 'Fecha', field: (row) => cambiarFormatoFecha(row.fecha), align: 'left' },
-  { name: 'descripcion', label: 'Descripción', field: 'descripcion', align: 'left' },
+  { name: 'Fecha', label: 'Fecha', field: 'Fecha', align: 'left', sortable: true },
+  { name: 'Concepto', label: 'Concepto', field: 'Concepto', align: 'left', sortable: true },
+  { name: 'Entrada', label: 'Entrada', field: 'Entrada', align: 'right', sortable: true },
+  { name: 'Salida', label: 'Salida', field: 'Salida', align: 'right', sortable: true },
+  { name: 'Existencia', label: 'Existencia', field: 'Existencia', align: 'right', sortable: true },
   {
-    name: 'canentrada',
-    label: 'Entrada',
-    field: (row) => Number(row.canentrada).toFixed(3),
+    name: 'CUnit',
+    label: 'C. Unitario',
+    field: 'C.Unit',
     align: 'right',
+    format: (val) => val,
+    sortable: true,
   },
   {
-    name: 'cansalida',
-    label: 'Salida',
-    field: (row) => Number(row.cansalida).toFixed(3),
+    name: 'Debe',
+    label: 'Debe',
+    field: 'Debe',
     align: 'right',
+    format: (val) => formatCurrency(val),
+    sortable: true,
   },
   {
-    name: 'cansaldo',
-    label: 'Existencia',
-    field: (row) => Number(row.cansaldo).toFixed(3),
+    name: 'Haber',
+    label: 'Haber',
+    field: 'Haber',
     align: 'right',
+    format: (val) => formatCurrency(val),
+    sortable: true,
   },
   {
-    name: 'costoEntrada',
-    label: 'Costo Unit. Entrada',
-    field: (row) => `${divisaActiva.simbolo}` + Number(row.costoEntrada).toFixed(2),
+    name: 'Saldo',
+    label: 'Saldo',
+    field: 'Saldo',
     align: 'right',
-  },
-
-  {
-    name: 'costoSalida',
-    label: 'Costo Unit. Salida',
-    field: (row) => Number(row.costoSalida).toFixed(2),
-    align: 'right',
-  },
-
-  {
-    name: 'costoSaldo',
-    label: 'Costo Unit. Saldo',
-    field: (row) => Number(row.costoSaldo).toFixed(2),
-    align: 'right',
-  },
-  {
-    name: 'ingreso',
-    label: 'Total Entrada',
-    field: (row) => Number(row.ingreso).toFixed(2),
-    align: 'right',
-  },
-  {
-    name: 'egreso',
-    label: 'Total Salida',
-    field: (row) => Number(row.egreso).toFixed(2),
-    align: 'right',
-  },
-  {
-    name: 'saldoT',
-    label: 'Total Saldo',
-    field: (row) => Number(row.saldoT).toFixed(2),
-    align: 'right',
+    format: (val) => formatCurrency(val),
+    sortable: true,
   },
 ]
-
+const formatCurrency = (value) => {
+  if (typeof value !== 'number') return value
+  return new Intl.NumberFormat('es-BO', { style: 'currency', currency: 'BOB' }).format(value)
+}
 // Computed
 const almacenesOptions = computed(() => {
   return [{ almacen: 'Todos los almacenes', idalmacen: 0 }, ...almacenes.value]
@@ -274,12 +266,6 @@ const validarFechas = () => {
     return false
   }
   return true
-}
-
-const cambiarFormatoFecha = (fecha) => {
-  if (!fecha) return ''
-  const [year, month, day] = fecha.split('-')
-  return `${day}/${month}/${year}`
 }
 
 async function listaAlmacenes() {
@@ -350,9 +336,8 @@ async function generarReporte() {
     // Guardar los datos originales para recalcular con diferentes métodos
     movimientosOriginales.value = data
     datosOriginales.value = data
-
-    // Procesar según el método seleccionado
     procesarMovimientos()
+    // Procesar según el método seleccionado
 
     reporteGenerado.value = true
   } catch (error) {
@@ -378,7 +363,50 @@ function procesarMovimientos() {
       datosFiltrados.value = calcularPEPS(movimientosOriginales.value)
   }
 }
-
+async function registrarSaldoFinal() {
+  const movimientos = movimientosOriginales.value
+  const saldo_peps = movimientos.PEPS.saldo_final
+  const saldo_ueps = movimientos.UEPS.saldo_final
+  const saldo_promedio = movimientos.PROMEDIO.saldo_final
+  console.log(saldo_peps, saldo_ueps, saldo_promedio)
+  const peps = {
+    ver: 'registrarSaldo',
+    id: idproductoR.value,
+    fecha: fechafR.value,
+    metodo: 'PEPS',
+    cantidad: saldo_peps['Existencia_Final'],
+    precio: saldo_peps['Precio_Unitario_Promedio_Ponderado_Final'],
+  }
+  const ueps = {
+    ver: 'registrarSaldo',
+    id: idproductoR.value,
+    fecha: fechafR.value,
+    metodo: 'UEPS',
+    cantidad: saldo_ueps['Existencia_Final'],
+    precio: saldo_ueps['Precio_Unitario_Promedio_Ponderado_Final'],
+  }
+  const promedio = {
+    ver: 'registrarSaldo',
+    id: idproductoR.value,
+    fecha: fechafR.value,
+    metodo: 'PROMEDIO',
+    cantidad: saldo_promedio['Existencia_Final'],
+    precio: saldo_promedio['Precio_Unitario_Promedio_Ponderado_Final'],
+  }
+  console.log(peps, ueps, promedio)
+  try {
+    const [resPEPS, resUEPS, resPROM] = await Promise.all([
+      api.post('', peps),
+      api.post('', ueps),
+      api.post('', promedio),
+    ])
+    console.log('PEPS:', resPEPS.data)
+    console.log('UEPS:', resUEPS.data)
+    console.log('PROMEDIO:', resPROM.data)
+  } catch (error) {
+    console.error('Error al registrar saldos:', error)
+  }
+}
 function recalcularKardex() {
   if (reporteGenerado.value) {
     procesarMovimientos()
@@ -387,327 +415,36 @@ function recalcularKardex() {
 
 // Métodos de valoración de inventarios
 function calcularPEPS(movimientos) {
-  console.log(movimientos)
-  const code = {
-    VE: 'VENTAS',
-    MOV1: 'MOVIMIENTO+',
-    MOV2: 'MOVIMIENTO-',
-    MIC: 'COMPRAS',
-    RO: 'ROBOS',
-    MER: 'MERMAS',
-    AN: 'ANULADO',
-    EXT: 'EXTRAVIO',
-    DEV: 'DEVOLUCION',
-  }
+  console.log(movimientos.PEPS.kardex)
 
   let kardex = []
-  let inventario = [] // Array para manejar los lotes de inventario (PEPS)
-
-  // Procesar cada movimiento
-  movimientos.forEach((mov, index) => {
-    console.log(mov)
-    const descripcion = code[mov.codigo] || 'MOVIMIENTO DESCONOCIDO'
-    console.log(descripcion)
-    const esEntrada = ['MOVIMIENTO+', 'COMPRAS', 'DEVOLUCION'].includes(descripcion)
-    const esSalida = ['VENTAS', 'MOVIMIENTO-', 'ROBOS', 'MERMAS', 'ANULADO', 'EXTRAVIO'].includes(
-      descripcion,
-    )
-    console.log(esSalida)
-    let registro = {
-      c: index + 1,
-      fecha: mov.fecha,
-      descripcion: descripcion,
-      canentrada: 0,
-      costoEntrada: 0,
-      cansalida: 0,
-      costoSalida: 0,
-      cansaldo: 0,
-      costoSaldo: 0,
-      ingreso: 0,
-      egreso: 0,
-      saldoT: 0,
-    }
-
-    if (index === 0) {
-      // Primer registro es el saldo inicial
-      inventario.push({
-        cantidad: mov.stock,
-        costo: mov.precio,
-        fecha: mov.fecha,
-      })
-
-      registro.cansaldo = mov.stock
-      registro.costoSaldo = mov.precio
-      registro.saldoT = mov.stock * mov.precio
-      registro.descripcion = 'SALDO INICIAL'
-    } else {
-      console.log(esEntrada)
-      if (esEntrada) {
-        // Agregar al inventario como nuevo lote (al final)
-        console.log(mov)
-        const cantidad = Math.abs(mov.stock - getCantidadTotalInventario(inventario))
-        inventario.push({
-          cantidad: cantidad,
-          costo: mov.precio,
-          fecha: mov.fecha,
-        })
-        console.log(mov.precio)
-        console.log(cantidad)
-        registro.canentrada = cantidad
-        registro.costoEntrada = mov.precio
-        registro.ingreso = cantidad * Number(mov.precio)
-      } else if (esSalida) {
-        console.log(esSalida)
-        // Sacar del inventario según PEPS (desde el principio)
-        console.log(mov.stock)
-        console.log(getCantidadTotalInventario(inventario))
-        console.log(inventario)
-        const cantidadNecesaria = Math.abs(mov.stock - getCantidadTotalInventario(inventario))
-
-        let cantidadRestante = cantidadNecesaria
-        let costoTotalSalida = 0
-
-        while (cantidadRestante > 0 && inventario.length > 0) {
-          const primerLote = inventario[0]
-          const cantidadUsar = Math.min(primerLote.cantidad, cantidadRestante)
-
-          costoTotalSalida += cantidadUsar * primerLote.costo
-          cantidadRestante -= cantidadUsar
-          primerLote.cantidad -= cantidadUsar
-
-          if (primerLote.cantidad <= 0) {
-            inventario.shift() // Eliminar el lote si ya no queda cantidad
-          }
-        }
-
-        registro.cansalida = cantidadNecesaria
-        registro.costoSalida = cantidadNecesaria > 0 ? costoTotalSalida / cantidadNecesaria : 0
-        registro.egreso = costoTotalSalida
-      }
-
-      // Actualizar saldos
-      registro.cansaldo = getCantidadTotalInventario(inventario)
-      registro.costoSaldo = getCostoPromedioInventario(inventario)
-      registro.saldoT = getValorTotalInventario(inventario)
-    }
-    console.log(registro)
-    console.log(kardex)
-    kardex.push(registro)
-  })
+  kardex = movimientos.PEPS.kardex
+  saldoFinal.value = movimientos.PEPS.saldo_final
+  console.log(saldoFinal.value)
 
   return kardex
 }
 
 function calcularUEPS(movimientos) {
-  const code = {
-    VE: 'VENTAS',
-    MOV1: 'MOVIMIENTO+',
-    MOV2: 'MOVIMIENTO-',
-    MIC: 'COMPRAS',
-    RO: 'ROBOS',
-    MER: 'MERMAS',
-    AN: 'ANULADO',
-    EXT: 'EXTRAVIO',
-  }
+  console.log(movimientos)
 
   let kardex = []
-  let inventario = [] // Array para manejar los lotes de inventario (UEPS)
-
-  // Procesar cada movimiento
-  movimientos.forEach((mov, index) => {
-    const descripcion = code[mov.codigo] || 'MOVIMIENTO DESCONOCIDO'
-
-    const esEntrada = ['MOVIMIENTO+', 'COMPRAS'].includes(descripcion)
-    const esSalida = ['VENTAS', 'MOVIMIENTO-', 'ROBOS', 'MERMAS', 'ANULADO'].includes(descripcion)
-
-    let registro = {
-      c: index + 1,
-      fecha: mov.fecha,
-      descripcion: descripcion,
-      canentrada: 0,
-      costoEntrada: 0,
-      cansalida: 0,
-      costoSalida: 0,
-      cansaldo: 0,
-      costoSaldo: 0,
-      ingreso: 0,
-      egreso: 0,
-      saldoT: 0,
-    }
-
-    if (index === 0) {
-      // Primer registro es el saldo inicial
-      inventario.push({
-        cantidad: mov.stock,
-        costo: mov.precio,
-        fecha: mov.fecha,
-      })
-
-      registro.cansaldo = mov.stock
-      registro.costoSaldo = mov.precio
-      registro.saldoT = mov.stock * mov.precio
-      registro.descripcion = 'SALDO INICIAL'
-    } else {
-      if (esEntrada) {
-        // Agregar al inventario como nuevo lote (al final)
-        const cantidad = Math.abs(mov.stock - getCantidadTotalInventario(inventario))
-        inventario.push({
-          cantidad: cantidad,
-          costo: mov.precio,
-          fecha: mov.fecha,
-        })
-
-        registro.canentrada = cantidad
-        registro.costoEntrada = mov.precio
-        registro.ingreso = cantidad * mov.precio
-      } else if (esSalida) {
-        // Sacar del inventario según UEPS (desde el final)
-        const cantidadNecesaria = Math.abs(mov.stock - getCantidadTotalInventario(inventario))
-        console.log(cantidadNecesaria)
-        let cantidadRestante = cantidadNecesaria
-        let costoTotalSalida = 0
-
-        while (cantidadRestante > 0 && inventario.length > 0) {
-          const ultimoLote = inventario[inventario.length - 1]
-          const cantidadUsar = Math.min(ultimoLote.cantidad, cantidadRestante)
-
-          costoTotalSalida += cantidadUsar * ultimoLote.costo
-          cantidadRestante -= cantidadUsar
-          ultimoLote.cantidad -= cantidadUsar
-
-          if (ultimoLote.cantidad <= 0) {
-            inventario.pop() // Eliminar el lote si ya no queda cantidad
-          }
-        }
-
-        registro.cansalida = cantidadNecesaria
-        registro.costoSalida = cantidadNecesaria > 0 ? costoTotalSalida / cantidadNecesaria : 0
-        registro.egreso = costoTotalSalida
-      }
-
-      // Actualizar saldos
-      registro.cansaldo = getCantidadTotalInventario(inventario)
-      registro.costoSaldo = getCostoPromedioInventario(inventario)
-      registro.saldoT = getValorTotalInventario(inventario)
-    }
-
-    kardex.push(registro)
-  })
+  kardex = movimientos.UEPS.kardex
+  saldoFinal.value = movimientos.UEPS.saldo_final
+  console.log(saldoFinal.value)
 
   return kardex
 }
 
 function calcularPromedio(movimientos) {
-  const code = {
-    VE: 'VENTAS',
-    MOV1: 'MOVIMIENTO+',
-    MOV2: 'MOVIMIENTO-',
-    MIC: 'COMPRAS',
-    RO: 'ROBOS',
-    MER: 'MERMAS',
-    AN: 'ANULADO',
-    EXT: 'EXTRAVIO',
-  }
+  console.log(movimientos)
 
   let kardex = []
-  let inventario = {
-    cantidad: 0,
-    costoPromedio: 0,
-    valorTotal: 0,
-  }
-
-  // Procesar cada movimiento
-  movimientos.forEach((mov, index) => {
-    const descripcion = code[mov.codigo] || 'MOVIMIENTO DESCONOCIDO'
-    const esEntrada = ['MOVIMIENTO+', 'COMPRAS'].includes(descripcion)
-    const esSalida = ['VENTAS', 'MOVIMIENTO-', 'ROBOS', 'MERMAS', 'ANULADO'].includes(descripcion)
-
-    let registro = {
-      c: index + 1,
-      fecha: mov.fecha,
-      descripcion: descripcion,
-      canentrada: 0,
-      costoEntrada: 0,
-      cansalida: 0,
-      costoSalida: 0,
-      cansaldo: 0,
-      costoSaldo: 0,
-      ingreso: 0,
-      egreso: 0,
-      saldoT: 0,
-    }
-
-    if (index === 0) {
-      // Primer registro es el saldo inicial
-      inventario = {
-        cantidad: mov.stock,
-        costoPromedio: mov.precio,
-        valorTotal: mov.stock * mov.precio,
-      }
-
-      registro.cansaldo = inventario.cantidad
-      registro.costoSaldo = inventario.costoPromedio
-      registro.saldoT = inventario.valorTotal
-      registro.descripcion = 'SALDO INICIAL'
-    } else {
-      if (esEntrada) {
-        const cantidadEntrada = Math.abs(mov.stock - inventario.cantidad)
-        const valorEntrada = cantidadEntrada * mov.precio
-
-        // Calcular nuevo costo promedio
-        const nuevoValorTotal = inventario.valorTotal + valorEntrada
-        const nuevaCantidad = inventario.cantidad + cantidadEntrada
-        const nuevoCostoPromedio = nuevaCantidad > 0 ? nuevoValorTotal / nuevaCantidad : 0
-
-        inventario = {
-          cantidad: nuevaCantidad,
-          costoPromedio: nuevoCostoPromedio,
-          valorTotal: nuevoValorTotal,
-        }
-
-        registro.canentrada = cantidadEntrada
-        registro.costoEntrada = mov.precio
-        registro.ingreso = valorEntrada
-      } else if (esSalida) {
-        const cantidadSalida = Math.abs(mov.stock - inventario.cantidad)
-        const valorSalida = cantidadSalida * inventario.costoPromedio
-
-        inventario = {
-          cantidad: inventario.cantidad - cantidadSalida,
-          costoPromedio: inventario.costoPromedio, // El costo promedio no cambia en salidas
-          valorTotal: inventario.valorTotal - valorSalida,
-        }
-
-        registro.cansalida = cantidadSalida
-        registro.costoSalida = inventario.costoPromedio
-        registro.egreso = valorSalida
-      }
-
-      // Actualizar saldos
-      registro.cansaldo = inventario.cantidad
-      registro.costoSaldo = inventario.costoPromedio
-      registro.saldoT = inventario.valorTotal
-    }
-
-    kardex.push(registro)
-  })
+  kardex = movimientos.PROMEDIO.kardex
+  saldoFinal.value = movimientos.PROMEDIO.saldo_final
+  console.log(saldoFinal.value)
 
   return kardex
-}
-
-// Funciones auxiliares para manejo de inventario
-function getCantidadTotalInventario(inventario) {
-  return inventario.reduce((total, lote) => Number(total) + Number(lote.cantidad), 0)
-}
-
-function getValorTotalInventario(inventario) {
-  return inventario.reduce((total, lote) => total + lote.cantidad * lote.costo, 0)
-}
-
-function getCostoPromedioInventario(inventario) {
-  const cantidadTotal = getCantidadTotalInventario(inventario)
-  if (cantidadTotal === 0) return 0
-  return getValorTotalInventario(inventario) / cantidadTotal
 }
 
 function cargarPDF() {

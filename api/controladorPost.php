@@ -613,6 +613,10 @@ elseif ($ver == "registrarNotaCreditoDebito"){
     $controlador = new Nota_Debito_Credito();
     $controlador->registrarNotaCreditoDebito($data);
 }
+elseif ($ver == "registrarSaldo"){
+    $controlador = new Kardex();
+    $controlador->registrarSaldo($data);
+}
 
 
 if ($controlador === null) {
