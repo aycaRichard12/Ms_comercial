@@ -95,6 +95,12 @@
               color="secondary"
               @click="cargarPDF"
             />
+            <q-btn
+              v-if="datosFiltrados.length > 0"
+              label="Saldos Registrados"
+              color="secondary"
+              @click="kardex = false"
+            />
           </div>
         </q-form>
       </q-card-section>
@@ -137,7 +143,9 @@
         />
       </div>
     </div>
-    <div v-else></div>
+    <div v-else>
+      <saldosPage :producto="idproductoR" @close="kardex = true" />
+    </div>
   </q-page>
 </template>
 
@@ -150,6 +158,7 @@ import { PDFKardex } from 'src/utils/pdfReportGenerator'
 import { obtenerFechaActualDato, obtenerFechaPrimerDiaMesActual } from 'src/composables/FuncionesG'
 import { useCurrencyStore } from 'src/stores/currencyStore'
 import kardexSaldoFinal from './kardexSaldoFinal.vue'
+import saldosPage from './saldosPage.vue'
 const divisaActiva = useCurrencyStore()
 console.log(divisaActiva)
 const usuario = validarUsuario()[0]

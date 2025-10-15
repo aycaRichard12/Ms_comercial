@@ -619,8 +619,6 @@ elseif ($ver == "registrarSaldo"){
 }
 elseif ($ver == "editarSaldo") {
     $controlador = new Kardex();
-    $input = json_decode(file_get_contents("php://input"), true);
-
     $ok = $controlador->editarSaldo($data);
     echo json_encode(["success" => $ok]);
 }
@@ -630,5 +628,5 @@ elseif ($ver == "editarSaldo") {
 
 if ($controlador === null) {
     // Acción por defecto si no se encuentra una ruta válida producto sendEmail ConfiguracionInicial registroPrueba registrarConfiguracion
-    echo json_encode("El formulario ".$_POST['ver']." no existe");
+    echo json_encode("El formulario ".$ver." no existe");
 }

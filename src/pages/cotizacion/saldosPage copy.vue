@@ -1,64 +1,59 @@
 <template>
-  <q-page>
-    <div>
-      <div class="row flex justify-between q-mb-md">
-        <div>
-          <q-btn
-            color="secondary"
-            class="btn-res"
-            id="btnregistrarcompra"
-            icon="arrow_back"
-            label="Volver"
-            @click="$emit('close')"
-            no-caps
-          />
+  <q-page class="q-pa-md bg-grey-1">
+    <q-card class="shadow-2" bordered>
+      <q-card-section class="bg-blue-grey-1 text-blue-grey-10 q-pb-sm">
+        <div class="row items-center no-wrap">
+          <div class="col">
+            <div class="text-h6 text-weight-bold">Gestión de Saldos Iniciales por Método</div>
+          </div>
         </div>
-        <div class="col-md-4 col-12">
-          <q-input dense v-model="filter" placeholder="Buscar...">
-            <template v-slot:append>
-              <q-icon name="search" />
-            </template>
-          </q-input>
-        </div>
-      </div>
-      <q-table
-        title="Saldos Registrados"
-        :rows="saldos"
-        :columns="columns"
-        row-key="id_saldo"
-        :loading="loading"
-        :filter="filter"
-        no-data-label="No se encontraron saldos iniciales."
-        :rows-per-page-options="[10, 25, 50, 0]"
-      >
-        <template v-slot:top-right> </template>
+      </q-card-section>
 
-        <template v-slot:body-cell-acciones="props">
-          <q-td :props="props">
-            <q-btn
-              icon="edit"
-              color="blue-grey-7"
-              size="sm"
-              flat
-              round
-              dense
-              @click="openDialog('edit', props.row)"
-              title="Editar saldo"
-            />
-            <q-btn
-              icon="delete"
-              color="red-7"
-              size="sm"
-              flat
-              round
-              dense
-              @click="confirmDelete(props.row.id_saldo)"
-              title="Eliminar saldo"
-            />
-          </q-td>
-        </template>
-      </q-table>
-    </div>
+      <q-card-section>
+        <q-table
+          :rows="saldos"
+          :columns="columns"
+          row-key="id_saldo"
+          :loading="loading"
+          :filter="filter"
+          no-data-label="No se encontraron saldos iniciales."
+          :rows-per-page-options="[10, 25, 50, 0]"
+        >
+          <template v-slot:top-right>
+            <q-input borderless dense debounce="300" v-model="filter" placeholder="Buscar...">
+              <template v-slot:append>
+                <q-icon name="search" />
+              </template>
+            </q-input>
+          </template>
+
+          <template v-slot:body-cell-acciones="props">
+            <q-td :props="props">
+              <q-btn
+                icon="edit"
+                color="blue-grey-7"
+                size="sm"
+                flat
+                round
+                dense
+                @click="openDialog('edit', props.row)"
+                title="Editar saldo"
+              />
+              <q-btn
+                icon="delete"
+                color="red-7"
+                size="sm"
+                flat
+                round
+                dense
+                @click="confirmDelete(props.row.id_saldo)"
+                title="Eliminar saldo"
+              />
+            </q-td>
+          </template>
+        </q-table>
+      </q-card-section>
+    </q-card>
 
     <q-dialog v-model="dialogVisible" persistent>
       <q-card style="width: 700px; max-width: 80vw">
@@ -68,8 +63,19 @@
           </div>
         </q-card-section>
 
-        <q-form>
+        <q-form @submit.prevent="saveSaldo">
           <q-card-section class="q-gutter-md">
+            <q-input
+              v-model.number="currentSaldo.productos_almacen_id_productos_almacen"
+              label="ID Producto Almacén *"
+              type="number"
+              filled
+              :rules="[
+                (val) => !!val || 'El ID es requerido',
+                (val) => val > 0 || 'Debe ser un número positivo',
+              ]"
+            />
+
             <q-input
               v-model="currentSaldo.fecha"
               label="Fecha *"
@@ -82,7 +88,7 @@
               v-model="currentSaldo.metodo"
               label="Método *"
               filled
-              :options="['PEPS', 'UEPS', 'PROMEDIO']"
+              :options="['Promedio', 'FIFO', 'LIFO']"
               :rules="[(val) => !!val || 'El método es requerido']"
             />
 
@@ -125,8 +131,8 @@
             <q-btn
               :label="isEditing ? 'Guardar Cambios' : 'Crear Saldo'"
               color="primary"
+              type="submit"
               :loading="saving"
-              @click="saveSaldo"
             />
           </q-card-actions>
         </q-form>
@@ -139,7 +145,6 @@
 import { ref, onMounted, computed } from 'vue'
 import { useQuasar } from 'quasar'
 import saldosService from 'src/services/saldo.service'
-defineEmits(['close'])
 
 const props = defineProps({
   producto: {
@@ -149,7 +154,6 @@ const props = defineProps({
 })
 console.log(props.producto)
 const idProducto = ref(props.producto)
-
 // Instancias de Quasar
 const $q = useQuasar()
 
@@ -158,7 +162,7 @@ const saldos = ref([])
 const loading = ref(false)
 const filter = ref('')
 const dialogVisible = ref(false)
-const isEditing = ref(true)
+const isEditing = ref(false)
 const saving = ref(false)
 
 // Estructura inicial para un nuevo saldo
@@ -191,7 +195,13 @@ const calculatedCostoTotal = computed(() => {
 // --- CONFIGURACIÓN DE LA TABLA ---
 const columns = [
   // { name: 'id_saldo', label: 'ID', field: 'id_saldo', align: 'left' },
-
+  {
+    name: 'id_producto_almacen',
+    label: 'ID Producto Almacén',
+    field: 'productos_almacen_id_productos_almacen',
+    align: 'left',
+    sortable: true,
+  },
   {
     name: 'fecha',
     label: 'Fecha',
@@ -269,67 +279,16 @@ async function fetchSaldos() {
  * @param {Object} [saldo=null] - El objeto saldo si el modo es 'edit'.
  */
 function openDialog(mode, saldo = null) {
-  console.log(mode)
-  console.log(saldo)
-
   isEditing.value = mode === 'edit'
-  console.log(isEditing.value)
   if (isEditing.value) {
     // Clona el objeto para evitar modificar el estado de la tabla antes de guardar
     // y ajusta los números para la reactividad de los inputs.
     currentSaldo.value = { ...saldo }
-    console.log(currentSaldo.value)
   } else {
     currentSaldo.value = { ...emptySaldo }
   }
   dialogVisible.value = true
 }
-
-/**
- * Guarda (crea o actualiza) el saldo actual.
- */
-async function saveSaldo() {
-  saving.value = true
-  try {
-    let result
-    if (isEditing.value) {
-      // Actualizar
-      console.log(currentSaldo.value)
-      const form = currentSaldo.value
-      const sendJson = {
-        ver: 'editarSaldo',
-        idSaldo: form.id_saldo,
-        cantidad: form.cantidad,
-        precio: form.costo_unitario,
-      }
-      console.log(sendJson)
-      result = await saldosService.updateSaldo(sendJson)
-      console.log(result)
-      if (result.success) {
-        saving.value = false
-      }
-      $q.notify({
-        type: 'positive',
-        message: 'Saldo actualizado con éxito.',
-        color: 'green-7',
-        position: 'top',
-      })
-    }
-
-    // Recargar la tabla o actualizar localmente si es posible
-    await fetchSaldos()
-
-    dialogVisible.value = false // Cerrar el modal
-  } catch (error) {
-    $q.notify({
-      type: 'negative',
-      message: error.message,
-      color: 'red-7',
-      position: 'top',
-    })
-  }
-}
-
 /**
  * Muestra un diálogo de confirmación antes de eliminar.
  * @param {number} id_saldo - El ID del saldo a eliminar.
@@ -340,12 +299,7 @@ function confirmDelete(id_saldo) {
     message: `¿Está seguro de que desea eliminar el saldo con ID ${id_saldo}? Esta acción es irreversible.`,
     cancel: true,
     persistent: true,
-    ok: {
-      label: 'Eliminar',
-      color: 'negative',
-    },
   }).onOk(() => {
-    console.log(id_saldo)
     deleteSaldo(id_saldo)
   })
 }
