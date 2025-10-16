@@ -9,7 +9,6 @@ export default defineConfig((ctx) => {
   return {
     // https://v2.quasar.dev/quasar-cli-vite/prefetch-feature vite
     // preFetch: true,
-
     // app boot file (/src/boot)
     // --> boot files are part of "main.js"
     // https://v2.quasar.dev/quasar-cli-vite/boot-files
@@ -58,7 +57,6 @@ export default defineConfig((ctx) => {
       // extendViteConf (viteConf) {},
       // viteVuePluginOptions: {},
       publicPath: '/app/cmv1/',
-
       vitePlugins: [
         // Plugin simple: vite-svg-loader
         svgLoader(),
