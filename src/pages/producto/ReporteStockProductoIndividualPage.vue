@@ -3,7 +3,7 @@
     <div class="col-12 q-mb-md">
       <div class="row items-center">
         <!-- Botón Volver -->
-        <q-btn
+        <!-- <q-btn
           color="secondary"
           class="btn-res"
           id="btnregistrarcompra"
@@ -11,7 +11,7 @@
           icon="arrow_back"
           label="Volver"
           no-caps
-        />
+        /> -->
 
         <!-- Título -->
         <div class="titulo q-ma-md">Stock Producto Individual</div>

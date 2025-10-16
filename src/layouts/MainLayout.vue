@@ -329,16 +329,15 @@ const selectSubmenu = async (submenu) => {
   subMenuSeleccionado.value = submenuCode
   loadTabsForSubmenu(submenuCode)
   tabsVisible.value = true
-
   // Si el submenú tiene tabs, navegar al primer tab.
   if (activeTabs.value.length > 0) {
     const firstTab = activeTabs.value[0]
     await navigateToTab(firstTab)
-  } else {
-    if (activeTabsReportes.value.length > 0) {
-      const firstTab = activeTabsReportes.value[0]
-      await navigateToTab(firstTab)
-    }
+  } else if (activeTabsReportes.value.length > 0) {
+    const firstTab = activeTabsReportes.value[0]
+    await navigateToTab(firstTab)
+  } else if (submenu != null) {
+    router.push(`/${submenuCode}`) // o router.push(`/ruta/${submenuCode}`)
   }
 }
 

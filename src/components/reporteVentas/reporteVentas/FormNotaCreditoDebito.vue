@@ -328,12 +328,12 @@
 
 <script setup>
 import { defineProps, ref, onMounted, computed } from 'vue'
-import { validarUsuario } from 'src/composables/FuncionesG'
+import { getfechaCodigo, validarUsuario } from 'src/composables/FuncionesG'
 import { peticionGET } from 'src/composables/peticionesFetch'
 import { URL_APICM } from 'src/composables/services'
 import { useQuasar } from 'quasar'
 import { showDialog } from 'src/utils/dialogs'
-//import { api } from 'boot/axios'
+import { api } from 'boot/axios'
 
 import axios from 'axios'
 const $q = useQuasar()
@@ -374,7 +374,7 @@ const nota = ref(props.nota)
 const leyendasSINOptions = ref([])
 const puntosVenta = ref([])
 console.log(props.nota)
-//const emit = defineEmits(['cancelar'])
+const emit = defineEmits(['cancelar'])
 
 // =============================================
 // CONFIGURACIÓN DE TABLA
@@ -604,16 +604,15 @@ const confirmarNota = async () => {
   const token = contenidousuario[0]?.factura?.access_token
   const tipo = contenidousuario[0]?.factura?.tipo
   const md5E = contenidousuario[0]?.empresa?.idempresa
-
+  const codigoFecha = getfechaCodigo()
+  console.log(codigoFecha)
   const { facturaExterna, venta, idalmacen, motivo, ...resto } = nota.value
-  console.log(venta)
   const notaCreditoDebito = {
     ...facturaExterna,
     ...resto,
     extras: { facturaTicket: venta.ack_ticket },
   }
-  const detalleventa = venta?.detalle[0] || []
-  console.log(detalleventa)
+
   const sendData = {
     ver: 'registrarNotaCreditoDebito',
     token,
@@ -634,20 +633,20 @@ const confirmarNota = async () => {
     notaCreditoDebito,
   }
   console.log('Datos a enviar:', sendData)
-  // try {
-  //   const response = await api.post('', sendData)
+  try {
+    const response = await api.post('', sendData)
 
-  //   const data = response.data
-  //   console.log('Respuesta del servidor:', data)
-  //   if (data.estado === 'error') {
-  //     showDialog($q, 'E', data.mensaje || 'Error al registrar la nota de crédito/débito')
-  //   } else {
-  //     showDialog($q, 'I', 'La nota de crédito/débito se registró exitosamente.')
-  //     emit('cancelar') // Cerrar el formulario después de confirmar
-  //   }
-  // } catch (error) {
-  //   showDialog($q, 'E', error.message || 'Error inesperado al registrar la nota de crédito/débito')
-  // }
+    const data = response.data
+    console.log('Respuesta del servidor:', data)
+    if (data.estado === 'error') {
+      showDialog($q, 'E', data.mensaje || 'Error al registrar la nota de crédito/débito')
+    } else {
+      showDialog($q, 'I', 'La nota de crédito/débito se registró exitosamente.')
+      emit('cancelar') // Cerrar el formulario después de confirmar
+    }
+  } catch (error) {
+    showDialog($q, 'E', error.message || 'Error inesperado al registrar la nota de crédito/débito')
+  }
 }
 const montoDescuentoCreditoDebito = computed(() => {
   return nota.value.montoDescuentoCreditoDebito

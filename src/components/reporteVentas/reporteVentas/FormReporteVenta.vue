@@ -244,17 +244,6 @@
       </q-card>
     </q-dialog>
 
-    <q-dialog v-model="VisibleModalNotaCredito" full-width full-height>
-      <q-card>
-        <q-card-section class="bg-primary text-white text-h6 flex justify-between">
-          <div>Registrar Nota Credito Debito</div>
-          <q-btn icon="close" flat dense round @click="toggleModal" />
-        </q-card-section>
-        <q-card-section style="max-height: 83vh; overflow-y: auto">
-          <FormNotaCreditoDebito :nota="Factura" @cancelar="toggleModal" />
-        </q-card-section>
-      </q-card>
-    </q-dialog>
     <RegistrarNotaCreditoDebito
       v-if="isVisibleNota"
       :venta="ventaSeleccionada"
@@ -274,14 +263,11 @@ import { PDFComprovanteVenta } from 'src/utils/pdfReportGenerator'
 import { PDFreporteVentasPeriodo } from 'src/utils/pdfReportGenerator'
 import { PDFenviarFacturaCorreo } from 'src/utils/pdfReportGenerator'
 import { exportTOXLSX_Reporte_Ventas } from 'src/utils/XCLReportImport'
-import FormNotaCreditoDebito from './FormNotaCreditoDebito.vue'
 //import { getUsuario } from 'src/composables/FuncionesGenerales'
 import RegistrarNotaCreditoDebito from 'src/pages/NotasCreditoDebito/RegistrarNotaCreditoDebito.vue'
 //import { decimas } from 'src/composables/FuncionesG'
 //const usuario = getUsuario()
 const isVisibleNota = ref(false)
-const VisibleModalNotaCredito = ref(false)
-const Factura = ref({})
 const pdfData = ref(null)
 const mostrarModal = ref(false)
 const tipo = {
@@ -418,7 +404,6 @@ const columnas = [
   { name: 'nro', label: 'N°', field: 'nro', align: 'left' },
   { name: 'fecha', label: 'Fecha', field: 'fecha' },
   { name: 'cliente', label: 'Cliente', field: 'cliente' },
-  //{ name: 'sucursal', label: 'Sucursal', field: 'sucursal' },
   { name: 'tipoventa', label: 'Tipo-Venta', field: 'tipoventa' },
   { name: 'tipopago', label: 'Tipo-Pago', field: 'tipopago' },
   { name: 'nfactura', label: 'Nro.Factura', field: 'nfactura' },
@@ -434,7 +419,6 @@ const detalleVenta = ref([])
 
 const ir_a_factura = (row) => {
   console.log(row)
-  // const urlPDF = 'https://example.com/factura.pdf'
   window.open(row.shortlink, '_blank')
 }
 const ir_a_impuestos = (row) => {
@@ -505,8 +489,7 @@ const getDetalleVenta = async (id) => {
 function imprimirReporte() {
   console.log(detalleVenta.value)
   const doc = PDFComprovanteVenta(detalleVenta)
-  // doc.save('proveedores.pdf') ← comenta o elimina esta línea
-  //doc.output('dataurlnewwindow') // ← muestra el PDF en una nueva ventana del navegador
+
   pdfData.value = doc.output('dataurlstring') // muestra el pdf en un modal
   mostrarModal.value = true
 }
@@ -514,8 +497,6 @@ const vistaPrevia = () => {
   console.log(filteredCompra.value, almacen.value)
   const doc = PDFreporteVentasPeriodo(filteredCompra, almacen)
 
-  // doc.save('proveedores.pdf') ← comenta o elimina esta línea
-  //doc.output('dataurlnewwindow') // ← muestra el PDF en una nueva ventana del navegador
   pdfData.value = doc.output('dataurlstring') // muestra el pdf en un modal
   mostrarModal.value = true
 }
@@ -572,97 +553,7 @@ function abrirModal(venta) {
   isVisibleNota.value = true
   ventaSeleccionada.value = venta
 }
-// const ir_a_NotaCreditoDebito = async (factura) => {
-//   console.log(factura)
-//   let jsonEmizor = {}
-//   try {
-//     const response = await api.get(`detallesVenta/${factura.idventa}/${idempresa}`) // Cambia a tu ruta real
-//     console.log(response.data)
-//     const venta = response.data[0]
-//     detalleVenta.value = response.data[0]
-//     const productos = cambiarDetalleProducto(detalleVenta.value.detalle)
-//     console.log(productos)
-//     jsonEmizor = {
-//       facturaExterna: {
-//         facturaExterna: 0,
-//         numeroFactura: Number(venta.nfactura),
-//         numeroAutorizacionCuf: venta.cuf,
-//         fechaFacturaOriginal: venta.fechaEmission,
-//         descuentoFacturaOriginal: parseFloat(venta.descuento),
-//         montoTotalFacturaOriginal: parseFloat(venta.montototal),
-//         detalleFacturaOriginal: productos.original,
-//       },
-//       idalmacen: factura.idalmacen,
-//       numeroNota: 1,
-//       codigoPuntoVenta: 0,
-//       nombreRazonSocial: venta.nombrecomercial,
-//       codigoTipoDocumentoIdentidad: Number(venta.tipodocumento),
-//       numeroDocumento: venta.nit,
-//       codigoCliente: venta.codigoCliente,
-//       codigoLeyenda: venta.leyendaSin,
-//       usuario: usuario,
-//       montoTotalDevuelto: 0,
-//       montoDescuentoCreditoDebito: 0,
-//       montoEfectivoCreditoDebito: 0,
-//       detalles: productos.ajuste,
-//       venta: venta,
-//     }
-//     console.log(jsonEmizor)
-//     toggleModal()
-//   } catch (error) {
-//     console.error('Error al cargar datos:', error)
-//     $q.notify({
-//       type: 'negative',
-//       message: 'No se pudieron cargar los datos',
-//     })
-//   }
-//   console.log(jsonEmizor)
-//   Factura.value = jsonEmizor
-// }
-// const cambiarDetalleProducto = (detalle = []) => {
-//   if (!Array.isArray(detalle) || detalle.length === 0) {
-//     return { original: [], ajuste: [] }
-//   }
 
-//   const productos = detalle[0] || []
-
-//   const original = []
-//   const ajuste = []
-
-//   productos.forEach((producto) => {
-//     original.push({
-//       codigoProducto: producto.codigo,
-//       codigoProductoSin: producto.codigosin,
-//       descripcion: producto.descripcion,
-//       cantidad: producto.cantidad,
-//       unidadMedida: producto.unidadsin,
-//       precioUnitario: parseFloat(producto.precio),
-//       subTotal: producto.subTotal,
-//       montoDescuento: 0,
-//     })
-
-//     ajuste.push({
-//       id: producto.idproducto,
-//       codigoProducto: producto.codigo,
-//       codigoActividadSin: producto.actividadsin,
-//       codigoProductoSin: producto.codigosin,
-//       descripcion: producto.descripcion,
-//       cantidad: Number(producto.cantidad),
-//       unidadMedida: producto.unidadsin,
-//       precioUnitario: parseFloat(producto.precio),
-//       subTotal: producto.subTotal,
-//       montoDescuento: 0,
-//       esPerdida: false,
-//       cantidadPerdida: 0,
-//     })
-//   })
-
-//   return { original, ajuste }
-// }
-
-const toggleModal = () => {
-  VisibleModalNotaCredito.value = !VisibleModalNotaCredito.value
-}
 onMounted(() => {
   cargarAlmacenes()
   getClientes()
