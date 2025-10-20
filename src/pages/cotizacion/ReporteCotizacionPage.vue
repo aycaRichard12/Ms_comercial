@@ -637,9 +637,11 @@ const generarComprobantePDF = async (id) => {
   }
 
   try {
-    const endpoint = `${URL_APICM}api/detallesCotizacion/${id}/${idempresa}`
-    const data = await peticionGET(endpoint)
-    console.log(data)
+    const endpoint = `detallesCotizacion/${id}/${idempresa}`
+    const response = await api.get(endpoint)
+    console.log(response)
+    const data = response.data
+
     if (data[0] === 'error') {
       console.error(data.error)
       $q.notify({

@@ -615,6 +615,7 @@ const carritoCO = reactive({
   ventatotal: 0,
   subtotal: 0,
   descuento: 0,
+  idalmacen: 0,
   divisa: divisaActiva.id,
   ipv: puntoVenta.value,
   idusuario: 0, // Se llenará al validar el usuario
@@ -944,7 +945,7 @@ const cargarPuntoVentas = async () => {
         console.log(filtrados)
         puntosVenta.value = filtrados.map((item) => ({
           label: item.nombre,
-          value: item.codigosin,
+          value: item.idpuntoventa,
           Data: item,
         }))
         puntoVenta.value = puntosVenta.value[0]
@@ -1374,6 +1375,7 @@ async function enviarDatos() {
   }
   const pv = puntoVenta.value
   carritoCO.ipv = Number(pv.value)
+  carritoCO.idalmacen = filtroAlmacenCO.value
   // ref([{ metodoPago: null, monto: 0, porcentaje: 0 }])
   const datosFormulario = new FormData()
   datosFormulario.append('ver', 'registrarCotizacion')

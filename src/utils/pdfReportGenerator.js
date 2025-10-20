@@ -965,6 +965,7 @@ export function generarPdfCotizacion(data) {
         doc.setFont(undefined, 'normal')
         doc.text(direccionEmpresa, 5, 13)
         doc.text(`Tel: ${telefonoEmpresa}`, 5, 16)
+        doc.text(`Punto Venta: ${cotizacionInfo.puntoVenta}`, 5, 19)
 
         // Título centrado
         doc.setFontSize(10)
