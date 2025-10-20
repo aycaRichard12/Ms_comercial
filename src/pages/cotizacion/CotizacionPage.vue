@@ -114,6 +114,21 @@
             dense
           />
         </div>
+        <div class="col-12 col-md-3">
+          <label for="categoria">Punto Venta*</label>
+          <q-select
+            v-model="puntoVenta"
+            :options="puntosVenta"
+            id="categoria"
+            emit-value
+            map-options
+            option-value="value"
+            option-label="label"
+            :rules="[(val) => !!val || 'Campo requerido']"
+            outlined
+            dense
+          />
+        </div>
       </div>
     </q-form>
 
@@ -580,6 +595,9 @@ const selectedSucursal = ref(null) // Objeto de la sucursal seleccionada
 const sucursalesOptions = ref([])
 const filteredSucursales = ref([])
 
+const puntosVenta = ref([])
+const puntoVenta = ref(null)
+
 const selectedProduct = ref(null) // Objeto del producto seleccionado
 const cantidaddisponibleCO = ref('')
 const cantidadCO = ref(0)
@@ -597,7 +615,9 @@ const carritoCO = reactive({
   ventatotal: 0,
   subtotal: 0,
   descuento: 0,
+  idalmacen: 0,
   divisa: divisaActiva.id,
+  ipv: puntoVenta.value,
   idusuario: 0, // Se llenará al validar el usuario
   listaProductos: [],
   pagosDivididos: [],
@@ -884,6 +904,7 @@ watch(filtroAlmacenCO, (newVal) => {
   listaCategoria()
 })
 async function listaCategoria() {
+  cargarPuntoVentas()
   const contenidousuario = await getUserData()
   const idempresa = contenidousuario?.empresa?.idempresa
   const endpoint = `listaCategoriaPrecio/${idempresa}`
@@ -907,7 +928,34 @@ async function listaCategoria() {
     console.error('Error al cargar categorías:', error)
   }
 }
+const cargarPuntoVentas = async () => {
+  try {
+    const response = await validarUsuario()
+    const idusuario = response[0]?.idusuario
 
+    if (idusuario) {
+      const { data } = await api.get(`listaPuntoVentaFactura/${idusuario}`)
+      console.log(data)
+      const idalmacen = Number(idalmacenfiltro.value)
+      console.log()
+      if (data.estado == 'error') {
+        console.log(data.error)
+      } else {
+        const filtrados = data.datos.filter((u) => u.idalmacen == idalmacen)
+        console.log(filtrados)
+        puntosVenta.value = filtrados.map((item) => ({
+          label: item.nombre,
+          value: item.idpuntoventa,
+          Data: item,
+        }))
+        puntoVenta.value = puntosVenta.value[0]
+        console.log(puntosVenta.value)
+      }
+    }
+  } catch (error) {
+    console.error(error)
+  }
+}
 async function listaProductosDisponibles() {
   const contenidousuario = await getUserData()
   const idempresa = contenidousuario?.empresa?.idempresa
@@ -1325,6 +1373,9 @@ async function enviarDatos() {
     }
     carritoCO.pagosDivididos.push(pago)
   }
+  const pv = puntoVenta.value
+  carritoCO.ipv = Number(pv.value)
+  carritoCO.idalmacen = filtroAlmacenCO.value
   // ref([{ metodoPago: null, monto: 0, porcentaje: 0 }])
   const datosFormulario = new FormData()
   datosFormulario.append('ver', 'registrarCotizacion')
@@ -1334,7 +1385,7 @@ async function enviarDatos() {
   datosFormulario.append('idsucursal', idsucursalCOS.value)
   datosFormulario.append('listaProductos', JSON.stringify(carritoCO)) // Enviar el objeto completo del carrito
   datosFormulario.append('tipo_operacion', tipoOperacion.value?.value) // Añadir el tipo de operación
-
+  console.log(carritoCO)
   $q.loading.show({
     message: 'Registrando cotización...',
   })

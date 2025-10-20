@@ -180,11 +180,11 @@ class UseCotizacion
             
 
             // 1. Insertar la cotización principal
-            $sqlCotizacion = "INSERT INTO cotizacion (fecha_cotizacion, monto_total, descuento, cliente_id_cliente, divisas_id_divisas, id_usuario, idsucursal, estado, num) 
-                              VALUES (NOW(), ?, ?, ?, ?, ?, ?, ?, ?)";
+            $sqlCotizacion = "INSERT INTO cotizacion (fecha_cotizacion, monto_total, descuento, cliente_id_cliente, divisas_id_divisas, id_usuario, idsucursal, estado, idpv, num, id_almacen) 
+                              VALUES (NOW(), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
             $stmtCotizacion = $this->cm->prepare($sqlCotizacion);
             $stmtCotizacion->bind_param(
-                "ddiiiiii",
+                "ddiiiiiiii",
                 $detalles['ventatotal'],
                 $detalles['descuento'],
                 $idcliente,
@@ -192,7 +192,9 @@ class UseCotizacion
                 $idusuario,
                 $idsucursal,
                 $estado, 
-                $nroFactura
+                $detalles['ipv'],
+                $nroFactura,
+                $detalles['idalmacen'],
             );
             $stmtCotizacion->execute();
 
@@ -284,7 +286,7 @@ class UseCotizacion
         $tipo = 2;
 
         $sqlDetalle = "INSERT INTO ventas_no_despachadas (
-            id_venta, 
+            id_venta,
             productos_almacen_id_productos_almacen, 
             cantidad_pendiente,
             precio_unitario,
@@ -350,11 +352,10 @@ class UseCotizacion
             $this->cm->begin_transaction();
 
             // 1. Insertar la cotización principal
-            $sqlCotizacion = "INSERT INTO cotizacion (fecha_cotizacion, monto_total, descuento, cliente_id_cliente, divisas_id_divisas, id_usuario, idsucursal, estado, num) 
-                              VALUES (NOW(), ?, ?, ?, ?, ?, ?, ?, ?)";
+            $sqlCotizacion = "INSERT INTO cotizacion (fecha_cotizacion, monto_total, descuento, cliente_id_cliente, divisas_id_divisas, id_usuario, idsucursal, estado, idpv, num, id_almacen) VALUES (NOW(), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
             $stmtCotizacion = $this->cm->prepare($sqlCotizacion);
             $stmtCotizacion->bind_param(
-                "ddiiiiii",
+                "ddiiiiiiii",
                 $detalles['ventatotal'],
                 $detalles['descuento'],
                 $idcliente,
@@ -362,7 +363,9 @@ class UseCotizacion
                 $idusuario,
                 $idsucursal,
                 $estado, 
-                $nroFactura
+                $detalles['ipv'],
+                $nroFactura,
+                $detalles['idalmacen'],
             );
             $stmtCotizacion->execute();
 
@@ -481,45 +484,68 @@ class UseCotizacion
 
         $lista2 = [];
         $alma = $this->cm->query("SELECT 
-                                    co.id_cotizacion,
-                                    c.id_cliente AS idcliente,
-                                    c.nombre AS cliente,
-                                    c.nombrecomercial,
-                                    s.id_sucursal AS idsucursal,
-                                    s.nombre AS sucursal,
-                                    co.fecha_cotizacion,
-                                    c.direccion, 
-                                    c.nit, 
-                                    c.email, 
-                                    co.monto_total, 
-                                    co.descuento,
-                                    co.id_usuario,
-                                    d.nombre AS divisa,
-                                    d.monedasin, 
-                                    a.id_almacen AS idalmacen,
-                                    a.nombre AS almacen,
-                                    CASE 
-                                        WHEN co.num IS NULL THEN COALESCE((
-                                            SELECT COUNT(z.id_cotizacion)
-                                            FROM cotizacion AS z
-                                            LEFT JOIN cliente c2 ON z.cliente_id_cliente = c2.id_cliente 
-                                            WHERE c2.idempresa = '$idempresa'
-                                            AND (
-                                                z.fecha_cotizacion < co.fecha_cotizacion
-                                                OR (z.fecha_cotizacion = co.fecha_cotizacion AND z.id_cotizacion <= co.id_cotizacion)
-                                            )
-                                        ), 0)
-                                        WHEN co.num IS NOT NULL THEN co.num
-                                        ELSE 0
-                                    END AS num
-                                FROM cotizacion co
-                                INNER JOIN cliente c ON co.cliente_id_cliente = c.id_cliente
-                                INNER JOIN sucursal s ON co.idsucursal = s.id_sucursal
-                                INNER JOIN divisas d ON co.divisas_id_divisas = d.id_divisas
-                                INNER JOIN detalle_cotizacion dc ON dc.cotizacion_id_cotizacion = co.id_cotizacion
-                                INNER JOIN productos_almacen pa ON pa.id_productos_almacen = dc.productos_almacen_id_productos_almacen
-                                INNER JOIN almacen a ON a.id_almacen = pa.almacen_id_almacen
-                                WHERE co.id_cotizacion = '$id'");
+                co.id_cotizacion,
+                c.id_cliente AS idcliente,
+                c.nombre AS cliente,
+                c.nombrecomercial,
+                s.id_sucursal AS idsucursal,
+                s.nombre AS sucursal,
+                co.fecha_cotizacion,
+                c.direccion, 
+                c.nit, 
+                c.email, 
+                co.monto_total, 
+                co.descuento,
+                co.id_usuario,
+                d.nombre AS divisa,
+                d.monedasin, 
+                a.id_almacen AS idalmacen,
+                a.nombre AS almacen,
+                CASE 
+                    WHEN pv.idpunto_venta IS NULL THEN COALESCE((
+                        SELECT rpv.idpuntoventa
+                        FROM responsable_puntoventa AS rpv
+                        LEFT JOIN responsable AS r ON rpv.idresponsable = r.id_responsable
+                        WHERE r.id_usuario = co.id_usuario 
+                        ORDER BY rpv.idpuntoventa DESC 
+                        LIMIT 1
+                    ), 0)
+                    ELSE pv.idpunto_venta
+                END AS idpuntoventa,
+                CASE 
+                    WHEN pv.idpunto_venta IS NULL THEN COALESCE((
+                        SELECT pv2.nombre
+                        FROM responsable_puntoventa AS rpv
+                        LEFT JOIN responsable AS r ON rpv.idresponsable = r.id_responsable
+                        LEFT JOIN punto_venta pv2 ON pv2.idpunto_venta = rpv.idpuntoventa
+                        WHERE r.id_usuario = co.id_usuario 
+                        ORDER BY rpv.idpuntoventa DESC 
+                        LIMIT 1
+                    ), 'SIN ASIGNAR')
+                    ELSE pv.nombre
+                END AS puntoventa,
+                CASE 
+                    WHEN co.num IS NULL THEN COALESCE((
+                        SELECT COUNT(z.id_cotizacion)
+                        FROM cotizacion AS z
+                        LEFT JOIN cliente c2 ON z.cliente_id_cliente = c2.id_cliente 
+                        WHERE c2.idempresa = '$idempresa'
+                        AND (
+                            z.fecha_cotizacion < co.fecha_cotizacion
+                            OR (z.fecha_cotizacion = co.fecha_cotizacion AND z.id_cotizacion <= co.id_cotizacion)
+                        )
+                    ), 0)
+                    ELSE co.num
+                END AS num
+                FROM cotizacion co
+                INNER JOIN cliente c ON co.cliente_id_cliente = c.id_cliente
+                INNER JOIN sucursal s ON co.idsucursal = s.id_sucursal
+                INNER JOIN divisas d ON co.divisas_id_divisas = d.id_divisas
+                INNER JOIN detalle_cotizacion dc ON dc.cotizacion_id_cotizacion = co.id_cotizacion
+                INNER JOIN productos_almacen pa ON pa.id_productos_almacen = dc.productos_almacen_id_productos_almacen
+                INNER JOIN almacen a ON a.id_almacen = pa.almacen_id_almacen
+                LEFT JOIN punto_venta pv ON pv.idpunto_venta = co.idpv
+                WHERE co.id_cotizacion = '$id';");
 
         while ($qwe = $this->cm->fetch($alma)) {
             $res = array(
@@ -542,7 +568,11 @@ class UseCotizacion
                     "fecha" => $qwe['fecha_cotizacion'],
                     "montototal" => $qwe['monto_total'],
                     "descuento" => $qwe['descuento'],
+                    "puntoVenta" => $qwe['puntoventa'],
+                    "idpv" => $qwe['idpuntoventa'],
                     "nfactura" => $qwe['num'],
+                    
+
                 ),
                 "divisa"=> array(
                     "divisa" => $qwe['divisa'],

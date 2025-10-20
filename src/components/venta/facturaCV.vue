@@ -703,7 +703,7 @@ const cargarPuntoVentas = async () => {
       const { data } = await api.get(`listaPuntoVentaFactura/${idusuario}`)
       console.log(data)
       const idalmacen = JSON.parse(localStorage.getItem('carrito')).idalmacen
-      console.log(idalmacen)
+      console.log()
       if (data.estado == 'error') {
         console.log(data.error)
       } else {

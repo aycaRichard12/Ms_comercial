@@ -1423,7 +1423,7 @@ class ventas
             );
         }
         $lista2 = [];
-        $alma = $this->cm->query("SELECT ve.id_venta, c.id_cliente, c.nombre AS cliente, c.codigo AS codigoCliente, c.tipodocumento, c.nombrecomercial, s.nombre AS sucursal, ve.fecha_venta, c.direccion, c.nit, c.email, ve.monto_total, ve.descuento, ve.id_usuario, ve.tipo_pago, di.nombre AS divisa, ve.nfactura , vf.ack_ticket, vf.cuf, vf.fechaEmission, vf.numeroFactura, ve.punto_venta, pv.codigosin AS puntoVentaSin, l.idleyendas, l.codigosin AS leyendaSin FROM venta ve
+        $alma = $this->cm->query("SELECT ve.id_venta, c.id_cliente, c.nombre AS cliente, c.codigo AS codigoCliente, c.tipodocumento, c.nombrecomercial, s.nombre AS sucursal, ve.fecha_venta, c.direccion, c.nit, c.email, ve.monto_total, ve.descuento, ve.id_usuario, ve.tipo_pago, di.nombre AS divisa, ve.nfactura , vf.ack_ticket, vf.cuf, vf.fechaEmission, vf.numeroFactura, ve.punto_venta,  pv.nombre as nombre_punto_venta, pv.codigosin AS puntoVentaSin, l.idleyendas, l.codigosin AS leyendaSin FROM venta ve
         INNER JOIN cliente c ON ve.cliente_id_cliente1=c.id_cliente
         INNER JOIN sucursal s ON ve.idsucursal=s.id_sucursal
         INNER JOIN divisas di ON ve.divisas_id_divisas=di.id_divisas
@@ -1455,6 +1455,7 @@ class ventas
                 "fechaEmission" => $qwe['fechaEmission'], 
                 "numeroFactura" => $qwe['numeroFactura'], 
                 "punto_venta" => $qwe['punto_venta'], 
+                "nombre_punto_venta" => $qwe['nombre_punto_venta'], 
                 "puntoVentaSin" => $qwe['puntoVentaSin'],
                 "idleyendas" => $qwe['idleyendas'],
                 "leyendaSin" => $qwe['leyendaSin'],
