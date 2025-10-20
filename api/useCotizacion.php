@@ -180,8 +180,8 @@ class UseCotizacion
             
 
             // 1. Insertar la cotización principal
-            $sqlCotizacion = "INSERT INTO cotizacion (fecha_cotizacion, monto_total, descuento, cliente_id_cliente, divisas_id_divisas, id_usuario, idsucursal, estado, num) 
-                              VALUES (NOW(), ?, ?, ?, ?, ?, ?, ?, ?)";
+            $sqlCotizacion = "INSERT INTO cotizacion (fecha_cotizacion, monto_total, descuento, cliente_id_cliente, divisas_id_divisas, id_usuario, idsucursal, estado, idpv, num) 
+                              VALUES (NOW(), ?, ?, ?, ?, ?, ?, ?, ?, ?)";
             $stmtCotizacion = $this->cm->prepare($sqlCotizacion);
             $stmtCotizacion->bind_param(
                 "ddiiiiii",
@@ -192,6 +192,7 @@ class UseCotizacion
                 $idusuario,
                 $idsucursal,
                 $estado, 
+                $detalles['ipv'],
                 $nroFactura
             );
             $stmtCotizacion->execute();
@@ -350,8 +351,8 @@ class UseCotizacion
             $this->cm->begin_transaction();
 
             // 1. Insertar la cotización principal
-            $sqlCotizacion = "INSERT INTO cotizacion (fecha_cotizacion, monto_total, descuento, cliente_id_cliente, divisas_id_divisas, id_usuario, idsucursal, estado, num) 
-                              VALUES (NOW(), ?, ?, ?, ?, ?, ?, ?, ?)";
+            $sqlCotizacion = "INSERT INTO cotizacion (fecha_cotizacion, monto_total, descuento, cliente_id_cliente, divisas_id_divisas, id_usuario, idsucursal, estado, idpv, num) 
+                              VALUES (NOW(), ?, ?, ?, ?, ?, ?, ?, ?, ?)";
             $stmtCotizacion = $this->cm->prepare($sqlCotizacion);
             $stmtCotizacion->bind_param(
                 "ddiiiiii",
@@ -362,6 +363,7 @@ class UseCotizacion
                 $idusuario,
                 $idsucursal,
                 $estado, 
+                $detalles['ipv'],
                 $nroFactura
             );
             $stmtCotizacion->execute();
@@ -511,7 +513,21 @@ class UseCotizacion
                                         ), 0)
                                         WHEN co.num IS NOT NULL THEN co.num
                                         ELSE 0
-                                    END AS num
+                                    END AS num,
+                                    CASE 
+                                        WHEN co.idpv IS NULL THEN COALESCE((
+                                            SELECT idpv
+                                            FROM cotizacion AS z
+                                            LEFT JOIN cliente c2 ON z.cliente_id_cliente = c2.id_cliente 
+                                            WHERE c2.idempresa = '$idempresa'
+                                            AND (
+                                                z.fecha_cotizacion < co.fecha_cotizacion
+                                                OR (z.fecha_cotizacion = co.fecha_cotizacion AND z.id_cotizacion <= co.id_cotizacion)
+                                            )
+                                        ), 0)
+                                        WHEN co.idpv IS NOT NULL THEN co.idpv
+                                        ELSE 0
+                                    END AS ads,
                                 FROM cotizacion co
                                 INNER JOIN cliente c ON co.cliente_id_cliente = c.id_cliente
                                 INNER JOIN sucursal s ON co.idsucursal = s.id_sucursal

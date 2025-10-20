@@ -37,7 +37,7 @@ if (!currencyStore.divisa && !currencyStore.loading) {
 
 const componentes = {
   tipo_doc: defineAsyncComponent(() => import('./typeDoc.vue')),
-  preforma: defineAsyncComponent(() => import('./preformaC.vue')),
+  //preforma: defineAsyncComponent(() => import('./preformaC.vue')),
   facturaCV: defineAsyncComponent(() => import('./facturaCV.vue')),
   facturaCMEX: defineAsyncComponent(() => import('./facturaCMEX.vue')),
   facturaABYM: defineAsyncComponent(() => import('./facturaABYM.vue')),
