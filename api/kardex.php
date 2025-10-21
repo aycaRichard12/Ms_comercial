@@ -73,7 +73,7 @@ class Kardex
         // NOTA: Se asume que el objeto $this->cm implementa prepare/bind_param/execute/get_result
         // (por ejemplo, con mysqli)
         if($count > 0){
-            $sql = "select 
+            $sql = "SELECT 
                 s.id_stock, s.cantidad as stock , s.fecha, s.codigo, s.estado, s.productos_almacen_id_productos_almacen,
                 case 
                     WHEN s.codigo is not null THEN COALESCE(
@@ -96,7 +96,7 @@ class Kardex
                 end as precio_unitario
             from stock s where s.productos_almacen_id_productos_almacen = ? and s.fecha between ? and ?";
         }else{
-            $sql = "select 
+            $sql = "SELECT 
                 s.id_stock, s.cantidad as stock , s.fecha, s.codigo, s.estado, s.productos_almacen_id_productos_almacen,
                 case 
                     WHEN s.codigo is not null THEN COALESCE(

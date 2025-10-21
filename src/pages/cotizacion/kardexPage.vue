@@ -346,7 +346,9 @@ async function generarReporte() {
     console.log(endpoint)
     const response = await api.get(endpoint)
     const data = response.data
-    console.log(data)
+    console.log(data.PEPS)
+    console.log(data.UEPS)
+    console.log(data.PROMEDIO)
     // Guardar los datos originales para recalcular con diferentes métodos
     movimientosOriginales.value = data
     datosOriginales.value = data

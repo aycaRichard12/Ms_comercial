@@ -219,8 +219,8 @@ class UseCotizacion
                 $sqlUpdateStock = "UPDATE stock SET estado = 2 WHERE id_stock = ? AND estado = 1";
                 $stmtUpdateStock = $this->cm->prepare($sqlUpdateStock);
 
-                $sqlNewStock = "INSERT INTO stock (cantidad, fecha, codigo, estado, productos_almacen_id_productos_almacen) 
-                                VALUES (?, NOW(), 'VE', 1, ?)";
+                $sqlNewStock = "INSERT INTO stock (cantidad, fecha, codigo, estado, productos_almacen_id_productos_almacen, idorigen) 
+                                VALUES (?, NOW(), 'COT', 1, ?, ?)";
                 $stmtNewStock = $this->cm->prepare($sqlNewStock);
 
                 foreach ($detalles['listaProductos'] as $producto) {
@@ -247,7 +247,7 @@ class UseCotizacion
 
                         // Crear nuevo registro de stock con la cantidad actualizada
                         $nuevaCantidad = $cantidadActual - $producto['cantidad'];
-                        $stmtNewStock->bind_param("di", $nuevaCantidad, $producto['idproductoalmacen']);
+                        $stmtNewStock->bind_param("dii", $nuevaCantidad, $producto['idproductoalmacen'], $ultimoIdInsertado);
                         $stmtNewStock->execute();
                         if ($stmtNewStock->affected_rows === 0) {
                             throw new Exception("No se pudo crear el nuevo registro de stock para el producto con ID almacén: " . $producto['idproductoalmacen']);
