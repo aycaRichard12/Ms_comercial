@@ -51,6 +51,14 @@
     <template v-slot:body-cell-opciones="props">
       <q-td :props="props" class="text-nowrap">
         <q-btn
+          v-if="tipoFactura"
+          icon="check"
+          color="primary"
+          flat=""
+          @click="abrirModal(props.row)"
+        />
+
+        <q-btn
           icon="edit"
           color="primary"
           dense
@@ -62,10 +70,59 @@
       </q-td>
     </template>
   </q-table>
+  <modalPuntoVentaFacturacion
+    v-model:showModal="mostrarModal"
+    :dato="datoSeleccionado"
+    :codigosucursal="codigoSucursal"
+    @onSuccess="listarDatos"
+  />
 </template>
 
 <script setup>
 import { ref, watch, computed } from 'vue'
+import { getTipoFactura } from 'src/composables/FuncionesG'
+import modalPuntoVentaFacturacion from './modalPuntoVentaFacturacion.vue'
+import { api } from 'src/boot/axios'
+import { idempresa_md5, idusuario_md5 } from 'src/composables/FuncionesGenerales'
+const idusuario = idusuario_md5()
+const idempresa = idempresa_md5()
+console.log(getTipoFactura(true))
+const tipoFactura = getTipoFactura(true)
+console.log(tipoFactura)
+
+const mostrarModal = ref(false)
+const datoSeleccionado = ref([])
+const codigoSucursal = ref(null)
+
+async function abrirModal(dato) {
+  console.log(dato)
+
+  datoSeleccionado.value = dato
+  codigoSucursal.value = await verificarSucursalFactura(dato.almacen.id)
+  console.log(codigoSucursal.value)
+  mostrarModal.value = true
+}
+async function verificarSucursalFactura(id) {
+  const endpoint = `listaResponsableAlmacen/${idempresa}`
+
+  try {
+    const response = await api.get(endpoint)
+    console.log(response)
+
+    const resultado = response.data
+    console.log(resultado)
+    if (resultado[0] == 'error') {
+      console.error(resultado.error)
+      return null
+    }
+
+    const use = resultado.filter((u) => u.idusuario == idusuario && u.idalmacen == id)
+    return use[0].sucursales[0].codigosin || 0
+  } catch (error) {
+    console.error(error)
+    return null
+  }
+}
 const filtroTipoAlmacen = ref(null)
 
 const props = defineProps({
