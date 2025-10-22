@@ -467,6 +467,8 @@ class UseCotizacion
             );
         }
 
+        
+
         $empresas = $this->em->query("SELECT * FROM organizacion WHERE idorganizacion='$idempresa'");
 
         $empresaInfo = [];
