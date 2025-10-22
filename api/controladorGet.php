@@ -387,10 +387,16 @@ if ($ver[0] == "datosusuario") {
 } elseif ($ver[0] == "eliminarPedido") {
     $controlador = new compras();
     $controlador->eliminarPedido($ver[1]);
-} elseif ($ver[0] == "listaCompra") {
+}
+ elseif ($ver[0] == "listaCompra") {
     $controlador = new compras();
     $controlador->listaCompra($ver[1]);
-} elseif ($ver[0] == "cancelarCompra") {
+} 
+ elseif ($ver[0] == "listaLotesxProductoProveedor") {
+    $controlador = new compras();
+    $controlador->listaLotesxProductoProveedor($ver[1]);
+} 
+elseif ($ver[0] == "cancelarCompra") {
     $controlador = new compras();
     $controlador->cancelarCompra($ver[1]);
 } elseif ($ver[0] == "listaDetalleCompra") {

@@ -2342,14 +2342,14 @@ class ventas
         $codigo = "EXT";
         $res="";
         $registro=$this->cm->query("update robos SET autorizacion='$estado' where id_robos='$id'");
-        $nuevostock=$this->cm->query("select dr.productos_almacen_id_productos_almacen, (s.cantidad - dr.cantidad) as nuevo from detalle_robo dr
+        $nuevostock=$this->cm->query("select dr.productos_almacen_id_productos_almacen, (s.cantidad - dr.cantidad) as nuevo, dr.idcompra from detalle_robo dr
         inner join productos_almacen pa on dr.productos_almacen_id_productos_almacen=pa.id_productos_almacen
         inner join stock as s on pa.id_productos_almacen=s.productos_almacen_id_productos_almacen 
         where dr.robos_id_robos='$id' and s.estado=1");
         while($stock=$this->cm->fetch($nuevostock)){
             $cambioestado = $this->cm->query("update stock set estado=2 where productos_almacen_id_productos_almacen='$stock[0]' and estado=1");
             if($cambioestado === TRUE){
-                $registrostock=$this->cm->query("insert into stock(id_stock,cantidad,fecha,codigo,estado,productos_almacen_id_productos_almacen) value(null,'$stock[1]','$fecha','$codigo',1,'$stock[0]')");
+                $registrostock=$this->cm->query("insert into stock(id_stock,cantidad,fecha,codigo,estado,productos_almacen_id_productos_almacen, idorigen) value(null,'$stock[1]','$fecha','$codigo',1,'$stock[0]', '$stock[2]')");
             }
         }
         if($registro===TRUE){
@@ -2406,10 +2406,10 @@ class ventas
         }
     }
 
-    public function registrodetallerobo($idrobos,$cantidad,$productoalmacen)
+    public function registrodetallerobo($idrobos,$cantidad,$productoalmacen, $compra)
     {
         $res = "";
-        $registro = $this->cm->query("insert into detalle_robo(id_detalle_robo,cantidad,robos_id_robos,productos_almacen_id_productos_almacen)value(NULL,'$cantidad','$idrobos','$productoalmacen')");
+        $registro = $this->cm->query("insert into detalle_robo(id_detalle_robo,cantidad,robos_id_robos,productos_almacen_id_productos_almacen, idcompra )value(NULL,'$cantidad','$idrobos','$productoalmacen', '$compra')");
         if ($registro !== null) {
             $res = array("estado" => "exito", "mensaje" => "Registro con exitoso");
         } else {
@@ -2705,14 +2705,23 @@ class ventas
         $con = 0;
         $res = array("devolucion" => array(), "perdidas" => array(), "estado" => "");
         try {
+            
+            // 1. SELECT query (Prepared Statement)
             $sql = "SELECT venta_id_venta AS idventa FROM devoluciones WHERE id_devoluciones = ?";
             $stm = $this->cm->prepare($sql);
             $stm->bind_param('i', $id);
-
             $stm->execute();
+            
+            // OPTION A: If you need the result ($idventa), fetch it here:
             $stm->bind_result($idventa);
+            $stm->fetch(); 
+            
+            // 2. CRITICAL FIX: Close the prepared statement before the next query.
+            $stm->close(); 
                 
+            // 3. Next query (Regular Query) - Now the connection is free
             $registro = $this->cm->query("update devoluciones SET autorizacion='$estado' where id_devoluciones='$id'");
+            
             if ($registro) {
                 $nuevostock = $this->cm->query("select dv.producto_almacen_id_producto_almacen, (s.cantidad + dv.cantidad) as nuevo from detalle_devolucion dv
                 LEFT JOIN  productos_almacen pa on dv.producto_almacen_id_producto_almacen = pa.id_productos_almacen

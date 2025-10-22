@@ -555,7 +555,8 @@ const listaCLientes = async () => {
     const idempresa = response[0]?.empresa?.idempresa
 
     if (idempresa) {
-      const { data } = await api.get(`listaCliente/${idempresa}`)
+      const response = await api.get(`listaCliente/${idempresa}`)
+      const data = response.data
       console.log(data)
       clients.value = data.map((cliente) => ({
         label: `${cliente.codigo} - ${cliente.nombre} - ${cliente.nit}`,

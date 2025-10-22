@@ -678,7 +678,95 @@ class compras
         }
         echo json_encode($lista);
     }
+    public function listaLotesxProductoProveedor($idmd5)
+    {
+        $lista = [];
 
+        // Verificar empresa
+        $idempresa = $this->verificar->verificarIDEMPRESAMD5($idmd5);
+        if ($idempresa === "false") {
+            echo json_encode([
+                "success" => false,
+                "error" => "El ID de empresa no existe"
+            ]);
+            return;
+        }
+
+        $estado = 1;
+        $consulta = "SELECT 
+                i.id_ingreso, 
+                pr.id_proveedor,
+                di.productos_almacen_id_productos_almacen, 
+                pr.nombre AS proveedor,
+                i.nombre AS lote,
+                i.codigo,
+                i.nfactura
+            FROM ingreso AS i
+            LEFT JOIN proveedor pr ON i.proveedor_id_proveedor = pr.id_proveedor
+            LEFT JOIN detalle_ingreso di ON di.ingreso_id_ingreso = i.id_ingreso
+            WHERE pr.id_empresa = ? AND i.estado = ?
+            ORDER BY i.fecha_ingreso DESC, i.id_ingreso DESC
+        ";
+
+        // Preparar la consulta
+        $stmt = $this->cm->prepare($consulta);
+        if (!$stmt) {
+            echo json_encode([
+                "success" => false,
+                "error" => "Error al preparar la consulta SQL: " . $this->cm->error
+            ]);
+            return;
+        }
+
+        // Enlazar parámetros
+        $stmt->bind_param('ii', $idempresa, $estado);
+
+        // Ejecutar y obtener resultados
+        if (!$stmt->execute()) {
+            echo json_encode([
+                "success" => false,
+                "error" => "Error al ejecutar la consulta: " . $stmt->error
+            ]);
+            $stmt->close();
+            return;
+        }
+
+        $result = $stmt->get_result();
+
+        if ($result->num_rows === 0) {
+            echo json_encode([
+                "success" => true,
+                "data" => []
+            ]);
+            $stmt->close();
+            return;
+        }
+
+        // Procesar resultados
+        while ($row = $result->fetch_assoc()) {
+            $lista[] = [
+                "idingreso"   => $row['id_ingreso'],
+                "idproveedor" => $row['id_proveedor'],
+                "idproducto"  => $row['productos_almacen_id_productos_almacen'],
+                "proveedor"   => $row['proveedor'],
+                "lote"        => $row['lote'],
+                "codigo"      => $row['codigo'],
+                "nfactura"    => $row['nfactura'],
+            ];
+        }
+
+        // Cerrar recursos
+        $stmt->close();
+
+        // Respuesta final
+        echo json_encode([
+            "success" => true,
+            "data" => $lista
+        ]);
+    }
+
+
+    
     public function listaProductoCompra($idpedido, $idalmacen) {
         $lista = [];
         
