@@ -239,7 +239,7 @@ class UseVEnta
                            $respuestaFinal = $resultadoDB; // Propagar error de la BD
                         }
                     } else {
-                        $respuestaFinal = ["estado" => "error", "mensaje" => "La factura no pudo ser validada por el SIN.", "detalles" => $estadoFactura];
+                        $respuestaFinal = ["estado" => "error", "mensaje" => "La factura no pudo ser validada por el SIN.", "detalles" => $respuestaEmizor];
                     }
                 } else {
                     $respuestaFinal = ["estado" => "error", "mensaje" => "Error al emitir la factura.", "detalles" => $respuestaEmizor->errors ?? $respuestaEmizor, "jsonFactura" => $jsonDetalles['listaFactura']];

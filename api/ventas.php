@@ -2124,14 +2124,15 @@ class ventas
         $codigo = "MER";
         $res="";
         $registro=$this->cm->query("update mermas_desperdicios SET autorizacion='$estado' where id_mermas_desperdicios='$id'");
-        $nuevostock=$this->cm->query("select dm.productos_almacen_id_productos_almacen, (s.cantidad - dm.cantidad) as nuevo from detalle_mermas dm
+        $nuevostock=$this->cm->query("SELECT dm.productos_almacen_id_productos_almacen, (s.cantidad - dm.cantidad) as nuevo, di.id_detalle_ingreso from detalle_mermas dm
         inner join productos_almacen pa on dm.productos_almacen_id_productos_almacen=pa.id_productos_almacen
         inner join stock as s on pa.id_productos_almacen=s.productos_almacen_id_productos_almacen 
+        LEFT JOIN detalle_ingreso AS di ON di.ingreso_id_ingreso = dm.idcompra
         where dm.mermas_desperdicios_id_mermas_desperdicios='$id' and s.estado=1");
         while($stock=$this->cm->fetch($nuevostock)){
             $cambioestado = $this->cm->query("update stock set estado=2 where productos_almacen_id_productos_almacen='$stock[0]' and estado=1 order by id_stock desc limit 1");
             if($cambioestado === TRUE){
-                $registrostock=$this->cm->query("insert into stock(id_stock,cantidad,fecha,codigo,estado,productos_almacen_id_productos_almacen) value(null,'$stock[1]','$fecha','$codigo',1,'$stock[0]')");
+                $registrostock=$this->cm->query("insert into stock(id_stock,cantidad,fecha,codigo,estado,productos_almacen_id_productos_almacen, idorigen) value(null, '$stock[1]', '$fecha', '$codigo', 1, '$stock[0]', '$stock[2]')");
             }
         }
         if($registro===TRUE){
@@ -2189,10 +2190,10 @@ class ventas
         }
     }
 
-    public function registrodetallemerma($idmerma,$cantidad,$productoalmacen)
+    public function registrodetallemerma($idmerma,$cantidad,$productoalmacen, $compra)
     {
         $res = "";
-        $registro = $this->cm->query("insert into detalle_mermas(id_detalle_mermas,cantidad,mermas_desperdicios_id_mermas_desperdicios,productos_almacen_id_productos_almacen)value(NULL,'$cantidad','$idmerma','$productoalmacen')");
+        $registro = $this->cm->query("insert into detalle_mermas(id_detalle_mermas,cantidad,mermas_desperdicios_id_mermas_desperdicios,productos_almacen_id_productos_almacen, idcompra)value(NULL,'$cantidad','$idmerma','$productoalmacen', '$compra')");
         if ($registro !== null) {
             $res = array("estado" => "exito", "mensaje" => "Registro con exitoso");
         } else {
@@ -2342,10 +2343,11 @@ class ventas
         $codigo = "EXT";
         $res="";
         $registro=$this->cm->query("update robos SET autorizacion='$estado' where id_robos='$id'");
-        $nuevostock=$this->cm->query("select dr.productos_almacen_id_productos_almacen, (s.cantidad - dr.cantidad) as nuevo, dr.idcompra from detalle_robo dr
-        inner join productos_almacen pa on dr.productos_almacen_id_productos_almacen=pa.id_productos_almacen
-        inner join stock as s on pa.id_productos_almacen=s.productos_almacen_id_productos_almacen 
-        where dr.robos_id_robos='$id' and s.estado=1");
+        $nuevostock=$this->cm->query("SELECT dr.productos_almacen_id_productos_almacen, (s.cantidad - dr.cantidad) AS nuevo, di.id_detalle_ingreso FROM detalle_robo dr
+        INNER JOIN productos_almacen pa ON dr.productos_almacen_id_productos_almacen=pa.id_productos_almacen
+        INNER JOIN stock AS s ON pa.id_productos_almacen=s.productos_almacen_id_productos_almacen
+        LEFT JOIN detalle_ingreso AS di ON di.ingreso_id_ingreso = dr.idcompra
+        WHERE dr.robos_id_robos='$id' AND s.estado=1");
         while($stock=$this->cm->fetch($nuevostock)){
             $cambioestado = $this->cm->query("update stock set estado=2 where productos_almacen_id_productos_almacen='$stock[0]' and estado=1");
             if($cambioestado === TRUE){

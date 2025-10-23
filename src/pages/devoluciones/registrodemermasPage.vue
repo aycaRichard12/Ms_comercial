@@ -231,7 +231,7 @@
                   </template>
                 </q-select>
               </div>
-              <div class="col-6 col-md-2">
+              <div class="col-6 col-md-3">
                 <label for="stock">Stock</label>
                 <q-input
                   v-model.number="detailForm.stock"
@@ -242,7 +242,7 @@
                   readonly
                 />
               </div>
-              <div class="col-6 col-md-2">
+              <div class="col-6 col-md-3">
                 <label for="cantidad">Cantidad</label>
                 <q-input
                   v-model.number="detailForm.cantidad"
@@ -253,6 +253,44 @@
                   outlined
                   required
                   @update:model-value="validateQuantity"
+                />
+              </div>
+              <div class="col-12 col-md-3">
+                <label for="provedor">Proveedor*</label>
+                <q-select
+                  v-model="detailForm.proveedor"
+                  :options="filteredProveedores"
+                  id="provedor"
+                  dense
+                  outlined
+                  emit-value
+                  map-options
+                  use-input
+                  fill-input
+                  hide-selected
+                  input-debounce="0"
+                  clearable
+                  @clear="limpiarComprasFiltradas"
+                  @filter="filterFn"
+                  @update:model-value="filtrarComprasxProveedor"
+                />
+              </div>
+              <div class="col-12 col-md-9">
+                <label for="compras">Lote Compra*</label>
+                <q-select
+                  v-model="detailForm.compra"
+                  :options="filterCompras"
+                  id="compras"
+                  dense
+                  outlined
+                  emit-value
+                  map-options
+                  use-input
+                  fill-input
+                  hide-selected
+                  input-debounce="0"
+                  clearable
+                  @filter="filterlotes"
                 />
               </div>
               <div class="col-md-2">
@@ -285,7 +323,7 @@
                   dense
                   color="negative"
                   icon="delete"
-                  @click="deleteDetailItem(props.row.id)"
+                  @click="deleteDetailItem(props.row)"
                 />
               </q-td>
             </template>
@@ -356,6 +394,11 @@ const loading = ref(false)
 const detailLoading = ref(false)
 const idmd5 = ref('')
 
+const filteredProveedores = ref([])
+const Proveedores = ref([])
+const ComprasOriginales = ref([])
+const Compras = ref([])
+const filterCompras = ref([])
 // Datos del usuario
 const userData = ref({})
 
@@ -374,6 +417,8 @@ const detailForm = ref({
   cantidad: 0,
   stock: 0,
   idalmacen: 0,
+  proveedor: null,
+  compra: null,
 })
 
 // Datos de tablas
@@ -538,6 +583,7 @@ const loadDetailData = async (idMerma) => {
 }
 
 const loadAvailableProducts = async (idMerma, idAlmacen) => {
+  console.log(idMerma, idAlmacen)
   try {
     const response = await api.get(`ListaProductosmerma/${idMerma}/${idAlmacen}`)
     availableProducts.value = response.data.map((product) => ({
@@ -553,6 +599,51 @@ const loadAvailableProducts = async (idMerma, idAlmacen) => {
       type: 'negative',
       message: 'Error al cargar productos disponibles',
     })
+  }
+}
+
+async function cargarProveedores() {
+  try {
+    const response = await api.get(`listaProveedor/${idempresa}`)
+    console.log(response)
+    Proveedores.value = response.data.map((item) => ({
+      label: item.nombre,
+      value: item.id,
+    }))
+  } catch (error) {
+    console.error('Error al cargar proveedores:', error)
+    $q.notify({ type: 'negative', message: 'No se pudieron cargar los proveedores' })
+  }
+}
+async function cargarComprasLotes() {
+  const d = detailForm.value
+  console.log(d)
+  try {
+    const response = await api.get(`listaLotesxProductoProveedor/${idempresa}`)
+    const res = response.data
+    const respuesta = res.data.filter(
+      (item) => Number(item.idproducto) === Number(d.idproductoalmacen),
+    )
+
+    const filtrado = respuesta.map((item) => ({
+      label:
+        'Nro Fac: ' +
+        item.nfactura +
+        ' Com: ' +
+        item.lote +
+        ' Cod: ' +
+        item.codigo +
+        ' Prov.: ' +
+        item.proveedor,
+      value: item.idingreso,
+      idproveedor: item.idproveedor,
+      idproducto: item.idproducto,
+    }))
+    ComprasOriginales.value = filtrado
+    Compras.value = filtrado
+  } catch (error) {
+    console.error('Error al cargar compras:', error)
+    $q.notify({ type: 'negative', message: 'No se pudieron cargar las compras' })
   }
 }
 const filtrarProductos = (val, update) => {
@@ -633,6 +724,7 @@ const submitDetailForm = async () => {
   try {
     //const endpoint = detailEditMode.value ? 'actualizarDetallemerma' : 'registrarDetallemerma'
     const formulario = objectToFormData(detailForm.value)
+    formulario.append('compra', detailForm.value.compra)
 
     if (detailEditMode.value) {
       formulario.append('ver', 'editarDetallemerma')
@@ -742,7 +834,42 @@ const deleteItem = (id) => {
 //   })
 // }
 
-const showDetails = (id, idAlmacen, estado) => {
+const limpiarComprasFiltradas = () => {
+  Compras.value = ComprasOriginales.value
+}
+const filtrarComprasxProveedor = () => {
+  const d = detailForm.value
+
+  Compras.value = ComprasOriginales.value.filter(
+    (v) => Number(v.idproveedor) === Number(d.proveedor),
+  )
+  d.compra = null
+}
+const filterFn = (val, update) => {
+  update(() => {
+    if (val === '') {
+      filteredProveedores.value = Proveedores.value
+    } else {
+      const needle = val.toLowerCase()
+      const paraFiltrar = filteredProveedores.value
+      filteredProveedores.value = paraFiltrar.filter((v) => v.label.toLowerCase().includes(needle))
+    }
+  })
+}
+const filterlotes = (val, update) => {
+  update(() => {
+    if (val === '') {
+      filterCompras.value = Compras.value
+      console.log(filterCompras.value)
+    } else {
+      const fc = filterCompras.value
+      const needle = val.toLowerCase()
+
+      filterCompras.value = fc.filter((v) => v.label.toLowerCase().includes(needle))
+    }
+  })
+}
+const showDetails = async (id, idAlmacen, estado) => {
   currentDetailStatus.value = estado
   console.log(id, idAlmacen, estado)
   detailForm.value.idmerma = id
@@ -754,6 +881,8 @@ const showDetails = (id, idAlmacen, estado) => {
 
   loadDetailData(id)
   loadAvailableProducts(id, idAlmacen)
+  await cargarProveedores()
+
   showMainForm.value = true
 }
 
@@ -796,6 +925,7 @@ const selectProduct = (id) => {
   if (product) {
     detailForm.value.stock = product.stock
   }
+  cargarComprasLotes()
 }
 
 const validateQuantity = () => {
@@ -848,16 +978,16 @@ const editDetailItem = async (id) => {
   }
 }
 
-const deleteDetailItem = async (id) => {
+const deleteDetailItem = async (row) => {
   try {
-    const response = await api.get(`eliminarDetallemerma/${id}`)
+    const response = await api.get(`eliminarDetallemerma/${row.id}`)
 
     $q.notify({
       type: 'positive',
       message: response.data.mensaje,
     })
 
-    loadAvailableProducts(detailForm.value.idmerma, userData.value.almacen.idalmacen)
+    loadAvailableProducts(detailForm.value.idmerma, detailForm.value.idalmacen)
     loadDetailData(detailForm.value.idmerma)
   } catch (error) {
     console.error('Error al eliminar detalle:', error)

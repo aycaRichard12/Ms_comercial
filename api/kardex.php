@@ -23,7 +23,7 @@ class Kardex
         //$this->ad = $this->conexion->ad; reportecreditos detalleVenta
         $this->em = $this->conexion->em;
     }
-
+    
     public function arrayIDalmacen($idmd5)
     {
 
@@ -53,72 +53,56 @@ class Kardex
             'AN'=> 'ANULADO',
             'EXT'=> 'EXTRAVIO',
             'DEV'=> 'DEVOLUCION',
+            'AN'=>'ANULACION',
+            'COT'=>'COTIZACION',
         ];
         return $codigo[$cod] ?? 'MOVIMIENTO DESCONOCIDO';
     }
     public function prepararKardex($fechainicio, $fechafinal,$idproducto){
         $resultado = [];
-        $sql_verificar_existencia_saldo = "
-            SELECT COUNT(productos_almacen_id_productos_almacen)
-            FROM saldos_iniciales_metodo
-            WHERE productos_almacen_id_productos_almacen = ?
-        ";
-        $stm = $this->cm->prepare($sql_verificar_existencia_saldo);
-        $stm->bind_param('i', $idproducto);
-        $stm->execute();
-        $stm->bind_result($count);
-        $stm->fetch();
-        $stm->close();
+        
         $sql = "";
         // NOTA: Se asume que el objeto $this->cm implementa prepare/bind_param/execute/get_result
         // (por ejemplo, con mysqli)
-        if($count > 0){
-            $sql = "SELECT 
-                s.id_stock, s.cantidad as stock , s.fecha, s.codigo, s.estado, s.productos_almacen_id_productos_almacen,
-                case 
-                    WHEN s.codigo is not null THEN COALESCE(
-                        s.cantidad - LAG(s.cantidad) OVER (
-                            PARTITION BY s.productos_almacen_id_productos_almacen
-                            ORDER BY s.fecha, s.id_stock
-                        ), s.cantidad
-                    )
-                    ELSE 0
-                end as cantidad_movimiento, 
-                case 
-                when s.idorigen is null then COALESCE((
-                    select di.precio_unitario from ingreso as i
-                    left join detalle_ingreso as di on i.id_ingreso = di.ingreso_id_ingreso
-                    where i.fecha_ingreso = s.fecha and di.productos_almacen_id_productos_almacen = s.productos_almacen_id_productos_almacen and s.codigo = 'MIC' limit 1
-                ),0)
-                when s.idorigen is not null then COALESCE((
-                    select precio_unitario from detalle_ingreso where id_detalle_ingreso = s.idorigen limit 1
-                ),0)
-                end as precio_unitario
-            from stock s where s.productos_almacen_id_productos_almacen = ? and s.fecha between ? and ?";
-        }else{
-            $sql = "SELECT 
-                s.id_stock, s.cantidad as stock , s.fecha, s.codigo, s.estado, s.productos_almacen_id_productos_almacen,
-                case 
-                    WHEN s.codigo is not null THEN COALESCE(
-                        s.cantidad - LAG(s.cantidad) OVER (
-                            PARTITION BY s.productos_almacen_id_productos_almacen
-                            ORDER BY s.fecha, s.id_stock
-                        ), s.cantidad
-                    )
-                    ELSE 0
-                end as cantidad_movimiento, 
-                case 
-                when s.idorigen is null then COALESCE((
-                    select di.precio_unitario from ingreso as i
-                    left join detalle_ingreso as di on i.id_ingreso = di.ingreso_id_ingreso
-                    where i.fecha_ingreso = s.fecha and di.productos_almacen_id_productos_almacen = s.productos_almacen_id_productos_almacen and s.codigo = 'MIC' limit 1
-                ),0)
-                when s.idorigen is not null then COALESCE((
-                    select precio_unitario from detalle_ingreso where id_detalle_ingreso = s.idorigen limit 1
-                ),0)
-                end as precio_unitario
-            from stock s where s.productos_almacen_id_productos_almacen = ? and s.fecha <= ?";
-        }
+        
+        $sql = "SELECT 
+                    s.id_stock, s.cantidad as stock , s.fecha, s.codigo, s.estado, s.productos_almacen_id_productos_almacen,
+                    case 
+                        WHEN s.codigo is not null THEN COALESCE(
+                            s.cantidad - LAG(s.cantidad) OVER (
+                                PARTITION BY s.productos_almacen_id_productos_almacen
+                                ORDER BY s.fecha, s.id_stock
+                            ), s.cantidad
+                        )
+                        ELSE 0
+                    end as cantidad_movimiento, 
+                    case 
+                        when s.idorigen is null and s.codigo = 'MIC' then COALESCE((
+                            select di.precio_unitario from ingreso as i
+                            left join detalle_ingreso as di on i.id_ingreso = di.ingreso_id_ingreso
+                            where i.fecha_ingreso = s.fecha and di.productos_almacen_id_productos_almacen = s.productos_almacen_id_productos_almacen limit 1
+                        ),0)
+                        when s.idorigen is not null and s.codigo = 'MIC' then COALESCE((
+                            select precio_unitario from detalle_ingreso where id_detalle_ingreso = s.idorigen limit 1
+                        ),0)
+                        when s.idorigen is not null and s.codigo = 'MER' then COALESCE((
+                            select precio_unitario from detalle_ingreso where id_detalle_ingreso = s.idorigen limit 1
+                        ),0)
+                        when s.idorigen is not null and s.codigo = 'EXT' then COALESCE((
+                            select precio_unitario from detalle_ingreso where id_detalle_ingreso = s.idorigen limit 1
+                        ),0)
+                    end as precio_unitario,
+                    case 
+                    
+                        when s.idorigen is not null and s.codigo = 'DEV' then COALESCE((
+                            select s2.id_stock from stock as s2 where s2.idorigen = s.idorigen and s2.codigo = 'VE' limit 1
+                        ),0)
+                        when s.idorigen is not null and s.codigo = 'AN' then COALESCE((
+                            select s2.id_stock from stock as s2 where s2.idorigen = s.idorigen and s2.codigo = 'VE' limit 1
+                        ),0)
+                    end as precio_de
+                from stock s where s.productos_almacen_id_productos_almacen = ? and s.fecha <= ?";
+        
         
         
         $stm = $this->cm->prepare($sql);
@@ -128,11 +112,9 @@ class Kardex
             return $resultado; // Asegurar retorno en caso de error de preparación
         }
         
-        if ($count > 0) {
-            $stm->bind_param('iss', $idproducto, $fechainicio, $fechafinal);
-        } else {
-            $stm->bind_param('is', $idproducto, $fechafinal);
-        }
+        
+        $stm->bind_param('is', $idproducto, $fechafinal);
+        
         $stm->execute();
         $result = $stm->get_result();
 
@@ -143,76 +125,64 @@ class Kardex
         
         $stm->close(); // Cierre de la sentencia preparada
 
-        $peps = $this->PEPS($kardex,$idproducto, $count);
-        $ueps = $this->UEPS($kardex,$idproducto, $count);
-        $promedio = $this->Promedio($kardex,$idproducto, $count);
-        echo json_encode(["PEPS"=>$peps, "UEPS"=>$ueps, "PROMEDIO" => $promedio ]);
+        $peps = $this->PEPS($kardex);
+        $ueps = $this->UEPS($kardex,$idproducto,0);
+        $promedio = $this->Promedio($kardex,$idproducto,0);
+        echo json_encode(["PEPS"=>$peps ]);
         // Si la función está en una clase, probablemente debería retornar el valor, no imprimirlo
         // return $peps; 
     }
-    public function PEPS($KARDEX, $idproducto, $count){
+    public function PEPS($KARDEX){
+        $a = [];
         $resultado = [];
         $entradas = []; // Entradas pendientes [cantidad, precio_unitario]
         $saldo_inicial = [];
-        if($count > 0 ){
-            $sql = "
-                SELECT *
-                FROM saldos_iniciales_metodo
-                WHERE productos_almacen_id_productos_almacen = ?
-                AND metodo = 'PEPS'
-                ORDER BY fecha DESC
-                LIMIT 1
-            ";
-            $stm = $this->cm->prepare($sql);
-
-            if (!$stm) {
-                return ["estado" => "error", "mensaje" => "No se pudo preparar la consulta del saldo inicial"];
-            }
-
-            $stm->bind_param('i', $idproducto);
-            $stm->execute();
-            $result = $stm->get_result();
-
-            // Solo un registro
-            $saldo = $result->fetch_assoc(); 
-            $saldo_inicial = [
-                "id_stock"=> 0,
-                "stock" => $saldo['cantidad'],
-                "fecha" => $saldo['fecha'],
-                "codigo" => 'NUE',
-                "estado" => 2,
-                "productos_almacen_id_productos_almacen" => $saldo['productos_almacen_id_productos_almacen'],
-                "cantidad_movimiento" => $saldo['cantidad'],
-                "precio_unitario" => $saldo['costo_unitario'],
-
-            ];
-            array_unshift($KARDEX, $saldo_inicial);
-
-        }
         
+        $saldo_final_of = 0;
         foreach ($KARDEX as $movimiento) {
-            
+            $precios_divididos = [];
             $cantidadMovimiento = floatval($movimiento['cantidad_movimiento']);
             $precioUnitario = floatval($movimiento['precio_unitario']);
+            $cod = $movimiento['codigo'];
             $debe = 0;
             $haber = 0;
-
-            if($cantidadMovimiento > 0){
+            $codigos_perdidas = [ 'EXT', 'MER'];
+            $codigos_entradas = ['MIC'];
+            $codigos_salidas = ['VE', 'COT'];
+            $codigos_especiales = ['DEV', 'AN'];
+            if( in_array($cod, $codigos_entradas) ){
                 // Entrada
                 $entradas[] = [
-                    'cantidad' => $cantidadMovimiento,
+                    'idstock' => $movimiento['id_stock'],
+                    'cantidad' => abs($cantidadMovimiento),
                     'precio_unitario' => $precioUnitario
                 ];
-                $debe = $cantidadMovimiento * $precioUnitario;
+                $debe = abs($cantidadMovimiento) * $precioUnitario;
                 $precioUnitario = $precioUnitario; // Precio unitario de la entrada
 
-            } else {
+            } elseif(in_array($cod, $codigos_perdidas)){
+                
+                $haber = abs($cantidadMovimiento) * $precioUnitario;
+                $precioUnitario = $precioUnitario; // Precio unitario de la entrada
+                
+                
+                foreach ($entradas as &$e) {
+                    if ($e['precio_unitario'] == $precioUnitario) {
+                        $e['cantidad'] -= abs($cantidadMovimiento);
+                        
+                        break; // salir de ambos loops
+                    }
+                    
+                }
+                unset($e);
+                
+            }
+             elseif(in_array($cod, $codigos_salidas)) {
                 // Salida (Venta/Consumo)
                 $cantidad_salida = abs($cantidadMovimiento); 
                 $haber = 0;
                 // Usaremos esta variable para registrar el detalle de los precios de salida
-                $precios_salida_detalle = ""; 
-
+ 
                 while($cantidad_salida > 0 && count($entradas) > 0){
                     $primera = &$entradas[0];
                     
@@ -221,21 +191,74 @@ class Kardex
                         $valor_consumido = $primera['cantidad'] * $primera['precio_unitario'];
                         $haber += $valor_consumido;
                         $cantidad_salida -= $primera['cantidad'];
-                        $precios_salida_detalle .= $primera['cantidad'] . ":" . $primera['precio_unitario'] . ", ";
-                        array_shift($entradas); 
+
+                        $precios_divididos [] = [
+                            "compra_de" => $primera['idstock'],
+                            "cantidad" => $primera['cantidad'],
+                            "precio" => $primera['precio_unitario']
+                        ];
+
+                        unset($primera); // 🔹 rompe la referencia
+                        array_shift($entradas);
+                        $a [] = $precios_divididos;
                     } else {
                         // Consume una parte del lote
                         $valor_consumido = $cantidad_salida * $primera['precio_unitario'];
                         $haber += $valor_consumido;
                         $primera['cantidad'] -= $cantidad_salida;
-                        $precios_salida_detalle .= $cantidad_salida . ":" .$primera['precio_unitario'];
+
+                        $precios_divididos [] = [
+                            "compra_de" => $primera['idstock'],
+                            "cantidad" => $cantidad_salida,
+                            "precio" => $primera['precio_unitario']
+                        ];
+
                         $cantidad_salida = 0;
+                        unset($primera); // también aquí, buena práctica
+                        $a [] = $precios_divididos;
                     }
+                    
                 }
                 // El precio unitario de una salida es el detalle de los precios usados
-                $precioUnitario = rtrim($precios_salida_detalle, ", ");
-            }
+                
+                
+            } elseif (in_array($cod, $codigos_especiales)) {
+                
+                $compra_de = null;
 
+                // Buscar el movimiento original desde el cual se hace la devolución/anulación
+                foreach ($resultado as $mov) {
+                    if (isset($movimiento['precio_de']) && $mov['idstock'] == $movimiento['precio_de']) {
+                        $precioUnitario = floatval($mov['C.Unit']);
+                        $compra_de = $mov['compra_de']; // asumimos que se devuelve al mismo lote
+                        break;
+                    }
+                }
+                // echo $compra_de;
+                //Si se encontró el lote original, se agrega la cantidad devuelta a ese lote
+                if ($compra_de !== null) {
+                    foreach ($entradas as &$e) {
+                        if ($e['idstock'] == $compra_de) {
+                            $e['cantidad'] += abs($cantidadMovimiento);
+                           
+                            break; // salir de ambos loops
+                        }
+                        
+                    }
+                    unset($e);
+                } else {
+                    // Si no se encontró el lote, se crea una nueva entrada (devolución sin referencia exacta)
+                    $entradas[] = [
+                        'idstock' => $movimiento['id_stock'], // opcional, para rastrear
+                        'cantidad' => abs($cantidadMovimiento),
+                        'precio_unitario' => $precioUnitario > 0 ? $precioUnitario : 0
+                    ];
+                }
+
+                // Actualizamos el movimiento financiero
+                $debe = abs($cantidadMovimiento) * $precioUnitario;
+            }
+            $registro = [];
             // Existencia = stock del movimiento
             $existencia = $movimiento['stock'];
 
@@ -247,27 +270,62 @@ class Kardex
             // Solo para el saldo. Es el Saldo Valor dividido por la Existencia.
             // **********************************************
             $pup_final = ($existencia > 0) ? ($saldo / $existencia) : 0;
+            if (is_array($precios_divididos) && count($precios_divididos) > 0) {
+                foreach($precios_divididos as $dividido){
+                    $saldo_final_of -= floatval($dividido['cantidad'])* floatval($dividido['precio']);
 
-            $registro = [
-                "Fecha" => $movimiento['fecha'],
-                "Concepto" => $this->getConceptoKardex($movimiento['codigo']),
-                "Entrada" => $cantidadMovimiento > 0 ? $cantidadMovimiento : 0,
-                "Salida" => $cantidadMovimiento < 0 ? abs($cantidadMovimiento) : 0,
-                "Existencia" => $existencia, 
-                "C.Unit" => $precioUnitario, // En salidas, es el detalle de precios usados
-                "Debe" => $debe,
-                "Haber" => $haber,
-                "Saldo" => $saldo,
-                // Detalle de los lotes pendientes (para el último registro, es el inventario final)
-                "Lotes_Pendientes" => $entradas
-            ];
-
-            // Añadir el PUP al registro si es el último
-            if (count($KARDEX) == (array_key_last($KARDEX) + 1)) {
-                $registro['PUP_Final'] = $pup_final;
+                    $registro = [
+                        "compra_de"=> $dividido['compra_de'],
+                        "idstock" => $movimiento['id_stock'],
+                        "Fecha" => $movimiento['fecha'],
+                        "Concepto" => $this->getConceptoKardex($movimiento['codigo']),
+                        "Entrada" => 0,
+                        "Salida" => $dividido['cantidad'],
+                        "Existencia" => $existencia, 
+                        "C.Unit" => $dividido['precio'], // En salidas, es el detalle de precios usados
+                        "Debe" => $debe,
+                        "Haber" => floatval($dividido['cantidad'])* floatval($dividido['precio']),
+                        "Saldo" => $saldo_final_of,
+                        "saldo_final" => $saldo_final_of,
+                        // Detalle de los lotes pendientes (para el último registro, es el inventario final)
+                        "Lotes_Pendientes" => $entradas
+                    ];
+                    if (count($KARDEX) == (array_key_last($KARDEX) + 1)) {
+                        $registro['PUP_Final'] = $pup_final;
+                    
+                    }
+                    $resultado[] = $registro;
+                }
+                
+            }else{
+                $registro = [
+                    "compra_de" => 0,
+                    "idstock" => $movimiento['id_stock'],
+                    "Fecha" => $movimiento['fecha'],
+                    "Concepto" => $this->getConceptoKardex($movimiento['codigo']),
+                    "Entrada" => $cantidadMovimiento > 0 ? $cantidadMovimiento : 0,
+                    "Salida" => $cantidadMovimiento < 0 ? abs($cantidadMovimiento) : 0,
+                    "Existencia" => $existencia, 
+                    "C.Unit" => $precioUnitario, // En salidas, es el detalle de precios usados
+                    "Debe" => $debe,
+                    "Haber" => $haber,
+                    "Saldo" => $saldo,
+                    "saldo_final" => $saldo_final_of,
+                    // Detalle de los lotes pendientes (para el último registro, es el inventario final)
+                    "Lotes_Pendientes" => $entradas
+                ];
+                if (count($KARDEX) == (array_key_last($KARDEX) + 1)) {
+                    $registro['PUP_Final'] = $pup_final;
+                   
+                }
+                 $resultado[] = $registro;
             }
+            
+            $saldo_final_of = $saldo;
+            // Añadir el PUP al registro si es el último
+            
 
-            $resultado[] = $registro;
+           
         }
 
        
@@ -289,6 +347,7 @@ class Kardex
             'kardex' => $resultado,
             'saldo_final' => $saldo_final_data,
             'saldo_inicial' => $saldo_inicial,
+            'salidas' => $a,
         ];
     }
     // Función PEPS con acceso a arrays corregido

@@ -345,6 +345,7 @@ async function generarReporte() {
     const endpoint = `kardex/${fechaiR.value}/${fechafR.value}/${almacenR.value}/${idproductoR.value}`
     console.log(endpoint)
     const response = await api.get(endpoint)
+    console.log(response)
     const data = response.data
     console.log(data.PEPS)
     console.log(data.UEPS)
@@ -437,7 +438,10 @@ function calcularPEPS(movimientos) {
   kardex = movimientos.PEPS.kardex
   saldoFinal.value = movimientos.PEPS.saldo_final
   console.log(saldoFinal.value)
+  const resultado = filtrarLotesPendientes(movimientos.PEPS.kardex, fechaiR.value)
 
+  console.log(resultado.primerMovimiento)
+  console.log(resultado.lotesPendientes)
   return kardex
 }
 
@@ -450,6 +454,40 @@ function calcularUEPS(movimientos) {
   console.log(saldoFinal.value)
 
   return kardex
+}
+function filtrarLotesPendientes(movimientos, fechaInicial) {
+  // Convertimos la fecha inicial a objeto Date para comparaciones
+  const fechaFiltro = new Date(fechaInicial)
+
+  // 1. Filtramos los movimientos que sean anteriores o igual a la fecha inicial
+  const movimientosAntes = movimientos.find((mov) => new Date(mov.Fecha) == fechaFiltro)
+  console.log(movimientosAntes)
+
+  // 2. Tomamos los Lotes_Pendientes de cada movimiento y los acumulamos en un objeto por idstock
+  const lotesPendientesMap = {}
+
+  movimientosAntes.forEach((mov) => {
+    mov.Lotes_Pendientes.forEach((lote) => {
+      if (!lotesPendientesMap[lote.idstock]) {
+        lotesPendientesMap[lote.idstock] = { ...lote } // clonamos
+      } else {
+        // Si ya existe, sumamos la cantidad
+        lotesPendientesMap[lote.idstock].cantidad += lote.cantidad
+      }
+    })
+  })
+
+  // 3. Convertimos el resultado a array de lotes pendientes
+  const lotesPendientes = Object.values(lotesPendientesMap)
+
+  // 4. Encontramos el primer movimiento de la fecha inicial
+  const primerMovimiento = movimientos.find((mov) => mov.Fecha === fechaInicial)
+
+  // 5. Retornamos solo el primer movimiento y los lotes pendientes asociados
+  return {
+    primerMovimiento,
+    lotesPendientes,
+  }
 }
 
 function calcularPromedio(movimientos) {

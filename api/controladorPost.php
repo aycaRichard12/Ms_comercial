@@ -454,7 +454,7 @@ elseif ($ver == "editarCliente") {
     $controlador->editarmerma($_POST['id'],$_POST['almacen'], $_POST['fecha'], $_POST['descripcion']);
 } elseif ($ver == "registrarDetallemerma") {
     $controlador = new ventas();
-    $controlador->registrodetallemerma($_POST['idmerma'], $_POST['cantidad'], $_POST['idproductoalmacen']);
+    $controlador->registrodetallemerma($_POST['idmerma'], $_POST['cantidad'], $_POST['idproductoalmacen'], $_POST['compra']);
 } elseif ($ver == "editarDetallemerma") {
     $controlador = new ventas();
     $controlador->editardetallemerma($_POST['id'], $_POST['idproductoalmacen'], $_POST['cantidad']);
