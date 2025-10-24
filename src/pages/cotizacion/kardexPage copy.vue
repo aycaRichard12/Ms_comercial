@@ -113,40 +113,7 @@
         flat
         bordered
         no-data-label="Aún no se ha generado ningún Reporte"
-      >
-        <template v-slot:top-row>
-          <q-tr style="height: 5px">
-            <q-td colspan="10" class="text-center">
-              <q-btn
-                flat
-                dense
-                style="height: 4px"
-                color="primary"
-                label="Mostrar / Ocultar Saldos Iniciales"
-                @click="mostrarSaldos = !mostrarSaldos"
-              />
-            </q-td>
-          </q-tr>
-
-          <!-- Filas de saldos iniciales, solo visibles si mostrarSaldos es true -->
-          <q-tr
-            v-for="(item, index) in saldosIniciales"
-            :key="index"
-            v-show="mostrarSaldos"
-            class="bg-amber-1"
-          >
-            <q-td>{{ item.Fecha }}</q-td>
-            <q-td style="align-items: center">{{ item.Concepto }}</q-td>
-            <q-td class="text-right">{{ item.Entrada }}</q-td>
-            <q-td class="text-right">{{ item.Salida }}</q-td>
-            <q-td class="text-right">{{ item.Existencia }}</q-td>
-            <q-td class="text-right">{{ item['C.Unit'] }}</q-td>
-            <q-td class="text-right">{{ item.Debe }}</q-td>
-            <q-td class="text-right">{{ item.Haber }}</q-td>
-            <q-td class="text-right">{{ item.Saldo }}</q-td>
-          </q-tr>
-        </template>
-      </q-table>
+      />
       <q-dialog v-model="mostrarPDF" persistent full-width full-height>
         <q-card class="q-pa-md" style="height: 100%; max-width: 100%">
           <q-card-section class="row items-center q-pb-none">
@@ -192,9 +159,10 @@ import { obtenerFechaActualDato, obtenerFechaPrimerDiaMesActual } from 'src/comp
 import { useCurrencyStore } from 'src/stores/currencyStore'
 import kardexSaldoFinal from './kardexSaldoFinal.vue'
 import saldosPage from './saldosPage.vue'
+import { decimas, redondear } from 'src/composables/FuncionesG'
 
 const divisaActiva = useCurrencyStore()
-console.log(divisaActiva.codigo)
+console.log(divisaActiva)
 const usuario = validarUsuario()[0]
 const $q = useQuasar()
 const kardex = ref(true)
@@ -205,7 +173,6 @@ const almacenR = ref(null)
 const idproductoR = ref(null)
 const metodoValoracion = ref('PEPS') // Valor por defecto
 const saldoFinal = ref({})
-const mostrarSaldos = ref(false) // controla si se muestran los saldos iniciales
 
 // Opciones para el selector de métodos
 const metodosValoracion = [
@@ -224,8 +191,6 @@ const reporteGenerado = ref(false)
 const mostrarPDF = ref(false)
 const pdfData = ref(null)
 const productosFiltrados = ref([])
-const saldosIniciales = ref([])
-// Función para alternar expandido
 
 // Columnas de la tabla
 const columns = [
@@ -475,49 +440,9 @@ function calcularPEPS(movimientos) {
   console.log(saldoFinal.value)
   const salida = filtrarLotesPendientes(movimientos.PEPS.kardex, fechaiR.value)
   console.log(salida)
-  saldosIniciales.value = salida.compras || []
-  console.log(saldosIniciales.value)
-
-  return salida.movimientosDespues || salida || []
+  return salida
 }
 
-function filtrarLotesPendientes(movimientos, fechaInicial) {
-  const fechaFiltro = new Date(fechaInicial)
-
-  // Movimientos posteriores o iguales a la fecha inicial
-  const movDes = movimientos.filter((mov) => new Date(mov.Fecha) >= fechaFiltro)
-
-  // Movimientos anteriores a la fecha inicial
-  const movimientosAntes = movimientos.filter((mov) => new Date(mov.Fecha) < fechaFiltro)
-
-  // Último movimiento antes de la fecha inicial
-  const ultimo_movimiento =
-    movimientosAntes.length > 0 ? movimientosAntes[movimientosAntes.length - 1] : null
-
-  if (!ultimo_movimiento || !ultimo_movimiento.Lotes_Pendientes) {
-    // Si no hay lotes pendientes, devolvemos solo los movimientos posteriores
-    return movDes
-  }
-
-  const com = []
-
-  // Recorremos los lotes pendientes y generamos filas iniciales
-  ultimo_movimiento.Lotes_Pendientes.forEach((p) => {
-    const movimiento = movimientosAntes.find((obj) => Number(obj.idstock) === Number(p.idstock))
-    if (movimiento) {
-      movimiento.Entrada = p.cantidad
-      movimiento.Existencia = p.cantidad
-      movimiento.Debe = parseFloat(p.cantidad) * parseFloat(p.precio_unitario)
-      movimiento.Saldo = ultimo_movimiento.Saldo
-      movimiento.ini = true
-      com.push({ ...movimiento })
-    }
-  })
-  console.log(com)
-  console.log(movDes)
-  // Añadimos las filas de compras al inicio de movimientosDespues
-  return { compras: com || [], movimientosDespues: movDes || [] }
-}
 function calcularUEPS(movimientos) {
   console.log(movimientos)
 
@@ -528,6 +453,43 @@ function calcularUEPS(movimientos) {
 
   return kardex
 }
+function filtrarLotesPendientes(movimientos, fechaInicial) {
+  const fechaFiltro = new Date(fechaInicial)
+
+  // Movimientos posteriores o iguales a la fecha inicial
+  const movimientosDespues = movimientos.filter((mov) => new Date(mov.Fecha) >= fechaFiltro)
+
+  // Movimientos anteriores a la fecha inicial
+  const movimientosAntes = movimientos.filter((mov) => new Date(mov.Fecha) < fechaFiltro)
+
+  // Último movimiento antes de la fecha inicial
+  const ultimo_movimiento =
+    movimientosAntes.length > 0 ? movimientosAntes[movimientosAntes.length - 1] : null
+
+  if (!ultimo_movimiento || !ultimo_movimiento.Lotes_Pendientes) {
+    // Si no hay lotes pendientes, devolvemos solo los movimientos posteriores
+    return movimientosDespues
+  }
+
+  const compras = []
+
+  // Recorremos los lotes pendientes y generamos filas iniciales
+  ultimo_movimiento.Lotes_Pendientes.forEach((p) => {
+    const movimiento = movimientosAntes.find((obj) => Number(obj.idstock) === Number(p.idstock))
+    if (movimiento) {
+      movimiento.Entrada = p.cantidad
+      movimiento.Existencia = p.cantidad
+      movimiento.Debe = redondear(decimas(parseFloat(p.cantidad) * parseFloat(p.precio_unitario)))
+      movimiento.Saldo = ultimo_movimiento.Saldo
+      movimiento.ini = true
+      compras.push({ ...movimiento })
+    }
+  })
+
+  // Añadimos las filas de compras al inicio de movimientosDespues
+  return [...compras, ...movimientosDespues]
+}
+
 function calcularPromedio(movimientos) {
   console.log(movimientos)
 
@@ -568,24 +530,6 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.fade-enter-active,
-.fade-leave-active {
-  transition: all 0.3s ease;
-}
-.fade-enter-from,
-.fade-leave-to {
-  opacity: 0;
-  transform: translateY(-5px);
-}
-.fade-enter-active,
-.fade-leave-active {
-  transition: all 0.3s ease;
-}
-.fade-enter-from,
-.fade-leave-to {
-  opacity: 0;
-  transform: translateY(-5px);
-}
 .invoice {
   position: relative;
   background-color: #fff;
