@@ -934,7 +934,7 @@ const cargarPuntoVentas = async () => {
     const idusuario = response[0]?.idusuario
 
     if (idusuario) {
-      const { data } = await api.get(`listaPuntoVentaFactura/${idusuario}`)
+      const { data } = await api.get(`listaPuntoVentaFacturaCotizacion/${idusuario}`)
       console.log(data)
       const idalmacen = Number(idalmacenfiltro.value)
       console.log()
