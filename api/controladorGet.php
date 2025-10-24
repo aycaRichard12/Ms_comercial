@@ -441,10 +441,16 @@ if ($ver[0] == "datosusuario") {
 } elseif ($ver[0] == "listaProductosDisponiblesVenta") {
     $controlador = new ventas();
     $controlador->listaProductosDisponiblesVenta($ver[1]);
-} elseif ($ver[0] == "listaPuntoVentaFactura") {
+} 
+elseif ($ver[0] == "listaPuntoVentaFactura") {
     $controlador = new ventas();
     $controlador->listaPuntoVentaFactura($ver[1]);
-} elseif ($ver[0] == "ValidarNit") {
+}
+elseif ($ver[0] == "listaPuntoVentaFacturaCotizacion") {
+    $controlador = new ventas();
+    $controlador->listaPuntoVentaFacturaCotizacion($ver[1]);
+}
+ elseif ($ver[0] == "ValidarNit") {
     $controlador = new Facturacion();
     $controlador->validarNIT($ver[1], $ver[2], $ver[3]);
 } elseif ($ver[0] == "detallesVenta") {

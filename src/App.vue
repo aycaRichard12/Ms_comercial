@@ -17,7 +17,7 @@ const metaData = {
 }
 useMeta(metaData)
 const createInitialLocalStorage = () => {
-  const idx = 0
+  const idx = 5
   const usuario = USUARIOS[idx].usuario
   const menu = USUARIOS[idx].menu
 

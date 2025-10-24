@@ -815,6 +815,27 @@ class ventas
         }
         echo json_encode($res);
     }
+    public function listaPuntoVentaFacturaCotizacion($idmd5)
+    {
+        $res = "";
+        $val = "";
+        $lista = [];
+        $idusuario = $this->verificar->verificarIDUSERMD5($idmd5);
+        $registro = $this->cm->query("SELECT rpv.idresponsable, rpv.idpuntoventa, pv.nombre, pv.idalmacen, pv.codigosin FROM responsable_puntoventa rpv
+        LEFT JOIN punto_venta pv ON rpv.idpuntoventa=pv.idpunto_venta
+        LEFT JOIN responsable r ON rpv.idresponsable=r.id_responsable
+        WHERE r.id_usuario='$idusuario'");
+        if ($registro !== false) {
+            while ($qwe = $this->cm->fetch($registro)) {
+                $val = array("idresponsable" => $qwe[0], "idpuntoventa" => $qwe[1], "nombre" => $qwe[2], "idalmacen" => $qwe[3], "codigosin" => $qwe[4]);
+                array_push($lista, $val);
+            }
+            $res = array("estado" => "exito", "mensaje" => "Lista encontradas", "datos" => $lista);
+        } else {
+            $res = array("estado" => "error", "mensaje" => "Ocurrio un problema, intentelo nuevamente");
+        }
+        echo json_encode($res);
+    }
     function obtenerNumeroFacturaDisponiblePrueba($idempresa, $tipoventa) {
         $nroFactura = null;
         $contador = 0; // Contador para evitar bucles infinitos
