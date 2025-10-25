@@ -387,10 +387,16 @@ if ($ver[0] == "datosusuario") {
 } elseif ($ver[0] == "eliminarPedido") {
     $controlador = new compras();
     $controlador->eliminarPedido($ver[1]);
-} elseif ($ver[0] == "listaCompra") {
+}
+ elseif ($ver[0] == "listaCompra") {
     $controlador = new compras();
     $controlador->listaCompra($ver[1]);
-} elseif ($ver[0] == "cancelarCompra") {
+} 
+ elseif ($ver[0] == "listaLotesxProductoProveedor") {
+    $controlador = new compras();
+    $controlador->listaLotesxProductoProveedor($ver[1]);
+} 
+elseif ($ver[0] == "cancelarCompra") {
     $controlador = new compras();
     $controlador->cancelarCompra($ver[1]);
 } elseif ($ver[0] == "listaDetalleCompra") {
@@ -670,7 +676,7 @@ elseif ($ver[0] == "reportecreditosatrasados") {
     $controlador->reporterotacionglobal($ver[1], $ver[2], $ver[3]);
 } elseif ($ver[0] == "kardex") {
     $controlador = new Kardex();
-    $controlador->kardex($ver[1], $ver[2], $ver[3], $ver[4]);
+    $controlador->kardex($ver[1], $ver[2], $ver[3], $ver[4], $ver[5]);
 } elseif ($ver[0] == "reporteventasporproductos") {
     $controlador = new reportes();
     $controlador->reporteventasporproductos($ver[1], $ver[2], $ver[3]);
@@ -850,6 +856,11 @@ elseif ($ver[0] == "eliminarSaldo") {
     $idSaldo = intval($ver[1]);
     $ok = $controlador->eliminarSaldo($idSaldo);
     echo json_encode(["success" => $ok]);
+}
+elseif ($ver[0] == "getTipoKardex") {
+    $controlador = new Kardex();
+    $controlador->getTipoKardexjson($ver[1]);
+    
 }
 
 if ($controlador === null) {

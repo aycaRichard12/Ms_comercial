@@ -119,6 +119,8 @@ class UseVEnta
         //$controlador->registroVenta($_POST['fecha'], $_POST['tipoventa'], $_POST['tipopago'], $_POST['idcliente'], $_POST['sucursal'], $_POST['canal'], $_POST['idempresa'], $_POST['idusuario'], json_decode($_POST['jsonDetalles'], true));
         // $this->registroVenta($data['fecha'], $tipoventa, $tipopago, $idcliente, $idsucursal, $canalventa, $idmd5, $idmd5u, $jsonDetalles);
         $this->registroVenta($data['fecha'], $data['tipoventa'], $data['tipopago'], $data['idcliente'], $data['sucursal'], $data['canal'], $data['idempresa'], $data['idusuario'], $data['jsonDetalles']);
+        // $detalle = $data['jsonDetalles'];
+        // echo json_encode(["jsonDetalle" => $detalle['puntoVenta']]);
     }
 
     /**
@@ -198,7 +200,7 @@ class UseVEnta
                 'punto_venta' => $jsonDetalles['puntoVenta'],
                 //'leyenda' => $jsonDetalles['idleyenda'],
             ];
-
+            
             if ($tipoventa == self::TIPO_VENTA_SIN_FACTURA) {
                 // Venta sin factura: solo registrar en la base de datos local
                 $resultadoDB = $this->_registrarVentaDetallesEnDB($datosVenta, $jsonDetalles['listaProductos']);
@@ -225,7 +227,6 @@ class UseVEnta
                         $resultadoDB = $this->_registrarVentaDetallesEnDB($datosVenta, $jsonDetalles['listaProductos']);
                         if ($resultadoDB['estado'] == 'exito') {
                             $this->factura->registrarFacturas($respuestaEmizor->data->ack_ticket, $estadoFactura->data->codigoEstado, $respuestaEmizor->data->cuf, $respuestaEmizor->data->emission_type_code, $respuestaEmizor->data->fechaEmision, $respuestaEmizor->data->numeroFactura, $respuestaEmizor->data->shortLink, $respuestaEmizor->data->urlSin, $respuestaEmizor->data->xml_url, $resultadoDB['idventa']);
-                            
                             $respuestaFinal = array_merge($resultadoDB, [
                                 "tipoventa" => "Facturado",
                                 "estadoFactura" => $estadoFactura->data,
@@ -238,10 +239,10 @@ class UseVEnta
                            $respuestaFinal = $resultadoDB; // Propagar error de la BD
                         }
                     } else {
-                        $respuestaFinal = ["estado" => "error", "mensaje" => "La factura no pudo ser validada por el SIN.", "detalles" => $estadoFactura];
+                        $respuestaFinal = ["estado" => "error", "mensaje" => "La factura no pudo ser validada por el SIN.", "detalles" => $respuestaEmizor];
                     }
                 } else {
-                    $respuestaFinal = ["estado" => "error", "mensaje" => "Error al emitir la factura.", "detalles" => $respuestaEmizor->errors ?? $respuestaEmizor];
+                    $respuestaFinal = ["estado" => "error", "mensaje" => "Error al emitir la factura.", "detalles" => $respuestaEmizor->errors ?? $respuestaEmizor, "jsonFactura" => $jsonDetalles['listaFactura']];
                 }
             }
             
@@ -263,6 +264,7 @@ class UseVEnta
             }
 
             echo json_encode($respuestaFinal);
+
 
         } catch (Exception $e) {
             $this->logger->registrar("registroVenta", "error", $e->getMessage(), compact('fecha', 'tipoventa', 'idmd5', 'jsonDetalles'), $idusuario, $idempresa);
@@ -332,8 +334,8 @@ class UseVEnta
             $sqlUpdateStock = "UPDATE stock SET estado = 2 WHERE id_stock = ? AND estado = 1";
             $stmtUpdateStock = $this->cm->prepare($sqlUpdateStock);
 
-            $sqlNewStock = "INSERT INTO stock (cantidad, fecha, codigo, estado, productos_almacen_id_productos_almacen) 
-                            VALUES (?, NOW(), 'VE', 1, ?)";
+            $sqlNewStock = "INSERT INTO stock (cantidad, fecha, codigo, estado, productos_almacen_id_productos_almacen, idorigen) 
+                            VALUES (?, NOW(), 'VE', 1, ?, ?)";
             $stmtNewStock = $this->cm->prepare($sqlNewStock);
 
             foreach ($listaProductos as $producto) {
@@ -359,7 +361,7 @@ class UseVEnta
                         if($cantidadActual <  $producto['cantidad'] ){
                             $cantidadrestante = $producto['cantidad'] - $cantidadActual;
                             $nuevaCantidad =0;
-                            $stmtNewStock->bind_param("di", $nuevaCantidad, $producto['idproductoalmacen']);
+                            $stmtNewStock->bind_param("dii", $nuevaCantidad, $producto['idproductoalmacen'], $ultimoIDventa);
                             $stmtNewStock->execute();
                             if ($stmtNewStock->affected_rows === 0) {
                                 throw new Exception("No se pudo crear el nuevo registro de stock para el producto con ID almacén: " . $producto['idproductoalmacen']);
@@ -386,7 +388,7 @@ class UseVEnta
 
                     // Crear nuevo registro de stock con la cantidad actualizada
                     $nuevaCantidad = $cantidadActual - $producto['cantidad'];
-                    $stmtNewStock->bind_param("di", $nuevaCantidad, $producto['idproductoalmacen']);
+                    $stmtNewStock->bind_param("dii", $nuevaCantidad, $producto['idproductoalmacen'], $ultimoIDventa);
                     $stmtNewStock->execute();
                     if ($stmtNewStock->affected_rows === 0) {
                         throw new Exception("No se pudo crear el nuevo registro de stock para el producto con ID almacén: " . $producto['idproductoalmacen']);

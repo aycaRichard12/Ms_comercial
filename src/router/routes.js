@@ -342,6 +342,10 @@ const routes = [
         path: '/reportedemermas',
         component: () => import('src/pages/devoluciones/reporteMermaPage.vue'),
       },
+      {
+        path: '/tipokardex',
+        component: () => import('src/pages/cotizacion/configuraciontipoKardexPage.vue'),
+      },
     ],
   },
   {

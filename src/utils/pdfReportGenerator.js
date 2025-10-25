@@ -9,6 +9,8 @@ import { imagen } from 'src/boot/url'
 import { api } from 'src/boot/axios'
 import { cargarLogoBase64 } from 'src/composables/FuncionesG'
 import { convertirAMayusculas } from 'src/composables/FuncionesG'
+import { useCurrencyStore } from 'src/stores/currencyStore'
+const divisaActiva = useCurrencyStore().simbolo
 
 // Variables globales
 let logoBase64 = null
@@ -2606,26 +2608,28 @@ export function PDFKardex(kardex, almacenLabel, productoLabel, fechaiR, fechafR)
   const cargo = idempresa.cargo
   const columns = [
     { header: 'N', dataKey: 'c' },
-    { header: 'Fecha', dataKey: 'fecha' },
-    { header: 'Descripcion', dataKey: 'descripcion' },
-    { header: 'Cant. Entrada', dataKey: 'canentrada' },
-    { header: 'Cant. Salida', dataKey: 'cansalida' },
-    { header: 'Cant. Saldo', dataKey: 'cansaldo' },
-    { header: 'Entrada', dataKey: 'ingreso' },
-    { header: 'Salida', dataKey: 'egreso' },
-    { header: 'Saldo', dataKey: 'saldoT' },
+    { header: 'Fecha', dataKey: 'Fecha' },
+    { header: 'Concepto', dataKey: 'Concepto' },
+    { header: 'Entrada', dataKey: 'Entrada' },
+    { header: 'Salida', dataKey: 'Salida' },
+    { header: 'Existencia', dataKey: 'Existencia' },
+    { header: 'C.Unit', dataKey: 'costouniario' },
+    { header: 'Debe', dataKey: 'Debe' },
+    { header: 'Haber', dataKey: 'Haber' },
+    { header: 'Saldo', dataKey: 'Saldo' },
   ]
   // filteredCompra.value.reduce((sum, row) => sum + Number(row.total), 0)
-  const datos = kardex.map((item) => ({
-    c: item.c,
-    fecha: cambiarFormatoFecha(item.fecha),
-    descripcion: item.descripcion,
-    canentrada: item.canentrada,
-    cansalida: item.cansalida,
-    cansaldo: item.cansaldo,
-    ingreso: item.ingreso,
-    egreso: item.egreso,
-    saldoT: item.saldoT,
+  const datos = kardex.map((item, index) => ({
+    c: index + 1,
+    Fecha: cambiarFormatoFecha(item.Fecha),
+    Concepto: item.Concepto,
+    Entrada: item.Entrada,
+    Salida: item.Salida,
+    Existencia: item.Existencia,
+    costouniario: divisaActiva + ' ' + parseFloat(item['C.Unit']).toFixed(2),
+    Debe: divisaActiva + ' ' + parseFloat(item.Debe).toFixed(2),
+    Haber: divisaActiva + ' ' + parseFloat(item.Haber).toFixed(2),
+    Saldo: divisaActiva + ' ' + parseFloat(item.Saldo).toFixed(2),
   }))
 
   autoTable(doc, {
@@ -2644,15 +2648,16 @@ export function PDFKardex(kardex, almacenLabel, productoLabel, fechaiR, fechafR)
       fontStyle: 'bold',
     },
     columnStyles: {
-      c: { cellWidth: 15, halign: 'center' },
-      fecha: { cellWidth: 20, halign: 'center' },
-      descripcion: { cellWidth: 35, halign: 'left' },
-      canentrada: { cellWidth: 20, halign: 'right' },
-      cansalida: { cellWidth: 20, halign: 'right' },
-      cansaldo: { cellWidth: 20, halign: 'right' },
-      ingreso: { cellWidth: 20, halign: 'right' },
-      egreso: { cellWidth: 20, halign: 'right' },
-      saldoT: { cellWidth: 25, halign: 'right' },
+      c: { cellWidth: 10, halign: 'center' },
+      Fecha: { cellWidth: 20, halign: 'center' },
+      Concepto: { cellWidth: 25, halign: 'left' },
+      Entrada: { cellWidth: 15, halign: 'right' },
+      Salida: { cellWidth: 15, halign: 'right' },
+      Existencia: { cellWidth: 20, halign: 'right' },
+      costouniario: { cellWidth: 20, halign: 'right' },
+      Debe: { cellWidth: 20, halign: 'right' },
+      Haber: { cellWidth: 25, halign: 'right' },
+      Saldo: { cellWidth: 25, halign: 'right' },
     },
     //20 + 15 + 20 + 25 + 30 + 20 + 20 + 25 + 20 + 15 + 20 + 15 + 20 = 265 mm
 

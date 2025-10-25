@@ -1,5 +1,10 @@
 export const PAGINAS = Object.freeze({
-  configuraciongeneral: Object.freeze(['tipodealmacen', 'divisas', 'leyendaproforma']),
+  configuraciongeneral: Object.freeze([
+    'tipodealmacen',
+    'divisas',
+    'leyendaproforma',
+    'tipokardex',
+  ]),
   configuracionproducto: Object.freeze([
     'categoriadeproducto',
     'estadodeproducto',

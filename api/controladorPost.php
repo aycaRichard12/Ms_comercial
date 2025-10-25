@@ -454,7 +454,7 @@ elseif ($ver == "editarCliente") {
     $controlador->editarmerma($_POST['id'],$_POST['almacen'], $_POST['fecha'], $_POST['descripcion']);
 } elseif ($ver == "registrarDetallemerma") {
     $controlador = new ventas();
-    $controlador->registrodetallemerma($_POST['idmerma'], $_POST['cantidad'], $_POST['idproductoalmacen']);
+    $controlador->registrodetallemerma($_POST['idmerma'], $_POST['cantidad'], $_POST['idproductoalmacen'], $_POST['compra']);
 } elseif ($ver == "editarDetallemerma") {
     $controlador = new ventas();
     $controlador->editardetallemerma($_POST['id'], $_POST['idproductoalmacen'], $_POST['cantidad']);
@@ -466,7 +466,7 @@ elseif ($ver == "editarCliente") {
     $controlador->editarrobo($_POST['id'],$_POST['almacen'], $_POST['fecha'], $_POST['descripcion']);
 } elseif ($ver == "registrarDetallerobos") {
     $controlador = new ventas();
-    $controlador->registrodetallerobo($_POST['idrobo'], $_POST['cantidad'], $_POST['idproductoalmacen']);
+    $controlador->registrodetallerobo($_POST['idrobo'], $_POST['cantidad'], $_POST['idproductoalmacen'], $_POST['compra']);
 } elseif ($ver == "editarDetallerobos") {
     $controlador = new ventas();
     $controlador->editardetallerobo($_POST['id'], $_POST['idproductoalmacen'], $_POST['cantidad']);
@@ -621,6 +621,10 @@ elseif ($ver == "editarSaldo") {
     $controlador = new Kardex();
     $ok = $controlador->editarSaldo($data);
     echo json_encode(["success" => $ok]);
+}
+elseif ($ver == "cambiarTipoKardex") {
+    $controlador = new Kardex();
+    $controlador->cambiarTipoKardex($data['idempresa'], $data['tipo']);
 }
 
 
