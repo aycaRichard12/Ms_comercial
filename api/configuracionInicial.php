@@ -73,36 +73,14 @@ class ConfiguracionInicial
             return 0;
         }
 
-        // Leer archivo JSON
-        // $jsonString = @file_get_contents('json/Jcategorias.json');
-        // if ($jsonString === false) {
-        //     error_log("No se pudo leer el archivo Jcategorias.json");
-        //     return 0;
-        // }
-
-        // // Decodificar JSON
-        // $datos = json_decode($jsonString);
-        // if (json_last_error() !== JSON_ERROR_NONE) {
-        //     error_log("Error decodificando JSON: " . json_last_error_msg());
-        //     return 0;
-        // }
-
-        // // Verificar estructura de datos
-        // if (!isset($datos->categorias)) {
-        //     error_log("Estructura JSON inválida - no se encontró el campo 'categorias'");
-        //     return 0;
-        // }
+        
         $categorias = $this->sincronizarCategoria($idrubro);
         $success = true;
         $estado = 1; // Estado activo
 
         foreach ($categorias as $categoria) {
             // Validar categoría principal
-            if (!isset($categoria->nombre, $categoria->descripcion, $categoria->subcategorias)) {
-                error_log("Estructura de categoría inválida");
-                $success = false;
-                break;
-            }
+            
 
             // Insertar categoría principal
             $query = "INSERT INTO categorias (nombre, descripcion, estado, id_empresa, idp) VALUES (?, ?, ?, ?, ?)";
@@ -115,7 +93,7 @@ class ConfiguracionInicial
             }
 
             $idp = 0; // Categoría padre (0 para categorías principales)
-            $stmt->bind_param("sssii", $categoria->nombre, $categoria->descripcion, $estado, $id_empresa, $idp);
+            $stmt->bind_param("sssii", $categoria['nombre'], $categoria['descripcion'], $estado, $id_empresa, $idp);
 
             if (!$stmt->execute()) {
                 error_log("Error insertando categoría: " . $stmt->error);
@@ -124,38 +102,9 @@ class ConfiguracionInicial
                 break;
             }
 
-            $id_categoria = $stmt->insert_id;
             $stmt->close();
 
-            // Insertar subcategorías
-            foreach ($categoria->subcategorias as $subcategoria) {
-                // Validar subcategoría
-                if (!isset($subcategoria->nombre, $subcategoria->descripcion)) {
-                    error_log("Estructura de subcategoría inválida");
-                    $success = false;
-                    break 2; // Salir de ambos bucles
-                }
-
-                $query = "INSERT INTO categorias (nombre, descripcion, estado, id_empresa, idp) VALUES (?, ?, ?, ?, ?)";
-                $stmt = $this->conexion->cm->prepare($query);
-                
-                if (!$stmt) {
-                    error_log("Error preparando consulta de subcategoría: " . $this->conexion->cm->error);
-                    $success = false;
-                    break 2;
-                }
-
-                $stmt->bind_param("sssii", $subcategoria->nombre, $subcategoria->descripcion, $estado, $id_empresa, $id_categoria);
-
-                if (!$stmt->execute()) {
-                    error_log("Error insertando subcategoría: " . $stmt->error);
-                    $stmt->close();
-                    $success = false;
-                    break 2;
-                }
-                
-                $stmt->close();
-            }
+           
         }
 
         return $success ? 1 : 0;
@@ -167,30 +116,11 @@ class ConfiguracionInicial
             return 0;
         }
 
-        // $jsonString = @file_get_contents('json/JestadosProductos.json');
-        // if($jsonString === false){
-        //     error_log("NO se pudo leer el archivo JestadosProductos.json");
-        //     return 0;
-        // }
-        // $datos = json_decode($jsonString);
-        // if(json_last_error() !== JSON_ERROR_NONE){
-        //     error_log('Error decodificando Json: '. json_last_error_msg());
-        //     return 0;
-        // }
-        // if(!isset($datos->EstadosProductos)){
-        //     error_log("Estructura JSON inválida no se encontro el campo 'EstadosProductos'");
-        //     return 0;
-        // }
         $EstadosProductos = $this-> sincronizar_estado_productos($idrubro);
         $success = true;
         $estado = 1;
         foreach($EstadosProductos as $estProd){
-            if(!isset($estProd->tipoestado,$estProd->descricpion)){
-                error_log("Estructura de Estado producto inválida");
-                $success = false;
-                break;
-            }
-
+           
             $query = "INSERT INTO estados_productos (tipos_estado, descripcion, estado, id_empresa) VALUES (?, ?, ?, ?)";
             $stmt = $this->conexion->cm->prepare($query);
             if(!$stmt){
@@ -198,7 +128,7 @@ class ConfiguracionInicial
                 $success = false;
                 break;
             }
-            $stmt->bind_param("ssii",$estProd->tipoestado,$estProd->descricpion,$estado,$id_empresa);
+            $stmt->bind_param("ssii",$estProd['tipoestado'],$estProd['descricpion'],$estado,$id_empresa);
 
             if(!$stmt->execute()){
                 error_log("Error insertando estado: ". $stmt->error);
@@ -217,31 +147,12 @@ class ConfiguracionInicial
             return 0;
         }
 
-        // $jsonString = @file_get_contents('json/Junidades.json');
-        // if($jsonString === false){
-        //     error_log("NO se pudo leer el archivo Junidades");
-        //     return 0;
-        // }
-        // $datos = json_decode($jsonString);
-        // if(json_last_error() !== JSON_ERROR_NONE){
-        //     error_log('Error decodificando Json: '. json_last_error_msg());
-        //     return 0;
-        // }
-        // if(!isset($datos->unidades)){
-        //     error_log("Estructura JSON inválida no se encontro el campo 'unidades'");
-        //     return 0;
-        // }
+        
         $unidades = $this->sincronizarUnidadMedida($idrubro);
         $success = true;
         $estado = 1;
         foreach($unidades as $unidad){
-            if(!isset($unidad->nombre,$unidad->descripcion)){
-                error_log("Estructura de unidad json inválida");
-                $success = false;
-                break;
-            }
-
-           
+            
             $query = "INSERT INTO unidad (nombre, descripcion, estado, id_empresa) VALUES (?, ?, ?, ?)";
             $stmt = $this->conexion->cm->prepare($query);
             if(!$stmt){
@@ -249,7 +160,7 @@ class ConfiguracionInicial
                 $success = false;
                 break;
             }
-            $stmt->bind_param("ssii",$unidad->nombre,$unidad->descripcion,$estado,$id_empresa);
+            $stmt->bind_param("ssii",$unidad['nombre'],$unidad['descripcion'],$estado,$id_empresa);
 
             if(!$stmt->execute()){
                 error_log("Error insertando estado: ". $stmt->error);
@@ -267,21 +178,6 @@ class ConfiguracionInicial
             error_log("ID de empresa invalido: " . $id_empresa);
             return 0;
         }
-
-        // $jsonString = @file_get_contents('json/Jcaracteristicas.json');
-        // if($jsonString === false){
-        //     error_log("NO se pudo leer el archivo Jcaracteristicas,json");
-        //     return 0;
-        // }
-        // $datos = json_decode($jsonString);
-        // if(json_last_error() !== JSON_ERROR_NONE){
-        //     error_log('Error decodificando Json: '. json_last_error_msg());
-        //     return 0;
-        // }
-        // if(!isset($datos->caracteristicas_productos)){
-        //     error_log("Estructura JSON inválida no se encontro el campo 'caracteristicas_productos'");
-        //     return 0;
-        // }
         $caracteristicas_productos = $this->sincronizarCaracteristicas($idrubro);
         $success = true;
         $estado = 1;
@@ -298,7 +194,7 @@ class ConfiguracionInicial
                 $success = false;
                 break;
             }
-            $stmt->bind_param("ssii",$caracteristica->nombre_medida,$caracteristica->descripcion,$estado,$id_empresa);
+            $stmt->bind_param("ssii",$caracteristica['nombre_medida'],$caracteristica['descripcion'],$estado,$id_empresa);
 
             if(!$stmt->execute()){
                 error_log("Error insertando estado: ". $stmt->error);
@@ -317,30 +213,12 @@ class ConfiguracionInicial
             return 0;
         }
 
-        // $jsonString = @file_get_contents('json/Jparemetros.json');
-        // if($jsonString === false){
-        //     error_log("NO se pudo leer el archivo Jparemetros");
-        //     return 0;
-        // }
-        // $datos = json_decode($jsonString);
-        // if(json_last_error() !== JSON_ERROR_NONE){
-        //     error_log('Error decodificando Json: '. json_last_error_msg());
-        //     return 0;
-        // }
-        // if(!isset($datos->parametros_obsolescencia)){
-        //     error_log("Estructura JSON inválida no se encontro el campo 'parametros_obsolescencia'");
-        //     return 0;
-        // }
         $parametros_obsolescencia = $this-> sincronizar_parametros_obsolescencia($idrubro);
         $success = true;
         $estado = 1;
 
         foreach($parametros_obsolescencia as $parametros){
-            if(!isset($parametros->nombre,$parametros->valor,$parametros->color)){
-                error_log("Estructura de parametros json inválida");
-                $success = false;
-                break;
-            }
+           
 
            
             $query = "INSERT INTO medidores (nombre, valor, color, tipo, idempresa) VALUES (?, ?, ?, ?, ?)";
@@ -350,7 +228,7 @@ class ConfiguracionInicial
                 $success = false;
                 break;
             }
-            $stmt->bind_param("sdsii", $parametros->nombre, $parametros->valor, $parametros->color, $estado, $id_empresa);
+            $stmt->bind_param("sdsii", $parametros['nombre'], $parametros['valor'], $parametros['color'], $estado, $id_empresa);
 
             if(!$stmt->execute()){
                 error_log("Error insertando estado: ". $stmt->error);
@@ -367,34 +245,12 @@ class ConfiguracionInicial
             echo("ID de empresa invalido: " . $id_empresa);
             return 0;
         }
-
-        // $jsonString = @file_get_contents('json/Jtipoclientes.json');
-        // if($jsonString === false){
-        //     echo("NO se pudo leer el archivo Jtipoclientes");
-        //     return 0;
-        // }
-        // $datos = json_decode($jsonString);
-        // if(json_last_error() !== JSON_ERROR_NONE){
-        //     echo('Error decodificando Json: '. json_last_error_msg());
-        //     return 0;
-        // }
-        // if(!isset($datos->tipos_clientes)){
-        //     echo("Estructura JSON inválida no se encontro el campo 'tipos_clientes'");
-        //     return 0;
-        // }
         $tipos_clientes = $this->sincronizarTipoCliente($idrubro);
         $success = true;
         $estado = 1;
 
         foreach($tipos_clientes as $tipo_cliente){
-            if(!isset($tipo_cliente->tipo,$tipo_cliente->descripcion)){
-                echo("Estructura de tipo_cliente json inválida");
-                $success = false;
-                break;
-            }
 
-           
-           
             $query = "INSERT INTO tipocliente (tipo, descripcion, estado, idempresa) VALUES (?, ?, ?, ?)";
             $stmt = $this->conexion->cm->prepare($query);
 
@@ -404,7 +260,7 @@ class ConfiguracionInicial
                 $success = false;
                 break;
             }
-            $stmt->bind_param("ssii", $tipo_cliente->tipo, $tipo_cliente->descripcion, $estado, $id_empresa);
+            $stmt->bind_param("ssii", $tipo_cliente['tipo'], $tipo_cliente['descripcion'], $estado, $id_empresa);
 
             if(!$stmt->execute()){
                 echo("Error insertando estado: ". $stmt->error);
@@ -418,35 +274,15 @@ class ConfiguracionInicial
     }
     public function registrar_canales($id_empresa,$idrubro):int
     {
-        if(!is_numeric($id_empresa) || $id_empresa <=0){
-            echo("ID de empresa invalido: " . $id_empresa);
-            return 0;
-        }
+        
 
-        // $jsonString = @file_get_contents('json/Jcanales.json');
-        // if($jsonString === false){
-        //     echo("NO se pudo leer el archivo Jcanales");
-        //     return 0;
-        // }
-        // $datos = json_decode($jsonString);
-        // if(json_last_error() !== JSON_ERROR_NONE){
-        //     echo('Error decodificando Json: '. json_last_error_msg());
-        //     return 0;
-        // }
-        // if(!isset($datos->canales)){
-        //     echo("Estructura JSON inválida no se encontro el campo 'canales'");
-        //     return 0;
-        // }
+       
         $canales = $this->sincronizarCanalVenta($idrubro);
         $success = true;
         $estado = 1;
 
         foreach($canales as $canal){
-            if(!isset($canal->canal,$canal->descripcion)){
-                echo("Estructura de tipo_cliente json inválida");
-                $success = false;
-                break;
-            }
+            
             $query = "INSERT INTO canalventa (canal, descripcion, estado, idempresa) VALUES (?, ?, ?, ?)";
             $stmt = $this->conexion->cm->prepare($query);
  
@@ -455,7 +291,7 @@ class ConfiguracionInicial
                 $success = false;
                 break;
             }
-            $stmt->bind_param("ssii",$canal->canal,$canal->descripcion,(int)$canal->$estado, $id_empresa);
+            $stmt->bind_param("ssii",$canal['canal'],$canal['descripcion'],$estado, $id_empresa);
 
             if(!$stmt->execute()){
                 echo("Error insertando estado: ". $stmt->error);
@@ -1064,68 +900,30 @@ class ConfiguracionInicial
      * @return array|null The decoded JSON response as an associative array, or null on failure.
      * @throws \Exception If a cURL error occurs.
      */
-    public function get_administrador(string $point, int $idrubro): ?array
+    public function get_administrador(string $point, int $idrubro)
     {
-        // 1. Build the full API URL
-        // Use an array for endpoint segments for better readability and safety.
-        $baseUrl = $this->endpoint[3] ?? '';
-        if (empty($baseUrl)) {
-            return [];
-        }
+        // Construir la URL directamente
+        $url = "http://mistersofts.com/administrador/api/" . $point . "/" . $idrubro;
 
-        $url = $baseUrl . "/administrador/api/" . $point . "/" . $idrubro;
-
-        // 2. Initialize and Configure cURL
-        $ch = curl_init();
-        if ($ch === false) {
-            // This is a rare, but possible, system-level failure
-           return [];
-        }
-
-        // Set standard options
-        curl_setopt($ch, CURLOPT_URL, $url);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true); // Return the transfer as a string
-        curl_setopt($ch, CURLOPT_TIMEOUT, 15);         // Increased timeout to 15 seconds (better for network delays)
-        curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 5);   // Max time to wait for the initial connection
-        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true); // Follow any 'Location:' header that the server sends
-
-        // Security best practice: try to solve SSL issues rather than disabling verification.
-        // However, if the environment absolutely requires it:
-        // curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-        // If you must disable verification, consider adding a comment explaining WHY.
-
-        // 3. Execute Request and Handle cURL Errors
-        $response = curl_exec($ch);
+        // Intentar obtener el contenido
+        $response = @file_get_contents($url);
 
         if ($response === false) {
-            
-            curl_close($ch);
-            // Throw a formal exception instead of using die() to allow calling code to handle the error
+            // No se pudo obtener la respuesta, retorna array vacío
             return [];
         }
 
-        // 4. Get HTTP Status Code
-        $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        curl_close($ch);
-
-        // 5. Check for HTTP Errors (e.g., 404, 500)
-        if ($http_code >= 400) {
-            // Log the error for debugging (e.g., "API returned 404 for URL...")
-            // You might decide to throw an exception here as well, or return null/an error array
-            return [];
-        }
-
-        // 6. Decode JSON and Handle Decoding Errors
+        // Decodificar JSON
         $respuesta = json_decode($response, true);
 
         if (json_last_error() !== JSON_ERROR_NONE) {
-           
-            // Log or throw an error about the invalid JSON response
+            // JSON inválido, retorna array vacío
             return [];
         }
 
         return $respuesta;
-    }
+}
+
     /**
      * Sincroniza los tipos de almacén de una API externa con el sistema local.
      *
@@ -1140,33 +938,11 @@ class ConfiguracionInicial
         $point = "gettipoalmacen";
         $result = $last_id_sincronizado;
 
-        try {
-            // 1. Obtener datos de la API
-            $tiposAlmacen = $this->get_administrador($point, $idrubro);
-            echo json_encode(["tiposAlmacen" => $tiposAlmacen]);
-            return 0;
-
-        } catch (\Exception $e) {
-            // Manejar errores de conexión/cURL lanzados por get_administrador
-            // Opcional: registrar el error en un log
-            // error_log($result['message']);
-            return $last_id_sincronizado;
-        }
-
-        // 2. Manejar errores lógicos o de respuesta (HTTP/JSON)
-        // Asumiendo que errores de API devuelven ['error' => true, ...]
-        if (is_array($tiposAlmacen) && isset($tiposAlmacen['error']) && $tiposAlmacen['error'] === true) {
-           
-            return $last_id_sincronizado;
-        }
-
-        // 3. Procesar datos (Debe ser un array de ítems)
-        if (!is_array($tiposAlmacen) || empty($tiposAlmacen)) {
-           
-            return $last_id_sincronizado;
-        }
-
-        
+       
+            
+        $tiposAlmacen = $this->get_administrador($point, $idrubro);
+            
+            
 
         foreach ($tiposAlmacen as $item) {
             // Asegurar que las claves existan para evitar errores de 'undefined index'
@@ -1342,53 +1118,16 @@ class ConfiguracionInicial
     public function sincronizarCanalVenta(int $idrubro): array
     {
         $point = "getlistacanales";
-
-        try {
-            // 1. Obtener datos de la API
-            $canales = $this->get_administrador($point, $idrubro);
-
-        } catch (\Exception $e) {
-            // Manejar errores de conexión/cURL lanzados por get_administrador
-            // Opcional: registrar el error en un log
-            // error_log($result['message']);
-            return [];
-        }
-
-        // 2. Manejar errores lógicos o de respuesta (HTTP/JSON)
-        // Asumiendo que errores de API devuelven ['error' => true, ...]
-        if (is_array($canales) && isset($canales['error']) && $canales['error'] === true) {
-           
-            return [];
-        }
-
-        // 3. Procesar datos (Debe ser un array de ítems)
-        if (!is_array($canales) || empty($canales)) {
-           
-            return [];
-        }
+        $canales = $this->get_administrador($point, $idrubro);
         return $canales;
+
     }
     public function sincronizarCategoria(int $idrubro): array
     {
         $point = "getlistacategorias";
-        try {
-            // 1. Obtener datos de la API
-            $categorias = $this->get_administrador($point, $idrubro);
-        } catch (\Exception $e) {
-            // Manejar errores de conexión/cURL lanzados por get_administrador
-            // Opcional: registrar el error en un log
-            // error_log($result['message']);
-            return [];
-        }
-        // 2. Manejar errores lógicos o de respuesta (HTTP/JSON)
-        // Asumiendo que errores de API devuelven ['error' => true, ...]
-        if (is_array($categorias) && isset($categorias['error']) && $categorias['error'] === true) {  
-            return [];
-        }
-        // 3. Procesar datos (Debe ser un array de ítems)
-        if (!is_array($categorias) || empty($categorias)){
-            return [];
-        }
+        
+        $categorias = $this->get_administrador($point, $idrubro);
+        
         return $categorias;
     }
     public function sincronizar_parametros_obsolescencia(int $idrubro): array
@@ -1416,25 +1155,10 @@ class ConfiguracionInicial
     }
     public function sincronizar_estado_productos(int $idrubro): array
     {
-        $point = "getlistamedidores";
-        try {
-            // 1. Obtener datos de la API
-            $res = $this->get_administrador($point, $idrubro);
-        } catch (\Exception $e) {
-            // Manejar errores de conexión/cURL lanzados por get_administrador
-            // Opcional: registrar el error en un log
-            // error_log($result['message']);
-            return [];
-        }
-        // 2. Manejar errores lógicos o de respuesta (HTTP/JSON)
-        // Asumiendo que errores de API devuelven ['error' => true, ...]
-        if (is_array($res) && isset($res['error']) && $res['error'] === true) {  
-            return [];
-        }
-        // 3. Procesar datos (Debe ser un array de ítems)
-        if (!is_array($res) || empty($res)){
-            return [];
-        }
+        $point = "getlistaestadoproductos";
+        
+        $res = $this->get_administrador($point, $idrubro);
+       
         return $res;
     }
     public function sincronizarUnidadMedida(int $idrubro): array
@@ -1483,27 +1207,12 @@ class ConfiguracionInicial
         }
         return $caracteristicas;
     }
-    public function sincronizarTipoCliente(int $idrubro): array
+    public function sincronizarTipoCliente(int $idrubro)
     {
         $point = "getlistatipocliente";
-        try {
-            // 1. Obtener datos de la API
-            $tiposCliente = $this->get_administrador($point, $idrubro);
-        } catch (\Exception $e) {
-            // Manejar errores de conexión/cURL lanzados por get_administrador
-            // Opcional: registrar el error en un log
-            // error_log($result['message']);
-            return [];
-        }
-        // 2. Manejar errores lógicos o de respuesta (HTTP/JSON)
-        // Asumiendo que errores de API devuelven ['error' => true, ...]
-        if (is_array($tiposCliente) && isset($tiposCliente['error']) && $tiposCliente['error'] === true) {  
-            return [];
-        }
-        // 3. Procesar datos (Debe ser un array de ítems)
-        if (!is_array($tiposCliente) || empty($tiposCliente)){
-            return [];
-        }
+        
+        $tiposCliente = $this->get_administrador($point, $idrubro);
+        
         return $tiposCliente;
     }
     public function sincronizarPuntoVenta(int $idrubro, $idalmacen): int
@@ -1778,23 +1487,23 @@ class ConfiguracionInicial
 
         $query = "
             SELECT 
-                EXISTS (SELECT 1 FROM configuracion_inicial WHERE idempresa = ?) OR
-                (
-                    EXISTS (SELECT 1 FROM almacen WHERE idempresa = ?) AND
-                    EXISTS (SELECT 1 FROM categorias WHERE id_empresa = ?) AND
-                    EXISTS (SELECT 1 FROM cliente WHERE idempresa = ?) AND
-                    EXISTS (SELECT 1 FROM proveedor WHERE id_empresa = ?) AND
-                    EXISTS (
-                        SELECT 1 FROM ingreso i
-                        JOIN proveedor p ON i.proveedor_id_proveedor = p.id_proveedor
-                        WHERE p.id_empresa = ?
-                    ) AND
-                    EXISTS (
-                        SELECT 1 FROM venta v
-                        JOIN cliente c ON v.cliente_id_cliente1 = c.id_cliente
-                        WHERE c.idempresa = ?
-                    )
-                ) AS existe
+            EXISTS (SELECT 1 FROM configuracion_inicial WHERE idempresa = ?) AND
+            (
+                EXISTS (SELECT 1 FROM almacen WHERE idempresa = ?) OR
+                EXISTS (SELECT 1 FROM categorias WHERE id_empresa = ?) OR
+                EXISTS (SELECT 1 FROM cliente WHERE idempresa = ?) OR
+                EXISTS (SELECT 1 FROM proveedor WHERE id_empresa = ?) OR
+                EXISTS (
+                    SELECT 1 FROM ingreso i
+                    JOIN proveedor p ON i.proveedor_id_proveedor = p.id_proveedor
+                    WHERE p.id_empresa = ?
+                ) OR
+                EXISTS (
+                    SELECT 1 FROM venta v
+                    JOIN cliente c ON v.cliente_id_cliente1 = c.id_cliente
+                    WHERE c.idempresa = ?
+                )
+            ) AS existe
         ";
 
         $stmt = $this->conexion->cm->prepare($query);

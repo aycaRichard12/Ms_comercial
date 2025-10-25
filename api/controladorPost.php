@@ -622,6 +622,10 @@ elseif ($ver == "editarSaldo") {
     $ok = $controlador->editarSaldo($data);
     echo json_encode(["success" => $ok]);
 }
+elseif ($ver == "cambiarTipoKardex") {
+    $controlador = new Kardex();
+    $controlador->cambiarTipoKardex($data['idempresa'], $data['tipo']);
+}
 
 
 

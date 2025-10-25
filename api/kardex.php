@@ -23,7 +23,113 @@ class Kardex
         //$this->ad = $this->conexion->ad; reportecreditos detalleVenta
         $this->em = $this->conexion->em;
     }
-    
+    public function cambiarTipoKardex($idmd5, $tipo) {
+        header('Content-Type: application/json; charset=utf-8'); // <-- asegura formato JSON
+        
+        try {
+            $idempresa = $this->verificar->verificarIDEMPRESAMD5($idmd5);
+
+            if (!$idempresa) {
+                echo json_encode([
+                    "estado" => "error",
+                    "mensaje" => "Empresa no encontrada o ID inválido"
+                ]);
+                return;
+            }
+
+            $sql = "UPDATE configuracion_inicial
+                    SET kardex = ?
+                    WHERE idempresa = ?;";
+
+            $stmt = $this->cm->prepare($sql);
+            if (!$stmt) {
+                throw new Exception("Error al preparar la consulta: " . $this->cm->error);
+            }
+
+            $stmt->bind_param('si', $tipo, $idempresa);
+
+            if (!$stmt->execute()) {
+                throw new Exception("Error al ejecutar la consulta: " . $stmt->error);
+            }
+
+            if ($stmt->affected_rows > 0) {
+                echo json_encode([
+                    "estado" => "exito",
+                    "mensaje" => "Se actualizó correctamente el tipo de Kardex a '$tipo'."
+                ]);
+            } else {
+                echo json_encode([
+                    "estado" => "advertencia",
+                    "mensaje" => "No se realizaron cambios. Es posible que ya esté configurado como '$tipo'."
+                ]);
+            }
+        } catch (Exception $e) {
+            echo json_encode([
+                "estado" => "error",
+                "mensaje" => $e->getMessage()
+            ]);
+        }
+    }
+
+    public function getTipoKardex($idmd5) {
+        $idempresa = $this->verificar->verificarIDEMPRESAMD5($idmd5);
+
+        $sql = "SELECT kardex
+                FROM configuracion_inicial
+                WHERE idempresa = ?;";
+
+        $stmt = $this->cm->prepare($sql);
+        if (!$stmt) {
+            throw new Exception("Error al preparar la consulta: " . $this->cm->error);
+        }
+
+        // Vinculamos el parámetro
+        $stmt->bind_param('i', $idempresa);
+
+        // Ejecutamos la consulta
+        if (!$stmt->execute()) {
+            throw new Exception("Error al ejecutar la consulta: " . $stmt->error);
+        }
+
+        // Vinculamos la variable donde se almacenará el resultado
+        $stmt->bind_result($kardex);
+
+        // Obtenemos el resultado (fetch devuelve true si hay una fila)
+        if ($stmt->fetch()) {
+            return $kardex; // ✅ devolvemos el valor encontrado
+        } else {
+            return null; // ⚠️ no hay resultado
+        }
+    }
+
+    public function getTipoKardexjson($idmd5) {
+        $idempresa = $this->verificar->verificarIDEMPRESAMD5($idmd5);
+
+        $sql = "SELECT kardex
+                FROM configuracion_inicial
+                WHERE idempresa = ?;";
+
+        $stmt = $this->cm->prepare($sql);
+        if (!$stmt) {
+            throw new Exception("Error al preparar la consulta: " . $this->cm->error);
+        }
+
+        $stmt->bind_param('i', $idempresa);
+
+        if (!$stmt->execute()) {
+            throw new Exception("Error al ejecutar la consulta: " . $stmt->error);
+        }
+
+        $stmt->bind_result($kardex);
+
+        // ✅ Este paso es obligatorio para llenar $kardex
+        if ($stmt->fetch()) {
+            echo json_encode(["metodo" => $kardex]);
+        } else {
+            echo json_encode(["metodo" => null]);
+        }
+    }
+
     public function arrayIDalmacen($idmd5)
     {
 
@@ -58,7 +164,7 @@ class Kardex
         ];
         return $codigo[$cod] ?? 'MOVIMIENTO DESCONOCIDO';
     }
-    public function prepararKardex($fechainicio, $fechafinal,$idproducto){
+    public function prepararKardex($fechainicio, $fechafinal,$idproducto, $idmd5){
         $resultado = [];
         
         $sql = "";
@@ -125,10 +231,31 @@ class Kardex
         
         $stm->close(); // Cierre de la sentencia preparada
 
-        $peps = $this->PEPS($kardex);
-        $ueps = $this->UEPS($kardex,$idproducto,0);
-        $promedio = $this->Promedio($kardex,$idproducto,0);
-        echo json_encode(["PEPS"=>$peps ]);
+        $tipo = $this->getTipoKardex($idmd5);
+        $k = [];
+        
+        switch ($tipo) {
+            case 'PEPS':
+                // Código si $variable == 'valor1'
+                $k = $this->PEPS($kardex);
+                break;
+
+            case 'UEPS':
+                // Código si $variable == 'valor2'
+                $k = $this->UEPS($kardex,$idproducto,0);
+                break;
+            case 'PROMEDIO':
+                // Código si $variable == 'valor2'
+                $k = $this->Promedio_($kardex,$idproducto,0);
+                break;
+
+            default:
+                // Código si no coincide ningún caso
+                break;
+        }
+        echo json_encode([
+            $tipo => $k
+        ], JSON_UNESCAPED_UNICODE);
         // Si la función está en una clase, probablemente debería retornar el valor, no imprimirlo
         // return $peps; 
     }
@@ -352,68 +479,59 @@ class Kardex
     }
     // Función PEPS con acceso a arrays corregido
     
-    public function UEPS($KARDEX, $idproducto, $count){
+    public function UEPS($KARDEX){
+        $a = [];
         $resultado = [];
         $entradas = []; // Entradas pendientes [cantidad, precio_unitario]
         $saldo_inicial = [];
-        if($count > 0 ){
-            $sql = "
-                SELECT *
-                FROM saldos_iniciales_metodo
-                WHERE productos_almacen_id_productos_almacen = ?
-                AND metodo = 'UEPS'
-                ORDER BY fecha DESC
-                LIMIT 1
-            ";
-            $stm = $this->cm->prepare($sql);
-
-            if (!$stm) {
-                return ["estado" => "error", "mensaje" => "No se pudo preparar la consulta del saldo inicial"];
-            }
-
-            $stm->bind_param('i', $idproducto);
-            $stm->execute();
-            $result = $stm->get_result();
-
-            // Solo un registro
-            $saldo = $result->fetch_assoc(); 
-            $saldo_inicial = [
-                "id_stock"=> 0,
-                "stock" => $saldo['cantidad'],
-                "fecha" => $saldo['fecha'],
-                "codigo" => 'NUE',
-                "estado" => 2,
-                "productos_almacen_id_productos_almacen" => $saldo['productos_almacen_id_productos_almacen'],
-                "cantidad_movimiento" => $saldo['cantidad'],
-                "precio_unitario" => $saldo['costo_unitario'],
-
-            ];
-            array_unshift($KARDEX, $saldo_inicial);
-
-        }
         
+        $saldo_final_of = 0;
+
         foreach ($KARDEX as $movimiento) {
-            
+            $precios_divididos = [];
             $cantidadMovimiento = floatval($movimiento['cantidad_movimiento']);
             $precioUnitario = floatval($movimiento['precio_unitario']);
+            $cod = $movimiento['codigo'];
             $debe = 0;
             $haber = 0;
+            $codigos_perdidas = [ 'EXT', 'MER'];
+            $codigos_entradas = ['MIC'];
+            $codigos_salidas = ['VE', 'COT'];
+            $codigos_especiales = ['DEV', 'AN'];
             $es_ultimo_movimiento = (array_key_last($KARDEX) == key($KARDEX)); // Verifica si estamos en el último item
 
-            if($cantidadMovimiento > 0){
+            if(in_array($cod, $codigos_entradas)){
                 // Entrada
                 $entradas[] = [
-                    'cantidad' => $cantidadMovimiento,
+                    'idstock' => $movimiento['id_stock'],
+                    'cantidad' => abs($cantidadMovimiento),
                     'precio_unitario' => $precioUnitario
                 ];
-                $debe = $cantidadMovimiento * $precioUnitario;
+                $debe = abs($cantidadMovimiento) * $precioUnitario;
                 $precioUnitario = $precioUnitario; 
 
-            } else {
+            } 
+            elseif(in_array($cod, $codigos_perdidas)){
+                
+                $haber = abs($cantidadMovimiento) * $precioUnitario;
+                $precioUnitario = $precioUnitario; // Precio unitario de la entrada
+                
+                
+                foreach ($entradas as &$e) {
+                    if ($e['precio_unitario'] == $precioUnitario) {
+                        $e['cantidad'] -= abs($cantidadMovimiento);
+                        
+                        break; // salir de ambos loops
+                    }
+                    
+                }
+                unset($e);
+                
+            }
+            elseif(in_array($cod, $codigos_salidas)) {
                 // Salida (se consume la ÚLTIMA entrada)
                 $cantidad_salida = abs($cantidadMovimiento); 
                 $haber = 0;
-                $precios_salida_detalle = ""; 
 
                 while($cantidad_salida > 0 && count($entradas) > 0){
                     // Referencia a la ÚLTIMA entrada
@@ -425,23 +543,69 @@ class Kardex
                         $valor_consumido = $ultima['cantidad'] * $ultima['precio_unitario'];
                         $haber += $valor_consumido;
                         $cantidad_salida -= $ultima['cantidad'];
-                        $precios_salida_detalle .= $ultima['cantidad'] . ":" . $ultima['precio_unitario'] . ", ";
+
+                        $precios_divididos [] = [
+                            "compra_de" => $ultima['idstock'],
+                            "cantidad" => $ultima['cantidad'],
+                            "precio" => $ultima['precio_unitario']
+                        ];
+
+                        unset($ultima); // rompe la referencia
                         array_pop($entradas); // Eliminamos la última entrada consumida
+                        $a [] = $precios_divididos;
+
                     } else {
                         // Consumo parcial del último lote
                         $valor_consumido = $cantidad_salida * $ultima['precio_unitario'];
                         $haber += $valor_consumido;
                         $ultima['cantidad'] -= $cantidad_salida;
                         
-                        if (!empty($precios_salida_detalle)) {
-                            $precios_salida_detalle .= $cantidad_salida . ":" .$ultima['precio_unitario'];
-                        }else{
-                            $precios_salida_detalle = $cantidad_salida . ":" .$ultima['precio_unitario'];
-                        }
+                        $precios_divididos [] = [
+                            "compra_de" => $ultima['idstock'],
+                            "cantidad" => $cantidad_salida,
+                            "precio" => $ultima['precio_unitario']
+                        ];
                         $cantidad_salida = 0; 
+                        unset($ultima);
+                        $a [] = $precios_divididos;
+
                     }
                 }
-                $precioUnitario = rtrim($precios_salida_detalle, ", "); // Detalle de precios usados
+            }elseif (in_array($cod, $codigos_especiales)) {
+                
+                $compra_de = null;
+
+                // Buscar el movimiento original desde el cual se hace la devolución/anulación
+                foreach ($resultado as $mov) {
+                    if (isset($movimiento['precio_de']) && $mov['idstock'] == $movimiento['precio_de']) {
+                        $precioUnitario = floatval($mov['C.Unit']);
+                        $compra_de = $mov['compra_de']; // asumimos que se devuelve al mismo lote
+                        break;
+                    }
+                }
+                // echo $compra_de;
+                //Si se encontró el lote original, se agrega la cantidad devuelta a ese lote
+                if ($compra_de !== null) {
+                    foreach ($entradas as &$e) {
+                        if ($e['idstock'] == $compra_de) {
+                            $e['cantidad'] += abs($cantidadMovimiento);
+                           
+                            break; // salir de ambos loops
+                        }
+                        
+                    }
+                    unset($e);
+                } else {
+                    // Si no se encontró el lote, se crea una nueva entrada (devolución sin referencia exacta)
+                    $entradas[] = [
+                        'idstock' => $movimiento['id_stock'], // opcional, para rastrear
+                        'cantidad' => abs($cantidadMovimiento),
+                        'precio_unitario' => $precioUnitario > 0 ? $precioUnitario : 0
+                    ];
+                }
+
+                // Actualizamos el movimiento financiero
+                $debe = abs($cantidadMovimiento) * $precioUnitario;
             }
 
             // Existencia = stock del movimiento
@@ -452,28 +616,63 @@ class Kardex
             
             // CÁLCULO DEL PRECIO UNITARIO PROMEDIO (PUP)
             $pup_final = ($existencia > 0) ? ($saldo / $existencia) : 0;
-            
-            $registro = [
-                "Fecha" => $movimiento['fecha'],
-                "Concepto" => $this->getConceptoKardex($movimiento['codigo']), 
-                "Entrada" => $cantidadMovimiento > 0 ? $cantidadMovimiento : 0,
-                "Salida" => $cantidadMovimiento < 0 ? abs($cantidadMovimiento) : 0,
-                "Existencia" => $existencia, 
-                "C.Unit" => $precioUnitario,
-                "Debe" => $debe,
-                "Haber" => $haber,
-                "Saldo" => $saldo,
-                // Detalle de los lotes pendientes (el inventario final)
-                "Lotes_Pendientes" => $entradas
-            ];
-            
-            // Para asegurar que el PUP y el detalle final estén en el último registro
-            if ($es_ultimo_movimiento) {
-                $registro['PUP_Final'] = $pup_final;
-            }
+            if (is_array($precios_divididos) && count($precios_divididos) > 0) {
+                foreach($precios_divididos as $dividido){
+                    $saldo_final_of -= floatval($dividido['cantidad'])* floatval($dividido['precio']);
 
-            $resultado[] = $registro;
+                    $registro = [
+                        "compra_de"=> $dividido['compra_de'],
+                        "idstock" => $movimiento['id_stock'],
+                        "Fecha" => $movimiento['fecha'],
+                        "Concepto" => $this->getConceptoKardex($movimiento['codigo']),
+                        "Entrada" => 0,
+                        "Salida" => $dividido['cantidad'],
+                        "Existencia" => $existencia, 
+                        "C.Unit" => $dividido['precio'], // En salidas, es el detalle de precios usados
+                        "Debe" => $debe,
+                        "Haber" => floatval($dividido['cantidad'])* floatval($dividido['precio']),
+                        "Saldo" => $saldo_final_of,
+                        "saldo_final" => $saldo_final_of,
+                        // Detalle de los lotes pendientes (para el último registro, es el inventario final)
+                        "Lotes_Pendientes" => $entradas
+                    ];
+                    if ($es_ultimo_movimiento) {
+                        $registro['PUP_Final'] = $pup_final;
+                    }
+
+                    $resultado[] = $registro;
+                }
+                
+            }else{
+                $registro = [
+                    "compra_de" => 0,
+                    "idstock" => $movimiento['id_stock'],
+                    "Fecha" => $movimiento['fecha'],
+                    "Concepto" => $this->getConceptoKardex($movimiento['codigo']), 
+                    "Entrada" => $cantidadMovimiento > 0 ? $cantidadMovimiento : 0,
+                    "Salida" => $cantidadMovimiento < 0 ? abs($cantidadMovimiento) : 0,
+                    "Existencia" => $existencia, 
+                    "C.Unit" => $precioUnitario,
+                    "Debe" => $debe,
+                    "Haber" => $haber,
+                    "Saldo" => $saldo,
+                    "saldo_final" => $saldo_final_of,
+
+                    // Detalle de los lotes pendientes (el inventario final)
+                    "Lotes_Pendientes" => $entradas
+                ];
+                if ($es_ultimo_movimiento) {
+                    $registro['PUP_Final'] = $pup_final;
+                }
+
+                $resultado[] = $registro;
+            }
+            $saldo_final_of = $saldo;
+
             next($KARDEX); // Avanza el puntero para la siguiente iteración
+
+            // Para asegurar que el PUP y el detalle final estén en el último registro
+           
         }
 
      
@@ -497,60 +696,30 @@ class Kardex
         ];
     }
 
-    public function Promedio($KARDEX, $idproducto, $count){
+    public function Promedio($KARDEX){
         $resultado = [];
         // En Promedio Ponderado, solo necesitamos el Saldo Valor y la Existencia Total
         $existenciaTotal = 0;
         $saldoValorado = 0;
         $costoUnitarioPromedio = 0;
         $saldo_inicial = [];
-        if($count > 0 ){
-            $sql = "
-                SELECT *
-                FROM saldos_iniciales_metodo
-                WHERE productos_almacen_id_productos_almacen = ?
-                AND metodo = 'PROMEDIO'
-                ORDER BY fecha DESC
-                LIMIT 1
-            ";
-            $stm = $this->cm->prepare($sql);
+        $entradas = []; // Entradas pendientes [cantidad, precio_unitario]
 
-            if (!$stm) {
-                return ["estado" => "error", "mensaje" => "No se pudo preparar la consulta del saldo inicial"];
-            }
 
-            $stm->bind_param('i', $idproducto);
-            $stm->execute();
-            $result = $stm->get_result();
-
-            // Solo un registro
-            $saldo = $result->fetch_assoc(); 
-            $saldo_inicial = [
-                "id_stock"=> 0,
-                "stock" => $saldo['cantidad'],
-                "fecha" => $saldo['fecha'],
-                "codigo" => 'NUE',
-                "estado" => 2,
-                "productos_almacen_id_productos_almacen" => $saldo['productos_almacen_id_productos_almacen'],
-                "cantidad_movimiento" => $saldo['cantidad'],
-                "precio_unitario" => $saldo['costo_unitario'],
-
-            ];
-            array_unshift($KARDEX, $saldo_inicial);
-
-        }
-        
         foreach ($KARDEX as $movimiento) {
+            $cod = $movimiento['codigo'];
+
             $cantidadMovimiento = floatval($movimiento['cantidad_movimiento']);
             $precioUnitario = floatval($movimiento['precio_unitario']);
             $debe = 0;
             $haber = 0;
             $cUnit = 0;
             
-            // El último movimiento es el último índice del array
-            $es_ultimo_movimiento = (key($KARDEX) === array_key_last($KARDEX)); 
+            $codigos_entradas = ['MIC'];
+            $codigos_salidas = ['VE', 'COT', 'EXT', 'MER'];
+            $codigos_especiales = ['DEV', 'AN'];
 
-            if($cantidadMovimiento > 0){
+            if(in_array($cod, $codigos_entradas)){
                 // 1. Entrada: Se recalcula el promedio ponderado
                 
                 $valorEntrada = $cantidadMovimiento * $precioUnitario;
@@ -565,8 +734,14 @@ class Kardex
                 
                 // Recalculamos el Costo Unitario Promedio (solo después de una entrada)
                 $costoUnitarioPromedio = $existenciaTotal > 0 ? ($saldoValorado / $existenciaTotal) : 0;
+                 $entradas[] = [
+                    'idstock' => $movimiento['id_stock'],
+                    'cantidad' => abs($cantidadMovimiento),
+                    'precio_unitario' => $precioUnitario
+                ];
                 
-            } else {
+            }
+            elseif(in_array($cod, $codigos_salidas)){
                 // 2. Salida: Se usa el promedio ponderado CALCULADO antes de esta salida
                 
                 $cantidad_salida = abs($cantidadMovimiento);
@@ -591,6 +766,31 @@ class Kardex
                     $saldoValorado = 0;
                     $costoUnitarioPromedio = 0;
                 }
+            }elseif (in_array($cod, $codigos_especiales)) {
+                // Buscar el movimiento original desde el cual se hace la devolución/anulación
+                foreach ($resultado as $mov) {
+                    if (isset($movimiento['precio_de']) && $mov['idstock'] == $movimiento['precio_de']) {
+                        $precioUnitario = floatval($mov['C.Unit']);
+                        break;
+                    }
+                }
+                // echo $compra_de;
+                //Si se encontró el lote original, se agrega la cantidad devuelta a ese lote
+               
+
+                $valorEntrada = $cantidadMovimiento * $precioUnitario;
+                $debe = $valorEntrada;
+                $cUnit = $precioUnitario; // Costo unitario de la compra
+
+                // Nuevo Saldo Valor = Saldo Anterior + Valor de la Nueva Entrada
+                $saldoValorado += $valorEntrada;
+                
+                // Nueva Existencia Total = Existencia Anterior + Cantidad de la Entrada
+                $existenciaTotal += $cantidadMovimiento;
+                
+                // Recalculamos el Costo Unitario Promedio (solo después de una entrada)
+                $costoUnitarioPromedio = $existenciaTotal > 0 ? ($saldoValorado / $existenciaTotal) : 0;
+                
             }
             
             // **********************************************
@@ -634,9 +834,136 @@ class Kardex
             'saldo_inicial' => $saldo_inicial,
         ];
     }
-    public function kardex($fechainicio, $fechafinal, $idalmacen, $idproducto)
+    public function Promedio_($KARDEX) {
+        $resultado = [];
+        $existenciaTotal = 0;
+        $saldoValorado = 0;
+        $costoUnitarioPromedio = 0;
+        $saldo_inicial = [];
+        $entradas = [];
+
+        foreach ($KARDEX as $movimiento) {
+            $cod = $movimiento['codigo'];
+            $cantidadMovimiento = floatval($movimiento['cantidad_movimiento']);
+            $precioUnitario = floatval($movimiento['precio_unitario']);
+
+            if ($this->esEntrada($cod)) {
+                [$existenciaTotal, $saldoValorado, $costoUnitarioPromedio, $debe, $cUnit] =
+                    $this->procesarEntrada($cantidadMovimiento, $precioUnitario, $existenciaTotal, $saldoValorado);
+            } 
+            elseif ($this->esSalida($cod)) {
+                [$existenciaTotal, $saldoValorado, $costoUnitarioPromedio, $haber, $cUnit] =
+                    $this->procesarSalida($cantidadMovimiento, $costoUnitarioPromedio, $existenciaTotal, $saldoValorado);
+            } 
+            elseif ($this->esEspecial($cod)) {
+                [$existenciaTotal, $saldoValorado, $costoUnitarioPromedio, $debe, $cUnit] =
+                    $this->procesarEspecial($movimiento, $resultado, $existenciaTotal, $saldoValorado);
+            }
+
+            // Registro
+            $resultado[] = $this->crearRegistro(
+                $movimiento,
+                $existenciaTotal,
+                $saldoValorado,
+                $cUnit ?? 0,
+                $debe ?? 0,
+                $haber ?? 0,
+                $costoUnitarioPromedio
+            );
+
+            // Reiniciar valores para evitar arrastres
+            $debe = $haber = $cUnit = 0;
+        }
+
+        $saldo_final = [
+            "Saldo_Valorado" => $saldoValorado,
+            "Existencia_Final" => $existenciaTotal,
+            "Precio_Unitario_Promedio_Ponderado_Final" => $costoUnitarioPromedio,
+        ];
+
+        return [
+            'kardex' => $resultado,
+            'saldo_final' => $saldo_final,
+            'saldo_inicial' => $saldo_inicial,
+        ];
+    }
+    private function esEntrada($codigo) {
+        return in_array($codigo, ['MIC']);
+    }
+
+    private function esSalida($codigo) {
+        return in_array($codigo, ['VE', 'COT', 'EXT', 'MER']);
+    }
+
+    private function esEspecial($codigo) {
+        return in_array($codigo, ['DEV', 'AN']);
+    }
+
+    private function procesarEntrada($cantidad, $precio, $existencia, $saldo) {
+        $valorEntrada = $cantidad * $precio;
+        $existencia += $cantidad;
+        $saldo += $valorEntrada;
+        $costoPromedio = $existencia > 0 ? $saldo / $existencia : 0;
+
+        return [$existencia, $saldo, $costoPromedio, $valorEntrada, $precio];
+    }
+    private function procesarSalida($cantidad, $costoPromedio, $existencia, $saldo) {
+        $cantidadSalida = abs($cantidad);
+        $costoUnitario = $costoPromedio ?: 0;
+        $valorSalida = $cantidadSalida * $costoUnitario;
+
+        $existencia -= $cantidadSalida;
+        $saldo -= $valorSalida;
+
+        // Corrección flotante
+        if ($existencia < 0.0001) {
+            $existencia = 0;
+            $saldo = 0;
+            $costoPromedio = 0;
+        }
+
+        return [$existencia, $saldo, $costoPromedio, $valorSalida, $costoUnitario];
+    }
+    private function procesarEspecial($movimiento, $resultado, $existencia, $saldo) {
+        $precioUnitario = 0;
+
+        if (isset($movimiento['precio_de'])) {
+            foreach ($resultado as $mov) {
+                if ($mov['idstock'] == $movimiento['precio_de']) {
+                    $precioUnitario = floatval($mov['C.Unit']);
+                    break;
+                }
+            }
+        }
+
+        $valorEntrada = abs($movimiento['cantidad_movimiento']) * $precioUnitario;
+        $existencia += abs($movimiento['cantidad_movimiento']);
+        $saldo += $valorEntrada;
+        $costoPromedio = $existencia > 0 ? $saldo / $existencia : 0;
+
+        return [$existencia, $saldo, $costoPromedio, $valorEntrada, $precioUnitario];
+    }
+    private function crearRegistro($movimiento, $existencia, $saldo, $cUnit, $debe, $haber, $costoPromedio) {
+        $cantidad = floatval($movimiento['cantidad_movimiento']);
+
+        return [
+            "idstock" => $movimiento['id_stock'],
+            "Fecha" => $movimiento['fecha'],
+            "Concepto" => $this->getConceptoKardex($movimiento['codigo']),
+            "Entrada" => $cantidad > 0 ? $cantidad : 0,
+            "Salida" => $cantidad < 0 ? abs($cantidad) : 0,
+            "Existencia" => $existencia,
+            "C.Unit" => round($cUnit, 2),
+            "Debe" => $debe,
+            "Haber" => $haber,
+            "Saldo" => $saldo,
+            "Costo_Promedio_Actual" => $costoPromedio,
+        ];
+    }
+
+    public function kardex($fechainicio, $fechafinal, $idalmacen, $idproducto, $idmd5)
     {
-        $this->prepararKardex($fechainicio, $fechafinal,$idproducto);
+        $this->prepararKardex($fechainicio, $fechafinal,$idproducto, $idmd5);
     
     }
 

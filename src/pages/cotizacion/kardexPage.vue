@@ -72,20 +72,6 @@
                 </template>
               </q-select>
             </div>
-            <div class="col-md-4 col-sm-6 col-xs-12">
-              <label for="metodo">Método de valoración *</label>
-              <q-select
-                dense
-                outlined
-                v-model="metodoValoracion"
-                :options="metodosValoracion"
-                id="metodo"
-                emit-value
-                map-options
-                :rules="[(val) => !!val || 'Campo requerido']"
-                @update:model-value="recalcularKardex"
-              />
-            </div>
           </div>
           <div class="row q-mt-md justify-center">
             <q-btn type="submit" label="Generar reporte" color="primary" class="q-mr-sm" />
@@ -95,18 +81,18 @@
               color="secondary"
               @click="cargarPDF"
             />
-            <q-btn
+            <!-- <q-btn
               v-if="datosFiltrados.length > 0"
               label="Saldos Registrados"
               color="secondary"
               @click="kardex = false"
-            />
+            /> -->
           </div>
         </q-form>
       </q-card-section>
 
       <q-table
-        title="Reporte Kardex"
+        :title="title"
         :rows="datosFiltrados"
         :columns="columns"
         row-key="c"
@@ -140,10 +126,18 @@
             <q-td class="text-right">{{ item.Entrada }}</q-td>
             <q-td class="text-right">{{ item.Salida }}</q-td>
             <q-td class="text-right">{{ item.Existencia }}</q-td>
-            <q-td class="text-right">{{ item['C.Unit'] }}</q-td>
-            <q-td class="text-right">{{ item.Debe }}</q-td>
-            <q-td class="text-right">{{ item.Haber }}</q-td>
-            <q-td class="text-right">{{ item.Saldo }}</q-td>
+            <q-td class="text-right">{{
+              divisaActiva + ' ' + parseFloat(item['C.Unit']).toFixed(2)
+            }}</q-td>
+            <q-td class="text-right">{{
+              divisaActiva + ' ' + parseFloat(item.Debe).toFixed(2)
+            }}</q-td>
+            <q-td class="text-right">{{
+              divisaActiva + ' ' + parseFloat(item.Haber).toFixed(2)
+            }}</q-td>
+            <q-td class="text-right">{{
+              divisaActiva + ' ' + parseFloat(item.Saldo).toFixed(2)
+            }}</q-td>
           </q-tr>
         </template>
       </q-table>
@@ -167,14 +161,14 @@
         </q-card>
       </q-dialog>
       <kardexSaldoFinal :saldo-final="saldoFinal" />
-      <div class="row flex justify-end">
+      <!-- <div class="row flex justify-end">
         <q-btn
           color="green"
           text-color="white"
           label="Confirmar saldo final"
           @click="registrarSaldoFinal"
         />
-      </div>
+      </div> -->
     </div>
     <div v-else>
       <saldosPage :producto="idproductoR" @close="kardex = true" />
@@ -192,9 +186,10 @@ import { obtenerFechaActualDato, obtenerFechaPrimerDiaMesActual } from 'src/comp
 import { useCurrencyStore } from 'src/stores/currencyStore'
 import kardexSaldoFinal from './kardexSaldoFinal.vue'
 import saldosPage from './saldosPage.vue'
-
-const divisaActiva = useCurrencyStore()
-console.log(divisaActiva.codigo)
+import { idempresa_md5 } from 'src/composables/FuncionesGenerales'
+const idempresa = idempresa_md5()
+const divisaActiva = useCurrencyStore().simbolo
+console.log(divisaActiva)
 const usuario = validarUsuario()[0]
 const $q = useQuasar()
 const kardex = ref(true)
@@ -206,13 +201,8 @@ const idproductoR = ref(null)
 const metodoValoracion = ref('PEPS') // Valor por defecto
 const saldoFinal = ref({})
 const mostrarSaldos = ref(false) // controla si se muestran los saldos iniciales
-
+const title = ref('Reporte Kardex')
 // Opciones para el selector de métodos
-const metodosValoracion = [
-  { label: 'PEPS (Primeras Entradas, Primeras Salidas)', value: 'PEPS' },
-  { label: 'UEPS (Últimas Entradas, Primeras Salidas)', value: 'UEPS' },
-  { label: 'Promedio Ponderado', value: 'PROMEDIO' },
-]
 
 // Datos y estados
 const almacenes = ref([])
@@ -239,7 +229,7 @@ const columns = [
     label: 'C. Unitario',
     field: 'C.Unit',
     align: 'right',
-    format: (val) => val,
+    format: (val) => divisaActiva + ' ' + parseFloat(val).toFixed(2),
     sortable: true,
   },
   {
@@ -247,7 +237,7 @@ const columns = [
     label: 'Debe',
     field: 'Debe',
     align: 'right',
-    format: (val) => formatCurrency(val),
+    format: (val) => divisaActiva + ' ' + parseFloat(val).toFixed(2),
     sortable: true,
   },
   {
@@ -255,7 +245,7 @@ const columns = [
     label: 'Haber',
     field: 'Haber',
     align: 'right',
-    format: (val) => formatCurrency(val),
+    format: (val) => divisaActiva + ' ' + parseFloat(val).toFixed(2),
     sortable: true,
   },
   {
@@ -263,14 +253,11 @@ const columns = [
     label: 'Saldo',
     field: 'Saldo',
     align: 'right',
-    format: (val) => formatCurrency(val),
+    format: (val) => divisaActiva + ' ' + parseFloat(val).toFixed(2),
     sortable: true,
   },
 ]
-const formatCurrency = (value) => {
-  if (typeof value !== 'number') return value
-  return new Intl.NumberFormat('es-BO', { style: 'currency', currency: 'BOB' }).format(value)
-}
+
 // Computed
 const almacenesOptions = computed(() => {
   return [{ almacen: 'Todos los almacenes', idalmacen: 0 }, ...almacenes.value]
@@ -326,7 +313,6 @@ async function listaAlmacenes() {
 
     const response = await api.get(endpoint)
     const data = response.data
-    console.log(data)
     if (data && data.length > 0) {
       almacenes.value = data.filter((u) => u.idusuario === usuario.idusuario)
     } else {
@@ -344,7 +330,6 @@ async function listaProductosDisponibles() {
     const endpoint = `listaProductoAlmacen/${idempresa}`
     const response = await api.get(endpoint)
     const data = response.data
-    console.log(data)
     if (data && data.length > 0) {
       if (almacenR.value === 0) {
         productosDisponibles.value = data
@@ -379,20 +364,16 @@ async function generarReporte() {
   }
 
   try {
-    const endpoint = `kardex/${fechaiR.value}/${fechafR.value}/${almacenR.value}/${idproductoR.value}`
-    console.log(endpoint)
+    const endpoint = `kardex/${fechaiR.value}/${fechafR.value}/${almacenR.value}/${idproductoR.value}/${idempresa}`
     const response = await api.get(endpoint)
-    console.log(response)
     const data = response.data
-    console.log(data.PEPS)
-    console.log(data.UEPS)
-    console.log(data.PROMEDIO)
     // Guardar los datos originales para recalcular con diferentes métodos
     movimientosOriginales.value = data
     datosOriginales.value = data
+    metodoValoracion.value = Object.keys(response.data)[0]
+    title.value += ' ' + metodoValoracion.value
     procesarMovimientos()
     // Procesar según el método seleccionado
-
     reporteGenerado.value = true
   } catch (error) {
     console.error(error)
@@ -417,126 +398,156 @@ function procesarMovimientos() {
       datosFiltrados.value = calcularPEPS(movimientosOriginales.value)
   }
 }
-async function registrarSaldoFinal() {
-  const movimientos = movimientosOriginales.value
-  const saldo_peps = movimientos.PEPS.saldo_final
-  const saldo_ueps = movimientos.UEPS.saldo_final
-  const saldo_promedio = movimientos.PROMEDIO.saldo_final
-  console.log(saldo_peps, saldo_ueps, saldo_promedio)
-  const peps = {
-    ver: 'registrarSaldo',
-    id: idproductoR.value,
-    fecha: fechafR.value,
-    metodo: 'PEPS',
-    cantidad: saldo_peps['Existencia_Final'],
-    precio: saldo_peps['Precio_Unitario_Promedio_Ponderado_Final'],
-  }
-  const ueps = {
-    ver: 'registrarSaldo',
-    id: idproductoR.value,
-    fecha: fechafR.value,
-    metodo: 'UEPS',
-    cantidad: saldo_ueps['Existencia_Final'],
-    precio: saldo_ueps['Precio_Unitario_Promedio_Ponderado_Final'],
-  }
-  const promedio = {
-    ver: 'registrarSaldo',
-    id: idproductoR.value,
-    fecha: fechafR.value,
-    metodo: 'PROMEDIO',
-    cantidad: saldo_promedio['Existencia_Final'],
-    precio: saldo_promedio['Precio_Unitario_Promedio_Ponderado_Final'],
-  }
-  console.log(peps, ueps, promedio)
-  try {
-    const [resPEPS, resUEPS, resPROM] = await Promise.all([
-      api.post('', peps),
-      api.post('', ueps),
-      api.post('', promedio),
-    ])
-    console.log('PEPS:', resPEPS.data)
-    console.log('UEPS:', resUEPS.data)
-    console.log('PROMEDIO:', resPROM.data)
-  } catch (error) {
-    console.error('Error al registrar saldos:', error)
-  }
-}
-function recalcularKardex() {
-  if (reporteGenerado.value) {
-    procesarMovimientos()
-  }
-}
+// async function registrarSaldoFinal() {
+//   const movimientos = movimientosOriginales.value
+//   const saldo_peps = movimientos.PEPS.saldo_final
+//   const saldo_ueps = movimientos.UEPS.saldo_final
+//   const saldo_promedio = movimientos.PROMEDIO.saldo_final
+//   console.log(saldo_peps, saldo_ueps, saldo_promedio)
+//   const peps = {
+//     ver: 'registrarSaldo',
+//     id: idproductoR.value,
+//     fecha: fechafR.value,
+//     metodo: 'PEPS',
+//     cantidad: saldo_peps['Existencia_Final'],
+//     precio: saldo_peps['Precio_Unitario_Promedio_Ponderado_Final'],
+//   }
+//   const ueps = {
+//     ver: 'registrarSaldo',
+//     id: idproductoR.value,
+//     fecha: fechafR.value,
+//     metodo: 'UEPS',
+//     cantidad: saldo_ueps['Existencia_Final'],
+//     precio: saldo_ueps['Precio_Unitario_Promedio_Ponderado_Final'],
+//   }
+//   const promedio = {
+//     ver: 'registrarSaldo',
+//     id: idproductoR.value,
+//     fecha: fechafR.value,
+//     metodo: 'PROMEDIO',
+//     cantidad: saldo_promedio['Existencia_Final'],
+//     precio: saldo_promedio['Precio_Unitario_Promedio_Ponderado_Final'],
+//   }
+//   console.log(peps, ueps, promedio)
+//   try {
+//     const [resPEPS, resUEPS, resPROM] = await Promise.all([
+//       api.post('', peps),
+//       api.post('', ueps),
+//       api.post('', promedio),
+//     ])
+//     console.log('PEPS:', resPEPS.data)
+//     console.log('UEPS:', resUEPS.data)
+//     console.log('PROMEDIO:', resPROM.data)
+//   } catch (error) {
+//     console.error('Error al registrar saldos:', error)
+//   }
+// }
 
 // Métodos de valoración de inventarios
 function calcularPEPS(movimientos) {
-  console.log(movimientos.PEPS.kardex)
-
   saldoFinal.value = movimientos.PEPS.saldo_final
-  console.log(saldoFinal.value)
   const salida = filtrarLotesPendientes(movimientos.PEPS.kardex, fechaiR.value)
-  console.log(salida)
   saldosIniciales.value = salida.compras || []
-  console.log(saldosIniciales.value)
 
   return salida.movimientosDespues || salida || []
 }
 
 function filtrarLotesPendientes(movimientos, fechaInicial) {
-  const fechaFiltro = new Date(fechaInicial)
+  console.log(metodoValoracion.value)
+  if (metodoValoracion.value == 'PROMEDIO') {
+    const fechaFiltro = new Date(fechaInicial)
+    console.log(metodoValoracion.value)
 
-  // Movimientos posteriores o iguales a la fecha inicial
-  const movDes = movimientos.filter((mov) => new Date(mov.Fecha) >= fechaFiltro)
+    // Movimientos posteriores o iguales a la fecha inicial
+    const movDes = movimientos.filter((mov) => new Date(mov.Fecha) >= fechaFiltro)
 
-  // Movimientos anteriores a la fecha inicial
-  const movimientosAntes = movimientos.filter((mov) => new Date(mov.Fecha) < fechaFiltro)
+    // Movimientos anteriores a la fecha inicial
+    const movimientosAntes = movimientos.filter((mov) => new Date(mov.Fecha) < fechaFiltro)
 
-  // Último movimiento antes de la fecha inicial
-  const ultimo_movimiento =
-    movimientosAntes.length > 0 ? movimientosAntes[movimientosAntes.length - 1] : null
+    // Último movimiento antes de la fecha inicial
+    const ultimo_movimiento =
+      movimientosAntes.length > 0 ? movimientosAntes[movimientosAntes.length - 1] : null
+    console.log(ultimo_movimiento)
 
-  if (!ultimo_movimiento || !ultimo_movimiento.Lotes_Pendientes) {
-    // Si no hay lotes pendientes, devolvemos solo los movimientos posteriores
-    return movDes
-  }
-
-  const com = []
-
-  // Recorremos los lotes pendientes y generamos filas iniciales
-  ultimo_movimiento.Lotes_Pendientes.forEach((p) => {
-    const movimiento = movimientosAntes.find((obj) => Number(obj.idstock) === Number(p.idstock))
-    if (movimiento) {
-      movimiento.Entrada = p.cantidad
-      movimiento.Existencia = p.cantidad
-      movimiento.Debe = parseFloat(p.cantidad) * parseFloat(p.precio_unitario)
-      movimiento.Saldo = ultimo_movimiento.Saldo
-      movimiento.ini = true
-      com.push({ ...movimiento })
+    // Recorremos los lotes pendientes y generamos filas iniciales
+    let compra = []
+    if (ultimo_movimiento) {
+      compra = [
+        {
+          idstock: ultimo_movimiento.idstock,
+          Fecha: ultimo_movimiento.Fecha,
+          Concepto: 'SALDO INICIAL',
+          Entrada: 0,
+          Salida: 0,
+          Existencia: ultimo_movimiento.Existencia,
+          'C.Unit': ultimo_movimiento['C.Unit'],
+          Debe: 0,
+          Haber: 0,
+          Saldo: ultimo_movimiento.Saldo,
+          Costo_Promedio_Actual: ultimo_movimiento['C.Unit'],
+        },
+      ]
     }
-  })
-  console.log(com)
-  console.log(movDes)
-  // Añadimos las filas de compras al inicio de movimientosDespues
-  return { compras: com || [], movimientosDespues: movDes || [] }
+
+    console.log(compra)
+    // Añadimos las filas de compras al inicio de movimientosDespues
+    return { compras: compra || [], movimientosDespues: movDes || [] }
+  } else {
+    const fechaFiltro = new Date(fechaInicial)
+
+    // Movimientos posteriores o iguales a la fecha inicial
+    const movDes = movimientos.filter((mov) => new Date(mov.Fecha) >= fechaFiltro)
+
+    // Movimientos anteriores a la fecha inicial
+    const movimientosAntes = movimientos.filter((mov) => new Date(mov.Fecha) < fechaFiltro)
+
+    // Último movimiento antes de la fecha inicial
+    const ultimo_movimiento =
+      movimientosAntes.length > 0 ? movimientosAntes[movimientosAntes.length - 1] : null
+
+    if (!ultimo_movimiento || !ultimo_movimiento.Lotes_Pendientes) {
+      // Si no hay lotes pendientes, devolvemos solo los movimientos posteriores
+      return movDes
+    }
+
+    const com = []
+
+    // Recorremos los lotes pendientes y generamos filas iniciales
+    ultimo_movimiento.Lotes_Pendientes.forEach((p, index) => {
+      const movimiento = movimientosAntes.find((obj) => Number(obj.idstock) === Number(p.idstock))
+      if (movimiento) {
+        movimiento.Concepto = 'SALDO ' + (index + 1)
+        movimiento.Entrada = p.cantidad
+        movimiento.Existencia = p.cantidad
+        movimiento.Debe = parseFloat(p.cantidad) * parseFloat(p.precio_unitario)
+        movimiento.Saldo = ultimo_movimiento.Saldo
+        movimiento.ini = true
+        com.push({ ...movimiento })
+      }
+    })
+    console.log(com)
+    console.log(movDes)
+    // Añadimos las filas de compras al inicio de movimientosDespues
+    return { compras: com || [], movimientosDespues: movDes || [] }
+  }
 }
 function calcularUEPS(movimientos) {
   console.log(movimientos)
 
-  let kardex = []
-  kardex = movimientos.UEPS.kardex
   saldoFinal.value = movimientos.UEPS.saldo_final
-  console.log(saldoFinal.value)
+  const salida = filtrarLotesPendientes(movimientos.UEPS.kardex, fechaiR.value)
+  saldosIniciales.value = salida.compras || []
 
-  return kardex
+  return salida.movimientosDespues || salida || []
 }
 function calcularPromedio(movimientos) {
   console.log(movimientos)
 
-  let kardex = []
-  kardex = movimientos.PROMEDIO.kardex
   saldoFinal.value = movimientos.PROMEDIO.saldo_final
-  console.log(saldoFinal.value)
+  const salida = filtrarLotesPendientes(movimientos.PROMEDIO.kardex, fechaiR.value)
+  saldosIniciales.value = salida.compras || []
 
-  return kardex
+  return salida.movimientosDespues || salida || []
 }
 
 function cargarPDF() {
