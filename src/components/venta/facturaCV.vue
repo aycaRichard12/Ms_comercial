@@ -509,7 +509,7 @@ const formData = ref({
   // tipoDocumento: null,
   // numeroDocumento: '',
   pagosDivididos: [
-    { metodoPago: null, monto: 0, porcentaje: 0 }, // Initial split payment method credito
+    { metodoPago: null, monto: 0, porcentaje: 0 }, // Initial split payment method credito numeroDocumento
   ],
 })
 async function crearFormularioFacturaCompraVenta() {
@@ -940,7 +940,7 @@ const onSubmit = async () => {
     cartData.valorpagos = montoPagos
     cartData.dias = periodo
 
-    cartData.puntoVenta = puntoventa.Data.idpuntoventa
+    cartData.puntoVenta = Number(puntoventa.Data.idpuntoventa)
     cartData.puntoVentaSin = puntoventa.value
     cartData.idleyenda = leyendaActiva.leyenda.id
     cartData.listaFactura.fechaEmision = obtenerHoraISO8601()

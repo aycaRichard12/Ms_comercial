@@ -80,7 +80,6 @@ async function crearPuntoVenta() {
 
   try {
     loading.value = true
-
     console.log(props.dato)
     const puntoventa = {
       nombre: props.dato.nombre,

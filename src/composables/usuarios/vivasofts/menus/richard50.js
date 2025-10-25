@@ -213,6 +213,11 @@ export const menurichard50 = [
             permiso: '1111',
           },
           {
+            titulo: 'Configuración-General-Tipo Kardex',
+            codigo: 'tipokardex-03afdbd66e7929b125f8597834fa83a4',
+            permiso: '1111',
+          },
+          {
             titulo: 'Configuración-Producto-Categoría',
             codigo: 'categoriadeproducto-03afdbd66e7929b125f8597834fa83a4',
             permiso: '1111',

@@ -30,7 +30,7 @@
               outlined
               emit-value
               map-options
-              @update:model-value="listarRobos"
+              @update:model-value="cargarRobos"
             />
           </div>
           <div class="col-12 col-md-4">
@@ -210,6 +210,7 @@
                   input-debounce="300"
                   clearable
                   @filter="filtrarProductos"
+                  @update:model-value="cargarComprasLotes"
                 >
                   <template v-slot:no-option>
                     <q-item>
@@ -238,6 +239,44 @@
                   outlined
                   type="number"
                   :rules="[(val) => val <= formularioDetalle.stock || 'Cantidad excede stock']"
+                />
+              </div>
+              <div class="col-12 col-md-3">
+                <label for="provedor">Proveedor*</label>
+                <q-select
+                  v-model="formularioDetalle.proveedor"
+                  :options="filteredProveedores"
+                  id="provedor"
+                  dense
+                  outlined
+                  emit-value
+                  map-options
+                  use-input
+                  fill-input
+                  hide-selected
+                  input-debounce="0"
+                  clearable
+                  @clear="limpiarComprasFiltradas"
+                  @filter="filterFn"
+                  @update:model-value="filtrarComprasxProveedor"
+                />
+              </div>
+              <div class="col-12 col-md-9">
+                <label for="compras">Lote Compra*</label>
+                <q-select
+                  v-model="formularioDetalle.compra"
+                  :options="filterCompras"
+                  id="compras"
+                  dense
+                  outlined
+                  emit-value
+                  map-options
+                  use-input
+                  fill-input
+                  hide-selected
+                  input-debounce="0"
+                  clearable
+                  @filter="filterlotes"
                 />
               </div>
             </div>
@@ -317,6 +356,7 @@ import { cambiarFormatoFecha } from 'src/composables/FuncionesG'
 import { PDFextrabiosRobos } from 'src/utils/pdfReportGenerator'
 import { PDFComprovanteExtravio } from 'src/utils/pdfReportGenerator'
 import { obtenerPermisosPagina } from 'src/composables/FuncionesG'
+
 const [lectura, escritura, editar, eliminar] = obtenerPermisosPagina()
 console.log(lectura, escritura, editar, eliminar)
 const pdfData = ref(null)
@@ -340,6 +380,11 @@ const detalleActual = ref({})
 
 const modaldetalleProductos = ref(false)
 const autorizadoRobo = ref(false)
+const filteredProveedores = ref([])
+const Proveedores = ref([])
+const ComprasOriginales = ref([])
+const Compras = ref([])
+const filterCompras = ref([])
 // Datos del formulario
 const formulario = ref({
   id: null,
@@ -354,6 +399,8 @@ const formularioDetalle = ref({
   cantidad: 0,
   stock: 0,
   producto: null,
+  proveedor: null,
+  compra: null,
 })
 
 // Privilegios del usuario
@@ -420,7 +467,7 @@ const cargarAlmacenes = async () => {
   }
 }
 
-const listarRobos = async () => {
+const cargarRobos = async () => {
   if (!idAlmacenFiltro.value) return
 
   try {
@@ -466,7 +513,7 @@ const registrarRobo = async () => {
 
     resetearFormulario()
     mostrarFormulario.value = false
-    listarRobos()
+    cargarRobos()
   } catch (error) {
     console.error('Error al registrar robo:', error)
     $q.notify({
@@ -510,7 +557,7 @@ const eliminarRobo = (id) => {
         type: 'positive',
         message: response.data.mensaje,
       })
-      listarRobos()
+      cargarRobos()
     } catch (error) {
       console.error('Error al eliminar robo:', error)
       $q.notify({
@@ -537,7 +584,7 @@ const cambiarEstado = (row) => {
         type: 'positive',
         message: response.data.mensaje,
       })
-      listarRobos()
+      cargarRobos()
     } catch (error) {
       console.error('Error al cambiar estado:', error)
       $q.notify({
@@ -566,6 +613,7 @@ const mostrarDetalle = async (idRobo, idalmacen, estado, row) => {
   modaldetalleProductos.value = true
   await cargarProductosDisponibles(idRobo, idalmacen)
   await listarDetalleRobo(idRobo)
+  await cargarProveedores()
 }
 
 const cargarProductosDisponibles = async (idRobo, idalmacen) => {
@@ -587,6 +635,50 @@ const cargarProductosDisponibles = async (idRobo, idalmacen) => {
     })
   }
 }
+async function cargarProveedores() {
+  try {
+    const response = await api.get(`listaProveedor/${idempresa}`)
+    console.log(response)
+    Proveedores.value = response.data.map((item) => ({
+      label: item.nombre,
+      value: item.id,
+    }))
+  } catch (error) {
+    console.error('Error al cargar proveedores:', error)
+    $q.notify({ type: 'negative', message: 'No se pudieron cargar los proveedores' })
+  }
+}
+async function cargarComprasLotes() {
+  const d = formularioDetalle.value
+  console.log(d)
+  try {
+    const response = await api.get(`listaLotesxProductoProveedor/${idempresa}`)
+    const res = response.data
+    const respuesta = res.data.filter(
+      (item) => Number(item.idproducto) === Number(d.idproductoalmacen),
+    )
+
+    const filtrado = respuesta.map((item) => ({
+      label:
+        'Nro Fac: ' +
+        item.nfactura +
+        ' Com: ' +
+        item.lote +
+        ' Cod: ' +
+        item.codigo +
+        ' Prov.: ' +
+        item.proveedor,
+      value: item.idingreso,
+      idproveedor: item.idproveedor,
+      idproducto: item.idproducto,
+    }))
+    ComprasOriginales.value = filtrado
+    Compras.value = filtrado
+  } catch (error) {
+    console.error('Error al cargar compras:', error)
+    $q.notify({ type: 'negative', message: 'No se pudieron cargar las compras' })
+  }
+}
 
 const filtrarProductos = (val, update) => {
   console.log(val, update)
@@ -602,7 +694,41 @@ const filtrarProductos = (val, update) => {
     }
   })
 }
+const limpiarComprasFiltradas = () => {
+  Compras.value = ComprasOriginales.value
+}
+const filtrarComprasxProveedor = () => {
+  const d = formularioDetalle.value
 
+  Compras.value = ComprasOriginales.value.filter(
+    (v) => Number(v.idproveedor) === Number(d.proveedor),
+  )
+  d.compra = null
+}
+const filterFn = (val, update) => {
+  update(() => {
+    if (val === '') {
+      filteredProveedores.value = Proveedores.value
+    } else {
+      const needle = val.toLowerCase()
+      const paraFiltrar = filteredProveedores.value
+      filteredProveedores.value = paraFiltrar.filter((v) => v.label.toLowerCase().includes(needle))
+    }
+  })
+}
+const filterlotes = (val, update) => {
+  update(() => {
+    if (val === '') {
+      filterCompras.value = Compras.value
+      console.log(filterCompras.value)
+    } else {
+      const fc = filterCompras.value
+      const needle = val.toLowerCase()
+
+      filterCompras.value = fc.filter((v) => v.label.toLowerCase().includes(needle))
+    }
+  })
+}
 const listarDetalleRobo = async (idRobo) => {
   try {
     console.log(idRobo)
@@ -625,6 +751,7 @@ const registrarDetalle = async () => {
     formdata.append('idrobo', detalleActual.value.robo)
     formdata.append('idproductoalmacen', formularioDetalle.value.idproductoalmacen)
     formdata.append('cantidad', formularioDetalle.value.cantidad)
+    formdata.append('compra', formularioDetalle.value.compra)
     formularioDetalle.value.id
       ? formdata.append('ver', 'editarDetallerobos')
       : formdata.append('ver', 'registrarDetallerobos')
@@ -777,7 +904,7 @@ const crearReporte = () => {
 
 // Watchers
 watch(idAlmacenFiltro, () => {
-  listarRobos()
+  cargarRobos()
 })
 
 watch(
@@ -809,7 +936,8 @@ onBeforeUnmount(() => {
 // Inicialización
 onMounted(() => {
   cargarAlmacenes()
-  listarRobos()
+
+  cargarRobos()
 })
 </script>
 
