@@ -794,7 +794,7 @@ class ventas
         echo json_encode($res);
     }
 
-    public function listaPuntoVentaFactura($idmd5)
+    public function listaPuntoVentaFactura($idmd5, $respuesta = null)
     {
         $res = "";
         $val = "";
@@ -806,10 +806,22 @@ class ventas
         WHERE r.id_usuario='$idusuario' AND pv.codigosin!= ''");
         if ($registro !== false) {
             while ($qwe = $this->cm->fetch($registro)) {
-                $val = array("idresponsable" => $qwe[0], "idpuntoventa" => $qwe[1], "nombre" => $qwe[2], "idalmacen" => $qwe[3], "codigosin" => $qwe[4]);
-                array_push($lista, $val);
+                if($respuesta == null){
+                    $val = array("idresponsable" => $qwe[0], "idpuntoventa" => $qwe[1], "nombre" => $qwe[2], "idalmacen" => $qwe[3], "codigosin" => $qwe[4]);
+                    array_push($lista, $val);
+                }elseif($respuesta == 1){
+                    $val = array( "nombre" => $qwe[2], "codigosin" => $qwe[4]);
+                    array_push($lista, $val);
+                }
+                
             }
-            $res = array("estado" => "exito", "mensaje" => "Lista encontradas", "datos" => $lista);
+
+            if($respuesta == null){
+                     $res = array("estado" => "exito", "mensaje" => "Lista encontradas", "datos" => $lista);
+            }elseif($respuesta == 1){
+                    $res = $lista;
+            }
+           
         } else {
             $res = array("estado" => "error", "mensaje" => "Ocurrio un problema, intentelo nuevamente");
         }

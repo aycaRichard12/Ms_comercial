@@ -1,5 +1,6 @@
 <?php
 require_once "apiTokens.php";
+date_default_timezone_set("America/La_Paz");
 class outVenta
 {
     // --- CONEXIONES Y CLASES AUXILIARES ---
@@ -235,11 +236,11 @@ class outVenta
             $stmt->bind_result($codigoDivisa,$codigoDivisaSin,$divisa);
             $stmt->fetch();
             $stmt->close();
-            echo json_encode([
-                "divisa" => $divisa,
-                "codigoDivisa" => $codigoDivisa,
-                "codigoDivisaSin" => $codigoDivisaSin,
-                "Estado" => "Activo",
+            echo json_encode([ 
+                
+                    "divisa" => $divisa,
+                    "codigoDivisa" => $codigoDivisa,
+                
             ]);
         } catch (Exception $e) {
             // $this->logger->log($e->getMessage());
@@ -276,18 +277,18 @@ class outVenta
                 "idstock"=> $producto['codigoStock'],
                 "idporcentaje"=> $producto['codigoPorcentaje'],
                 "candiponible"=> $producto['stock'],
-                "descripcion"=> $producto['descripcionProducto'],
-                "codigo"=> $producto['codigoProducto'],
+                "descripcion"=> $prod['descripcion'],
+                "codigo"=> $prod['codigo'],
                 "subtotal"=> $producto['subTotal'],
                 "datosAdicionales"=> '',
                 "despachado"=> 1, 
             ];
             if($factura != 0){
                 $LPF =[
-                    "codigoProducto"=> $producto['codigoProducto'],
+                    "codigoProducto"=> $prod['codigo'],
                     "codigoActividadSin"=> $prod['actividadsin'],
                     "codigoProductoSin"=> $prod['codigosin'],
-                    "descripcion"=> $producto['descripcionProducto'],
+                    "descripcion"=> $prod['descripcion'],
                     "unidadMedida"=> $prod['unidadsin'],
                     "precioUnitario"=> $producto['precioUnitario'],
                     "subTotal"=> $producto['subTotal'],
@@ -299,10 +300,10 @@ class outVenta
                 ];
 
                 $d = [
-                    "codigoProducto"=> $producto['codigoProducto'],
+                    "codigoProducto"=> $prod['codigo'],
                     "codigoActividadSin"=> $prod['actividadsin'],
                     "codigoProductoSin"=> $prod['codigosin'],
-                    "descripcion"=>  $producto['descripcionProducto'],
+                    "descripcion"=>  $prod['descripcion'],
                     "unidadMedida"=>  $prod['unidadsin'],
                     "precioUnitario"=> $producto['precioUnitario'],
                     "subTotal"=> $producto['subTotal'],
@@ -420,6 +421,7 @@ class outVenta
      */
     public function registrarVenta($data){
         $fecha_venta = date("Y-m-d");
+        $fechaEmision = date('Y-m-d\TH:i:s.000');
         $COD_SIN_METODO_PAGO = 0;
         $COD_SIN_DIVISA = 0;
         $TIPO_VENTA = 0;
@@ -454,7 +456,7 @@ class outVenta
                 "numeroFactura"=>"",
                 "nombreRazonSocial"=>$c['nombreComercial'],
                 "codigoPuntoVenta"=> $data['codigoPuntoVentaSin'],
-                "fechaEmision"=>$data['fechaEmision'],
+                "fechaEmision"=>$fechaEmision,
                 "cafc" =>"",
                 "codigoExcepcion"=>"",
                 "descuentoAdicional"=>$data['descuentoAdicional'],
@@ -481,7 +483,7 @@ class outVenta
             "idalmacen" => $almacen[0]['idalmacen'],
             "codigosinsucursal" => $almacen[0]['sucursales'][0]['codigosin'],
             "token" => $tokenEmizor,
-            "tipo" => 2,
+            "tipo" => $factura,
             "iddivisa" => $data['codigoDivisa'],
             "idcampana" => 0,
             "ventatotal" => $data['montoTotal'],
@@ -505,7 +507,7 @@ class outVenta
         ];
         //$fecha, $tipoventa, $tipopago, $idcliente, $idsucursal, $canalventa, $idmd5, $idmd5u, $jsonDetalles
         // echo json_encode(["fecha venta"=> $fecha_venta," TIPO_VENTA"=> $TIPO_VENTA,"idcliente"=> $c['idcliente'],"idsucursal"=> $c['idsucursal'],"id_empresa"=> $idmd5,"idusuario"=> $data['idusuario'],"jsonDetalles"=> $jsonDetalles]);
-        $this->venta->registroVenta($fecha_venta,$TIPO_VENTA,'contado',$c['idcliente'],$c['idsucursal'],'0',$idmd5,$data['idusuario'],$jsonDetalles);    
+       $this->venta->registroVenta($fecha_venta,$TIPO_VENTA,'contado',$c['idcliente'],$c['idsucursal'],'0',$idmd5,$data['idusuario'],$jsonDetalles);    
         
     }
     function tipo_documentos() {
@@ -530,10 +532,9 @@ class outVenta
                     ["documento" => "NIT", "codigo" => 5],
                 ];
 
-                echo json_encode([
-                    "estado" => "success",
-                    "resultado" => $documentos
-                ], JSON_UNESCAPED_UNICODE);
+                echo json_encode(
+                    $documentos
+                , JSON_UNESCAPED_UNICODE);
         } catch (Exception $e) {
             http_response_code(500);
             echo json_encode([
@@ -600,7 +601,7 @@ class outVenta
             $datostoken = $this->token->autenticarPeticion();
             $factura = $datostoken->data->tipo;
             if($factura == 2 || $factura == 1){
-                $this->funcionesVenta->listaPuntoVentaFactura($idmd5);
+                $this->funcionesVenta->listaPuntoVentaFactura($idmd5,1);
             }
         } catch (Exception $e) {
             http_response_code(500);
