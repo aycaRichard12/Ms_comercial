@@ -191,64 +191,65 @@ class ApiTokens
 
     public function obtenerTokenEmizor($md5)
     {
-        try {
-            // === Validar parámetro ===
-            $url = $this->endpoint[3] . "/administrador/api/listartokenempresa/" . $md5;
+        // try {
+        //     // === Validar parámetro ===
+        //     $url = $this->endpoint[3] . "/administrador/api/listartokenempresa/" . $md5;
 
-            // Inicializar cURL
-            $ch = curl_init();
-            curl_setopt($ch, CURLOPT_URL, $url);
-            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-            curl_setopt($ch, CURLOPT_TIMEOUT, 10); // máximo 10 segundos
-            curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+        //     // Inicializar cURL 
+        //     $ch = curl_init();
+        //     curl_setopt($ch, CURLOPT_URL, $url);
+        //     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        //     curl_setopt($ch, CURLOPT_TIMEOUT, 10); // máximo 10 segundos
+        //     curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
 
-            // Ejecutar petición
-            $response = curl_exec($ch);
+        //     // Ejecutar petición
+        //     $response = curl_exec($ch);
 
-            // Verificar errores de cURL
-            if ($response === false) {
-                $error = curl_error($ch);
-                curl_close($ch);
-                echo json_encode(["error" => "Error en cURL", "detalle" => $error]);
-                return null;
-            }
+        //     // Verificar errores de cURL
+        //     if ($response === false) {
+        //         $error = curl_error($ch);
+        //         curl_close($ch);
+        //         echo json_encode(["error" => "Error en cURL", "detalle" => $error]);
+        //         return null;
+        //     }
 
-            // Obtener código de respuesta HTTP
-            $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-            curl_close($ch);
+        //     // Obtener código de respuesta HTTP
+        //     $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        //     curl_close($ch);
 
-            // Si no es 200, mostrar error
-            if ($httpCode !== 200) {
-                echo json_encode(["error" => "HTTP Code $httpCode", "response" => $response]);
-                return null;
-            }
+        //     // Si no es 200, mostrar error
+        //     if ($httpCode !== 200) {
+        //         echo json_encode(["error" => "HTTP Code $httpCode", "response" => $response]);
+        //         return null;
+        //     }
 
-            // Decodificar JSON
-            $data = json_decode($response, true);
+        //     // Decodificar JSON
+        //     $data = json_decode($response, true);
 
-            // Verificar si JSON fue válido
-            if (json_last_error() !== JSON_ERROR_NONE) {
-                echo json_encode([
-                    "error" => "JSON inválido",
-                    "detalle" => json_last_error_msg(),
-                    "response" => $response
-                ], JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
-                return null;
-            }
-            // Retornar token valido
-            $ultimo = end($data);
-            return $ultimo['access_token'];
+        //     // Verificar si JSON fue válido
+        //     if (json_last_error() !== JSON_ERROR_NONE) {
+        //         echo json_encode([
+        //             "error" => "JSON inválido",
+        //             "detalle" => json_last_error_msg(),
+        //             "response" => $response
+        //         ], JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+        //         return null;
+        //     }
+        //     // Retornar token valido  
+        //     $ultimo = end($data);
+        //     return $ultimo['access_token'];
 
-        } catch (Exception $e) {
-            http_response_code(500);
-            echo json_encode([
-                'estado' => 'error',
-                'codigo' => 500,
-                'mensaje' => 'Error interno del servidor',
-                'detalle' => $e->getMessage()
-            ], JSON_UNESCAPED_UNICODE);
-            return null;
-        }
+        // } catch (Exception $e) {
+        //     http_response_code(500);
+        //     echo json_encode([
+        //         'estado' => 'error',
+        //         'codigo' => 500,
+        //         'mensaje' => 'Error interno del servidor',
+        //         'detalle' => $e->getMessage()
+        //     ], JSON_UNESCAPED_UNICODE);
+        //     return null;
+        // }
+        return "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJhdWQiOiIzMDAyMzIiLCJqdGkiOiJhNjM0NjIyMDdhOThkMDVjZDkzNWJkNDdiYjgwMzQ5MTgyZTIwODRmNWEyOTUxMGJiZGI5MTVhOTEyYTk3ZDM4ODg4MTRhY2ZlODE0MzgyMSIsImlhdCI6MTc1OTE1MzkzMywibmJmIjoxNzU5MTUzOTMzLCJleHAiOjE3OTA2ODk5MzMsInN1YiI6IiIsInNjb3BlcyI6W119.SBaYAQX50-0wa1UmHSCXabfoav9tBLLB_In9yt4IeJ7_hvopXc40E5Zh8UrHxzHPdgiQxODGSAg7WxVbFKqUc4IQzg1zhGsDDhmimJqJYPuwF-Y9mNMQHY3UM3QXSl5T0822Rf41YKBiDi3wku0BMoErIyupICG7ZiCnRqwlEs_hN-KZA23v0WT1eDstcivut6ahpKu3__XpDyf4taKIQEzYQTqOMbqN7FoupQTCTUn293U6a6UPG1ZG75-qnTsVr9poJuUii9395YWA9fhoqF09LLDZP2Qj_bsF2Oxv0PE_rlIJjUyo3NnrY_stgpbnvpASgFL_qQnQVWCHS80uEH4CsDnoB0p7yR0XrlQrGKVlCZtn-VUWH92E3PGDMCgaXMcJMZvjNdnlKOcKAGnrykpsFMQEl1057D_h29L2qep7X-A8xaHXurZAtXbkqKArFv75k4ID_YM4AN_QEeTi4FovijDYOEM4g4NJHyPi9QESD1y6Vp1yh7crFT9hPxVtBoPP3o4l0UkAGvrZRb5It2cu5dXpupvXQ0Y7HkWSZX-dcT_b9hLn7H0mTQZ5A2Cl8kIWTxX5v0-yENXfPvOfWeIdVG1YyQN_fwqMvfHOBGC5s4eMqSRWROcDhNkMVz0ET0TkoiO7X6gdW_DH2mWzQWDmHCRu6dC-_ew6cwNv7MQ";
     }
 
     public function verificarFactura($id_empresa) {
@@ -342,6 +343,55 @@ class ApiTokens
 
             // 5. Retornar los datos decodificados (payload del token)
             return $decoded;
+        } catch (\Exception $e) {
+            http_response_code(401);
+            echo json_encode(['estado' => 'error', 'mensaje' => 'Token inválido', 'detalle' => $e->getMessage()]);
+            exit;
+        }
+    }
+public function autenticarPeticionPrueba()
+    {
+
+        // 1. Obtener el encabezado Authorization
+        $headers = apache_request_headers();
+
+        if (!isset($headers['Authorization'])) {
+            http_response_code(401);
+            echo json_encode(['estado' => 'error', 'mensaje' => 'Token no enviado']);
+            exit;
+        }
+
+        // 2. Extraer el token (Formato: "Bearer <token>")
+        $authHeader = $headers['Authorization'];
+        if (!preg_match('/Bearer\s(\S+)/', $authHeader, $matches)) {
+            http_response_code(401);
+            echo json_encode(['estado' => 'error', 'mensaje' => 'Formato de token inválido']);
+            exit;
+        }
+
+        $jwt = $matches[1]; // Aquí está el token puro
+
+        // 3. Validar el token con la clave secreta
+        try {
+            $secret_key = 'mistersofts2025cm';
+            $decoded = JWT::decode($jwt, new Key($secret_key, 'HS256'));
+
+            // 4. Verificar también en la BD si el hash existe y está activo
+            $token_hash = hash('sha256', $jwt);
+            $sql = "SELECT * FROM auth_tokens WHERE token_hash = ? AND activo = 1 AND expira_en > NOW() AND id_empresa = ?";
+            $stmt = $this->cm->prepare($sql);
+            $stmt->bind_param("si", $token_hash, $decoded->data->id_empresa);
+            $stmt->execute();
+            $result = $stmt->get_result();
+
+            if ($result->num_rows === 0) {
+                http_response_code(401);
+                echo json_encode(['estado' => 'error', 'mensaje' => 'Token inválido o expirado']);
+                exit;
+            }
+
+            // 5. Retornar los datos decodificados (payload del token)
+            echo json_encode(["array" => $decoded]);
 
         } catch (\Exception $e) {
             http_response_code(401);
@@ -349,7 +399,6 @@ class ApiTokens
             exit;
         }
     }
-
     function sendResponse($statusCode, $message, $data = null) {
         http_response_code($statusCode);
         $response = [

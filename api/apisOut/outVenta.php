@@ -187,17 +187,43 @@ class outVenta
         }
     }
 
-    public function idProducto($idmd5P){
-        $consulta = $this->cm->query("select id_productos_almacen from productos_almacen WHERE MD5(id_productos_almacen) = '$idmd5P'");
-        if ($consulta->num_rows > 0) {
-            $fila = $this->cm->fetch($consulta);
-            $id = $fila[0];
-            return $id;
-        } else {
-            return "false";
-        }
+    public function obtenerDatosProductoPorMD5($idmd5P)
+    {
+        // Consulta uniendo productos_almacen con productos
+        $sql = "
+            SELECT 
+                pa.id_productos_almacen,
+                p.id_productos,
+                p.actividadsin,
+                p.codigosin,
+                p.unidadsin,
+                p.nombre,
+                p.codigo,
+                p.descripcion
+            FROM productos_almacen pa
+            INNER JOIN productos p ON p.id_productos = pa.productos_id_productos
+            WHERE MD5(pa.id_productos_almacen) = '$idmd5P'
+            LIMIT 1;
+        ";
 
+        $consulta = $this->cm->query($sql);
+
+        if ($consulta && $consulta->num_rows > 0) {
+            $fila = $this->cm->fetch($consulta);
+            return [
+                'id_productos_almacen' => $fila['id_productos_almacen'],
+                'actividadsin' => $fila['actividadsin'],
+                'codigosin' => $fila['codigosin'],
+                'unidadsin' => $fila['unidadsin'],
+                'nombre' => $fila['nombre'],
+                'codigo' => $fila['codigo'],
+                'descripcion' => $fila['descripcion']
+            ];
+        } else {
+            return null; // más limpio que devolver "false"
+        }
     }
+
     public function getDivisa(){
         $datostoken = $this->token->autenticarPeticion();
         $idempresa = $datostoken->data->id_empresa;
@@ -242,9 +268,9 @@ class outVenta
         $listaProductosFactura =[];
         $detalles = [];
         foreach ($dataproductos as $producto) {
-            $idproducto =  $this->idProducto($producto['id']);
+            $prod =  $this->obtenerDatosProductoPorMD5($producto['id']);
             $Lp = [
-                "idproductoalmacen"=> $idproducto,
+                "idproductoalmacen"=> $prod['id_productos_almacen'],
                 "cantidad"=> $producto['cantidad'],
                 "precio"=> $producto['precioUnitario'],
                 "idstock"=> $producto['codigoStock'],
@@ -259,10 +285,10 @@ class outVenta
             if($factura != 0){
                 $LPF =[
                     "codigoProducto"=> $producto['codigoProducto'],
-                    "codigoActividadSin"=> $producto['codigoActividadSin'],
-                    "codigoProductoSin"=> $producto['codigoProductoSin'],
+                    "codigoActividadSin"=> $prod['actividadsin'],
+                    "codigoProductoSin"=> $prod['codigosin'],
                     "descripcion"=> $producto['descripcionProducto'],
-                    "unidadMedida"=> $producto['unidadSin'],
+                    "unidadMedida"=> $prod['unidadsin'],
                     "precioUnitario"=> $producto['precioUnitario'],
                     "subTotal"=> $producto['subTotal'],
                     "cantidad"=> $producto['cantidad'],
@@ -274,10 +300,10 @@ class outVenta
 
                 $d = [
                     "codigoProducto"=> $producto['codigoProducto'],
-                    "codigoActividadSin"=> $producto['codigoActividadSin'],
-                    "codigoProductoSin"=> $producto['codigoProductoSin'],
+                    "codigoActividadSin"=> $prod['actividadsin'],
+                    "codigoProductoSin"=> $prod['codigosin'],
                     "descripcion"=>  $producto['descripcionProducto'],
-                    "unidadMedida"=>  $producto['unidadSin'],
+                    "unidadMedida"=>  $prod['unidadsin'],
                     "precioUnitario"=> $producto['precioUnitario'],
                     "subTotal"=> $producto['subTotal'],
                     "cantidad"=> $producto['cantidad'],
@@ -372,7 +398,7 @@ class outVenta
     public function sin_metodo_pago($id_metodo){
          try {
             $sql = "SELECT codigosin FROM metodopago WHERE idmetodopago = ?;";
-            $stmt = $this->rh->prepare($sql);
+            $stmt = $this->cm->prepare($sql);
             $stmt->bind_param("i", $id_metodo);
             $stmt->execute();
             $stmt->bind_result($codigosin);
@@ -403,17 +429,15 @@ class outVenta
         $id_empresa = $datostoken->data->id_empresa;
         $factura = $datostoken->data->tipo;
         $idmd5 = $datostoken->data->md5;
-
         $tokenEmizor = "";
         if($factura == 1 || $factura == 2){
             $tokenEmizor = $this->token->obtenerTokenEmizor($idmd5);
             $COD_SIN_METODO_PAGO = $this->sin_metodo_pago($data['codigoMetodoPago']);
             $COD_SIN_DIVISA = $this->sin_divisa($data['codigoDivisa']);;
-            $TIPO_VENTA =2;
+            $TIPO_VENTA =1;
         }
 
         $idusuario = $this->verificar->verificarIDUSERMD5($data['idusuario']);
-        
         
         $emailCliente = "factura@yofinanciero.com";
         
@@ -422,9 +446,7 @@ class outVenta
         $almacen = $this->configuracion->listaAlmacenesResponsable($idmd5,1,$data['codigoAlmacen'],$idusuario);
         
         
-        
         $r = $this->ordenar_listaProductos($data['detalle'],$factura);
-
         $jsonDetalles = [
             "listaProductos" => $r['listaProductos'],
             "listaProductosFactura" => $r['listaProductosFactura'],
@@ -459,7 +481,7 @@ class outVenta
             "idalmacen" => $almacen[0]['idalmacen'],
             "codigosinsucursal" => $almacen[0]['sucursales'][0]['codigosin'],
             "token" => $tokenEmizor,
-            "tipoFactura" => $factura,
+            "tipo" => 2,
             "iddivisa" => $data['codigoDivisa'],
             "idcampana" => 0,
             "ventatotal" => $data['montoTotal'],
@@ -478,10 +500,12 @@ class outVenta
                     "porcentaje" => 100,
                 ]
             ],
-            "variablePago" => "dividido"
+            "variablePago" => "dividido",
+            "puntoVenta" => 0,
         ];
         //$fecha, $tipoventa, $tipopago, $idcliente, $idsucursal, $canalventa, $idmd5, $idmd5u, $jsonDetalles
-        $this->venta->registroVenta($fecha_venta,$TIPO_VENTA,'contado',$c['idcliente'],$c['idsucursal'],'0',$id_empresa,$data['idusuario'],$jsonDetalles);    
+        // echo json_encode(["fecha venta"=> $fecha_venta," TIPO_VENTA"=> $TIPO_VENTA,"idcliente"=> $c['idcliente'],"idsucursal"=> $c['idsucursal'],"id_empresa"=> $idmd5,"idusuario"=> $data['idusuario'],"jsonDetalles"=> $jsonDetalles]);
+        $this->venta->registroVenta($fecha_venta,$TIPO_VENTA,'contado',$c['idcliente'],$c['idsucursal'],'0',$idmd5,$data['idusuario'],$jsonDetalles);    
         
     }
     function tipo_documentos() {
