@@ -244,6 +244,7 @@ class Facturacion
         //$data = json_decode($jsonData, true);
 
         // Configurar las opciones de la solicitud
+        //echo json_encode(["url0" => $urls[$tipo]]);
         $options = array(
             CURLOPT_URL => $urls[$tipo],
             CURLOPT_POST => true,

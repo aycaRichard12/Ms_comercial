@@ -212,7 +212,7 @@ class UseVEnta
                 $jsonDetalles['listaFactura']['extras']['facturaTicket'] = $codigoVenta;
 
                 $respuestaEmizor = $this->factura->crearfactura($jsonDetalles['listaFactura'], $tipoventa, $jsonDetalles['token'], $jsonDetalles['tipo'], $jsonDetalles['codigosinsucursal']);
-
+                // echo json_encode(["listaFactura"=>$jsonDetalles['listaFactura'], "tipoventa"=> $tipoventa, "token" =>$jsonDetalles['token'], "tipo" => $jsonDetalles['tipo'], "sucursal" => $jsonDetalles['codigosinsucursal'], "respuesta emizor" => $respuestaEmizor ]);
                 if ($respuestaEmizor->status === "success") {
                     $estadoFactura = null;
                     for ($i = 0; $i < self::MAX_INTENTOS_CONSULTA_FACTURA; $i++) {
