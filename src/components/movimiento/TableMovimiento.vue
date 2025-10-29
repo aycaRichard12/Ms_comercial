@@ -94,10 +94,11 @@
       <template v-slot:body-cell-Detalle="props">
         <q-td :props="props">
           <q-btn
-            label="Productos"
+            icon="shopping_cart"
             color="blue"
             dense
             flat
+            title="Añadir Productos Carrito"
             @click="$emit('viewProductDetails', props.row)"
           />
         </q-td>
@@ -106,26 +107,50 @@
       <template v-slot:body-cell-Opciones="props">
         <q-td :props="props">
           <div v-if="Number(props.row.autorizacion) === 2">
-            <q-btn size="sm" icon="visibility" flat @click="verDetalle(props.row)" />
+            <q-btn
+              title="Ver comprobante"
+              size="sm"
+              icon="visibility"
+              color="amber-11"
+              flat
+              @click="verDetalle(props.row)"
+            />
 
-            <q-btn icon="edit" color="primary" dense flat @click="$emit('editRecord', props.row)" />
+            <q-btn
+              icon="edit"
+              color="primary"
+              dense
+              flat
+              @click="$emit('editRecord', props.row)"
+              title="Editar movimiento"
+            />
+
             <q-btn
               icon="delete"
               color="negative"
               dense
               flat
               @click="$emit('deleteRecord', props.row)"
+              title="Eliminar movimiento"
             />
+
             <q-btn
               icon="toggle_off"
               dense
               flat
               color="grey"
               @click="$emit('toggleStatus', props.row)"
+              title="Activar movimiento"
             />
           </div>
           <div v-else>
-            <q-btn size="sm" icon="visibility" flat @click="verDetalle(props.row)" />
+            <q-btn
+              size="sm"
+              title="Ver comprobante"
+              icon="visibility"
+              flat
+              @click="verDetalle(props.row)"
+            />
           </div>
         </q-td>
       </template>
