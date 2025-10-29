@@ -1,5 +1,6 @@
 <template>
   <q-page class="q-pa-md">
+    <div class="titulo">Asignar Producto</div>
     <div class="row q-col-gutter-md">
       <!-- Main Content Area -->
       <div class="col-12">
