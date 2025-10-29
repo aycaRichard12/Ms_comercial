@@ -20,8 +20,8 @@ elseif ($ver == "cliente") {
     $controlador->verificarCliente($data, $data['idmd5'],$data['token'],$data['factura']);
 }
 elseif ($ver == "registrarVenta") {
-    $controlador = new outVenta(); 
-    $controlador->registrarVenta($data);
+    // $controlador = new outVenta(); 
+    // $controlador->registrarVenta($data);
 }
 elseif ($ver == "revisarP") {
     $controlador = new outVenta(); 
