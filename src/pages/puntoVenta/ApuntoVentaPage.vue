@@ -1,5 +1,6 @@
 <template>
   <q-page class="q-pa-md q-pa-md-md q-pa-lg-lg">
+    <div class="titulo">Asignar Punto Venta</div>
     <q-card-section>
       <UserTable
         v-if="showFirstView"
