@@ -244,7 +244,7 @@ watch(
 
 // Define table columns
 const columns = [
-  { name: 'N°', label: 'N°', align: 'left', field: 'id', sortable: true },
+  { name: 'indice', label: 'N°', align: 'left', field: 'indice', sortable: true },
   { name: 'Fecha', label: 'Fecha', align: 'center', field: 'fecha', sortable: true },
   {
     name: 'Almacén origen',
@@ -284,11 +284,15 @@ const filteredRows = computed(() => {
   if (!selectedFilterStore.value?.value) {
     return rows.value
   }
-  return rows.value.filter(
+  const filtrado = rows.value.filter(
     (row) =>
       row.idalmacenorigen == selectedFilterStore.value?.value ||
       row.idalmacendestino == selectedFilterStore.value?.value,
   )
+  return filtrado.map((item, indice) => ({
+    indice: indice + 1,
+    ...item,
+  }))
 })
 
 // --- Component-specific methods ---
