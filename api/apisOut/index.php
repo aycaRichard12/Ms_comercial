@@ -11,10 +11,14 @@
 
 
     $method = $_SERVER['REQUEST_METHOD'];
-    
+    $rutas = array_filter(explode("/",$uri));
     require_once "outProductos.php";
     require_once "outVenta.php";
     require_once "outCompras.php";
+    if ($rutas[1] == "venta") {
+            require_once "routersVenta.php";
+            return;
+    }
     if($method == "GET"){
         
             require_once "routersGet.php";

@@ -241,7 +241,18 @@
                   :rules="[(val) => val <= formularioDetalle.stock || 'Cantidad excede stock']"
                 />
               </div>
-              <div class="col-12 col-md-3">
+              <div class="col-12">
+                <q-btn
+                  :icon="lote ? 'toggle_on' : 'toggle_off'"
+                  dense
+                  flat
+                  label="Lote"
+                  :color="lote ? 'green' : 'grey'"
+                  @click="lote = !lote"
+                  title="CAMBIAR TIPO REPORTE"
+                />
+              </div>
+              <div class="col-12 col-md-3" v-if="lote">
                 <label for="provedor">Proveedor*</label>
                 <q-select
                   v-model="formularioDetalle.proveedor"
@@ -261,7 +272,7 @@
                   @update:model-value="filtrarComprasxProveedor"
                 />
               </div>
-              <div class="col-12 col-md-9">
+              <div class="col-12 col-md-9" v-if="lote">
                 <label for="compras">Lote Compra*</label>
                 <q-select
                   v-model="formularioDetalle.compra"
@@ -359,6 +370,7 @@ import { obtenerPermisosPagina } from 'src/composables/FuncionesG'
 
 const [lectura, escritura, editar, eliminar] = obtenerPermisosPagina()
 console.log(lectura, escritura, editar, eliminar)
+const lote = ref(true)
 const pdfData = ref(null)
 const mostrarModal = ref(false)
 
@@ -751,7 +763,7 @@ const registrarDetalle = async () => {
     formdata.append('idrobo', detalleActual.value.robo)
     formdata.append('idproductoalmacen', formularioDetalle.value.idproductoalmacen)
     formdata.append('cantidad', formularioDetalle.value.cantidad)
-    formdata.append('compra', formularioDetalle.value.compra)
+    formdata.append('compra', formularioDetalle.value.compra || 0)
     formularioDetalle.value.id
       ? formdata.append('ver', 'editarDetallerobos')
       : formdata.append('ver', 'registrarDetallerobos')

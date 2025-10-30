@@ -418,6 +418,11 @@ export const menurichard50 = [
             codigo: 'inventarioexterno-03afdbd66e7929b125f8597834fa83a4',
             permiso: '1111',
           },
+          {
+            titulo: 'Movimientos',
+            codigo: 'movimientos-03afdbd66e7929b125f8597834fa83a4',
+            permiso: '1111',
+          },
         ],
       },
       {

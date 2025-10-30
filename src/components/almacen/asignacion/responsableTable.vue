@@ -19,25 +19,26 @@
     flat
     bordered
   >
-    <template v-slot:top-right> </template>
     <template v-slot:body-cell-opciones="props">
-      <q-td class="flex justify-center">
-        <q-btn
-          dense
-          icon="delete"
-          color="negative"
-          @click="eliminar(props.row.id)"
-          title="Eliminar"
-          flat
-        />
-        <q-btn
-          dense
-          icon="add_box"
-          color="primary"
-          @click="asignarAlmacenes(props.row)"
-          title="Asignar Almacen"
-          flat
-        />
+      <q-td>
+        <q-btn-group outline flat>
+          <q-btn
+            dense
+            icon="delete"
+            color="negative"
+            @click="eliminar(props.row.id)"
+            title="Eliminar"
+            flat
+          />
+          <q-btn
+            dense
+            icon="add_box"
+            color="primary"
+            @click="asignarAlmacenes(props.row)"
+            title="Asignar Almacen"
+            flat
+          />
+        </q-btn-group>
       </q-td>
     </template>
   </q-table>

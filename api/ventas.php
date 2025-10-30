@@ -794,7 +794,7 @@ class ventas
         echo json_encode($res);
     }
 
-    public function listaPuntoVentaFactura($idmd5)
+    public function listaPuntoVentaFactura($idmd5, $respuesta = null)
     {
         $res = "";
         $val = "";
@@ -806,10 +806,22 @@ class ventas
         WHERE r.id_usuario='$idusuario' AND pv.codigosin!= ''");
         if ($registro !== false) {
             while ($qwe = $this->cm->fetch($registro)) {
-                $val = array("idresponsable" => $qwe[0], "idpuntoventa" => $qwe[1], "nombre" => $qwe[2], "idalmacen" => $qwe[3], "codigosin" => $qwe[4]);
-                array_push($lista, $val);
+                if($respuesta == null){
+                    $val = array("idresponsable" => $qwe[0], "idpuntoventa" => $qwe[1], "nombre" => $qwe[2], "idalmacen" => $qwe[3], "codigosin" => $qwe[4]);
+                    array_push($lista, $val);
+                }elseif($respuesta == 1){
+                    $val = array( "nombre" => $qwe[2], "codigosin" => $qwe[4]);
+                    array_push($lista, $val);
+                }
+                
             }
-            $res = array("estado" => "exito", "mensaje" => "Lista encontradas", "datos" => $lista);
+
+            if($respuesta == null){
+                     $res = array("estado" => "exito", "mensaje" => "Lista encontradas", "datos" => $lista);
+            }elseif($respuesta == 1){
+                    $res = $lista;
+            }
+           
         } else {
             $res = array("estado" => "error", "mensaje" => "Ocurrio un problema, intentelo nuevamente");
         }
@@ -2145,10 +2157,27 @@ class ventas
         $codigo = "MER";
         $res="";
         $registro=$this->cm->query("update mermas_desperdicios SET autorizacion='$estado' where id_mermas_desperdicios='$id'");
-        $nuevostock=$this->cm->query("SELECT dm.productos_almacen_id_productos_almacen, (s.cantidad - dm.cantidad) as nuevo, di.id_detalle_ingreso from detalle_mermas dm
+        $nuevostock=$this->cm->query("SELECT 
+        dm.productos_almacen_id_productos_almacen, 
+        (s.cantidad - dm.cantidad) as nuevo,
+        case 
+            when dm.idcompra is null then COALESCE((
+                select di.id_detalle_ingreso from ingreso as i
+                left join detalle_ingreso as di on i.id_ingreso = di.ingreso_id_ingreso
+                where di.productos_almacen_id_productos_almacen = s.productos_almacen_id_productos_almacen limit 1
+            ),0)
+            when dm.idcompra = 0 then COALESCE((
+                select di.id_detalle_ingreso from ingreso as i
+                left join detalle_ingreso as di on i.id_ingreso = di.ingreso_id_ingreso
+                where di.productos_almacen_id_productos_almacen = s.productos_almacen_id_productos_almacen limit 1
+            ),0)
+            when dm.idcompra is not null then COALESCE((
+                select id_detalle_ingreso from detalle_ingreso where id_detalle_ingreso = dm.idcompra limit 1
+            ),0)
+        end as id_detalle_ingreso
+        from detalle_mermas dm
         inner join productos_almacen pa on dm.productos_almacen_id_productos_almacen=pa.id_productos_almacen
         inner join stock as s on pa.id_productos_almacen=s.productos_almacen_id_productos_almacen 
-        LEFT JOIN detalle_ingreso AS di ON di.ingreso_id_ingreso = dm.idcompra
         where dm.mermas_desperdicios_id_mermas_desperdicios='$id' and s.estado=1");
         while($stock=$this->cm->fetch($nuevostock)){
             $cambioestado = $this->cm->query("update stock set estado=2 where productos_almacen_id_productos_almacen='$stock[0]' and estado=1 order by id_stock desc limit 1");
@@ -2211,7 +2240,7 @@ class ventas
         }
     }
 
-    public function registrodetallemerma($idmerma,$cantidad,$productoalmacen, $compra)
+    public function registrodetallemerma($idmerma,$cantidad,$productoalmacen, $compra = null)
     {
         $res = "";
         $registro = $this->cm->query("insert into detalle_mermas(id_detalle_mermas,cantidad,mermas_desperdicios_id_mermas_desperdicios,productos_almacen_id_productos_almacen, idcompra)value(NULL,'$cantidad','$idmerma','$productoalmacen', '$compra')");
@@ -2364,10 +2393,27 @@ class ventas
         $codigo = "EXT";
         $res="";
         $registro=$this->cm->query("update robos SET autorizacion='$estado' where id_robos='$id'");
-        $nuevostock=$this->cm->query("SELECT dr.productos_almacen_id_productos_almacen, (s.cantidad - dr.cantidad) AS nuevo, di.id_detalle_ingreso FROM detalle_robo dr
+        $nuevostock=$this->cm->query("SELECT 
+        dr.productos_almacen_id_productos_almacen, 
+        (s.cantidad - dr.cantidad) AS nuevo, 
+        case 
+            when dr.idcompra is null then COALESCE((
+                select di.id_detalle_ingreso from ingreso as i
+                left join detalle_ingreso as di on i.id_ingreso = di.ingreso_id_ingreso
+                where di.productos_almacen_id_productos_almacen = s.productos_almacen_id_productos_almacen limit 1
+            ),0)
+            when dr.idcompra = 0 then COALESCE((
+                select di.id_detalle_ingreso from ingreso as i
+                left join detalle_ingreso as di on i.id_ingreso = di.ingreso_id_ingreso
+                where di.productos_almacen_id_productos_almacen = s.productos_almacen_id_productos_almacen limit 1
+            ),0)
+            when dr.idcompra is not null then COALESCE((
+                select id_detalle_ingreso from detalle_ingreso where id_detalle_ingreso = dr.idcompra limit 1
+            ),0)
+        end as id_detalle_ingreso 
+        FROM detalle_robo dr
         INNER JOIN productos_almacen pa ON dr.productos_almacen_id_productos_almacen=pa.id_productos_almacen
         INNER JOIN stock AS s ON pa.id_productos_almacen=s.productos_almacen_id_productos_almacen
-        LEFT JOIN detalle_ingreso AS di ON di.ingreso_id_ingreso = dr.idcompra
         WHERE dr.robos_id_robos='$id' AND s.estado=1");
         while($stock=$this->cm->fetch($nuevostock)){
             $cambioestado = $this->cm->query("update stock set estado=2 where productos_almacen_id_productos_almacen='$stock[0]' and estado=1");

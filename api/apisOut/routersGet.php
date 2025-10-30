@@ -48,6 +48,17 @@ elseif($apiRoute == "divisa"){
     $controlador->getDivisa(); 
 } 
  
+elseif($apiRoute == "autenticarPeticion"){
+    
+    $controlador = new ApiTokens();
+    $controlador->autenticarPeticionPrueba(); 
+} 
+elseif($apiRoute == "tokenvalido"){
+    
+    $controlador = new ApiTokens();
+    $controlador->obtenerTokenEmizor($segments[2]); 
+} 
+ 
 else {
     http_response_code(404);
     echo json_encode([
