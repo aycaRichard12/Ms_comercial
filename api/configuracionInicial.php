@@ -1487,17 +1487,17 @@ class ConfiguracionInicial
 
         $query = "
             SELECT 
-            EXISTS (SELECT 1 FROM configuracion_inicial WHERE idempresa = ?) AND
+            EXISTS (SELECT 1 FROM configuracion_inicial WHERE idempresa = ?) OR
             (
-                EXISTS (SELECT 1 FROM almacen WHERE idempresa = ?) OR
-                EXISTS (SELECT 1 FROM categorias WHERE id_empresa = ?) OR
-                EXISTS (SELECT 1 FROM cliente WHERE idempresa = ?) OR
-                EXISTS (SELECT 1 FROM proveedor WHERE id_empresa = ?) OR
+                EXISTS (SELECT 1 FROM almacen WHERE idempresa = ?) AND
+                EXISTS (SELECT 1 FROM categorias WHERE id_empresa = ?) AND
+                EXISTS (SELECT 1 FROM cliente WHERE idempresa = ?) AND
+                EXISTS (SELECT 1 FROM proveedor WHERE id_empresa = ?) AND
                 EXISTS (
                     SELECT 1 FROM ingreso i
                     JOIN proveedor p ON i.proveedor_id_proveedor = p.id_proveedor
                     WHERE p.id_empresa = ?
-                ) OR
+                ) AND
                 EXISTS (
                     SELECT 1 FROM venta v
                     JOIN cliente c ON v.cliente_id_cliente1 = c.id_cliente
