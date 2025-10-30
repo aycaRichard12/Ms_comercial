@@ -131,6 +131,8 @@ export const PAGINAS_ICONS = Object.freeze({
   reportedeextravios: 'assignment_late',
   reportedemermas: 'trending_down',
   //pedidos
+  generarpedido: 'add_shopping_cart',
+  reportedepedidos: 'assignment',
 })
 export const PAGINAS_SELECT = Object.freeze({
   registrarventa: Object.freeze([

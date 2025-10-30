@@ -1,5 +1,6 @@
 <template>
   <q-page padding>
+    <div class="titulo">Asignar Almacen</div>
     <q-card-section v-if="!asignando">
       <q-dialog v-model="showForm" persistent>
         <q-card class="responsive-dialog">

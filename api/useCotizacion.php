@@ -44,6 +44,14 @@ class UseCotizacion
         $this->rh = $this->conexion->rh;
         $this->em = $this->conexion->em;
     }
+
+    public function anularCotizacion($idcotizacion, $estado , $motivo, $idmd5u){
+        date_default_timezone_set('America/La_Paz');
+        $fecha = date("Y-m-d");
+        $idusuario = $this->verificar->verificarIDUSERMD5($idmd5u);
+        $consultaCP =  $this->cm->query("select * from ");
+
+    }
     private function obtenerNumeroComprobanteCotizacion($idempresa, $tipoventa)
     {
         $nroFactura = null;
