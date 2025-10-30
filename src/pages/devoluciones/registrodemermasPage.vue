@@ -255,7 +255,18 @@
                   @update:model-value="validateQuantity"
                 />
               </div>
-              <div class="col-12 col-md-3">
+              <div class="col-12">
+                <q-btn
+                  :icon="lote ? 'toggle_on' : 'toggle_off'"
+                  dense
+                  flat
+                  label="Lote"
+                  :color="lote ? 'green' : 'grey'"
+                  @click="lote = !lote"
+                  title="CAMBIAR TIPO REPORTE"
+                />
+              </div>
+              <div class="col-12 col-md-3" v-if="lote">
                 <label for="provedor">Proveedor*</label>
                 <q-select
                   v-model="detailForm.proveedor"
@@ -275,7 +286,7 @@
                   @update:model-value="filtrarComprasxProveedor"
                 />
               </div>
-              <div class="col-12 col-md-9">
+              <div class="col-12 col-md-9" v-if="lote">
                 <label for="compras">Lote Compra*</label>
                 <q-select
                   v-model="detailForm.compra"
@@ -372,6 +383,9 @@ import { useAlmacenStore } from 'src/stores/listaResponsableAlmacen'
 import { objectToFormData } from 'src/composables/FuncionesGenerales'
 import { PDFreporteMermas } from 'src/utils/pdfReportGenerator'
 import { PDFComprovanteMerma } from 'src/utils/pdfReportGenerator'
+
+const lote = ref(true)
+
 const [lectura, escritura, editar, eliminar] = obtenerPermisosPagina()
 console.log(lectura, escritura, editar, eliminar)
 const pdfData = ref(null)
@@ -724,7 +738,8 @@ const submitDetailForm = async () => {
   try {
     //const endpoint = detailEditMode.value ? 'actualizarDetallemerma' : 'registrarDetallemerma'
     const formulario = objectToFormData(detailForm.value)
-    formulario.append('compra', detailForm.value.compra)
+
+    //formulario.append('compra', detailForm.value.compra || null)
 
     if (detailEditMode.value) {
       formulario.append('ver', 'editarDetallemerma')
