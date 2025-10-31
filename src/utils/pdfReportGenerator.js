@@ -834,7 +834,8 @@ export function generarPdfCotizacion(data) {
   comprobanteData.fecha = cotizacionInfo.fecha
   comprobanteData.usuario = usuarioInfo.usuario
   comprobanteData.cargo = usuarioInfo.cargo // Asumo que hay un campo rol en usuario
-
+  const estado = cotizacionInfo.estado
+  console.log(estado)
   let currentSubtotal = 0
   const detalleProductos = cotizacionDetalle.detalle.map((item) => {
     const totalProducto = redondear(item.cantidad * item.precio)
@@ -886,11 +887,13 @@ export function generarPdfCotizacion(data) {
 
   const descuento = decimas(detallePlano.descuento || 0)
 
-  datos.push(
-    { precio: 'SUBTOTAL', total: decimas(subtotal) },
-    { precio: 'DESCUENTO', total: decimas(descuento) },
-    { precio: 'MONTO TOTAL', total: decimas(montototal) },
-  )
+  // Fila para Subtotal
+  datos.push({ precio: 'SUBTOTAL', total: decimas(subtotal) })
+  // Fila para Descuento
+  datos.push({ precio: 'DESCUENTO', total: decimas(descuento) })
+  // Fila para Monto Total
+  datos.push({ precio: 'MONTO TOTAL', total: decimas(montototal) })
+
   autoTable(doc, {
     columns,
     body: datos,
@@ -914,33 +917,37 @@ export function generarPdfCotizacion(data) {
     },
     didDrawCell: function (data) {
       if (data.column.dataKey === 'descripcion' && data.cell.section === 'body') {
-        const item = detallePlano.detalle[data.row.index]
-        if (item && item.descripcionAdicional) {
-          const text = convertirAMayusculas(doc.splitTextToSize(item.descripcionAdicional, 45))
-          doc.setFontSize(4)
-          doc.setTextColor(100)
-          doc.text(
-            text,
-            data.cell.x + 2,
-            data.cell.y + data.cell.height - 1, // justo debajo del texto principal
-          )
-          doc.setTextColor(0)
+        // Asegurarse de que el índice es válido para el detalle de productos
+        const detailIndex = data.row.index
+        // La tabla tiene filas adicionales para subtotales, descuentos y montos totales
+        // Estas filas deben excluirse de la búsqueda de 'descripcionAdicional'
+        if (detailIndex < detallePlano.detalle.length) {
+          const item = detallePlano.detalle[detailIndex]
+          if (item && item.descripcionAdicional) {
+            const text = convertirAMayusculas(doc.splitTextToSize(item.descripcionAdicional, 45))
+            doc.setFontSize(4)
+            doc.setTextColor(100)
+            doc.text(
+              text,
+              data.cell.x + 2,
+              data.cell.y + data.cell.height - 1, // justo debajo del texto principal
+            )
+            doc.setTextColor(0)
+          }
         }
       }
     },
     didParseCell: function (data) {
-      // Ejemplo: destacar la última fila (que contiene el Monto Total)
-      if (data.row.index === datos.length - 1) {
-        data.cell.styles.halign = 'left'
-      }
-      if (data.row.index === datos.length - 2) {
-        data.cell.styles.halign = 'left'
-      }
-      if (data.row.index === datos.length - 3) {
-        data.cell.styles.halign = 'left'
+      // Destacar las últimas filas (SUBTOTAL, DESCUENTO, MONTO TOTAL)
+      if (data.row.index >= datos.length - 3) {
+        // La primera columna de estas filas es donde está el texto (precio)
+        if (data.column.dataKey === 'precio') {
+          data.cell.styles.halign = 'left'
+          data.cell.styles.fontStyle = 'bold' // Opcional: poner el texto en negrita
+        }
+        // La columna Total debe seguir alineada a la derecha, por lo que no la modificamos aquí.
       }
     },
-    //20 + 15 + 20 + 25 + 30 + 20 + 20 + 25 + 20 + 15 + 20 + 15 + 20 = 265 mm
 
     startY: 50,
     margin: { horizontal: 5 },
@@ -1028,8 +1035,30 @@ export function generarPdfCotizacion(data) {
     },
   })
 
-  // doc.save('proveedores.pdf') ← comenta o elimina esta línea
-  //doc.output('dataurlnewwindow') // ← muestra el PDF en una nueva ventana del navegador
+  // --- Lógica para el Watermark "Anulado" ---
+  if (estado == 2) {
+    const pageWidth = doc.internal.pageSize.getWidth()
+    const pageHeight = doc.internal.pageSize.getHeight()
+    const centerX = pageWidth / 2
+    const centerY = pageHeight / 2
+
+    // Texto diagonal grande simulando transparencia
+    doc.setFontSize(70)
+    doc.setTextColor(255, 0, 0) // rojo puro
+    doc.setGState(new doc.GState({ opacity: 0.15 })) // 🔥 usa opacidad real
+    doc.setFont(undefined, 'bold')
+
+    doc.text('ANULADO', centerX, centerY, {
+      angle: 45,
+      align: 'center',
+    })
+
+    // Restablecer
+    doc.setGState(new doc.GState({ opacity: 1 }))
+    doc.setFontSize(6)
+    doc.setTextColor(0)
+  }
+
   return doc
 }
 
@@ -1690,7 +1719,6 @@ export async function PDFdetalleVentaInicio(detalleVenta) {
   const nombreEmpresa = idempresa.empresa.nombre
   const direccionEmpresa = idempresa.empresa.direccion
   const telefonoEmpresa = idempresa.empresa.telefono
-  const logoEmpresa = idempresa.empresa.logo // Ruta relativa o base64
 
   const columns = [
     { header: 'N°', dataKey: 'indice' },
@@ -1773,9 +1801,14 @@ export async function PDFdetalleVentaInicio(detalleVenta) {
     theme: 'striped',
     didDrawPage: () => {
       if (doc.internal.getNumberOfPages() === 1) {
-        // Logo (requiere base64 o ruta absoluta en servidor si usas Node)
-        if (logoEmpresa) {
-          //doc.addImage(`${URL_APIE}${logoEmpresa}`, 'PNG', 180, 8, 20, 20)
+        if (logoBase64) {
+          const pageWidth = doc.internal.pageSize.getWidth() // Ancho total página
+          const imgWidth = 20 // Ancho del logo en mm
+          const imgHeight = 20 // Alto del logo en mm
+          const xPos = pageWidth - imgWidth - 5 // 10mm de margen derecho
+          const yPos = 5 // margen superior
+          console.log(logoBase64)
+          doc.addImage(logoBase64, 'JPEG', xPos, yPos, imgWidth, imgHeight)
         }
 
         // Nombre y datos de empresa

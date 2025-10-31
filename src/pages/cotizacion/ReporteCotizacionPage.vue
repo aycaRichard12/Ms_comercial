@@ -135,6 +135,12 @@
             label="NOR"
             outline=""
           ></q-badge>
+          <q-badge
+            color="red"
+            v-if="Number(props.row.estado) === 2"
+            label="ANU"
+            outline=""
+          ></q-badge>
         </q-td>
       </template>
       <template v-slot:body-cell-acciones="props">

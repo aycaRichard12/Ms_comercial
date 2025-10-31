@@ -45,13 +45,120 @@ class UseCotizacion
         $this->em = $this->conexion->em;
     }
 
-    public function anularCotizacion($idcotizacion, $estado , $motivo, $idmd5u){
+
+
+    public function anularCotizacion($idcotizacion , $motivo, $idmd5u){
+        
         date_default_timezone_set('America/La_Paz');
         $fecha = date("Y-m-d");
         $idusuario = $this->verificar->verificarIDUSERMD5($idmd5u);
-        $consultaCP =  $this->cm->query("select * from ");
+        $res = array("estado" => "error", "mensaje" => "Error desconocido.");
+        // Desactivar el autocommit para que podamos controlar el COMMIT y ROLLBACK.
+        $this->cm->autocommit(FALSE); 
 
+        try {
+            // 2. OBTENER ESTADO DE COTIZACIÓN
+            $sql = "SELECT c.estado FROM cotizacion c WHERE c.id_cotizacion = ?";
+            $stm = $this->cm->prepare($sql);
+            
+            // Verifica si la preparación de la consulta fue exitosa
+            if (!$stm) {
+                throw new Exception("Error al preparar consulta de estado: " . $this->cm->error);
+            }
+
+            $stm->bind_param('i', $idcotizacion);
+            $stm->execute();
+            
+            // Asume que solo se debe obtener un resultado
+            $stm->bind_result($estado);
+            $stm->fetch();
+            $stm->close();
+
+            // 3. LÓGICA DE ANULACIÓN Y RESTOCK
+            if($estado == 1){   
+                // COTIZACIÓN ACTIVA: requiere log y reabastecimiento
+                $estadoventa = "Venta anulada. Se ha realizado la devolución de stock.";
+
+                // A. Anular Cotización
+                $registro = $this->cm->query("update cotizacion SET estado = 2 where id_cotizacion='$idcotizacion'");
+                if (!$registro) {
+                    throw new Exception("Error al actualizar estado de cotización.");
+                }
+                
+                // B. Registrar Anulación
+                // Es CRUCIAL sanitizar o usar prepared statements aquí (pero siguiendo tu estilo, solo se añade la verificación)
+                $motivo_sanitized = $this->cm->real_escape_string($motivo);
+                $anulacion = $this->cm->query("insert into anulaciones(idanulaciones, fecha, motivo, venta_id_venta, idusuario,tipo_venta)values(NULL,'$fecha','$motivo_sanitized','$idcotizacion','$idusuario', 'COTIZACION')");
+                if (!$anulacion) {
+                    throw new Exception("Error al registrar anulación.");
+                }
+
+                // C. Obtener Productos para Restock
+                $productos = $this->cm->query("SELECT 
+                        dc.id_detalle_cotizacion,
+                        dc.cantidad, 
+                        dc.precio_unitario, 
+                        dc.productos_almacen_id_productos_almacen, 
+                        dc.cotizacion_id_cotizacion,
+                        (dc.cantidad+s.cantidad) as nuevo,
+                        s.id_stock
+                        from detalle_cotizacion dc 
+                        inner join stock s on  dc.productos_almacen_id_productos_almacen = s.productos_almacen_id_productos_almacen
+                        where dc.cotizacion_id_cotizacion = '$idcotizacion'  and s.estado = 1");
+                
+                if (!$productos) {
+                    throw new Exception("Error al obtener productos para reabastecimiento.");
+                }
+
+                // D. Ejecutar Restock (Reabastecimiento)
+                while ($qwe = $this->cm->fetch($productos)) { // Usar fetch_assoc o fetch_array si tienes una función fetch
+                    $codigo = "AN";
+                    
+                    // 1. Desactivar el stock antiguo
+                    $registro_old_stock = $this->cm->query("update stock set estado=2 where id_stock='$qwe[id_stock]'");
+                    if (!$registro_old_stock) {
+                        throw new Exception("Error al desactivar stock antiguo ID: $qwe[id_stock].");
+                    }
+                    
+                    // 2. Insertar el nuevo stock consolidado
+                    $nuevo_stock_valor = $qwe['nuevo'];
+                    $id_almacen = $qwe['productos_almacen_id_productos_almacen'];
+                    
+                    $nuevostock = $this->cm->query("insert into stock(id_stock, cantidad, fecha, codigo, estado, productos_almacen_id_productos_almacen, idorigen) values(NULL,'$nuevo_stock_valor','$fecha','$codigo',1,'$id_almacen', '$idcotizacion')");
+                    if (!$nuevostock) {
+                        throw new Exception("Error al insertar nuevo stock para producto: $id_almacen.");
+                    }
+                }
+                                    
+                $res = array("estado" => "exito", "mensaje" => "Cotización anulada y stock devuelto correctamente.", "datosFactura" => $estadoventa);
+
+            }elseif($estado == 0){
+                // COTIZACIÓN PENDIENTE: solo anulación
+                $registro = $this->cm->query("update cotizacion SET estado = 2 where id_cotizacion='$idcotizacion'");
+                if (!$registro) {
+                    throw new Exception("Error al actualizar estado de cotización pendiente.");
+                }
+                $res = array("estado" => "exito", "mensaje" => "Cotización pendiente anulada correctamente.");
+
+            } else {
+                // Estado no válido (ej. ya anulada)
+                throw new Exception("La cotización no está en un estado válido (1 o 0) para ser anulada.");
+            }
+
+            // 4. COMMIT: Si todo ha ido bien, guardar los cambios en la base de datos
+            $this->cm->commit(); 
+            $this->cm->autocommit(TRUE); // Volver a activar autocommit
+
+        } catch (Exception $e) {
+            $this->cm->rollback();
+            $this->cm->autocommit(TRUE); // Volver a activar autocommit
+            $res = array("estado" => "error", "mensaje" => "Fallo en la anulación. Se han revertido todos los cambios. Detalle: " . $e->getMessage()); 
+        }
+        
+        echo json_encode($res);
     }
+
+
     private function obtenerNumeroComprobanteCotizacion($idempresa, $tipoventa)
     {
         $nroFactura = null;
@@ -412,6 +519,46 @@ class UseCotizacion
         }
     }
 
+    public function estadoCotizacion($idcotizacion)
+    {
+        $sql = "SELECT estado FROM cotizacion WHERE id_cotizacion = ?";
+        $stm = $this->cm->prepare($sql);
+
+        if (!$stm) {
+            echo json_encode([
+                "status" => "error",
+                "message" => "Error al preparar la consulta",
+                "error" => $this->cm->error
+            ]);
+            return;
+        }
+
+        $stm->bind_param('i', $idcotizacion);
+        $stm->execute();
+        $stm->bind_result($estado);
+
+        $res = "NO EXISTE"; // valor por defecto
+
+        if ($stm->fetch()) {
+            $res = match ((int)$estado) {
+                1 => "VALIDA",
+                2 => "ANULADA",
+                default => "DESCONOCIDA"
+            };
+        }
+
+        $stm->close();
+
+        echo json_encode([
+            "status" => "success",
+            "data" => [
+                "id_cotizacion" => $idcotizacion,
+                "estado" => $res
+            ]
+        ]);
+    }
+
+
     /**
      * Obtiene y formatea todos los detalles de una cotización específica para su visualización.
      *
@@ -419,7 +566,7 @@ class UseCotizacion
      * @param string $idmd5 Hash MD5 del ID de la empresa.
      * @return void Imprime una respuesta JSON con los detalles completos.
      */
-     public function detallecotizacion($id, $idmd5)
+    public function detallecotizacion($id, $idmd5)
     {
         $idempresa = $this->verificar->verificarIDEMPRESAMD5($idmd5);
         $lista = [];
@@ -501,6 +648,7 @@ class UseCotizacion
                 s.id_sucursal AS idsucursal,
                 s.nombre AS sucursal,
                 co.fecha_cotizacion,
+                co.estado,
                 c.direccion, 
                 c.nit, 
                 c.email, 
@@ -581,6 +729,7 @@ class UseCotizacion
                     "puntoVenta" => $qwe['puntoventa'],
                     "idpv" => $qwe['idpuntoventa'],
                     "nfactura" => $qwe['num'],
+                    "estado" => $qwe['estado'],
                     
 
                 ),
