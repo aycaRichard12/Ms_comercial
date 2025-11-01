@@ -58,7 +58,7 @@ class UseCotizacion
 
         try {
             // 2. OBTENER ESTADO DE COTIZACIÓN
-            $sql = "SELECT c.estado FROM cotizacion c WHERE c.id_cotizacion = ?";
+            $sql = "SELECT c.condicion FROM cotizacion c WHERE c.id_cotizacion = ?";
             $stm = $this->cm->prepare($sql);
             
             // Verifica si la preparación de la consulta fue exitosa
@@ -70,17 +70,17 @@ class UseCotizacion
             $stm->execute();
             
             // Asume que solo se debe obtener un resultado
-            $stm->bind_result($estado);
+            $stm->bind_result($condicion);
             $stm->fetch();
             $stm->close();
 
             // 3. LÓGICA DE ANULACIÓN Y RESTOCK
-            if($estado == 1){   
+            if($condicion == 1){   
                 // COTIZACIÓN ACTIVA: requiere log y reabastecimiento
-                $estadoventa = "Venta anulada. Se ha realizado la devolución de stock.";
+                $condicionventa = "Venta anulada. Se ha realizado la devolución de stock.";
 
                 // A. Anular Cotización
-                $registro = $this->cm->query("update cotizacion SET estado = 2 where id_cotizacion='$idcotizacion'");
+                $registro = $this->cm->query("update cotizacion SET condicion = 2 where id_cotizacion='$idcotizacion'");
                 if (!$registro) {
                     throw new Exception("Error al actualizar estado de cotización.");
                 }
@@ -130,11 +130,11 @@ class UseCotizacion
                     }
                 }
                                     
-                $res = array("estado" => "exito", "mensaje" => "Cotización anulada y stock devuelto correctamente.", "datosFactura" => $estadoventa);
+                $res = array("estado" => "exito", "mensaje" => "Cotización anulada y stock devuelto correctamente.", "datosFactura" => $condicionventa);
 
-            }elseif($estado == 0){
+            }elseif($condicion == 0){
                 // COTIZACIÓN PENDIENTE: solo anulación
-                $registro = $this->cm->query("update cotizacion SET estado = 2 where id_cotizacion='$idcotizacion'");
+                $registro = $this->cm->query("update cotizacion SET condicion = 2 where id_cotizacion='$idcotizacion'");
                 if (!$registro) {
                     throw new Exception("Error al actualizar estado de cotización pendiente.");
                 }
@@ -170,7 +170,7 @@ class UseCotizacion
             $sqlConteo = "SELECT COUNT(co.id_cotizacion) 
                           FROM cotizacion co
                           LEFT JOIN cliente c ON co.cliente_id_cliente = c.id_cliente 
-                          WHERE c.idempresa = ? AND co.estado = ?";
+                          WHERE c.idempresa = ? AND co.estado = ?"; 
             $stmtConteo = $this->cm->prepare($sqlConteo);
             $stmtConteo->bind_param("ii", $idempresa, $tipoventa);
             $stmtConteo->execute();
@@ -521,7 +521,7 @@ class UseCotizacion
 
     public function estadoCotizacion($idcotizacion)
     {
-        $sql = "SELECT estado FROM cotizacion WHERE id_cotizacion = ?";
+        $sql = "SELECT condicion FROM cotizacion WHERE id_cotizacion = ?";
         $stm = $this->cm->prepare($sql);
 
         if (!$stm) {
@@ -535,12 +535,12 @@ class UseCotizacion
 
         $stm->bind_param('i', $idcotizacion);
         $stm->execute();
-        $stm->bind_result($estado);
+        $stm->bind_result($condicion);
 
         $res = "NO EXISTE"; // valor por defecto
 
         if ($stm->fetch()) {
-            $res = match ((int)$estado) {
+            $res = match ((int)$condicion) {
                 1 => "VALIDA",
                 2 => "ANULADA",
                 default => "DESCONOCIDA"
@@ -553,7 +553,7 @@ class UseCotizacion
             "status" => "success",
             "data" => [
                 "id_cotizacion" => $idcotizacion,
-                "estado" => $res
+                "condicion" => $res
             ]
         ]);
     }
@@ -648,6 +648,7 @@ class UseCotizacion
                 s.id_sucursal AS idsucursal,
                 s.nombre AS sucursal,
                 co.fecha_cotizacion,
+                co.condicion,
                 co.estado,
                 c.direccion, 
                 c.nit, 
@@ -729,6 +730,7 @@ class UseCotizacion
                     "puntoVenta" => $qwe['puntoventa'],
                     "idpv" => $qwe['idpuntoventa'],
                     "nfactura" => $qwe['num'],
+                    "condicion" => $qwe['condicion'],
                     "estado" => $qwe['estado'],
                     
 

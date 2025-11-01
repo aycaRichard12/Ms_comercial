@@ -1873,7 +1873,7 @@ class ventas
                 "fechaemision" => $qwe[17],
                 "shortlink" => $qwe[18],
                 "urlsin" => $qwe[19],
-                "tipo" => "venta" // 🔸 Añadimos un campo para distinguirlo
+                "tipo" => "venta" 
             );
             array_push($lista, $res);
         }
@@ -1895,7 +1895,7 @@ class ventas
                 pa.almacen_id_almacen AS idalmacen, 
                 ctz.cliente_id_cliente AS idcliente, 
                 s.nombre AS sucursal, 
-                ctz.estado AS estado, 
+                ctz.condicion AS estado, 
                 ca.canal AS canal, 
                 '' AS cuf , 
                 '' AS fechaemision, 
@@ -1908,7 +1908,7 @@ class ventas
             LEFT JOIN productos_almacen pa ON dctz.productos_almacen_id_productos_almacen=pa.id_productos_almacen
             LEFT JOIN almacen a ON pa.almacen_id_almacen=a.id_almacen
             LEFT JOIN canalventa ca ON ctz.idcanal=ca.idcanalventa
-            WHERE c.idempresa = '$idempresa' and ctz.estado = 1
+            WHERE c.idempresa = '$idempresa' and ctz.estado = 1 and ctz.condicion = 1
             GROUP BY ctz.id_cotizacion
             ORDER BY ctz.fecha_cotizacion DESC, ctz.id_cotizacion DESC
         ");
@@ -1936,7 +1936,7 @@ class ventas
                 "fechaemision" => $qwe[17],
                 "shortlink" => $qwe[18],
                 "urlsin" => $qwe[19],
-                "tipo" => "cotizacion" // 🔸 Distinción
+                "tipo" => "cotizacion" 
             );
             array_push($lista, $res);
         }
@@ -2018,7 +2018,7 @@ class ventas
             a.idusuario, 
             ctz.num as nfactura,   
             s.nombre as sucursal, 
-            ctz.estado as estado, 
+            ctz.condicion as estado, 
             '' as cuf, 
             '' as shortlink, 
             '' as urlsin,

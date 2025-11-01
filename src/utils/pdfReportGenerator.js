@@ -834,6 +834,7 @@ export function generarPdfCotizacion(data) {
   comprobanteData.fecha = cotizacionInfo.fecha
   comprobanteData.usuario = usuarioInfo.usuario
   comprobanteData.cargo = usuarioInfo.cargo // Asumo que hay un campo rol en usuario
+  const condicion = cotizacionInfo.condicion
   const estado = cotizacionInfo.estado
   console.log(estado)
   let currentSubtotal = 0
@@ -961,7 +962,6 @@ export function generarPdfCotizacion(data) {
           const imgHeight = 20 // Alto del logo en mm
           const xPos = pageWidth - imgWidth - 5 // 10mm de margen derecho
           const yPos = 5 // margen superior
-          console.log(logoBase64)
           doc.addImage(logoBase64, 'JPEG', xPos, yPos, imgWidth, imgHeight)
         }
 
@@ -1036,7 +1036,7 @@ export function generarPdfCotizacion(data) {
   })
 
   // --- Lógica para el Watermark "Anulado" ---
-  if (estado == 2) {
+  if (condicion == 2) {
     const pageWidth = doc.internal.pageSize.getWidth()
     const pageHeight = doc.internal.pageSize.getHeight()
     const centerX = pageWidth / 2
@@ -1973,7 +1973,6 @@ export function DPFReporteCotizacion(cotizaciones) {
   const nombreEmpresa = idempresa.empresa.nombre
   const direccionEmpresa = idempresa.empresa.direccion
   const telefonoEmpresa = idempresa.empresa.telefono
-  const logoEmpresa = idempresa.empresa.logo // Base64 string or URL
 
   // Columns for jsPDF-autoTable
   const columns = [
@@ -2061,8 +2060,14 @@ export function DPFReporteCotizacion(cotizaciones) {
 
       // Line before header
       if (doc.internal.getNumberOfPages() === 1) {
-        if (logoEmpresa && logoEmpresa.startsWith('data:image')) {
-          //doc.addImage(logoEmpresa, 'PNG', 180, 8, 20, 20) // Adjust x, y, width, height
+        if (logoBase64) {
+          const pageWidth = doc.internal.pageSize.getWidth() // Ancho total página
+          const imgWidth = 20 // Ancho del logo en mm
+          const imgHeight = 20 // Alto del logo en mm
+          const xPos = pageWidth - imgWidth - 5 // 10mm de margen derecho
+          const yPos = 5 // margen superior
+          console.log(logoBase64)
+          doc.addImage(logoBase64, 'JPEG', xPos, yPos, imgWidth, imgHeight)
         }
         // If logoEmpresa is a URL, it's more complex. Consider using it as Base64.
         // doc.addImage(`${URL_APIE}${logoEmpresa}`, 'PNG', 180, 8, 20, 20) // If using URL, uncomment and ensure URL_APIE is defined

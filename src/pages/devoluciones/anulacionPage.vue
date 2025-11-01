@@ -1288,16 +1288,16 @@ const estadoCotizacion = async (idcotizacion) => {
     const response = await api.get(`estadoCotizacion/${idcotizacion}`)
     console.log(response)
     if (response.data.status === 'success') {
-      estadoFactura.value = response.data.data.estado
+      estadoFactura.value = response.data.data.condicion
       modalEstadoFactura.value = true
     } else {
-      throw new Error(response.data.error || 'Error al verificar estado')
+      throw new Error(response.data.error || 'Error al verificar condicion')
     }
   } catch (error) {
-    console.error('Error al verificar estado de factura:', error)
+    console.error('Error al verificar condicion de factura:', error)
     $q.notify({
       type: 'negative',
-      message: 'Error al verificar estado de factura',
+      message: 'Error al verificar condicion de factura',
     })
   } finally {
     $q.loading.hide()
@@ -1594,7 +1594,13 @@ const autorizarDevolucion = async (id) => {
 
 const generarComprobantePDF = async (row) => {
   console.log(row)
-  const id = Number(row.tipoventa) === -1 ? row.idventa : row.id
+  let id
+
+  if (Number(row.tipoventa) === -1) {
+    id = row.tipo === 'cotizacion' ? row.id : row.idventa
+  } else {
+    id = row.id
+  }
 
   try {
     $q.loading.show({ message: 'Generando comprobante...' })
