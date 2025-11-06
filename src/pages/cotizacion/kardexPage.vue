@@ -365,6 +365,7 @@ async function generarReporte() {
 
   try {
     const endpoint = `kardex/${fechaiR.value}/${fechafR.value}/${almacenR.value}/${idproductoR.value}/${idempresa}`
+    console.log(endpoint)
     const response = await api.get(endpoint)
     const data = response.data
     // Guardar los datos originales para recalcular con diferentes métodos

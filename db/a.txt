@@ -1,0 +1,29 @@
+{
+  "status": "success",
+  "data": {
+    "cuf": "86DCEAF56777055B1A3DC3E8AC08D8182A5C1A5F1295B1E87DD22F74",
+    "ack_ticket": "68defb0f64153",
+    "urlSin": "https://siat.impuestos.gob.bo/consulta/QR?nit=123189023&cuf=86DCEAF56777055B1A3DC3E8AC08D8182A5C1A5F1295B1E87DD22F74&numero=25",
+    "xml_url": "https://emizor-web-prod.s3.amazonaws.com/company/100317/branch/451/86DCEAF56777055B1A3DC3E8AC08D8182A5C1A5F1295B1E87DD22F74.xml",
+    "emission_type_code": 1,
+    "fechaEmision": "2025-10-02 18:22:07",
+    "numeroFactura": 25,
+    "shortLink": "https://fel.emizor.com/inv/68defb0f64153",
+    "codigoEstado": null
+  }
+}
+
+{
+  "status": "success",
+  "data": {
+    "cuf": "86DCEAF56777055B1A3DC3E8AC08D8182A5C1A5F1295B1E87DD22F74",
+    "ack_ticket": "68defb0f64153",
+    "urlSin": "https://siat.impuestos.gob.bo/consulta/QR?nit=123189023&cuf=86DCEAF56777055B1A3DC3E8AC08D8182A5C1A5F1295B1E87DD22F74&numero=25",
+    "xml_url": "https://emizor-web-prod.s3.amazonaws.com/company/100317/branch/451/86DCEAF56777055B1A3DC3E8AC08D8182A5C1A5F1295B1E87DD22F74.xml",
+    "emission_type_code": 1,
+    "fechaEmision": "2025-10-02 18:22:07",
+    "numeroFactura": 25,
+    "shortLink": "https://fel.emizor.com/inv/68defb0f64153",
+    "codigoEstado": null
+  }
+}

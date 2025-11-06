@@ -90,3 +90,35 @@ left join sucursal s on ctz.idsucursal=s.id_sucursal
 where c.idempresa = 50 a.tipo_venta = 'COTIZACION'
 group by ctz.id_cotizacion
 order by ctz.fecha_cotizacion desc, ctz.id_cotizacion desc;
+
+
+id_venta fecha_venta tipo_venta monto_total descuento tipo_pago cliente_id_cliente1 divisas_id_divisas id_usuario nfactura idsucursal idcampaña nroventa estado idcanal codigoventa punto_venta puntoVentaSin leyenda
+
+
+id_venta fecha_venta tipo_venta monto_total descuento tipo_pago cliente_id_cliente1 divisas_id_divisas id_usuario nfactura idsucursal idcampaña nroventa estado idcanal codigoventa punto_venta puntoVentaSin leyenda
+
+select 
+  v.id_venta,
+  v.fecha_venta, 
+  v.tipo_venta, 
+  v.monto_total, 
+  v.descuento, 
+  v.tipo_pago, 
+  v.cliente_id_cliente1, 
+  v.divisas_id_divisas, 
+  v.id_usuario, 
+  v.nfactura, 
+  v.idsucursal, 
+  v.idcampaña, 
+  v.nroventa, 
+  v.estado, 
+  v.idcanal, 
+  vf.cuf, 
+  vf.shortLink, 
+  vf.urlSin, 
+  v.punto_venta,
+  v.puntoVentaSin,
+  v.leyenda 
+from ventas v
+left join ventas_facturadas vf on v.id_venta=vf.venta_id_venta
+where v.cliente_id_cliente1=1234    

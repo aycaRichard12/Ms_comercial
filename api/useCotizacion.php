@@ -112,7 +112,7 @@ class UseCotizacion
 
                 // D. Ejecutar Restock (Reabastecimiento)
                 while ($qwe = $this->cm->fetch($productos)) { // Usar fetch_assoc o fetch_array si tienes una función fetch
-                    $codigo = "AN";
+                    $codigo = "ANC";
                     
                     // 1. Desactivar el stock antiguo
                     $registro_old_stock = $this->cm->query("update stock set estado=2 where id_stock='$qwe[id_stock]'");
@@ -128,8 +128,7 @@ class UseCotizacion
                     if (!$nuevostock) {
                         throw new Exception("Error al insertar nuevo stock para producto: $id_almacen.");
                     }
-                }
-                                    
+                }                    
                 $res = array("estado" => "exito", "mensaje" => "Cotización anulada y stock devuelto correctamente.", "datosFactura" => $condicionventa);
 
             }elseif($condicion == 0){
