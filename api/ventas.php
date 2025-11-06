@@ -2448,7 +2448,7 @@ class ventas
                 where di.productos_almacen_id_productos_almacen = s.productos_almacen_id_productos_almacen limit 1
             ),0)
             when dm.idcompra is not null then COALESCE((
-                select id_detalle_ingreso from detalle_ingreso where id_detalle_ingreso = dm.idcompra limit 1
+                select id_detalle_ingreso from detalle_ingreso where ingreso_id_ingreso = dm.idcompra limit 1
             ),0)
         end as id_detalle_ingreso
         from detalle_mermas dm
@@ -2684,7 +2684,7 @@ class ventas
                 where di.productos_almacen_id_productos_almacen = s.productos_almacen_id_productos_almacen limit 1
             ),0)
             when dr.idcompra is not null then COALESCE((
-                select id_detalle_ingreso from detalle_ingreso where id_detalle_ingreso = dr.idcompra limit 1
+                select id_detalle_ingreso from detalle_ingreso where ingreso_id_ingreso = dr.idcompra limit 1
             ),0)
         end as id_detalle_ingreso 
         FROM detalle_robo dr
