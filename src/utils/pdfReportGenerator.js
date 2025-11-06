@@ -18,6 +18,12 @@ let contenidousuario = null
 let idempresa = null
 let logoEmpresa = null
 let ColoEncabezadoTabla = [128, 128, 128] // Negro
+let nombreEmpresa = null
+let direccionEmpresa = null
+let telefonoEmpresa = null
+let nombre = null
+let cargo = null
+let email_emizor = null
 const tipo = { 1: 'Pedido Compra', 2: 'Pedido Movimiento' }
 
 async function initPdfReportGenerator() {
@@ -25,6 +31,12 @@ async function initPdfReportGenerator() {
   idempresa = contenidousuario[0]
   logoEmpresa = idempresa.empresa.logo
   logoBase64 = await cargarLogoBase64(logoEmpresa)
+  nombreEmpresa = idempresa.empresa.nombre
+  direccionEmpresa = idempresa.empresa.direccion
+  telefonoEmpresa = idempresa.empresa.telefono
+  nombre = idempresa.nombre
+  cargo = idempresa.cargo
+  email_emizor = idempresa.empresa.email
 }
 
 export function getLogoBase64() {
@@ -34,14 +46,7 @@ export function getLogoBase64() {
 initPdfReportGenerator()
 
 export default function imprimirReporte(detallePedido) {
-  const contenidousuario = validarUsuario()
   const doc = new jsPDF({ orientation: 'portrait' })
-
-  const idempresa = contenidousuario[0]
-  const nombreEmpresa = idempresa.empresa.nombre
-  const direccionEmpresa = idempresa.empresa.direccion
-  const telefonoEmpresa = idempresa.empresa.telefono
-  const logoEmpresa = idempresa.empresa.logo
 
   const columns = [
     { header: 'N°', dataKey: 'indice' },
@@ -85,8 +90,14 @@ export default function imprimirReporte(detallePedido) {
     theme: 'striped',
     didDrawPage: () => {
       if (doc.internal.getNumberOfPages() === 1) {
-        if (logoEmpresa) {
-          //doc.addImage(`${URL_APIE}/${logoEmpresa}`, 'PNG', 180, 8, 20, 20)
+        if (logoBase64) {
+          const pageWidth = doc.internal.pageSize.getWidth() // Ancho total página
+          const imgWidth = 20 // Ancho del logo en mm
+          const imgHeight = 20 // Alto del logo en mm
+          const xPos = pageWidth - imgWidth - 5 // 10mm de margen derecho
+          const yPos = 5 // margen superior
+          console.log(logoBase64)
+          doc.addImage(logoBase64, 'JPEG', xPos, yPos, imgWidth, imgHeight)
         }
 
         doc.setFontSize(7)
@@ -136,16 +147,7 @@ export default function imprimirReporte(detallePedido) {
   return doc
 }
 export function PDFreporteCuentasXCobrarPeriodo(reportData, startDate, endDate) {
-  const contenidousuario = validarUsuario()
   const doc = new jsPDF({ orientation: 'portrait' })
-
-  const idempresa = contenidousuario[0]
-  const nombreEmpresa = idempresa.empresa.nombre
-  const direccionEmpresa = idempresa.empresa.direccion
-  const telefonoEmpresa = idempresa.empresa.telefono
-  const logoEmpresa = idempresa.empresa.logo // Base64 string or URL
-  const nombre = idempresa.nombre
-  const cargo = idempresa.cargo
 
   // Columns for jsPDF-autoTable
   const columns = [
@@ -236,8 +238,14 @@ export function PDFreporteCuentasXCobrarPeriodo(reportData, startDate, endDate) 
 
       // Line before header
       if (doc.internal.getNumberOfPages() === 1) {
-        if (logoEmpresa && logoEmpresa.startsWith('data:image')) {
-          doc.addImage(logoEmpresa, 'PNG', 180, 8, 20, 20) // Adjust x, y, width, height
+        if (logoBase64) {
+          const pageWidth = doc.internal.pageSize.getWidth() // Ancho total página
+          const imgWidth = 20 // Ancho del logo en mm
+          const imgHeight = 20 // Alto del logo en mm
+          const xPos = pageWidth - imgWidth - 5 // 10mm de margen derecho
+          const yPos = 5 // margen superior
+          console.log(logoBase64)
+          doc.addImage(logoBase64, 'JPEG', xPos, yPos, imgWidth, imgHeight)
         }
         // If logoEmpresa is a URL, it's more complex. Consider using it as Base64.
         // doc.addImage(`${URL_APIE}${logoEmpresa}`, 'PNG', 180, 8, 20, 20) // If using URL, uncomment and ensure URL_APIE is defined
@@ -529,7 +537,6 @@ export function PDFreporteStockProductosIndividual(processedRows) {
   const nombreEmpresa = idempresa.empresa.nombre
   const direccionEmpresa = idempresa.empresa.direccion
   const telefonoEmpresa = idempresa.empresa.telefono
-  const logoEmpresa = idempresa.empresa.logo // Ruta relativa o base64
 
   const columns = [
     { header: 'N°', dataKey: 'indice' },
@@ -629,9 +636,14 @@ export function PDFreporteStockProductosIndividual(processedRows) {
     didDrawPage: () => {
       if (doc.internal.getNumberOfPages() === 1) {
         // Logo (requiere base64 o ruta absoluta en servidor si usas Node)
-        if (logoEmpresa) {
-          //console.log(`${URL_APIE}${logoEmpresa}`)
-          //doc.addImage(`${URL_APIE}${logoEmpresa}`, 'PNG', 180, 8, 20, 20)
+        if (logoBase64) {
+          const pageWidth = doc.internal.pageSize.getWidth() // Ancho total página
+          const imgWidth = 20 // Ancho del logo en mm
+          const imgHeight = 20 // Alto del logo en mm
+          const xPos = pageWidth - imgWidth - 5 // 10mm de margen derecho
+          const yPos = 5 // margen superior
+          console.log(logoBase64)
+          doc.addImage(logoBase64, 'JPEG', xPos, yPos, imgWidth, imgHeight)
         }
 
         // Nombre y datos de empresa
@@ -668,7 +680,6 @@ export function PDFreporteStockProductosIndividual_img(processedRows) {
   const nombreEmpresa = idempresa.empresa.nombre
   const direccionEmpresa = idempresa.empresa.direccion
   const telefonoEmpresa = idempresa.empresa.telefono
-  const logoEmpresa = idempresa.empresa.logo // Ruta relativa o base64
 
   const columns = [
     { header: 'N°', dataKey: 'indice' },
@@ -765,12 +776,14 @@ export function PDFreporteStockProductosIndividual_img(processedRows) {
       // Only add header on first page
       if (data.pageNumber === 1) {
         // Logo
-        if (logoEmpresa) {
-          try {
-            //doc.addImage(logoEmpresa, 'PNG', 180, 8, 20, 20)
-          } catch (error) {
-            console.error('Error loading logo:', error)
-          }
+        if (logoBase64) {
+          const pageWidth = doc.internal.pageSize.getWidth() // Ancho total página
+          const imgWidth = 20 // Ancho del logo en mm
+          const imgHeight = 20 // Alto del logo en mm
+          const xPos = pageWidth - imgWidth - 5 // 10mm de margen derecho
+          const yPos = 5 // margen superior
+          console.log(logoBase64)
+          doc.addImage(logoBase64, 'JPEG', xPos, yPos, imgWidth, imgHeight)
         }
 
         // Company info
@@ -834,7 +847,9 @@ export function generarPdfCotizacion(data) {
   comprobanteData.fecha = cotizacionInfo.fecha
   comprobanteData.usuario = usuarioInfo.usuario
   comprobanteData.cargo = usuarioInfo.cargo // Asumo que hay un campo rol en usuario
-
+  const condicion = cotizacionInfo.condicion
+  const estado = cotizacionInfo.estado
+  console.log(estado)
   let currentSubtotal = 0
   const detalleProductos = cotizacionDetalle.detalle.map((item) => {
     const totalProducto = redondear(item.cantidad * item.precio)
@@ -886,11 +901,13 @@ export function generarPdfCotizacion(data) {
 
   const descuento = decimas(detallePlano.descuento || 0)
 
-  datos.push(
-    { precio: 'SUBTOTAL', total: decimas(subtotal) },
-    { precio: 'DESCUENTO', total: decimas(descuento) },
-    { precio: 'MONTO TOTAL', total: decimas(montototal) },
-  )
+  // Fila para Subtotal
+  datos.push({ precio: 'SUBTOTAL', total: decimas(subtotal) })
+  // Fila para Descuento
+  datos.push({ precio: 'DESCUENTO', total: decimas(descuento) })
+  // Fila para Monto Total
+  datos.push({ precio: 'MONTO TOTAL', total: decimas(montototal) })
+
   autoTable(doc, {
     columns,
     body: datos,
@@ -914,33 +931,37 @@ export function generarPdfCotizacion(data) {
     },
     didDrawCell: function (data) {
       if (data.column.dataKey === 'descripcion' && data.cell.section === 'body') {
-        const item = detallePlano.detalle[data.row.index]
-        if (item && item.descripcionAdicional) {
-          const text = convertirAMayusculas(doc.splitTextToSize(item.descripcionAdicional, 45))
-          doc.setFontSize(4)
-          doc.setTextColor(100)
-          doc.text(
-            text,
-            data.cell.x + 2,
-            data.cell.y + data.cell.height - 1, // justo debajo del texto principal
-          )
-          doc.setTextColor(0)
+        // Asegurarse de que el índice es válido para el detalle de productos
+        const detailIndex = data.row.index
+        // La tabla tiene filas adicionales para subtotales, descuentos y montos totales
+        // Estas filas deben excluirse de la búsqueda de 'descripcionAdicional'
+        if (detailIndex < detallePlano.detalle.length) {
+          const item = detallePlano.detalle[detailIndex]
+          if (item && item.descripcionAdicional) {
+            const text = convertirAMayusculas(doc.splitTextToSize(item.descripcionAdicional, 45))
+            doc.setFontSize(4)
+            doc.setTextColor(100)
+            doc.text(
+              text,
+              data.cell.x + 2,
+              data.cell.y + data.cell.height - 1, // justo debajo del texto principal
+            )
+            doc.setTextColor(0)
+          }
         }
       }
     },
     didParseCell: function (data) {
-      // Ejemplo: destacar la última fila (que contiene el Monto Total)
-      if (data.row.index === datos.length - 1) {
-        data.cell.styles.halign = 'left'
-      }
-      if (data.row.index === datos.length - 2) {
-        data.cell.styles.halign = 'left'
-      }
-      if (data.row.index === datos.length - 3) {
-        data.cell.styles.halign = 'left'
+      // Destacar las últimas filas (SUBTOTAL, DESCUENTO, MONTO TOTAL)
+      if (data.row.index >= datos.length - 3) {
+        // La primera columna de estas filas es donde está el texto (precio)
+        if (data.column.dataKey === 'precio') {
+          data.cell.styles.halign = 'left'
+          data.cell.styles.fontStyle = 'bold' // Opcional: poner el texto en negrita
+        }
+        // La columna Total debe seguir alineada a la derecha, por lo que no la modificamos aquí.
       }
     },
-    //20 + 15 + 20 + 25 + 30 + 20 + 20 + 25 + 20 + 15 + 20 + 15 + 20 = 265 mm
 
     startY: 50,
     margin: { horizontal: 5 },
@@ -954,7 +975,6 @@ export function generarPdfCotizacion(data) {
           const imgHeight = 20 // Alto del logo en mm
           const xPos = pageWidth - imgWidth - 5 // 10mm de margen derecho
           const yPos = 5 // margen superior
-          console.log(logoBase64)
           doc.addImage(logoBase64, 'JPEG', xPos, yPos, imgWidth, imgHeight)
         }
 
@@ -1028,8 +1048,30 @@ export function generarPdfCotizacion(data) {
     },
   })
 
-  // doc.save('proveedores.pdf') ← comenta o elimina esta línea
-  //doc.output('dataurlnewwindow') // ← muestra el PDF en una nueva ventana del navegador
+  // --- Lógica para el Watermark "Anulado" ---
+  if (condicion == 2) {
+    const pageWidth = doc.internal.pageSize.getWidth()
+    const pageHeight = doc.internal.pageSize.getHeight()
+    const centerX = pageWidth / 2
+    const centerY = pageHeight / 2
+
+    // Texto diagonal grande simulando transparencia
+    doc.setFontSize(70)
+    doc.setTextColor(255, 0, 0) // rojo puro
+    doc.setGState(new doc.GState({ opacity: 0.15 })) // 🔥 usa opacidad real
+    doc.setFont(undefined, 'bold')
+
+    doc.text('ANULADO', centerX, centerY, {
+      angle: 45,
+      align: 'center',
+    })
+
+    // Restablecer
+    doc.setGState(new doc.GState({ opacity: 1 }))
+    doc.setFontSize(6)
+    doc.setTextColor(0)
+  }
+
   return doc
 }
 
@@ -1042,7 +1084,6 @@ export function PDFfacturaCorreo(detalleVenta) {
 
   const direccionEmpresa = usuario.empresa.direccion
   const telefonoEmpresa = usuario.empresa.telefono
-  const logoEmpresa = usuario.empresa.logo // Ruta relativa o base64
 
   const columns = [
     { header: 'N°', dataKey: 'indice' },
@@ -1118,8 +1159,14 @@ export function PDFfacturaCorreo(detalleVenta) {
     didDrawPage: () => {
       if (doc.internal.getNumberOfPages() === 1) {
         // Logo (requiere base64 o ruta absoluta en servidor si usas Node)
-        if (logoEmpresa) {
-          //doc.addImage(`${URL_APIE}${logoEmpresa}`, 'PNG', 180, 8, 20, 20)
+        if (logoBase64) {
+          const pageWidth = doc.internal.pageSize.getWidth() // Ancho total página
+          const imgWidth = 20 // Ancho del logo en mm
+          const imgHeight = 20 // Alto del logo en mm
+          const xPos = pageWidth - imgWidth - 5 // 10mm de margen derecho
+          const yPos = 5 // margen superior
+          console.log(logoBase64)
+          doc.addImage(logoBase64, 'JPEG', xPos, yPos, imgWidth, imgHeight)
         }
 
         // Nombre y datos de empresa
@@ -1400,17 +1447,8 @@ export function PDFComprovanteVenta(detalleVenta) {
 }
 
 export function PDFreporteVentasPeriodo(filteredCompra, almacen) {
-  console.log(filteredCompra, almacen, almacen.value)
-  const contenidousuario = validarUsuario()
   const doc = new jsPDF({ orientation: 'portrait' })
 
-  const idempresa = contenidousuario[0]
-  const nombreEmpresa = idempresa.empresa.nombre
-  const direccionEmpresa = idempresa.empresa.direccion
-  const telefonoEmpresa = idempresa.empresa.telefono
-  const logoEmpresa = idempresa.empresa.logo // Ruta relativa o base64
-  const nombre = idempresa.nombre
-  const cargo = idempresa.cargo
   const columns = [
     { header: 'N', dataKey: 'indice' },
     { header: 'Fecha', dataKey: 'fecha' },
@@ -1492,8 +1530,14 @@ export function PDFreporteVentasPeriodo(filteredCompra, almacen) {
     didDrawPage: () => {
       if (doc.internal.getNumberOfPages() === 1) {
         // Logo (requiere base64 o ruta absoluta en servidor si usas Node)
-        if (logoEmpresa) {
-          //doc.addImage(`${URL_APIE}${logoEmpresa}`, 'PNG', 180, 8, 20, 20)
+        if (logoBase64) {
+          const pageWidth = doc.internal.pageSize.getWidth() // Ancho total página
+          const imgWidth = 20 // Ancho del logo en mm
+          const imgHeight = 20 // Alto del logo en mm
+          const xPos = pageWidth - imgWidth - 5 // 10mm de margen derecho
+          const yPos = 5 // margen superior
+          console.log(logoBase64)
+          doc.addImage(logoBase64, 'JPEG', xPos, yPos, imgWidth, imgHeight)
         }
 
         // Nombre y datos de empresa
@@ -1545,16 +1589,6 @@ export function PDFreporteVentasPeriodo(filteredCompra, almacen) {
 }
 
 export async function PDFenviarFacturaCorreo(idcliente, detalleVenta, $q) {
-  const contenidousuario = validarUsuario()
-  //const doc = new jsPDF({ orientation: 'portrait' })
-
-  const usuario = contenidousuario[0]
-  const nombreEmpresa = usuario.empresa.nombre
-  const email_emizor = usuario.empresa.email
-  const idempresa = usuario.empresa.idempresa
-  const direccionEmpresa = usuario.empresa.direccion
-  const telefonoEmpresa = usuario.empresa.telefono
-
   const detallePlano = JSON.parse(JSON.stringify(detalleVenta.value))
   const doc = PDFfacturaCorreo(detalleVenta)
   try {
@@ -1614,16 +1648,6 @@ export async function PDFenviarFacturaCorreo(idcliente, detalleVenta, $q) {
 }
 
 export async function PDFenviarComprobanteCorreo(idcliente, data, $q) {
-  const contenidousuario = validarUsuario()
-  //const doc = new jsPDF({ orientation: 'portrait' })
-  console.log(idcliente)
-  const usuario = contenidousuario[0]
-  const nombreEmpresa = usuario.empresa.nombre
-  const email_emizor = usuario.empresa.email
-  const idempresa = usuario.empresa.idempresa
-  const direccionEmpresa = usuario.empresa.direccion
-  const telefonoEmpresa = usuario.empresa.telefono
-
   const doc = generarPdfCotizacion(data)
   try {
     const response = await api.get(`obtenerEmailCliente/${idcliente}`) // Cambia a tu ruta real
@@ -1683,14 +1707,7 @@ export async function PDFenviarComprobanteCorreo(idcliente, data, $q) {
 
 export async function PDFdetalleVentaInicio(detalleVenta) {
   console.log(detalleVenta)
-  const contenidousuario = validarUsuario()
   const doc = new jsPDF({ orientation: 'portrait' })
-
-  const idempresa = contenidousuario[0]
-  const nombreEmpresa = idempresa.empresa.nombre
-  const direccionEmpresa = idempresa.empresa.direccion
-  const telefonoEmpresa = idempresa.empresa.telefono
-  const logoEmpresa = idempresa.empresa.logo // Ruta relativa o base64
 
   const columns = [
     { header: 'N°', dataKey: 'indice' },
@@ -1773,9 +1790,14 @@ export async function PDFdetalleVentaInicio(detalleVenta) {
     theme: 'striped',
     didDrawPage: () => {
       if (doc.internal.getNumberOfPages() === 1) {
-        // Logo (requiere base64 o ruta absoluta en servidor si usas Node)
-        if (logoEmpresa) {
-          //doc.addImage(`${URL_APIE}${logoEmpresa}`, 'PNG', 180, 8, 20, 20)
+        if (logoBase64) {
+          const pageWidth = doc.internal.pageSize.getWidth() // Ancho total página
+          const imgWidth = 20 // Ancho del logo en mm
+          const imgHeight = 20 // Alto del logo en mm
+          const xPos = pageWidth - imgWidth - 5 // 10mm de margen derecho
+          const yPos = 5 // margen superior
+          console.log(logoBase64)
+          doc.addImage(logoBase64, 'JPEG', xPos, yPos, imgWidth, imgHeight)
         }
 
         // Nombre y datos de empresa
@@ -1862,16 +1884,6 @@ export async function PDFdetalleVentaInicio(detalleVenta) {
 }
 
 export async function PDFenviarFacturaCorreoAlInicio(idcliente, detalleVenta, $q) {
-  const contenidousuario = validarUsuario()
-  //const doc = new jsPDF({ orientation: 'portrait' })
-
-  const usuario = contenidousuario[0]
-  const nombreEmpresa = usuario.empresa.nombre
-  const email_emizor = usuario.empresa.email
-  const idempresa = usuario.empresa.idempresa
-  const direccionEmpresa = usuario.empresa.direccion
-  const telefonoEmpresa = usuario.empresa.telefono
-
   const detallePlano = detalleVenta
 
   const doc = await PDFdetalleVentaInicio(detalleVenta)
@@ -1933,14 +1945,7 @@ export async function PDFenviarFacturaCorreoAlInicio(idcliente, detalleVenta, $q
 
 export function DPFReporteCotizacion(cotizaciones) {
   console.log(cotizaciones.value)
-  const contenidousuario = validarUsuario()
   const doc = new jsPDF({ orientation: 'portrait' })
-
-  const idempresa = contenidousuario[0]
-  const nombreEmpresa = idempresa.empresa.nombre
-  const direccionEmpresa = idempresa.empresa.direccion
-  const telefonoEmpresa = idempresa.empresa.telefono
-  const logoEmpresa = idempresa.empresa.logo // Base64 string or URL
 
   // Columns for jsPDF-autoTable
   const columns = [
@@ -2028,8 +2033,14 @@ export function DPFReporteCotizacion(cotizaciones) {
 
       // Line before header
       if (doc.internal.getNumberOfPages() === 1) {
-        if (logoEmpresa && logoEmpresa.startsWith('data:image')) {
-          //doc.addImage(logoEmpresa, 'PNG', 180, 8, 20, 20) // Adjust x, y, width, height
+        if (logoBase64) {
+          const pageWidth = doc.internal.pageSize.getWidth() // Ancho total página
+          const imgWidth = 20 // Ancho del logo en mm
+          const imgHeight = 20 // Alto del logo en mm
+          const xPos = pageWidth - imgWidth - 5 // 10mm de margen derecho
+          const yPos = 5 // margen superior
+          console.log(logoBase64)
+          doc.addImage(logoBase64, 'JPEG', xPos, yPos, imgWidth, imgHeight)
         }
         // If logoEmpresa is a URL, it's more complex. Consider using it as Base64.
         // doc.addImage(`${URL_APIE}${logoEmpresa}`, 'PNG', 180, 8, 20, 20) // If using URL, uncomment and ensure URL_APIE is defined
@@ -2080,14 +2091,7 @@ export function DPFReporteCotizacion(cotizaciones) {
 
 export function PDFConprovanteCotizacion(cotizacion) {
   console.log(cotizacion[0].detalle)
-  const contenidousuario = validarUsuario()
   const doc = new jsPDF({ orientation: 'portrait' })
-
-  const usuario = contenidousuario[0]
-  const nombreEmpresa = usuario.empresa.nombre
-  const direccionEmpresa = usuario.empresa.direccion
-  const telefonoEmpresa = usuario.empresa.telefono
-  const logoEmpresa = usuario.empresa.logo
 
   const columns = [
     { header: 'N°', dataKey: 'nro' },
@@ -2148,9 +2152,16 @@ export function PDFConprovanteCotizacion(cotizacion) {
       doc.setDrawColor(0) // Black
       doc.setLineWidth(0.2) // Line thickness
       if (doc.internal.getNumberOfPages() === 1) {
-        if (logoEmpresa && logoEmpresa.startsWith('data:image')) {
-          //doc.addImage(logoEmpresa, 'PNG', 180, 8, 20, 20) // Adjust x, y, width, height
+        if (logoBase64) {
+          const pageWidth = doc.internal.pageSize.getWidth() // Ancho total página
+          const imgWidth = 20 // Ancho del logo en mm
+          const imgHeight = 20 // Alto del logo en mm
+          const xPos = pageWidth - imgWidth - 5 // 10mm de margen derecho
+          const yPos = 5 // margen superior
+          console.log(logoBase64)
+          doc.addImage(logoBase64, 'JPEG', xPos, yPos, imgWidth, imgHeight)
         }
+
         // If logoEmpresa is a URL, it's more complex. Consider using it as Base64.
         // doc.addImage(`${URL_APIE}${logoEmpresa}`, 'PNG', 180, 8, 20, 20) // If using URL, uncomment and ensure URL_APIE is defined
 
@@ -2197,14 +2208,7 @@ export function PDFConprovanteCotizacion(cotizacion) {
 }
 
 export function PDFextrabiosRobos(extravios) {
-  const contenidousuario = validarUsuario()
   const doc = new jsPDF({ orientation: 'portrait' })
-
-  const idempresa = contenidousuario[0]
-  const nombreEmpresa = idempresa.empresa.nombre
-  const direccionEmpresa = idempresa.empresa.direccion
-  const telefonoEmpresa = idempresa.empresa.telefono
-  const logoEmpresa = idempresa.empresa.logo // Base64 string or URL
 
   // Columns for jsPDF-autoTable
   const columns = [
@@ -2266,9 +2270,16 @@ export function PDFextrabiosRobos(extravios) {
 
       // Line before header
       if (doc.internal.getNumberOfPages() === 1) {
-        if (logoEmpresa && logoEmpresa.startsWith('data:image')) {
-          //doc.addImage(logoEmpresa, 'PNG', 180, 8, 20, 20) // Adjust x, y, width, height
+        if (logoBase64) {
+          const pageWidth = doc.internal.pageSize.getWidth() // Ancho total página
+          const imgWidth = 20 // Ancho del logo en mm
+          const imgHeight = 20 // Alto del logo en mm
+          const xPos = pageWidth - imgWidth - 5 // 10mm de margen derecho
+          const yPos = 5 // margen superior
+          console.log(logoBase64)
+          doc.addImage(logoBase64, 'JPEG', xPos, yPos, imgWidth, imgHeight)
         }
+
         // If logoEmpresa is a URL, it's more complex. Consider using it as Base64.
         // doc.addImage(`${URL_APIE}${logoEmpresa}`, 'PNG', 180, 8, 20, 20) // If using URL, uncomment and ensure URL_APIE is defined
 
@@ -2317,15 +2328,7 @@ export function PDFextrabiosRobos(extravios) {
 }
 
 export function PDFComprovanteExtravio(detalleExtravio) {
-  const contenidousuario = validarUsuario()
   const doc = new jsPDF({ orientation: 'portrait' })
-
-  const idempresa = contenidousuario[0]
-  const nombreEmpresa = idempresa.empresa.nombre
-  const direccionEmpresa = idempresa.empresa.direccion
-  const telefonoEmpresa = idempresa.empresa.telefono
-  const logoEmpresa = idempresa.empresa.logo // Ruta relativa o base64
-
   const columns = [
     { header: 'N°', dataKey: 'indice' },
     { header: 'Codigo', dataKey: 'codigo' },
@@ -2368,8 +2371,14 @@ export function PDFComprovanteExtravio(detalleExtravio) {
     didDrawPage: () => {
       if (doc.internal.getNumberOfPages() === 1) {
         // Logo (requiere base64 o ruta absoluta en servidor si usas Node)
-        if (logoEmpresa) {
-          //doc.addImage(`${URL_APIE}${logoEmpresa}`, 'PNG', 180, 8, 20, 20)
+        if (logoBase64) {
+          const pageWidth = doc.internal.pageSize.getWidth() // Ancho total página
+          const imgWidth = 20 // Ancho del logo en mm
+          const imgHeight = 20 // Alto del logo en mm
+          const xPos = pageWidth - imgWidth - 5 // 10mm de margen derecho
+          const yPos = 5 // margen superior
+          console.log(logoBase64)
+          doc.addImage(logoBase64, 'JPEG', xPos, yPos, imgWidth, imgHeight)
         }
 
         // Nombre y datos de empresa
@@ -2395,16 +2404,7 @@ export function PDFComprovanteExtravio(detalleExtravio) {
 }
 
 export function PDFreporteMermas(mermas) {
-  console.log(mermas)
-
-  const contenidousuario = validarUsuario()
   const doc = new jsPDF({ orientation: 'portrait' })
-
-  const idempresa = contenidousuario[0]
-  const nombreEmpresa = idempresa.empresa.nombre
-  const direccionEmpresa = idempresa.empresa.direccion
-  const telefonoEmpresa = idempresa.empresa.telefono
-  const logoEmpresa = idempresa.empresa.logo // Base64 string or URL
 
   // Columns for jsPDF-autoTable
   const columns = [
@@ -2466,9 +2466,16 @@ export function PDFreporteMermas(mermas) {
 
       // Line before header
       if (doc.internal.getNumberOfPages() === 1) {
-        if (logoEmpresa && logoEmpresa.startsWith('data:image')) {
-          //doc.addImage(logoEmpresa, 'PNG', 180, 8, 20, 20) // Adjust x, y, width, height
+        if (logoBase64) {
+          const pageWidth = doc.internal.pageSize.getWidth() // Ancho total página
+          const imgWidth = 20 // Ancho del logo en mm
+          const imgHeight = 20 // Alto del logo en mm
+          const xPos = pageWidth - imgWidth - 5 // 10mm de margen derecho
+          const yPos = 5 // margen superior
+          console.log(logoBase64)
+          doc.addImage(logoBase64, 'JPEG', xPos, yPos, imgWidth, imgHeight)
         }
+
         // If logoEmpresa is a URL, it's more complex. Consider using it as Base64.
         // doc.addImage(`${URL_APIE}${logoEmpresa}`, 'PNG', 180, 8, 20, 20) // If using URL, uncomment and ensure URL_APIE is defined
 
@@ -2517,14 +2524,7 @@ export function PDFreporteMermas(mermas) {
 }
 
 export function PDFComprovanteMerma(detallemerma) {
-  const contenidousuario = validarUsuario()
   const doc = new jsPDF({ orientation: 'portrait' })
-
-  const idempresa = contenidousuario[0]
-  const nombreEmpresa = idempresa.empresa.nombre
-  const direccionEmpresa = idempresa.empresa.direccion
-  const telefonoEmpresa = idempresa.empresa.telefono
-  const logoEmpresa = idempresa.empresa.logo // Ruta relativa o base64
 
   const columns = [
     { header: 'N°', dataKey: 'indice' },
@@ -2568,8 +2568,14 @@ export function PDFComprovanteMerma(detallemerma) {
     didDrawPage: () => {
       if (doc.internal.getNumberOfPages() === 1) {
         // Logo (requiere base64 o ruta absoluta en servidor si usas Node)
-        if (logoEmpresa) {
-          //doc.addImage(`${URL_APIE}${logoEmpresa}`, 'PNG', 180, 8, 20, 20)
+        if (logoBase64) {
+          const pageWidth = doc.internal.pageSize.getWidth() // Ancho total página
+          const imgWidth = 20 // Ancho del logo en mm
+          const imgHeight = 20 // Alto del logo en mm
+          const xPos = pageWidth - imgWidth - 5 // 10mm de margen derecho
+          const yPos = 5 // margen superior
+          console.log(logoBase64)
+          doc.addImage(logoBase64, 'JPEG', xPos, yPos, imgWidth, imgHeight)
         }
 
         // Nombre y datos de empresa
@@ -2595,17 +2601,8 @@ export function PDFComprovanteMerma(detallemerma) {
 }
 
 export function PDFKardex(kardex, almacenLabel, productoLabel, fechaiR, fechafR) {
-  console.log(kardex)
-  console.log(almacenLabel, productoLabel, fechaiR, fechafR)
-  const contenidousuario = validarUsuario()
   const doc = new jsPDF({ orientation: 'portrait' })
 
-  const idempresa = contenidousuario[0]
-  const nombreEmpresa = idempresa.empresa.nombre
-  const direccionEmpresa = idempresa.empresa.direccion
-  const telefonoEmpresa = idempresa.empresa.telefono
-  const nombre = idempresa.nombre
-  const cargo = idempresa.cargo
   const columns = [
     { header: 'N', dataKey: 'c' },
     { header: 'Fecha', dataKey: 'Fecha' },
@@ -2736,15 +2733,7 @@ export function PDFKardex(kardex, almacenLabel, productoLabel, fechaiR, fechafR)
 }
 
 export function PDFCierreCaja(datosCierreCaja) {
-  const contenidousuario = validarUsuario()
   const doc = new jsPDF({ orientation: 'portrait' })
-
-  const idempresa = contenidousuario[0]
-  const nombreEmpresa = idempresa.empresa.nombre
-  const direccionEmpresa = idempresa.empresa.direccion
-  const telefonoEmpresa = idempresa.empresa.telefono
-  const nombre = idempresa.nombre
-  const cargo = idempresa.cargo
 
   // === Información del Encabezado ===
   if (logoBase64) {
@@ -2909,15 +2898,8 @@ export function PDFCierreCaja(datosCierreCaja) {
 }
 
 export function PDFpedidos(ordenados, tipoestados, filtroAlmacen) {
-  const contenidousuario = validarUsuario()
   const doc = new jsPDF({ orientation: 'portrait' })
 
-  const idempresa = contenidousuario[0]
-  const nombreEmpresa = idempresa.empresa.nombre
-  const direccionEmpresa = idempresa.empresa.direccion
-  const telefonoEmpresa = idempresa.empresa.telefono
-  const nombre = idempresa.nombre
-  const cargo = idempresa.cargo
   const columns = [
     { header: 'N', dataKey: 'indice' },
     { header: 'Fecha', dataKey: 'fecha' },
@@ -3042,15 +3024,7 @@ export function PDFpedidos(ordenados, tipoestados, filtroAlmacen) {
 }
 
 export function PDFalmacenes(props) {
-  console.log(props.rows) // ✅ Acceso correcto a los datos reactivos
-
-  const contenidousuario = validarUsuario()
   const doc = new jsPDF({ orientation: 'portrait' })
-
-  const idempresa = contenidousuario[0]
-  const nombreEmpresa = idempresa.empresa.nombre
-  const direccionEmpresa = idempresa.empresa.direccion
-  const telefonoEmpresa = idempresa.empresa.telefono
 
   const columns = [
     { header: 'N°', dataKey: 'indice' },
@@ -3139,17 +3113,7 @@ export function PDFalmacenes(props) {
   return doc
 }
 export function PDF_REPORTE_DE_ROTACION_POR_ALMACEN(reporte, datosFormulario) {
-  // ✅ Acceso correcto a los datos reactivos
-  console.log(reporte)
-  console.log(datosFormulario)
-
-  const contenidousuario = validarUsuario()
   const doc = new jsPDF({ orientation: 'portrait' })
-
-  const idempresa = contenidousuario[0]
-  const nombreEmpresa = idempresa.empresa.nombre
-  const direccionEmpresa = idempresa.empresa.direccion
-  const telefonoEmpresa = idempresa.empresa.telefono
 
   const columns = [
     { header: 'N°', dataKey: 'index' },
@@ -3275,18 +3239,7 @@ export function PDF_REPORTE_DE_ROTACION_POR_ALMACEN(reporte, datosFormulario) {
 }
 
 export function PDF_REPORTE_DE_ROTACION_POR_CLIENTE(reporte, datosFormulario) {
-  // ✅ Acceso correcto a los datos reactivos
-  console.log(reporte)
-  console.log(datosFormulario)
-
-  const contenidousuario = validarUsuario()
   const doc = new jsPDF({ orientation: 'portrait' })
-
-  const idempresa = contenidousuario[0]
-  const nombreEmpresa = idempresa.empresa.nombre
-  const direccionEmpresa = idempresa.empresa.direccion
-  const telefonoEmpresa = idempresa.empresa.telefono
-
   const columns = [
     { header: 'N°', dataKey: 'index' },
     { header: 'Codigo', dataKey: 'codigo' },
@@ -3415,17 +3368,7 @@ export function PDF_REPORTE_DE_ROTACION_POR_CLIENTE(reporte, datosFormulario) {
 }
 
 export function PDF_REPORTE_DE_ROTACION_POR_GLOBAL(reporte, datosFormulario) {
-  // ✅ Acceso correcto a los datos reactivos
-  console.log(reporte)
-  console.log(datosFormulario)
-
-  const contenidousuario = validarUsuario()
   const doc = new jsPDF({ orientation: 'portrait' })
-
-  const idempresa = contenidousuario[0]
-  const nombreEmpresa = idempresa.empresa.nombre
-  const direccionEmpresa = idempresa.empresa.direccion
-  const telefonoEmpresa = idempresa.empresa.telefono
 
   const columns = [
     { header: 'N°', dataKey: 'index' },
@@ -3547,18 +3490,7 @@ export function PDF_REPORTE_DE_ROTACION_POR_GLOBAL(reporte, datosFormulario) {
   return doc
 }
 export function PDF_REPORTE_CAMPANAS(reporte, datosFormulario) {
-  // ✅ Acceso correcto a los datos reactivos
-  console.log(reporte)
-  console.log(datosFormulario)
-
-  const contenidousuario = validarUsuario()
   const doc = new jsPDF({ orientation: 'portrait' })
-
-  const idempresa = contenidousuario[0]
-  const nombreEmpresa = idempresa.empresa.nombre
-  const direccionEmpresa = idempresa.empresa.direccion
-  const telefonoEmpresa = idempresa.empresa.telefono
-
   const columns = [
     { header: 'N°', dataKey: 'n' },
     { header: 'Almacén', dataKey: 'almacen' },
@@ -3673,17 +3605,7 @@ export function PDF_REPORTE_CAMPANAS(reporte, datosFormulario) {
   return doc
 }
 export function PDF_REPORTE_CAMPANAS_VENTAS(reporte, datosFormulario) {
-  // ✅ Acceso correcto a los datos reactivos
-  console.log(reporte)
-  console.log(datosFormulario)
-
-  const contenidousuario = validarUsuario()
   const doc = new jsPDF({ orientation: 'portrait' })
-
-  const idempresa = contenidousuario[0]
-  const nombreEmpresa = idempresa.empresa.nombre
-  const direccionEmpresa = idempresa.empresa.direccion
-  const telefonoEmpresa = idempresa.empresa.telefono
 
   const columns = [
     { header: 'N°', dataKey: 'n' },
@@ -3796,18 +3718,7 @@ export function PDF_REPORTE_CAMPANAS_VENTAS(reporte, datosFormulario) {
   return doc
 }
 export function PDF_REPORTE_MOVIMIENTOS(reporte, datosFormulario) {
-  // ✅ Acceso correcto a los datos reactivos
-  console.log(reporte)
-  console.log(datosFormulario)
-
-  const contenidousuario = validarUsuario()
   const doc = new jsPDF({ orientation: 'portrait' })
-
-  const idempresa = contenidousuario[0]
-  const nombreEmpresa = idempresa.empresa.nombre
-  const direccionEmpresa = idempresa.empresa.direccion
-  const telefonoEmpresa = idempresa.empresa.telefono
-
   const columns = [
     { header: 'N°', dataKey: 'n' },
     { header: 'Fecha', dataKey: 'fecha' },
@@ -3919,17 +3830,7 @@ export function PDF_REPORTE_MOVIMIENTOS(reporte, datosFormulario) {
   return doc
 }
 export function PDF_REPORTE_PEDIDOS(reporte, datosFormulario) {
-  // ✅ Acceso correcto a los datos reactivos
-  console.log(reporte)
-  console.log(datosFormulario)
-
-  const contenidousuario = validarUsuario()
   const doc = new jsPDF({ orientation: 'portrait' })
-
-  const idempresa = contenidousuario[0]
-  const nombreEmpresa = idempresa.empresa.nombre
-  const direccionEmpresa = idempresa.empresa.direccion
-  const telefonoEmpresa = idempresa.empresa.telefono
 
   const columns = [
     { header: 'N°', dataKey: 'n' },
@@ -4051,17 +3952,7 @@ export function PDF_REPORTE_PEDIDOS(reporte, datosFormulario) {
   return doc
 }
 export function PDF_REPORTE_PRECIO_BASE(reporte, datosFormulario) {
-  // ✅ Acceso correcto a los datos reactivos
-  console.log(reporte)
-  console.log(datosFormulario)
-
-  const contenidousuario = validarUsuario()
   const doc = new jsPDF({ orientation: 'portrait' })
-
-  const idempresa = contenidousuario[0]
-  const nombreEmpresa = idempresa.empresa.nombre
-  const direccionEmpresa = idempresa.empresa.direccion
-  const telefonoEmpresa = idempresa.empresa.telefono
 
   const columns = [
     { header: 'N°', dataKey: 'n' },
@@ -4178,17 +4069,7 @@ export function PDF_REPORTE_PRECIO_BASE(reporte, datosFormulario) {
   return doc
 }
 export function PDF_REPORTE_CATEGORIA_PRECIO(reporte, datosFormulario) {
-  // ✅ Acceso correcto a los datos reactivos
-  console.log(reporte)
-  console.log(datosFormulario)
-
-  const contenidousuario = validarUsuario()
   const doc = new jsPDF({ orientation: 'portrait' })
-
-  const idempresa = contenidousuario[0]
-  const nombreEmpresa = idempresa.empresa.nombre
-  const direccionEmpresa = idempresa.empresa.direccion
-  const telefonoEmpresa = idempresa.empresa.telefono
 
   const columns = [
     { header: 'N°', dataKey: 'n' },
@@ -4290,17 +4171,7 @@ export function PDF_REPORTE_CATEGORIA_PRECIO(reporte, datosFormulario) {
   return doc
 }
 export function PDF_REPORTE_EXTRAVIO(reporte, datosFormulario) {
-  // ✅ Acceso correcto a los datos reactivos
-  console.log(reporte)
-  console.log(datosFormulario)
-
-  const contenidousuario = validarUsuario()
   const doc = new jsPDF({ orientation: 'portrait' })
-
-  const idempresa = contenidousuario[0]
-  const nombreEmpresa = idempresa.empresa.nombre
-  const direccionEmpresa = idempresa.empresa.direccion
-  const telefonoEmpresa = idempresa.empresa.telefono
 
   const columns = [
     { header: 'N°', dataKey: 'index' },
@@ -4408,17 +4279,7 @@ export function PDF_REPORTE_EXTRAVIO(reporte, datosFormulario) {
   return doc
 }
 export function PDF_REPORTE_MERMA(reporte, datosFormulario) {
-  // ✅ Acceso correcto a los datos reactivos
-  console.log(reporte)
-  console.log(datosFormulario)
-
-  const contenidousuario = validarUsuario()
   const doc = new jsPDF({ orientation: 'portrait' })
-
-  const idempresa = contenidousuario[0]
-  const nombreEmpresa = idempresa.empresa.nombre
-  const direccionEmpresa = idempresa.empresa.direccion
-  const telefonoEmpresa = idempresa.empresa.telefono
 
   const columns = [
     { header: 'N°', dataKey: 'index' },
@@ -4526,14 +4387,7 @@ export function PDF_REPORTE_MERMA(reporte, datosFormulario) {
   return doc
 }
 export function DPF_REPORTE_PRODUCTO_ASIGNADOS(productoLista) {
-  console.log(productoLista.value)
-  const contenidousuario = validarUsuario()
   const doc = new jsPDF({ orientation: 'portrait' })
-
-  const idempresa = contenidousuario[0]
-  const nombreEmpresa = idempresa.empresa.nombre
-  const direccionEmpresa = idempresa.empresa.direccion
-  const telefonoEmpresa = idempresa.empresa.telefono
 
   const columns = [
     { header: 'N°', dataKey: 'indice' },
@@ -4632,6 +4486,239 @@ export function DPF_REPORTE_PRODUCTO_ASIGNADOS(productoLista) {
         doc.setFontSize(10)
         doc.setFont(undefined, 'bold')
         doc.text('Productos', doc.internal.pageSize.getWidth() / 2, 15, { align: 'center' })
+      }
+    },
+  })
+
+  // doc.save('proveedores.pdf') ← comenta o elimina esta línea
+  //doc.output('dataurlnewwindow') // ← muestra el PDF en una nueva ventana del navegador
+  return doc
+}
+
+export function PDF_REPORTE_GESTIPO_PEDIDOS_DETALLE(detallePedido) {
+  console.log(detallePedido.value)
+  const doc = new jsPDF({ orientation: 'portrait' })
+
+  const columns = [
+    { header: 'N°', dataKey: 'indice' },
+    { header: 'Descripción', dataKey: 'descripcion' },
+    { header: 'Cantidad', dataKey: 'cantidad' },
+  ]
+
+  const detallePlano = JSON.parse(JSON.stringify(detallePedido.value))
+
+  const datos = detallePlano[0].detalle.map((item, indice) => ({
+    indice: indice + 1,
+    descripcion: item.descripcion,
+    cantidad: decimas(item.cantidad),
+  }))
+
+  autoTable(doc, {
+    columns,
+    body: datos,
+    styles: {
+      overflow: 'linebreak',
+      fontSize: 5,
+      cellPadding: 2,
+    },
+    headStyles: {
+      fillColor: ColoEncabezadoTabla,
+      textColor: 255,
+      halign: 'center',
+    },
+    columnStyles: {
+      indice: { cellWidth: 15, halign: 'center' },
+      descripcion: { cellWidth: 100, halign: 'left' },
+      cantidad: { cellWidth: 80, halign: 'right' },
+    },
+    didParseCell: function (data) {
+      if (data.row.index >= datos.length - 3) {
+        data.cell.styles.halign = 'left'
+      }
+    },
+    startY: 50,
+    margin: { horizontal: 5 },
+    theme: 'striped',
+    didDrawPage: () => {
+      if (doc.internal.getNumberOfPages() === 1) {
+        if (logoBase64) {
+          const pageWidth = doc.internal.pageSize.getWidth() // Ancho total página
+          const imgWidth = 20 // Ancho del logo en mm
+          const imgHeight = 20 // Alto del logo en mm
+          const xPos = pageWidth - imgWidth - 5 // 10mm de margen derecho
+          const yPos = 5 // margen superior
+          console.log(logoBase64)
+          doc.addImage(logoBase64, 'JPEG', xPos, yPos, imgWidth, imgHeight)
+        }
+
+        doc.setFontSize(7)
+        doc.setFont(undefined, 'bold')
+        doc.text(nombreEmpresa, 5, 10)
+
+        doc.setFontSize(6)
+        doc.setFont(undefined, 'normal')
+        doc.text(direccionEmpresa, 5, 13)
+        doc.text(`Tel: ${telefonoEmpresa}`, 5, 16)
+
+        doc.setFontSize(10)
+        doc.setFont(undefined, 'bold')
+        doc.text('ORDEN PEDIDO', doc.internal.pageSize.getWidth() / 2, 15, {
+          align: 'center',
+        })
+
+        doc.setDrawColor(0)
+        doc.setLineWidth(0.2)
+        doc.line(5, 30, 200, 30)
+
+        doc.setFontSize(7)
+        doc.setFont(undefined, 'bold')
+        doc.text('DATOS ORDEN:', 5, 35)
+
+        doc.setFontSize(6)
+        doc.setFont(undefined, 'normal')
+        const cliente = `${detallePlano[0].almacen}`
+        doc.text(cliente, 5, 38)
+
+        doc.text(detallePlano[0].empresa.direccion, 5, 41)
+        doc.text(detallePlano[0].empresa.email, 5, 44)
+        doc.text('Fecha de Orden: ' + cambiarFormatoFecha(detallePlano[0].fecha), 5, 47)
+
+        doc.setFontSize(7)
+        doc.setFont(undefined, 'bold')
+        doc.text('DATOS DEL USUARIO:', 200, 35, { align: 'right' })
+
+        doc.setFontSize(6)
+        doc.setFont(undefined, 'normal')
+        doc.text(detallePlano[0].usuarios[0].usuario, 200, 38, { align: 'right' })
+        doc.text(detallePlano[0].usuarios[0].cargo, 200, 41, { align: 'right' })
+        doc.text('Tipo ' + tipo[detallePlano[0].tipopedido], 200, 44, { align: 'right' })
+      }
+    },
+  })
+
+  return doc
+}
+
+export const PDF_REPORTE_GESTION_PEDIDOS = (filterPedido, tipoestados, fechai, fechaf, almacen) => {
+  const doc = new jsPDF({ orientation: 'portrait' })
+  const columns = [
+    { header: 'N', dataKey: 'indice' },
+    { header: 'Fecha', dataKey: 'fecha' },
+    { header: 'Código', dataKey: 'codigo' },
+    { header: 'Nro.Pedido', dataKey: 'nropedido' },
+    { header: 'Tipo', dataKey: 'tipopedido' },
+    { header: 'Almacén Origen', dataKey: 'almacenorigen' },
+    { header: 'Almacén Destino', dataKey: 'almacen' },
+    { header: 'Observación', dataKey: 'observacion' },
+    { header: 'Esatado', dataKey: 'estado' },
+  ]
+  // filterPedido.value.reduce((sum, row) => sum + Number(row.total), 0)
+  const datos = filterPedido.value.map((item, indice) => ({
+    indice: indice + 1,
+    fecha: item.fecha,
+    codigo: item.codigo,
+    nropedido: item.nropedido,
+    tipopedido: tipo[Number(item.tipopedido)],
+    almacenorigen: item.almacenorigen,
+    almacen: item.almacen,
+    observacion: item.observacion,
+    estado: tipoestados[Number(item.estado)],
+  }))
+
+  autoTable(doc, {
+    columns,
+    body: datos,
+    styles: {
+      overflow: 'linebreak',
+      fontSize: 5,
+      cellPadding: 2,
+    },
+    headStyles: {
+      fillColor: ColoEncabezadoTabla,
+      textColor: 255,
+      halign: 'center',
+    },
+    columnStyles: {
+      indice: { cellWidth: 10, halign: 'center' },
+      fecha: { cellWidth: 15, halign: 'left' },
+      codigo: { cellWidth: 25, halign: 'left' },
+      nropedido: { cellWidth: 15, halign: 'center' },
+      tipopedido: { cellWidth: 25, halign: 'left' },
+      almacenorigen: { cellWidth: 25, halign: 'left' },
+      almacen: { cellWidth: 25, halign: 'left' },
+      observacion: { cellWidth: 40, halign: 'left' },
+      estado: { cellWidth: 15, halign: 'left' },
+    },
+    //20 + 15 + 20 + 25 + 30 + 20 + 20 + 25 + 20 + 15 + 20 + 15 + 20 = 265 mm
+
+    startY: 45,
+    margin: { horizontal: 5 },
+    theme: 'striped',
+    didDrawPage: () => {
+      if (doc.internal.getNumberOfPages() === 1) {
+        // Logo (requiere base64 o ruta absoluta en servidor si usas Node)
+        if (logoBase64) {
+          const pageWidth = doc.internal.pageSize.getWidth() // Ancho total página
+          const imgWidth = 20 // Ancho del logo en mm
+          const imgHeight = 20 // Alto del logo en mm
+          const xPos = pageWidth - imgWidth - 5 // 10mm de margen derecho
+          const yPos = 5 // margen superior
+          console.log(logoBase64)
+          doc.addImage(logoBase64, 'JPEG', xPos, yPos, imgWidth, imgHeight)
+        }
+        // Nombre y datos de empresa
+        doc.setFontSize(7)
+        doc.setFont(undefined, 'bold')
+        doc.text(nombreEmpresa, 5, 10)
+
+        doc.setFontSize(6)
+        doc.setFont(undefined, 'normal')
+        doc.text(direccionEmpresa, 5, 13)
+        doc.text(`Tel: ${telefonoEmpresa}`, 5, 16)
+
+        // Título centrado
+        doc.setFontSize(10)
+        doc.setFont(undefined, 'bold')
+        doc.text('REPORTE DE PEDIDOS', doc.internal.pageSize.getWidth() / 2, 15, {
+          align: 'center',
+        })
+        doc.setFontSize(6)
+        doc.setFont(undefined, 'normal')
+        doc.text(
+          'Entre ' + cambiarFormatoFecha(fechai.value) + ' Y ' + cambiarFormatoFecha(fechaf.value),
+          doc.internal.pageSize.getWidth() / 2,
+          19,
+          {
+            align: 'center',
+          },
+        )
+        doc.setDrawColor(0) // Color negro
+        doc.setLineWidth(0.2) // Grosor de la línea
+        doc.line(5, 30, 200, 30) // De (x1=5, y1=25) a (x2=200, y2=25)
+
+        doc.setFontSize(7)
+        doc.setFont(undefined, 'bold')
+        doc.text('DATOS DEL REPORTE', 5, 35)
+
+        doc.setFontSize(6)
+        doc.setFont(undefined, 'normal')
+        doc.text('Nombre del Almacen: ' + (almacen.value?.label || 'Todo los Almacenes'), 5, 38)
+
+        doc.setFontSize(6)
+        doc.setFont(undefined, 'normal')
+        doc.text('Fecha de Impresion: ' + cambiarFormatoFecha(obtenerFechaActualDato()), 5, 41)
+
+        doc.setFontSize(7)
+        doc.setFont(undefined, 'bold')
+        doc.text('DATOS DEL ENCARGADO:', 200, 35, { align: 'right' })
+
+        doc.setFontSize(6)
+        doc.setFont(undefined, 'normal')
+        doc.text(nombre, 200, 38, { align: 'right' })
+
+        doc.setFontSize(6)
+        doc.setFont(undefined, 'normal')
+        doc.text(cargo, 200, 41, { align: 'right' })
       }
     },
   })

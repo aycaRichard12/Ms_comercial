@@ -1502,66 +1502,147 @@ class ventas
         echo json_encode($lista2);
     }
 
+
+    /**
+     * Función para cambiar el estado de una venta (generalmente a 'Anulada') y gestionar
+     * la anulación de facturas asociadas y la reversión de stock.
+     *
+     * NOTA DE SEGURIDAD: Se recomienda encarecidamente usar sentencias preparadas 
+     * con $this->cm para prevenir ataques de inyección SQL.
+     *
+     * @param int $idventa ID de la venta a cambiar de estado.
+     * @param string $estado Nuevo estado de la venta.
+     * @param string $motivo Motivo de la anulación.
+     * @param string $idmd5u ID de usuario en formato MD5.
+     * @param string $token Token de autorización para el servicio de facturación.
+     * @param string $tipo Tipo de servicio de facturación.
+     */
     public function cambiarestadoventa($idventa, $estado, $motivo, $idmd5u, $token, $tipo)
     {
+        // 1. Configuración y Obtención de Datos Iniciales
         date_default_timezone_set('America/La_Paz');
         $fecha = date("Y-m-d");
-        $idusuario = $this->verificar->verificarIDUSERMD5($idmd5u);
-        //$estadoventa = "";
-        $consultaVF = $this->cm->query("select vf.cuf from ventas_facturadas vf where vf.venta_id_venta = '$idventa' limit 1");
 
+        // Obtener el ID de usuario
+        $idusuario = $this->verificar->verificarIDUSERMD5($idmd5u);
+        $estadoventa = "";
+
+        // **CORRECCIÓN 1: Inicializar $res.**
+        // Inicializar $res para garantizar que siempre esté definida, evitando el Warning.
+        $res = array("estado" => "error", "mensaje" => "Error desconocido: la función no completó su proceso.", "datosFactura" => "");
+
+        // Consulta para verificar si la venta tiene una factura asociada (cuf)
+        $consultaVF = $this->cm->query("SELECT vf.cuf FROM ventas_facturadas vf WHERE vf.venta_id_venta = '$idventa' LIMIT 1");
+
+        // 2. Lógica Condicional: Venta con o sin Factura
         if ($consultaVF->num_rows === 0) {
-            // No se encontraron resultados, la consulta devolvió datos vacíos.
+            // --- VENTA SIN FACTURA ASOCIADA (Procedimiento Interno de Anulación) ---
             $estadoventa = "Esta venta no requiere anulacion de factura";
-            $registro = $this->cm->query("update venta SET estado='$estado' where id_venta='$idventa'");
-                $estadocobro = $this->cm->query("update estado_cobro SET estado='4' where venta_id_venta='$idventa'");
-                if ($registro === TRUE) {
-                    $anulacion = $this->cm->query("insert into anulaciones(idanulaciones, fecha, motivo, venta_id_venta, idusuario)values(NULL,'$fecha','$motivo','$idventa','$idusuario')");
-                    $productos = $this->cm->query("select dv.id_detalle_venta, dv.cantidad, dv.precio_unitario, dv.productos_almacen_id_productos_almacen, dv.venta_id_venta, (dv.cantidad+s.cantidad) as nuevo, s.id_stock from detalle_venta dv 
-                    inner join stock s on dv.productos_almacen_id_productos_almacen=s.productos_almacen_id_productos_almacen
-                    where dv.venta_id_venta='$idventa' and s.estado=1");
-                    while ($qwe = $this->cm->fetch($productos)) {
-                        $codigo = "AN";
-                        $registro = $this->cm->query("update stock set estado=2 where id_stock='$qwe[6]'");
-                        if ($registro === TRUE) {
-                            $nuevostock = $this->cm->query("insert into stock(id_stock, cantidad, fecha, codigo, estado, productos_almacen_id_productos_almacen, idorigen) values(null,'$qwe[5]','$fecha','$codigo',1,'$qwe[3]', '$idventa')");
-                        }
+
+            // Actualizar estados de VENTA y ESTADO_COBRO
+            $registro = $this->cm->query("UPDATE venta SET estado='$estado' WHERE id_venta='$idventa'");
+            $estadocobro = $this->cm->query("UPDATE estado_cobro SET estado='4' WHERE venta_id_venta='$idventa'");
+
+            if ($registro === TRUE) {
+                // Registrar la anulación
+                $anulacion = $this->cm->query("INSERT INTO anulaciones(fecha, motivo, venta_id_venta, idusuario) VALUES('$fecha', '$motivo', '$idventa', '$idusuario')");
+
+                // Revertir Stock
+                $productos = $this->cm->query("
+                    SELECT dv.id_detalle_venta, dv.cantidad, dv.productos_almacen_id_productos_almacen, 
+                        (dv.cantidad + s.cantidad) AS nuevo, s.id_stock 
+                    FROM detalle_venta dv 
+                    INNER JOIN stock s ON dv.productos_almacen_id_productos_almacen = s.productos_almacen_id_productos_almacen
+                    WHERE dv.venta_id_venta = '$idventa' AND s.estado = 1
+                ");
+
+                while ($qwe = $this->cm->fetch($productos)) {
+                    $codigo = "AN";
+                    $id_stock = $qwe[4]; // s.id_stock
+                    $nueva_cantidad_stock = $qwe[3]; // (dv.cantidad + s.cantidad)
+                    $productos_almacen_id = $qwe[2]; // dv.productos_almacen_id_productos_almacen
+                    
+                    // 1. Desactivar el registro de stock anterior (estado=2)
+                    $registro = $this->cm->query("UPDATE stock SET estado=2 WHERE id_stock='$id_stock'");
+                    
+                    if ($registro === TRUE) {
+                        // 2. Insertar el nuevo registro de stock (estado=1)
+                        $nuevostock = $this->cm->query("INSERT INTO stock(cantidad, fecha, codigo, estado, productos_almacen_id_productos_almacen, idorigen) 
+                                                    VALUES('$nueva_cantidad_stock', '$fecha', '$codigo', 1, '$productos_almacen_id', '$idventa')");
                     }
-                    $res = array("estado" => "exito", "mensaje" => "Se actualizo correctamente", "datosFactura" => $estadoventa);
-                } else {
-                    $res = array("estado" => "error", "mensaje" => "Se ocurrio un problema", "datosFactura" => $estadoventa);
                 }
+
+                $res = array("estado" => "exito", "mensaje" => "Se actualizó correctamente", "datosFactura" => $estadoventa);
+            } else {
+                $res = array("estado" => "error", "mensaje" => "Ocurrió un problema al actualizar el estado de la venta.", "datosFactura" => $estadoventa);
+            }
+
         } else {
-            // Se encontraron resultados en la consulta.
+            // --- VENTA CON FACTURA ASOCIADA (Anulación Externa) ---
             $resi = $this->cm->fetch($consultaVF);
             $cuf = $resi[0];
-            //$fac = new facturacion();
+
+            // Llamada al servicio de anulación de factura
             $respuestaEmizor = $this->factura->anularFactura($cuf, $motivo, $token, $tipo);
-            $datosrespuesta = $respuestaEmizor->data;
+            $datosrespuesta = $respuestaEmizor->data ?? null;
+
             if ($respuestaEmizor->status == "success") {
+                // Anulación de Factura EXITOSA
                 $estadoventa = $datosrespuesta;
-                $registro = $this->cm->query("update venta SET estado='$estado' where id_venta='$idventa'");
-                $estadocobro = $this->cm->query("update estado_cobro SET estado='4' where venta_id_venta='$idventa'");
+                
+                // Actualizar estados de VENTA y ESTADO_COBRO
+                $registro = $this->cm->query("UPDATE venta SET estado='$estado' WHERE id_venta='$idventa'");
+                $estadocobro = $this->cm->query("UPDATE estado_cobro SET estado='4' WHERE venta_id_venta='$idventa'");
+
                 if ($registro === TRUE) {
-                    $anulacion = $this->cm->query("insert into anulaciones(idanulaciones, fecha, motivo, venta_id_venta, idusuario)values(NULL,'$fecha','$motivo','$idventa','$idusuario')");
-                    $productos = $this->cm->query("select dv.id_detalle_venta, dv.cantidad, dv.precio_unitario, dv.productos_almacen_id_productos_almacen, dv.venta_id_venta, (dv.cantidad+s.cantidad) as nuevo, s.id_stock from detalle_venta dv 
-                    inner join stock s on dv.productos_almacen_id_productos_almacen=s.productos_almacen_id_productos_almacen
-                    where dv.venta_id_venta='$idventa' and s.estado=1");
+                    // Registrar la anulación y revertir stock (mismo proceso que antes)
+                    $anulacion = $this->cm->query("INSERT INTO anulaciones(fecha, motivo, venta_id_venta, idusuario) VALUES('$fecha', '$motivo', '$idventa', '$idusuario')");
+                    
+                    $productos = $this->cm->query("
+                        SELECT dv.id_detalle_venta, dv.cantidad, dv.productos_almacen_id_productos_almacen, 
+                            (dv.cantidad + s.cantidad) AS nuevo, s.id_stock 
+                        FROM detalle_venta dv 
+                        INNER JOIN stock s ON dv.productos_almacen_id_productos_almacen = s.productos_almacen_id_productos_almacen
+                        WHERE dv.venta_id_venta = '$idventa' AND s.estado = 1
+                    ");
+                    
                     while ($qwe = $this->cm->fetch($productos)) {
                         $codigo = "AN";
-                        $registro = $this->cm->query("update stock set estado=2 where id_stock='$qwe[6]'");
+                        $id_stock = $qwe[4]; 
+                        $nueva_cantidad_stock = $qwe[3]; 
+                        $productos_almacen_id = $qwe[2]; 
+                        
+                        $registro = $this->cm->query("UPDATE stock SET estado=2 WHERE id_stock='$id_stock'");
+                        
                         if ($registro === TRUE) {
-                            $nuevostock = $this->cm->query("insert into stock(id_stock, cantidad, fecha, codigo, estado, productos_almacen_id_productos_almacen, idorigen) values(null,'$qwe[5]','$fecha','$codigo',1,'$qwe[3]', '$idventa')");
+                            $nuevostock = $this->cm->query("INSERT INTO stock(cantidad, fecha, codigo, estado, productos_almacen_id_productos_almacen, idorigen) 
+                                                        VALUES('$nueva_cantidad_stock', '$fecha', '$codigo', 1, '$productos_almacen_id', '$idventa')");
                         }
                     }
-                    $res = array("estado" => "exito", "mensaje" => "Se actualizo correctamente", "datosFactura" => $estadoventa, "datos" => $respuestaEmizor);
+                    
+                    $res = array("estado" => "exito", "mensaje" => "Se actualizó correctamente", "datosFactura" => $estadoventa, "datos" => $respuestaEmizor);
                 } else {
-                    $res = array("estado" => "error", "mensaje" => "Se ocurrio un problema", "datosFactura" => $estadoventa, "datos" => $respuestaEmizor);
+                    $res = array("estado" => "error", "mensaje" => "La factura se anuló, pero falló la actualización de estado de la venta.", "datosFactura" => $estadoventa, "datos" => $respuestaEmizor);
                 }
             } else {
+                // Anulación de Factura FALLIDA
                 $estadoventa = $datosrespuesta;
+                
+                // **CORRECCIÓN 2: Evitar la concatenación de objetos (Fatal Error).**
+                // Convertir el objeto $estadoventa a JSON string para usarlo en el mensaje.
+                $mensaje_detalle_error = is_object($estadoventa) ? json_encode($estadoventa) : ($estadoventa ?? "Comunicación fallida");
+
+                // **CORRECCIÓN 3: Definir $res en este camino de error.**
+                $res = array(
+                    "estado" => "error", 
+                    "mensaje" => "Error al anular la factura: " . $mensaje_detalle_error, 
+                    "datosFactura" => $estadoventa, 
+                    "datos" => $respuestaEmizor
+                );
             }
         }
+
+        // 3. Respuesta Final
         echo json_encode($res);
     }
 
@@ -1749,44 +1830,239 @@ class ventas
     {
         $idempresa = $this->verificar->verificarIDEMPRESAMD5($idmd5);
         $lista = [];
-        $clien = $this->cm->query("select v.id_venta, a.nombre, v.fecha_venta, c.nombre , c.nombrecomercial, c.ciudad, v.tipo_venta, v.tipo_pago, v.monto_total, v.nfactura, v.descuento, pa.almacen_id_almacen, v.cliente_id_cliente1, s.nombre, v.estado, ca.canal, vf.cuf, vf.fechaEmission, vf.shortLink, vf.urlSin from venta v 
-        left join cliente c on v.cliente_id_cliente1=c.id_cliente
-        left join detalle_venta dv on v.id_venta=dv.venta_id_venta
-        left join sucursal s on v.idsucursal=s.id_sucursal
-        left join productos_almacen pa on dv.productos_almacen_id_productos_almacen=pa.id_productos_almacen
-        left join almacen a on pa.almacen_id_almacen=a.id_almacen
-        left join canalventa ca on v.idcanal=ca.idcanalventa
-        left join ventas_facturadas vf on v.id_venta=vf.venta_id_venta
-        where c.idempresa = '$idempresa'
-        group by v.id_venta
-        order by v.fecha_venta desc, v.id_venta desc");
+
+        // 🔹 CONSULTA DE VENTAS
+        $clien = $this->cm->query("
+            SELECT 
+                v.id_venta, a.nombre, v.fecha_venta, c.nombre, c.nombrecomercial, c.ciudad, 
+                v.tipo_venta, v.tipo_pago, v.monto_total, v.nfactura, v.descuento, 
+                pa.almacen_id_almacen, v.cliente_id_cliente1, s.nombre, v.estado, 
+                ca.canal, vf.cuf, vf.fechaEmission, vf.shortLink, vf.urlSin 
+            FROM venta v 
+            LEFT JOIN cliente c ON v.cliente_id_cliente1=c.id_cliente
+            LEFT JOIN detalle_venta dv ON v.id_venta=dv.venta_id_venta
+            LEFT JOIN sucursal s ON v.idsucursal=s.id_sucursal
+            LEFT JOIN productos_almacen pa ON dv.productos_almacen_id_productos_almacen=pa.id_productos_almacen
+            LEFT JOIN almacen a ON pa.almacen_id_almacen=a.id_almacen
+            LEFT JOIN canalventa ca ON v.idcanal=ca.idcanalventa
+            LEFT JOIN ventas_facturadas vf ON v.id_venta=vf.venta_id_venta
+            WHERE c.idempresa = '$idempresa'
+            GROUP BY v.id_venta
+            ORDER BY v.fecha_venta DESC, v.id_venta DESC
+        ");
+
         while ($qwe = $this->cm->fetch($clien)) {
-            $res = array("id" => $qwe[0], "almacen" => $qwe[1], "fechaventa" => $qwe[2], "cliente" => $qwe[3], "nombrecomercial" => $qwe[4], "ciudad" => $qwe[5], "tipoventa" => $qwe[6], "tipopago" => $qwe[7], "montototal" => $qwe[8], "nfactura" => $qwe[9], "descuento" => $qwe[10], "idalmacen" => $qwe[11], "idcliente" => $qwe[12], "sucursal" => $qwe[13], "estado" => $qwe[14], "canal" => $qwe[15], "cuf" => $qwe[16], "fechaemision" => $qwe[17], "shortlink" => $qwe[18], "urlsin" => $qwe[19]);
+            $res = array(
+                "id" => $qwe[0],
+                "almacen" => $qwe[1],
+                "fechaventa" => $qwe[2],
+                "cliente" => $qwe[3],
+                "nombrecomercial" => $qwe[4],
+                "ciudad" => $qwe[5],
+                "tipoventa" => $qwe[6],
+                "tipopago" => $qwe[7],
+                "montototal" => $qwe[8],
+                "nfactura" => $qwe[9],
+                "descuento" => $qwe[10],
+                "idalmacen" => $qwe[11],
+                "idcliente" => $qwe[12],
+                "sucursal" => $qwe[13],
+                "estado" => $qwe[14],
+                "canal" => $qwe[15],
+                "cuf" => $qwe[16],
+                "fechaemision" => $qwe[17],
+                "shortlink" => $qwe[18],
+                "urlsin" => $qwe[19],
+                "tipo" => "venta" 
+            );
             array_push($lista, $res);
         }
+
+        // 🔹 CONSULTA DE COTIZACIONES
+        $cotizacion = $this->cm->query("
+            SELECT 
+                ctz.id_cotizacion AS id,
+                a.nombre AS almacen, 
+                ctz.fecha_cotizacion AS fechaventa, 
+                c.nombre AS cliente, 
+                c.nombrecomercial AS nombrecomercial, 
+                c.ciudad AS ciudad, 
+                -1 AS tipoventa,  
+                0 AS tipopago, 
+                ctz.monto_total AS montototal, 
+                ctz.num AS nfactura, 
+                0 AS descuento, 
+                pa.almacen_id_almacen AS idalmacen, 
+                ctz.cliente_id_cliente AS idcliente, 
+                s.nombre AS sucursal, 
+                ctz.condicion AS estado, 
+                ca.canal AS canal, 
+                '' AS cuf , 
+                '' AS fechaemision, 
+                '' AS shortlink, 
+                '' AS urlsin
+            FROM cotizacion ctz 
+            LEFT JOIN cliente c ON ctz.cliente_id_cliente=c.id_cliente
+            LEFT JOIN detalle_cotizacion dctz ON ctz.id_cotizacion=dctz.cotizacion_id_cotizacion
+            LEFT JOIN sucursal s ON ctz.idsucursal=s.id_sucursal
+            LEFT JOIN productos_almacen pa ON dctz.productos_almacen_id_productos_almacen=pa.id_productos_almacen
+            LEFT JOIN almacen a ON pa.almacen_id_almacen=a.id_almacen
+            LEFT JOIN canalventa ca ON ctz.idcanal=ca.idcanalventa
+            WHERE c.idempresa = '$idempresa' and ctz.estado = 1 and ctz.condicion = 1
+            GROUP BY ctz.id_cotizacion
+            ORDER BY ctz.fecha_cotizacion DESC, ctz.id_cotizacion DESC
+        ");
+
+        // 🔸 Agregamos cotizaciones al mismo array
+        while ($qwe = $this->cm->fetch($cotizacion)) {
+            $res = array(
+                "id" => $qwe[0],
+                "almacen" => $qwe[1],
+                "fechaventa" => $qwe[2],
+                "cliente" => $qwe[3],
+                "nombrecomercial" => $qwe[4],
+                "ciudad" => $qwe[5],
+                "tipoventa" => $qwe[6],
+                "tipopago" => $qwe[7],
+                "montototal" => $qwe[8],
+                "nfactura" => $qwe[9],
+                "descuento" => $qwe[10],
+                "idalmacen" => $qwe[11],
+                "idcliente" => $qwe[12],
+                "sucursal" => $qwe[13],
+                "estado" => $qwe[14],
+                "canal" => $qwe[15],
+                "cuf" => $qwe[16],
+                "fechaemision" => $qwe[17],
+                "shortlink" => $qwe[18],
+                "urlsin" => $qwe[19],
+                "tipo" => "cotizacion" 
+            );
+            array_push($lista, $res);
+        }
+
+        // 🔹 DEVOLVER UNA SOLA LISTA UNIDA
         echo json_encode($lista);
     }
 
-    public function listadoanulaciones($idmd5)
-    {
-        $idempresa = $this->verificar->verificarIDEMPRESAMD5($idmd5);
-        $lista = [];
-        $clien = $this->cm->query("select a.idanulaciones, v.fecha_venta, c.nombre, c.nombrecomercial, c.ciudad, a.fecha, a.motivo, a.venta_id_venta, a.idusuario, v.nfactura, s.nombre, vf.cuf, vf.shortLink, vf.urlSin, v.tipo_venta, pa.almacen_id_almacen from anulaciones a 
+
+    public function listadoanulaciones($idmd5) 
+{
+    $idempresa = $this->verificar->verificarIDEMPRESAMD5($idmd5);
+    $lista = [];
+
+    // 🔹 Anulaciones de ventas
+    $clien = $this->cm->query("
+        select 
+            a.idanulaciones, 
+            v.fecha_venta, 
+            c.nombre, 
+            c.nombrecomercial, 
+            c.ciudad, 
+            a.fecha, 
+            a.motivo, 
+            a.venta_id_venta, 
+            a.idusuario, 
+            v.nfactura, 
+            s.nombre, 
+            vf.cuf, 
+            vf.shortLink, 
+            vf.urlSin, 
+            v.tipo_venta, 
+            pa.almacen_id_almacen 
+        from anulaciones a 
         left join venta v on a.venta_id_venta=v.id_venta
         left join detalle_venta dv on v.id_venta=dv.venta_id_venta
         left join productos_almacen pa on dv.productos_almacen_id_productos_almacen=pa.id_productos_almacen
         left join cliente c on v.cliente_id_cliente1=c.id_cliente
         left join sucursal s on v.idsucursal=s.id_sucursal
         left join ventas_facturadas vf on v.id_venta=vf.venta_id_venta
-		where c.idempresa='$idempresa'
+        where c.idempresa='$idempresa' and a.tipo_venta = 'FACTURA'
         group by a.idanulaciones
-        order by a.fecha desc, a.idanulaciones desc");
-        while ($qwe = $this->cm->fetch($clien)) {
-            $res = array("id" => $qwe[0], "fechaventa" => $qwe[1], "cliente" => $qwe[2], "nombrecomercial" => $qwe[3], "ciudad" => $qwe[4], "fecharegistro" => $qwe[5], "motivo" => $qwe[6], "idventa" => $qwe[7], "idusuario" => $qwe[8], "nfactura" => $qwe[9], "sucursal" => $qwe[10], "cuf" => $qwe[11], "shortlink" => $qwe[12], "urlsin" => $qwe[13], "tipoventa" => $qwe[14], "idalmacen"=> $qwe[15]);
-            array_push($lista, $res);
-        }
-        echo json_encode($lista);
+        order by a.fecha desc, a.idanulaciones desc
+    ");
+
+    while ($qwe = $this->cm->fetch($clien)) {
+        $res = array(
+            "id" => $qwe[0],
+            "fechaventa" => $qwe[1],
+            "cliente" => $qwe[2],
+            "nombrecomercial" => $qwe[3],
+            "ciudad" => $qwe[4],
+            "fecharegistro" => $qwe[5],
+            "motivo" => $qwe[6],
+            "idventa" => $qwe[7],
+            "idusuario" => $qwe[8],
+            "nfactura" => $qwe[9],
+            "sucursal" => $qwe[10],
+            "cuf" => $qwe[11],
+            "shortlink" => $qwe[12],
+            "urlsin" => $qwe[13],
+            "tipoventa" => $qwe[14],
+            "idalmacen" => $qwe[15]
+        );
+        array_push($lista, $res);
     }
+
+    // 🔹 Anulaciones de cotizaciones
+    $sql = "
+        select 
+            a.idanulaciones as id,
+            ctz.fecha_cotizacion as fechaventa, 
+            c.nombre as cliente, 
+            c.nombrecomercial, 
+            c.ciudad, 
+            a.fecha as fecharegistro, 
+            a.motivo, 
+            a.venta_id_venta as idventa, 
+            a.idusuario, 
+            ctz.num as nfactura,   
+            s.nombre as sucursal, 
+            ctz.condicion as estado, 
+            '' as cuf, 
+            '' as shortlink, 
+            '' as urlsin,
+            -1 as tipoventa, 
+            pa.almacen_id_almacen 
+        from anulaciones a 
+        left join cotizacion ctz on a.venta_id_venta = ctz.id_cotizacion
+        left join detalle_cotizacion dctz on ctz.id_cotizacion = dctz.cotizacion_id_cotizacion
+        left join productos_almacen pa on dctz.productos_almacen_id_productos_almacen = pa.id_productos_almacen
+        left join cliente c on ctz.cliente_id_cliente = c.id_cliente
+        left join sucursal s on ctz.idsucursal = s.id_sucursal
+        where c.idempresa = '$idempresa' and a.tipo_venta = 'COTIZACION'
+        group by ctz.id_cotizacion
+        order by ctz.fecha_cotizacion desc, ctz.id_cotizacion desc;
+    ";
+
+    $res2 = $this->cm->query($sql);
+
+    while ($qwe2 = $this->cm->fetch($res2)) {
+        $res = array(
+            "id" => $qwe2[0],
+            "fechaventa" => $qwe2[1],
+            "cliente" => $qwe2[2],
+            "nombrecomercial" => $qwe2[3],
+            "ciudad" => $qwe2[4],
+            "fecharegistro" => $qwe2[5],
+            "motivo" => $qwe2[6],
+            "idventa" => $qwe2[7],
+            "idusuario" => $qwe2[8],
+            "nfactura" => $qwe2[9],
+            "sucursal" => $qwe2[10],
+            "cuf" => $qwe2[12],
+            "shortlink" => $qwe2[13],
+            "urlsin" => $qwe2[14],
+            "tipoventa" => $qwe2[15],
+            "idalmacen" => $qwe2[16]
+        );
+        array_push($lista, $res);
+    }
+
+    // 🔹 Devolver las dos listas combinadas
+    echo json_encode($lista);
+}
+
 
     public function cambiarcreditomoroso($id, $code){
         $actualizacion = $this->cm->query("update estado_cobro SET estado='$code' where id_estado_cobro='$id'");

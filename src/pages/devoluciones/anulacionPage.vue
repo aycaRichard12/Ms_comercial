@@ -108,10 +108,10 @@
                   round
                   flat
                   title="Generar Comprobante PDF"
-                  @click="generarComprobantePDF(props.row.id)"
+                  @click="generarComprobantePDF(props.row)"
                 />
                 <q-btn
-                  v-if="Number(props.row.tipoventa != 0)"
+                  v-if="Number(props.row.tipoventa > 0)"
                   icon="receipt_long"
                   dense
                   rounded=""
@@ -121,7 +121,7 @@
                   @click="verFactura(props.row.shortlink)"
                 />
                 <q-btn
-                  v-if="Number(props.row.tipoventa != 0)"
+                  v-if="Number(props.row.tipoventa > 0)"
                   icon="policy"
                   dense=""
                   rounded=""
@@ -225,7 +225,7 @@
           <template v-slot:body-cell-ver="props">
             <q-td :props="props">
               <div class="q-gutter-xs">
-                <template v-if="Number(props.row.tipoventa) == 0">
+                <template v-if="Number(props.row.tipoventa) <= 0">
                   <q-btn
                     icon="picture_as_pdf"
                     color="negative"
@@ -233,11 +233,20 @@
                     round
                     flat
                     title="Generar Comprobante PDF"
-                    @click="generarComprobantePDF(props.row.id)"
+                    @click="generarComprobantePDF(props.row)"
                   />
                 </template>
 
                 <template v-else>
+                  <q-btn
+                    icon="picture_as_pdf"
+                    color="negative"
+                    dense
+                    round
+                    flat
+                    title="Generar Comprobante PDF"
+                    @click="generarComprobantePDF(props.row)"
+                  />
                   <q-btn
                     icon="receipt_long"
                     dense
@@ -359,7 +368,7 @@
                   round
                   flat
                   title="Generar Comprobante PDF"
-                  @click="generarComprobantePDF(props.row.id)"
+                  @click="generarComprobantePDF(props.row)"
                 />
                 <template v-else>
                   <q-btn
@@ -607,7 +616,9 @@ import { api } from 'boot/axios'
 import { validarUsuario } from 'src/composables/FuncionesG'
 import { PDFdetalleVentaInicio } from 'src/utils/pdfReportGenerator'
 import RegistrarNotaCreditoDebito from 'src/pages/NotasCreditoDebito/RegistrarNotaCreditoDebito.vue'
-
+import { generarPdfCotizacion } from 'src/utils/pdfReportGenerator'
+import { idempresa_md5 } from 'src/composables/FuncionesGenerales'
+const idempresa = idempresa_md5()
 const $q = useQuasar()
 
 // Estado de la aplicación
@@ -656,6 +667,7 @@ const estadoFactura = ref('')
 const modalMotivoAnulacion = ref(false)
 const motivoAnulacionSeleccionado = ref(null)
 const ventaAAnular = ref(null)
+const cotizacionAAnular = ref(null)
 const modalMotivoDevolucion = ref(false)
 const motivoDevolucion = ref('')
 const ventaADevolver = ref(null)
@@ -844,20 +856,23 @@ const ventasValidasFiltradas = computed(() => {
 })
 
 const ventasAnuladasFiltradas = computed(() => {
+  console.log(filtroTipo.value)
+
   if (filtroAlmacen.value) {
     return ventasAnuladas.value
-      .filter((v) => filtroAlmacen.value === 0 || v.idalmacen == filtroAlmacen.value)
-      .filter((v) => filtroTipo.value === 0 || v.tipoventa == filtroTipo.value)
+      .filter((v) => Number(v.idalmacen) == filtroAlmacen.value)
+      .filter((v) => Number(v.tipoventa) == filtroTipo.value)
   } else {
     return []
   }
 })
 
 const ventasDevueltasFiltradas = computed(() => {
+  console.log(filtroTipo.value)
   if (filtroAlmacen.value) {
     return ventasDevueltas.value
-      .filter((v) => filtroAlmacen.value === 0 || v.idalmacen == filtroAlmacen.value)
-      .filter((v) => filtroTipo.value === 0 || v.tipoventa == filtroTipo.value)
+      .filter((v) => v.idalmacen == filtroAlmacen.value)
+      .filter((v) => v.tipoventa == filtroTipo.value)
   } else {
     return []
   }
@@ -896,9 +911,10 @@ const cargarDatosIniciales = async () => {
         [...tiposResponse.data.data],
         codigosPermitidos,
       )
-
+      console.log(datosFiltrados)
       tiposVentaOptions.value = [
         { value: 0, label: 'comprobante de venta' },
+        { value: -1, label: 'cotizacion de venta' },
         ...datosFiltrados.map((key) => ({
           value: key.codigoDocumentSector,
           label: key.documentoSector.toLowerCase(),
@@ -1120,13 +1136,21 @@ const handleAccion = (row) => {
   const value = row.accionSeleccionada
   const dataValue = row.id
   const TipoVenta = Number(row.tipoventa)
+  const idventa = Number(row.idventa)
+  const tipo = row.tipo
   // Resetear la selección después de manejar la acción
   setTimeout(() => {
     row.accionSeleccionada = ''
   }, 0)
-
+  console.log(value)
+  console.log(dataValue)
+  console.log(TipoVenta)
   if (value == 1) {
-    anularVentas(dataValue)
+    if (TipoVenta == -1) {
+      anularCotizacion(dataValue)
+    } else {
+      anularVentas(dataValue)
+    }
   } else if (value == 2) {
     if (TipoVenta == 0) {
       devolucion(dataValue)
@@ -1138,15 +1162,30 @@ const handleAccion = (row) => {
       abrirModal(rowVenta)
     }
   } else if (value == 3) {
-    estadofactura(row.cuf)
+    if (TipoVenta == -1) {
+      if (tipo == 'cotizacion') {
+        estadoCotizacion(dataValue)
+      } else {
+        estadoCotizacion(idventa)
+      }
+    } else {
+      estadofactura(row.cuf)
+    }
   }
 }
 
 const anularVentas = (id) => {
   ventaAAnular.value = id
+  cotizacionAAnular.value = null
+
   modalMotivoAnulacion.value = true
 }
+const anularCotizacion = (id) => {
+  cotizacionAAnular.value = id
+  ventaAAnular.value = null
 
+  modalMotivoAnulacion.value = true
+}
 const confirmarAnulacion = async () => {
   if (!motivoAnulacionSeleccionado.value) {
     $q.notify({
@@ -1166,11 +1205,20 @@ const confirmarAnulacion = async () => {
     $q.loading.show({
       message: 'Anulando venta...',
     })
+    let response = null
+    console.log(ventaAAnular.value)
+    console.log(cotizacionAAnular.value)
+    console.log(tipo)
+    console.log(token)
 
-    const response = await api.get(
-      `cambiarestadoventa/${ventaAAnular.value}/2/${motivoAnulacionSeleccionado.value}/${idusuario}/${token}/${tipo}`,
-    )
-
+    if (ventaAAnular.value == null) {
+      const endpoint = `anularCotizacion/${cotizacionAAnular.value}/${motivoAnulacionSeleccionado.value}/${idusuario}`
+      response = await api.get(`${endpoint}`)
+    } else if (cotizacionAAnular.value == null) {
+      const endpoint = `cambiarestadoventa/${ventaAAnular.value}/2/${motivoAnulacionSeleccionado.value}/${idusuario}/${token}/${tipo}`
+      response = await api.get(`${endpoint}`)
+    }
+    console.log(response)
     if (response.data.estado === 'exito') {
       $q.notify({
         type: 'positive',
@@ -1226,6 +1274,30 @@ const estadofactura = async (cuf) => {
     $q.notify({
       type: 'negative',
       message: 'Error al verificar estado de factura',
+    })
+  } finally {
+    $q.loading.hide()
+  }
+}
+const estadoCotizacion = async (idcotizacion) => {
+  try {
+    $q.loading.show({
+      message: 'Validando estado ...',
+    })
+
+    const response = await api.get(`estadoCotizacion/${idcotizacion}`)
+    console.log(response)
+    if (response.data.status === 'success') {
+      estadoFactura.value = response.data.data.condicion
+      modalEstadoFactura.value = true
+    } else {
+      throw new Error(response.data.error || 'Error al verificar condicion')
+    }
+  } catch (error) {
+    console.error('Error al verificar condicion de factura:', error)
+    $q.notify({
+      type: 'negative',
+      message: 'Error al verificar condicion de factura',
     })
   } finally {
     $q.loading.hide()
@@ -1520,32 +1592,54 @@ const autorizarDevolucion = async (id) => {
   }
 }
 
-const generarComprobantePDF = async (id) => {
+const generarComprobantePDF = async (row) => {
+  console.log(row)
+  let id
+
+  if (Number(row.tipoventa) === -1) {
+    id = row.tipo === 'cotizacion' ? row.id : row.idventa
+  } else {
+    id = row.id
+  }
+
   try {
-    const usuarioResponse = validarUsuario()
-    const usuario = usuarioResponse[0]
-    const idempresa = usuario?.empresa?.idempresa
+    $q.loading.show({ message: 'Generando comprobante...' })
 
-    $q.loading.show({
-      message: 'Generando comprobante...',
-    })
+    const endpoint =
+      Number(row.tipoventa) === -1
+        ? `detallesCotizacion/${id}/${idempresa}`
+        : `detallesVenta/${id}/${idempresa}`
 
-    const response = await api.get(`detallesVenta/${id}/${idempresa}`)
+    console.log(endpoint)
+    const response = await api.get(endpoint)
     console.log(response)
-    detalleVenta.value = response.data
-    if (response.data[0] === 'error') {
-      throw new Error(response.data.error)
+    const data = response.data
+
+    // Validar respuesta de API
+    if (!Array.isArray(data) || data[0] === 'error') {
+      const errorMsg = data.error || 'Respuesta inválida del servidor.'
+      throw new Error(errorMsg)
     }
-    const doc = await PDFdetalleVentaInicio(detalleVenta)
-    // doc.save('proveedores.pdf') ← comenta o elimina esta línea  autorizarDevolucion
-    //doc.output('dataurlnewwindow') // ← muestra el PDF en una nueva ventana del navegador
-    pdfData.value = doc.output('dataurlstring') // muestra el pdf en un modal
+
+    let doc
+    if (Number(row.tipoventa) === -1) {
+      // 🧾 Generar PDF para COTIZACIÓN
+      doc = generarPdfCotizacion(data)
+    } else {
+      // 🧾 Generar PDF para VENTA
+      detalleVenta.value = data
+      doc = await PDFdetalleVentaInicio(detalleVenta)
+    }
+
+    // Mostrar PDF en modal
+    pdfData.value = doc.output('dataurlstring')
     modalComprobantePDF.value = true
   } catch (error) {
     console.error('Error al generar comprobante:', error)
     $q.notify({
       type: 'negative',
-      message: 'Error al generar comprobante',
+      message: `Error al generar comprobante: ${error.message}`,
+      position: 'top',
     })
   } finally {
     $q.loading.hide()

@@ -160,6 +160,7 @@ class Kardex
             'EXT'=> 'EXTRAVIO',
             'DEV'=> 'DEVOLUCION',
             'AN'=>'ANULACION',
+            'ANC'=>'ANULACION',
             'COT'=>'COTIZACION',
         ];
         return $codigo[$cod] ?? 'MOVIMIENTO DESCONOCIDO';
@@ -205,6 +206,9 @@ class Kardex
                         ),0)
                         when s.idorigen is not null and s.codigo = 'AN' then COALESCE((
                             select s2.id_stock from stock as s2 where s2.idorigen = s.idorigen and s2.codigo = 'VE' limit 1
+                        ),0)
+                        when s.idorigen is not null and s.codigo = 'ANC' then COALESCE((
+                            select s2.id_stock from stock as s2 where s2.idorigen = s.idorigen and s2.codigo = 'COT' limit 1
                         ),0)
                     end as precio_de
                 from stock s where s.productos_almacen_id_productos_almacen = ? and s.fecha <= ?";
@@ -268,6 +272,7 @@ class Kardex
         $saldo_final_of = 0;
         foreach ($KARDEX as $movimiento) {
             $precios_divididos = [];
+            $entradas_divididos = []; 
             $cantidadMovimiento = floatval($movimiento['cantidad_movimiento']);
             $precioUnitario = floatval($movimiento['precio_unitario']);
             $cod = $movimiento['codigo'];
@@ -276,7 +281,7 @@ class Kardex
             $codigos_perdidas = [ 'EXT', 'MER'];
             $codigos_entradas = ['MIC'];
             $codigos_salidas = ['VE', 'COT'];
-            $codigos_especiales = ['DEV', 'AN'];
+            $codigos_especiales = ['DEV', 'AN', 'ANC'];
             if( in_array($cod, $codigos_entradas) ){
                 // Entrada
                 $entradas[] = [
@@ -358,21 +363,33 @@ class Kardex
                     if (isset($movimiento['precio_de']) && $mov['idstock'] == $movimiento['precio_de']) {
                         $precioUnitario = floatval($mov['C.Unit']);
                         $compra_de = $mov['compra_de']; // asumimos que se devuelve al mismo lote
-                        break;
+                        $entradas_divididos[] = [
+                            "compra_de" => $compra_de,
+                            "cantidad" => $mov['Salida'],
+                            "precio" => $precioUnitario
+                        ];
                     }
                 }
                 // echo $compra_de;
                 //Si se encontró el lote original, se agrega la cantidad devuelta a ese lote
+                $no_existe_entrada = true;
                 if ($compra_de !== null) {
                     foreach ($entradas as &$e) {
                         if ($e['idstock'] == $compra_de) {
                             $e['cantidad'] += abs($cantidadMovimiento);
-                           
+                            $no_existe_entrada = false;
                             break; // salir de ambos loops
                         }
                         
                     }
                     unset($e);
+                    if($no_existe_entrada){
+                        $entradas[] = [                          
+                            'idstock' => $compra_de,
+                            'cantidad' => abs($cantidadMovimiento),
+                            'precio_unitario' => $precioUnitario
+                        ];
+                    }
                 } else {
                     // Si no se encontró el lote, se crea una nueva entrada (devolución sin referencia exacta)
                     $entradas[] = [
@@ -425,27 +442,57 @@ class Kardex
                 }
                 
             }else{
-                $registro = [
-                    "compra_de" => 0,
-                    "idstock" => $movimiento['id_stock'],
-                    "Fecha" => $movimiento['fecha'],
-                    "Concepto" => $this->getConceptoKardex($movimiento['codigo']),
-                    "Entrada" => $cantidadMovimiento > 0 ? $cantidadMovimiento : 0,
-                    "Salida" => $cantidadMovimiento < 0 ? abs($cantidadMovimiento) : 0,
-                    "Existencia" => $existencia, 
-                    "C.Unit" => $precioUnitario, // En salidas, es el detalle de precios usados
-                    "Debe" => $debe,
-                    "Haber" => $haber,
-                    "Saldo" => $saldo,
-                    "saldo_final" => $saldo_final_of,
-                    // Detalle de los lotes pendientes (para el último registro, es el inventario final)
-                    "Lotes_Pendientes" => $entradas
-                ];
-                if (count($KARDEX) == (array_key_last($KARDEX) + 1)) {
-                    $registro['PUP_Final'] = $pup_final;
-                   
-                }
-                 $resultado[] = $registro;
+                 if (is_array($entradas_divididos) && count($entradas_divididos) > 0) {
+                    foreach($entradas_divididos as $dividido){
+                        $saldo_final_of += floatval($dividido['cantidad'])* floatval($dividido['precio']);
+
+                        $registro = [
+                            "compra_de"=> 0,
+                            "idstock" => $movimiento['id_stock'],
+                            "Fecha" => $movimiento['fecha'],
+                            "Concepto" => $this->getConceptoKardex($movimiento['codigo']),
+                            "Entrada" => $dividido['cantidad'],
+                            "Salida" => 0,
+                            "Existencia" => $existencia, 
+                            "C.Unit" => $dividido['precio'], // En salidas, es el detalle de precios usados
+                            "Debe" => floatval($dividido['cantidad'])* floatval($dividido['precio']),
+                            "Haber" => $haber,
+                            "Saldo" => $saldo_final_of,
+                            "saldo_final" => $saldo_final_of,
+                            // Detalle de los lotes pendientes (para el último registro, es el inventario final)
+                            "Lotes_Pendientes" => $entradas
+                        ];
+                        if (count($KARDEX) == (array_key_last($KARDEX) + 1)) {
+                            $registro['PUP_Final'] = $pup_final;
+                        
+                        }
+                        $resultado[] = $registro;
+                    }
+                 }
+                 else{
+                    $registro = [
+                        "compra_de" => 0,
+                        "idstock" => $movimiento['id_stock'],
+                        "Fecha" => $movimiento['fecha'],
+                        "Concepto" => $this->getConceptoKardex($movimiento['codigo']),
+                        "Entrada" => $cantidadMovimiento > 0 ? $cantidadMovimiento : 0,
+                        "Salida" => $cantidadMovimiento < 0 ? abs($cantidadMovimiento) : 0,
+                        "Existencia" => $existencia, 
+                        "C.Unit" => $precioUnitario, // En salidas, es el detalle de precios usados
+                        "Debe" => $debe,
+                        "Haber" => $haber,
+                        "Saldo" => $saldo,
+                        "saldo_final" => $saldo_final_of,
+                        // Detalle de los lotes pendientes (para el último registro, es el inventario final)
+                        "Lotes_Pendientes" => $entradas
+                    ];
+                    if (count($KARDEX) == (array_key_last($KARDEX) + 1)) {
+                        $registro['PUP_Final'] = $pup_final;
+                    
+                    }
+                    $resultado[] = $registro;
+                 }
+                
             }
             
             $saldo_final_of = $saldo;
@@ -497,7 +544,7 @@ class Kardex
             $codigos_perdidas = [ 'EXT', 'MER'];
             $codigos_entradas = ['MIC'];
             $codigos_salidas = ['VE', 'COT'];
-            $codigos_especiales = ['DEV', 'AN'];
+            $codigos_especiales = ['DEV', 'AN', 'ANC'];
             $es_ultimo_movimiento = (array_key_last($KARDEX) == key($KARDEX)); // Verifica si estamos en el último item
 
             if(in_array($cod, $codigos_entradas)){
@@ -717,7 +764,7 @@ class Kardex
             
             $codigos_entradas = ['MIC'];
             $codigos_salidas = ['VE', 'COT', 'EXT', 'MER'];
-            $codigos_especiales = ['DEV', 'AN'];
+            $codigos_especiales = ['DEV', 'AN', 'ANC'];
 
             if(in_array($cod, $codigos_entradas)){
                 // 1. Entrada: Se recalcula el promedio ponderado

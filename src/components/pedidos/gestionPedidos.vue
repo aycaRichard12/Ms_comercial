@@ -124,10 +124,11 @@ import { useQuasar } from 'quasar'
 import jsPDF from 'jspdf'
 import autoTable from 'jspdf-autotable'
 import { validarUsuario } from 'src/composables/FuncionesGenerales'
-import { cambiarFormatoFecha, obtenerFechaActualDato } from 'src/composables/FuncionesG'
-import { URL_APIE } from 'src/composables/services'
+import { cambiarFormatoFecha } from 'src/composables/FuncionesG'
 import { decimas } from 'src/composables/FuncionesG'
 import { useWhatsapp } from 'src/composables/useWhatsapp'
+import { PDF_REPORTE_GESTIPO_PEDIDOS_DETALLE } from '../../utils/pdfReportGenerator'
+import { PDF_REPORTE_GESTION_PEDIDOS } from '../../utils/pdfReportGenerator'
 const { mostrarDialogoWhatsapp } = useWhatsapp()
 const pdfData = ref(null)
 const mostrarModal = ref(false)
@@ -261,243 +262,28 @@ watch(
 )
 
 function imprimirReporte() {
-  console.log(detallePedido.value)
-  const contenidousuario = validarUsuario()
-  const doc = new jsPDF({ orientation: 'portrait' })
-
-  const idempresa = contenidousuario[0]
-  const nombreEmpresa = idempresa.empresa.nombre
-  const direccionEmpresa = idempresa.empresa.direccion
-  const telefonoEmpresa = idempresa.empresa.telefono
-  const logoEmpresa = idempresa.empresa.logo
-
-  const columns = [
-    { header: 'N°', dataKey: 'indice' },
-    { header: 'Descripción', dataKey: 'descripcion' },
-    { header: 'Cantidad', dataKey: 'cantidad' },
-  ]
-
-  const detallePlano = JSON.parse(JSON.stringify(detallePedido.value))
-
-  const datos = detallePlano[0].detalle.map((item, indice) => ({
-    indice: indice + 1,
-    descripcion: item.descripcion,
-    cantidad: decimas(item.cantidad),
-  }))
-
-  autoTable(doc, {
-    columns,
-    body: datos,
-    styles: {
-      overflow: 'linebreak',
-      fontSize: 5,
-      cellPadding: 2,
-    },
-    headStyles: {
-      fillColor: [22, 160, 133],
-      textColor: 255,
-      halign: 'center',
-    },
-    columnStyles: {
-      indice: { cellWidth: 15, halign: 'center' },
-      descripcion: { cellWidth: 100, halign: 'left' },
-      cantidad: { cellWidth: 80, halign: 'right' },
-    },
-    didParseCell: function (data) {
-      if (data.row.index >= datos.length - 3) {
-        data.cell.styles.halign = 'left'
-      }
-    },
-    startY: 50,
-    margin: { horizontal: 5 },
-    theme: 'striped',
-    didDrawPage: () => {
-      if (doc.internal.getNumberOfPages() === 1) {
-        if (logoEmpresa) {
-          doc.addImage(`${URL_APIE}/${logoEmpresa}`, 'PNG', 180, 8, 20, 20)
-        }
-
-        doc.setFontSize(7)
-        doc.setFont(undefined, 'bold')
-        doc.text(nombreEmpresa, 5, 10)
-
-        doc.setFontSize(6)
-        doc.setFont(undefined, 'normal')
-        doc.text(direccionEmpresa, 5, 13)
-        doc.text(`Tel: ${telefonoEmpresa}`, 5, 16)
-
-        doc.setFontSize(10)
-        doc.setFont(undefined, 'bold')
-        doc.text('ORDEN PEDIDO', doc.internal.pageSize.getWidth() / 2, 15, {
-          align: 'center',
-        })
-
-        doc.setDrawColor(0)
-        doc.setLineWidth(0.2)
-        doc.line(5, 30, 200, 30)
-
-        doc.setFontSize(7)
-        doc.setFont(undefined, 'bold')
-        doc.text('DATOS ORDEN:', 5, 35)
-
-        doc.setFontSize(6)
-        doc.setFont(undefined, 'normal')
-        const cliente = `${detallePlano[0].almacen}`
-        doc.text(cliente, 5, 38)
-
-        doc.text(detallePlano[0].empresa.direccion, 5, 41)
-        doc.text(detallePlano[0].empresa.email, 5, 44)
-        doc.text('Fecha de Orden: ' + cambiarFormatoFecha(detallePlano[0].fecha), 5, 47)
-
-        doc.setFontSize(7)
-        doc.setFont(undefined, 'bold')
-        doc.text('DATOS DEL USUARIO:', 200, 35, { align: 'right' })
-
-        doc.setFontSize(6)
-        doc.setFont(undefined, 'normal')
-        doc.text(detallePlano[0].usuarios[0].usuario, 200, 38, { align: 'right' })
-        doc.text(detallePlano[0].usuarios[0].cargo, 200, 41, { align: 'right' })
-        doc.text('Tipo ' + tipo[detallePlano[0].tipopedido], 200, 44, { align: 'right' })
-      }
-    },
-  })
-
-  pdfData.value = doc.output('dataurlstring')
-  mostrarModal.value = true
+  if (detallePedido.value) {
+    const doc = PDF_REPORTE_GESTIPO_PEDIDOS_DETALLE(detallePedido)
+    pdfData.value = doc.output('dataurlstring')
+    mostrarModal.value = true
+  } else {
+    $q.notify({
+      type: 'negative',
+      message: 'Pedido  sin items',
+    })
+  }
 }
 const vistaPrevia = () => {
-  console.log(filterPedido.value)
-  const contenidousuario = validarUsuario()
-  const doc = new jsPDF({ orientation: 'portrait' })
-
-  const idempresa = contenidousuario[0]
-  const nombreEmpresa = idempresa.empresa.nombre
-  const direccionEmpresa = idempresa.empresa.direccion
-  const telefonoEmpresa = idempresa.empresa.telefono
-  const logoEmpresa = idempresa.empresa.logo // Ruta relativa o base64
-  const nombre = idempresa.nombre
-  const cargo = idempresa.cargo
-  const columns = [
-    { header: 'N', dataKey: 'indice' },
-    { header: 'Fecha', dataKey: 'fecha' },
-    { header: 'Código', dataKey: 'codigo' },
-    { header: 'Nro.Pedido', dataKey: 'nropedido' },
-    { header: 'Tipo', dataKey: 'tipopedido' },
-    { header: 'Almacén Origen', dataKey: 'almacenorigen' },
-    { header: 'Almacén Destino', dataKey: 'almacen' },
-    { header: 'Observación', dataKey: 'observacion' },
-    { header: 'Esatado', dataKey: 'estado' },
-  ]
-  // filterPedido.value.reduce((sum, row) => sum + Number(row.total), 0)
-  const datos = filterPedido.value.map((item, indice) => ({
-    indice: indice + 1,
-    fecha: item.fecha,
-    codigo: item.codigo,
-    nropedido: item.nropedido,
-    tipopedido: tipo[Number(item.tipopedido)],
-    almacenorigen: item.almacenorigen,
-    almacen: item.almacen,
-    observacion: item.observacion,
-    estado: tipoestados[Number(item.estado)],
-  }))
-
-  autoTable(doc, {
-    columns,
-    body: datos,
-    styles: {
-      overflow: 'linebreak',
-      fontSize: 5,
-      cellPadding: 2,
-    },
-    headStyles: {
-      fillColor: [22, 160, 133],
-      textColor: 255,
-      halign: 'center',
-    },
-    columnStyles: {
-      indice: { cellWidth: 10, halign: 'center' },
-      fecha: { cellWidth: 15, halign: 'left' },
-      codigo: { cellWidth: 25, halign: 'left' },
-      nropedido: { cellWidth: 15, halign: 'center' },
-      tipopedido: { cellWidth: 25, halign: 'left' },
-      almacenorigen: { cellWidth: 25, halign: 'left' },
-      almacen: { cellWidth: 25, halign: 'left' },
-      observacion: { cellWidth: 40, halign: 'left' },
-      estado: { cellWidth: 15, halign: 'left' },
-    },
-    //20 + 15 + 20 + 25 + 30 + 20 + 20 + 25 + 20 + 15 + 20 + 15 + 20 = 265 mm
-
-    startY: 45,
-    margin: { horizontal: 5 },
-    theme: 'striped',
-    didDrawPage: () => {
-      if (doc.internal.getNumberOfPages() === 1) {
-        // Logo (requiere base64 o ruta absoluta en servidor si usas Node)
-        if (logoEmpresa) {
-          //doc.addImage(`${URL_APIE}${logoEmpresa}`, 'PNG', 180, 8, 20, 20)
-        }
-
-        // Nombre y datos de empresa
-        doc.setFontSize(7)
-        doc.setFont(undefined, 'bold')
-        doc.text(nombreEmpresa, 5, 10)
-
-        doc.setFontSize(6)
-        doc.setFont(undefined, 'normal')
-        doc.text(direccionEmpresa, 5, 13)
-        doc.text(`Tel: ${telefonoEmpresa}`, 5, 16)
-
-        // Título centrado
-        doc.setFontSize(10)
-        doc.setFont(undefined, 'bold')
-        doc.text('REPORTE DE PEDIDOS', doc.internal.pageSize.getWidth() / 2, 15, {
-          align: 'center',
-        })
-        doc.setFontSize(6)
-        doc.setFont(undefined, 'normal')
-        doc.text(
-          'Entre ' + cambiarFormatoFecha(fechai.value) + ' Y ' + cambiarFormatoFecha(fechaf.value),
-          doc.internal.pageSize.getWidth() / 2,
-          19,
-          {
-            align: 'center',
-          },
-        )
-        doc.setDrawColor(0) // Color negro
-        doc.setLineWidth(0.2) // Grosor de la línea
-        doc.line(5, 30, 200, 30) // De (x1=5, y1=25) a (x2=200, y2=25)
-
-        doc.setFontSize(7)
-        doc.setFont(undefined, 'bold')
-        doc.text('DATOS DEL REPORTE', 5, 35)
-
-        doc.setFontSize(6)
-        doc.setFont(undefined, 'normal')
-        doc.text('Nombre del Almacen: ' + (almacen.value?.label || 'Todo los Almacenes'), 5, 38)
-
-        doc.setFontSize(6)
-        doc.setFont(undefined, 'normal')
-        doc.text('Fecha de Impresion: ' + cambiarFormatoFecha(obtenerFechaActualDato()), 5, 41)
-
-        doc.setFontSize(7)
-        doc.setFont(undefined, 'bold')
-        doc.text('DATOS DEL ENCARGADO:', 200, 35, { align: 'right' })
-
-        doc.setFontSize(6)
-        doc.setFont(undefined, 'normal')
-        doc.text(nombre, 200, 38, { align: 'right' })
-
-        doc.setFontSize(6)
-        doc.setFont(undefined, 'normal')
-        doc.text(cargo, 200, 41, { align: 'right' })
-      }
-    },
-  })
-
-  // doc.save('proveedores.pdf') ← comenta o elimina esta línea
-  //doc.output('dataurlnewwindow') // ← muestra el PDF en una nueva ventana del navegador
-  pdfData.value = doc.output('dataurlstring') // muestra el pdf en un modal
-  mostrarModal.value = true
+  if (filterPedido.value) {
+    const doc = PDF_REPORTE_GESTION_PEDIDOS(filterPedido, tipoestados, fechai, fechaf, almacen)
+    pdfData.value = doc.output('dataurlstring')
+    mostrarModal.value = true
+  } else {
+    $q.notify({
+      type: 'negative',
+      message: 'Pedidos  sin items',
+    })
+  }
 }
 const toggleStatus = async (item) => {
   try {

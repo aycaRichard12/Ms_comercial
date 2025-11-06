@@ -293,12 +293,18 @@
             </div>
 
             <div class="col-12 flex justify-end q-ma-md">
-              <q-btn flat type="reset" label="Limpiar" color="negative" class="q-mr-md" />
               <q-btn
                 type="submit"
-                label="Guardar"
+                icon="add"
                 color="primary"
                 :disable="!formularioDetalle.idproductoalmacen || !formularioDetalle.cantidad"
+              />
+              <q-btn
+                flat
+                label="Cerrar"
+                color="negative"
+                class="q-mr-md"
+                @click="modaldetalleProductos = false"
               />
             </div>
           </q-form>

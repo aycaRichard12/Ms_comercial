@@ -862,6 +862,14 @@ elseif ($ver[0] == "getTipoKardex") {
     $controlador->getTipoKardexjson($ver[1]);
     
 }
+elseif ($ver[0] == "anularCotizacion") {
+    $controlador = new UseCotizacion();
+    $controlador->anularCotizacion($ver[1], $ver[2], $ver[3]);
+}
+elseif ($ver[0] == "estadoCotizacion") {
+    $controlador = new UseCotizacion();
+    $controlador->estadoCotizacion($ver[1]);
+}
 
 if ($controlador === null) {
     // Acción por defecto si no se encuentra una ruta valida reportecotizacion cambiarestadodevolucion

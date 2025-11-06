@@ -122,19 +122,22 @@
         <!-- <q-badge color="green" v-if="Number(props.row.estado) === 1" label="Activo" outline />
           <q-badge color="red" v-else label="Inactivo" outline /> -->
         <q-td class="flex justify-center">
+          <q-badge color="red" v-if="Number(props.row.condicion) === 2" label="ANU" outline="">
+          </q-badge>
           <q-badge
             color="deep-purple"
-            v-if="Number(props.row.estado) === 1"
+            v-if="Number(props.row.estado) === 1 && Number(props.row.condicion) === 1"
             label="PREF"
             outline=""
           >
           </q-badge>
           <q-badge
             color="blue"
-            v-if="Number(props.row.estado) === 0"
+            v-if="Number(props.row.estado) === 0 && Number(props.row.condicion) === 1"
             label="NOR"
             outline=""
-          ></q-badge>
+          >
+          </q-badge>
         </q-td>
       </template>
       <template v-slot:body-cell-acciones="props">
@@ -149,7 +152,10 @@
             title="VER COMPROBANTE"
           />
           <q-btn
-            v-if="Number(tipoFactura) === 2"
+            v-if="
+              Number(tipoFactura) === 2 ||
+              (Number(tipoFactura) === 1 && Number(props.row.condicion) === 1)
+            "
             icon="payment"
             color="blue"
             dense
@@ -216,9 +222,9 @@ import ModalR from 'src/components/ModalR.vue'
 import FacturarCotizacion from './FacturarCotizacion.vue'
 import { api } from 'src/boot/axios'
 import { DPFReporteCotizacion } from 'src/utils/pdfReportGenerator'
-import { TipoFactura } from 'src/composables/FuncionesGenerales'
+import { getTipoFactura } from 'src/composables/FuncionesG'
 import { generarPdfCotizacion } from 'src/utils/pdfReportGenerator'
-const tipoFactura = TipoFactura()
+const tipoFactura = getTipoFactura()
 console.log(tipoFactura)
 const pdfData = ref(null)
 

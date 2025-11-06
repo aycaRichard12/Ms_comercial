@@ -347,7 +347,7 @@ class reportes
     public function reportecotizacion($idmd5, $fechai, $fechaf)
     {   $arrayid = $this->arrayIDalmacen($idmd5);
         $lista = [];
-        $clien = $this->cm->query("select co.id_cotizacion, co.fecha_cotizacion, concat(c.nombre, ' - ' , c.nombrecomercial) as nombre, co.monto_total, co.descuento, pa.almacen_id_almacen, co.cliente_id_cliente, d.tipo_divisa, s.nombre as sucursal, co.estado from cotizacion co 
+        $clien = $this->cm->query("select co.id_cotizacion, co.fecha_cotizacion, concat(c.nombre, ' - ' , c.nombrecomercial) as nombre, co.monto_total, co.descuento, pa.almacen_id_almacen, co.cliente_id_cliente, d.tipo_divisa, s.nombre as sucursal, co.estado, co.condicion from cotizacion co 
         left join cliente c on co.cliente_id_cliente=c.id_cliente
         left join detalle_cotizacion dco on co.id_cotizacion=dco.cotizacion_id_cotizacion
         left join sucursal s on co.idsucursal=s.id_sucursal
@@ -367,7 +367,8 @@ class reportes
                 "idcliente" => $qwe['cliente_id_cliente'],
                 "divisa" => $qwe['tipo_divisa'],
                 "sucursal" => $qwe['sucursal'],
-                "estado" => $qwe['estado']
+                "estado" => $qwe['estado'],
+                "condicion" => $qwe['condicion']
             );
 
             array_push($lista, $res);
