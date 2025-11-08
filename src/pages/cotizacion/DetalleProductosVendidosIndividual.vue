@@ -171,6 +171,7 @@ import { useQuasar } from 'quasar'
 import { peticionGET } from 'src/composables/peticionesFetch'
 import * as funGeneral from 'src/composables/FuncionesG'
 import { URL_APICM } from 'src/composables/services'
+import { primerDiaDelMes } from 'src/composables/FuncionesG'
 import * as XLSX from 'xlsx'
 // Importar XLSX si no está globalmente disponible
 // import * as XLSX from 'xlsx';
@@ -179,7 +180,7 @@ import * as XLSX from 'xlsx'
 const $q = useQuasar()
 
 // Reactive state
-const fechai = ref(funGeneral.obtenerFechaActualDato())
+const fechai = ref(primerDiaDelMes().toISOString().slice(0, 10))
 const fechaf = ref(funGeneral.obtenerFechaActualDato())
 const datosOriginales = ref([])
 const datosFiltrados = ref([])

@@ -79,8 +79,8 @@
               <q-btn
                 dense
                 color="primary"
-                icon="list"
-                label="Productos"
+                icon="shopping_cart"
+                flat
                 size="10px"
                 @click="showDetails(props.row.id, props.row.idalmacen, props.row.autorizacion)"
               />
@@ -94,6 +94,7 @@
                 color="primary"
                 icon="edit"
                 class="q-mr-xs"
+                flat=""
                 @click="editItem(props.row.id)"
               />
               <q-btn
@@ -102,14 +103,16 @@
                 color="negative"
                 icon="delete"
                 class="q-mr-xs"
+                flat
                 @click="deleteItem(props.row.id)"
               />
 
               <q-btn
                 v-if="Number(props.row.autorizacion) === 1"
                 dense
-                color="info"
+                color="red"
                 icon="picture_as_pdf"
+                flat
                 @click="showComprobante(props.row)"
               />
               <q-btn
@@ -267,7 +270,7 @@
                 />
               </div>
               <div class="col-12 col-md-3" v-if="lote">
-                <label for="provedor">Proveedor*</label>
+                <label for="provedor">Filtrar por proveedor:</label>
                 <q-select
                   v-model="detailForm.proveedor"
                   :options="filteredProveedores"
@@ -287,7 +290,7 @@
                 />
               </div>
               <div class="col-12 col-md-9" v-if="lote">
-                <label for="compras">Lote Compra*</label>
+                <label for="compras">Seleccionar Lote de Compra/Producción:</label>
                 <q-select
                   v-model="detailForm.compra"
                   :options="filterCompras"
@@ -307,7 +310,7 @@
               <div class="col-md-2">
                 <q-btn type="submit" color="primary" class="btn-res q-mt-lg">
                   <q-icon name="save" class="icono" />
-                  <span class="texto">{{ detailEditMode ? 'Actualizar' : 'Agregar' }}</span>
+                  <span class="texto">{{ detailEditMode ? 'Actualizar' : 'Cargar' }}</span>
                 </q-btn>
               </div>
             </div>
@@ -485,6 +488,7 @@ const detailColumns = [
     field: (row) => detailData.value.indexOf(row) + 1,
     align: 'right',
   },
+  { name: 'codigolote', label: 'Código Lote', field: 'codigolote', align: 'left' },
   { name: 'codigo', label: 'Código', field: 'codigo', align: 'left' },
   { name: 'descripcion', label: 'Descripción', field: 'descripcion', align: 'left' },
   { name: 'cantidad', label: 'Cantidad', field: 'cantidad', align: 'right' },

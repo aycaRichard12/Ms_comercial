@@ -15,7 +15,9 @@
         </div>
 
         <q-toolbar-title class="q-gutter-sm flex justify-end items-center" clearable>
+          <ComandoVoz />
           <q-btn icon="help_outline" color="blue" flat @click="IniciarGuia" />
+
           <notificacion-layout v-if="permitidoNotificaciones" />
           <q-btn
             flat
@@ -182,6 +184,7 @@ import logo from 'src/assets/IMAGOTIPO-02.png'
 import NotificacionLayout from './NotificacionLayout.vue'
 import { permisoNotificaciones } from 'src/composables/FuncionesG'
 import { guiarInicio } from 'src/utils/guiasDriver'
+import ComandoVoz from './ComandoVoz.vue'
 
 const ocultarTabs = () => {
   tabsVisible.value = false

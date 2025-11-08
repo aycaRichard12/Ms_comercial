@@ -265,6 +265,7 @@ import { PDFenviarFacturaCorreo } from 'src/utils/pdfReportGenerator'
 import { exportTOXLSX_Reporte_Ventas } from 'src/utils/XCLReportImport'
 //import { getUsuario } from 'src/composables/FuncionesGenerales'
 import RegistrarNotaCreditoDebito from 'src/pages/NotasCreditoDebito/RegistrarNotaCreditoDebito.vue'
+import { primerDiaDelMes } from 'src/composables/FuncionesG'
 //import { decimas } from 'src/composables/FuncionesG'
 //const usuario = getUsuario()
 const isVisibleNota = ref(false)
@@ -282,8 +283,9 @@ const today = new Date().toISOString().slice(0, 10)
 const idempresa = idempresa_md5()
 const idusuario = idusuario_md5()
 
+console.log(primerDiaDelMes())
 // Fec
-const fechai = ref(today)
+const fechai = ref(primerDiaDelMes().toISOString().slice(0, 10))
 const fechaf = ref(today)
 
 // Filtros

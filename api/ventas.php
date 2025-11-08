@@ -2489,13 +2489,30 @@ class ventas
     public function detallemerma($id)
     {
         $lista = [];
-        $alma = $this->cm->query("select dm.id_detalle_mermas,p.nombre,p.codigo,p.descripcion,p.caracteristicas,dm.cantidad from detalle_mermas dm
+        $alma = $this->cm->query("select 
+        dm.id_detalle_mermas,
+        p.nombre,
+        p.codigo,
+        p.descripcion,
+        p.caracteristicas,
+        dm.cantidad,
+        i.codigo as codigolote
+        from detalle_mermas dm
         inner join productos_almacen pa on dm.productos_almacen_id_productos_almacen=pa.id_productos_almacen
         inner join productos p on pa.productos_id_productos=p.id_productos
+        left join ingreso i on dm.idcompra=i.id_ingreso
         where dm.mermas_desperdicios_id_mermas_desperdicios='$id'
         order by dm.mermas_desperdicios_id_mermas_desperdicios desc");
         while ($qwe = $this->cm->fetch($alma)) {
-            $res = array("id" => $qwe[0], "producto" => $qwe[1], "codigo" => $qwe[2], "descripcion" => $qwe[3], "caracteristica" => $qwe[4], "cantidad" => $qwe[5]);
+            $res = array(
+                "id" => $qwe[0], 
+                "producto" => $qwe[1], 
+                "codigo" => $qwe[2], 
+                "descripcion" => $qwe[3], 
+                "caracteristica" => $qwe[4], 
+                "cantidad" => $qwe[5],
+                "codigolote" => $qwe[6]
+            );
             array_push($lista, $res);
         }
         echo json_encode($lista);
@@ -2724,13 +2741,30 @@ class ventas
     public function detallerobo($id)
     {
         $lista = [];
-        $alma = $this->cm->query("select dm.id_detalle_robo,p.nombre,p.codigo,p.descripcion,p.caracteristicas,dm.cantidad from detalle_robo dm
+        $alma = $this->cm->query("select 
+        dm.id_detalle_robo,
+        p.nombre,
+        p.codigo,
+        p.descripcion,
+        p.caracteristicas,
+        dm.cantidad,
+        i.codigo as codigolote
+        from detalle_robo dm
         inner join productos_almacen pa on dm.productos_almacen_id_productos_almacen=pa.id_productos_almacen
         inner join productos p on pa.productos_id_productos=p.id_productos
+        left join ingreso i on dm.idcompra=i.id_ingreso
         where dm.robos_id_robos='$id'
         order by dm.id_detalle_robo DESC");
         while ($qwe = $this->cm->fetch($alma)) {
-            $res = array("id" => $qwe[0], "producto" => $qwe[1], "codigo" => $qwe[2], "descripcion" => $qwe[3], "caracteristica" => $qwe[4], "cantidad" => $qwe[5]);
+            $res = array(
+            "id" => $qwe[0], 
+            "producto" => $qwe[1], 
+            "codigo" => $qwe[2], 
+            "descripcion" => $qwe[3], 
+            "caracteristica" => $qwe[4], 
+            "cantidad" => $qwe[5],
+            "codigolote" => $qwe[6]
+        );
             array_push($lista, $res);
         }
         echo json_encode($lista);

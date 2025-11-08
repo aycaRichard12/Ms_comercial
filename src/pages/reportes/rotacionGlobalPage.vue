@@ -187,6 +187,7 @@ import { html2pdf } from 'html2pdf.js'
 import { cambiarFormatoFecha, validarUsuario } from 'src/composables/FuncionesG'
 import { idempresa_md5 } from 'src/composables/FuncionesGenerales'
 import { PDF_REPORTE_DE_ROTACION_POR_GLOBAL } from 'src/utils/pdfReportGenerator'
+import { primerDiaDelMes } from 'src/composables/FuncionesG'
 const usuarioValido = validarUsuario()
 const idempresa = idempresa_md5()
 
@@ -238,7 +239,7 @@ onMounted(() => {
 
   // Establecer fecha por defecto (hoy)
   const hoy = new Date().toISOString().split('T')[0]
-  fechaInicio.value = hoy
+  fechaInicio.value = primerDiaDelMes().toISOString().slice(0, 10)
   fechaFin.value = hoy
 })
 

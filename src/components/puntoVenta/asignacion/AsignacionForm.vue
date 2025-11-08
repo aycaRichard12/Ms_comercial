@@ -12,7 +12,7 @@
       </div>
     </div>
 
-    <q-form @submit.prevent="$emit('submit', { warehouse, pointOfSale })">
+    <q-form @submit.prevent="handleSubmit" ref="myForm">
       <div class="title-container">
         <div class="title">Asignación de puntos de venta</div>
         <div class="subtitle">{{ user.name }}</div>
@@ -50,8 +50,8 @@
         </div>
       </q-card-section>
       <q-card-section class="flex justify-center">
-        <q-btn type="submit" color="primary" label="Registrar"
-      /></q-card-section>
+        <q-btn type="submit" color="primary" label="Registrar" />
+      </q-card-section>
     </q-form>
   </div>
 </template>
@@ -60,5 +60,17 @@
 import { ref } from 'vue'
 const warehouse = ref(null)
 const pointOfSale = ref(null)
+const myForm = ref(null)
 defineProps(['user', 'warehouses', 'pointsOfSale'])
+
+const emit = defineEmits(['submit', 'volver', 'load'])
+
+const resetForm = () => {
+  warehouse.value = null
+  pointOfSale.value = null
+}
+const handleSubmit = () => {
+  emit('submit', { warehouse: warehouse.value, pointOfSale: pointOfSale.value })
+  resetForm()
+}
 </script>

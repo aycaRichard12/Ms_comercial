@@ -84,7 +84,7 @@
                 </div>
 
                 <div class="col-12 flex justify-start q-mt-md">
-                  <q-btn type="submit" label="Guardar" color="primary" />
+                  <q-btn type="submit" label="Cargar" color="primary" />
                   <q-btn flat label="Cancelar" color="negative" @click="cancelarRegistro" />
                 </div>
               </q-form>
@@ -118,17 +118,12 @@
           <template v-slot:body-cell-estado="props">
             <q-td :props="props">
               <q-btn
-                v-if="editar"
-                :icon="Number(props.row.autorizacion) === 1 ? 'thumb_up' : 'thumb_down'"
-                :color="Number(props.row.autorizacion) === 1 ? 'positive' : 'negative'"
+                v-if="Number(props.row.autorizacion) === 2 && editar"
+                :icon="Number(props.row.autorizacion) === 1 ? 'toggle_on' : 'toggle_off'"
                 dense
                 flat
+                :color="Number(props.row.autorizacion) === 1 ? 'green' : 'grey'"
                 @click="cambiarEstado(props.row)"
-              />
-              <q-icon
-                v-else
-                :name="props.row.autorizacion === 1 ? 'thumb_up' : 'thumb_down'"
-                :color="props.row.autorizacion === 1 ? 'positive' : 'negative'"
               />
             </q-td>
           </template>
@@ -137,10 +132,10 @@
             <q-td :props="props">
               <div class="q-gutter-sm">
                 <q-btn
-                  icon="list"
+                  icon="shopping_cart"
                   color="primary"
-                  label="Productos"
                   dense
+                  flat
                   @click="
                     mostrarDetalle(
                       props.row.id,
@@ -170,7 +165,7 @@
                 <q-btn
                   v-if="Number(props.row.autorizacion) === 1 && lectura"
                   icon="picture_as_pdf"
-                  color="info"
+                  color="red"
                   dense
                   flat
                   @click="generarComprobante(props.row)"
@@ -253,7 +248,7 @@
                 />
               </div>
               <div class="col-12 col-md-3" v-if="lote">
-                <label for="provedor">Proveedor*</label>
+                <label for="provedor">Filtrar por proveedor:</label>
                 <q-select
                   v-model="formularioDetalle.proveedor"
                   :options="filteredProveedores"
@@ -273,7 +268,7 @@
                 />
               </div>
               <div class="col-12 col-md-9" v-if="lote">
-                <label for="compras">Lote Compra*</label>
+                <label for="compras">Seleccionar Lote de Compra/Producción:</label>
                 <q-select
                   v-model="formularioDetalle.compra"
                   :options="filterCompras"
@@ -451,6 +446,7 @@ const columnasDetalle = [
     field: (row) => detalleRobo.value.indexOf(row) + 1,
     align: 'center',
   },
+  { name: 'codigolote', label: 'Código Lote', field: 'codigolote', align: 'left' },
   { name: 'codigo', label: 'Código', field: 'codigo', align: 'left' },
   { name: 'descripcion', label: 'Descripción', field: 'descripcion', align: 'left' },
   { name: 'cantidad', label: 'Cantidad', field: 'cantidad', align: 'right' },

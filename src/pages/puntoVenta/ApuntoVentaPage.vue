@@ -158,6 +158,7 @@ async function submitAssignment({ warehouse, pointOfSale }) {
     if (response.data.estado === 'exito') {
       console.log(idalmacenF.value)
       cargarAsignaciones(idalmacenF.value)
+      loadPointsOfSale(warehouse)
       $q.notify({
         type: 'positive',
         message: 'Registrado correctamente',

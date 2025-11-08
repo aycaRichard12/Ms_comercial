@@ -4,9 +4,26 @@ import { useMenuStore } from 'src/stores/permitidos'
 import { idusuario_md5 } from 'src/composables/FuncionesGenerales'
 import { api } from 'src/boot/axios'
 
+export function obtenerFechaHoraNumerica() {
+  const ahora = new Date()
+
+  const fechaHoraNumeros =
+    ahora.getFullYear().toString() +
+    String(ahora.getMonth() + 1).padStart(2, '0') +
+    String(ahora.getDate()).padStart(2, '0') +
+    String(ahora.getHours()).padStart(2, '0') +
+    String(ahora.getMinutes()).padStart(2, '0') +
+    String(ahora.getSeconds()).padStart(2, '0')
+
+  return fechaHoraNumeros
+}
 export function convertirAMayusculas(texto) {
   if (!texto) return ''
   return texto.toString().toUpperCase()
+}
+export function primerDiaDelMes() {
+  const hoy = new Date()
+  return new Date(hoy.getFullYear(), hoy.getMonth(), 1)
 }
 
 export function getfechaCodigo() {

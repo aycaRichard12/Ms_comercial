@@ -224,6 +224,7 @@ import { api } from 'src/boot/axios'
 import { DPFReporteCotizacion } from 'src/utils/pdfReportGenerator'
 import { getTipoFactura } from 'src/composables/FuncionesG'
 import { generarPdfCotizacion } from 'src/utils/pdfReportGenerator'
+import { primerDiaDelMes } from 'src/composables/FuncionesG'
 const tipoFactura = getTipoFactura()
 console.log(tipoFactura)
 const pdfData = ref(null)
@@ -269,7 +270,7 @@ leyendaActiva.cargarLeyendaActivo()
 const $q = useQuasar()
 
 // Reactive data
-const fechai = ref(obtenerFechaActualDato())
+const fechai = ref(primerDiaDelMes().toISOString().slice(0, 10))
 const fechaf = ref(obtenerFechaActualDato())
 const datosOriginales = ref([])
 const datosFiltrados = ref([])
