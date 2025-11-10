@@ -1,0 +1,14 @@
+{
+    "name": "cm/api",
+    "type": "project",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "aycaRichard12",
+            "email": "aycarichard7@gmail.com"
+        }
+    ],
+    "require": {
+        "google/cloud-dialogflow": "0.15"
+    }
+}

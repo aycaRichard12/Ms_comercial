@@ -1,32 +1,34 @@
 <template>
-  <q-card class="q-ma-md">
-    <q-card-section>
-      <div class="text-h6">Reporte de Cobros Diarios</div>
-    </q-card-section>
+  <div class="q-pa-md">
+    <div class="titulo">Reporte de Cobros Diarios</div>
 
     <q-card-section class="q-pt-none">
       <div class="row q-col-gutter-md">
         <div class="col-xs-12 col-sm-6">
-          <q-input outlined v-model="startDate" label="Fecha Inicio" readonly>
-            <template v-slot:append>
-              <q-icon name="event" class="cursor-pointer">
-                <q-popup-proxy cover transition-show="scale" transition-hide="scale">
-                  <q-date v-model="startDate" mask="YYYY-MM-DD"></q-date>
-                </q-popup-proxy>
-              </q-icon>
-            </template>
+          <label for="fechainicio">Fecha Inicio</label>
+
+          <q-input
+            type="date"
+            v-model="startDate"
+            id="fechaini"
+            dense
+            outlined
+            :rules="[(val) => !!val || 'Seleccione una fecha válida']"
+          >
           </q-input>
         </div>
 
         <div class="col-xs-12 col-sm-6">
-          <q-input outlined v-model="endDate" label="Fecha Fin" readonly>
-            <template v-slot:append>
-              <q-icon name="event" class="cursor-pointer">
-                <q-popup-proxy cover transition-show="scale" transition-hide="scale">
-                  <q-date v-model="endDate" mask="YYYY-MM-DD"></q-date>
-                </q-popup-proxy>
-              </q-icon>
-            </template>
+          <label for="fechafin">Fecha Fin</label>
+
+          <q-input
+            type="date"
+            v-model="endDate"
+            id="fechaini"
+            dense
+            outlined
+            :rules="[(val) => !!val || 'Seleccione una fecha válida']"
+          >
           </q-input>
         </div>
       </div>
@@ -65,29 +67,35 @@
         <div class="row q-col-gutter-md q-pt-md">
           <!-- Filtro por almacén -->
           <div class="col-xs-12 col-sm-6 col-md-3">
+            <label for="filtrarporalmacen">Filtrar por Almacén</label>
             <q-select
               v-model="selectedAlmacen"
               :options="almacenOptions"
-              label="Filtrar por Almacén"
+              id="filtrarporalmacen"
               emit-value
               map-options
+              dense
+              outlined
               @update:model-value="updateFilter('almacen', $event !== 0)"
             />
           </div>
 
           <!-- Filtro por cliente -->
           <div class="col-xs-12 col-sm-6 col-md-4">
+            <label for="cliente">Buscar cliente</label>
             <q-select
               v-model="clienteStore.clienteSeleccionado"
               use-input
               input-debounce="300"
               :options="clientesFiltrados"
               @filter="filterClientes"
-              label="Buscar cliente"
+              id="cliente"
               option-label="displayName"
               :loading="loadingClientes"
               :disable="loadingClientes"
               clearable
+              dense
+              outlined
               @update:model-value="updateFilter('cliente', !!$event)"
               @clear="resetClientSelection"
             >
@@ -120,12 +128,15 @@
 
           <!-- Filtro por sucursal -->
           <div class="col-xs-12 col-sm-6 col-md-3">
+            <label for="seleccionarsucursal">Seleccionar sucursal</label>
             <q-select
               v-if="clienteStore.clienteSeleccionado"
               v-model="clienteStore.sucursalSeleccionada"
               :options="clienteStore.sucursales"
               option-label="nombre"
-              label="Seleccionar sucursal"
+              id="seleccionarsucursal"
+              dense
+              outlined
               :loading="loadingSucursales"
               :disable="!clienteStore.sucursales.length || loadingSucursales"
               clearable
@@ -146,13 +157,16 @@
 
           <!-- Filtro por estado (nuevo) -->
           <div class="col-xs-12 col-sm-6 col-md-2">
+            <label for="estadocredito">Estado crédito</label>
             <q-select
               v-model="selectedEstado"
               :options="estadoOptions"
-              label="Estado crédito"
+              id="estadocredito"
               emit-value
               map-options
               clearable
+              dense
+              outlined
               @update:model-value="updateFilter('estado', !!$event)"
             />
           </div>
@@ -206,32 +220,32 @@
     <q-inner-loading :showing="loading">
       <q-spinner-hourglass color="primary" size="50px" />
     </q-inner-loading>
-  </q-card>
-  <q-dialog v-model="mostrarModal" persistent full-width full-height>
-    <q-card class="q-pa-md" style="height: 100%; max-width: 100%">
-      <q-card-section class="row items-center q-pb-none">
-        <div class="text-h6">Vista previa de PDF</div>
-        <q-space />
-        <q-btn flat round icon="close" @click="mostrarModal = false" />
-      </q-card-section>
+    <q-dialog v-model="mostrarModal" persistent full-width full-height>
+      <q-card class="q-pa-md" style="height: 100%; max-width: 100%">
+        <q-card-section class="row items-center q-pb-none">
+          <div class="text-h6">Vista previa de PDF</div>
+          <q-space />
+          <q-btn flat round icon="close" @click="mostrarModal = false" />
+        </q-card-section>
 
-      <q-separator />
+        <q-separator />
 
-      <q-card-section class="q-pa-none" style="height: calc(100% - 60px)">
-        <iframe
-          v-if="pdfData"
-          :src="pdfData"
-          style="width: 100%; height: 100%; border: none"
-        ></iframe>
-      </q-card-section>
-    </q-card>
-  </q-dialog>
+        <q-card-section class="q-pa-none" style="height: calc(100% - 60px)">
+          <iframe
+            v-if="pdfData"
+            :src="pdfData"
+            style="width: 100%; height: 100%; border: none"
+          ></iframe>
+        </q-card-section>
+      </q-card>
+    </q-dialog>
+  </div>
 </template>
 
 <script setup>
 import { ref, onMounted, computed, watch } from 'vue'
 import { api } from 'src/boot/axios'
-import { useQuasar } from 'quasar'
+import { date, useQuasar } from 'quasar'
 import { idusuario_md5 } from 'src/composables/FuncionesGenerales'
 import { PDFreporteCuentasXCobrarPeriodo } from 'src/utils/pdfReportGenerator'
 //import * as XLSX from 'xlsx-js-style'
@@ -239,13 +253,14 @@ import { exportToXLSX_Reporte_CuentasXCobrarPeriodo } from 'src/utils/XCLReportI
 // Initialize Quasar for notifications
 import { useAlmacenStore } from 'src/stores/listaResponsableAlmacen'
 import { useClienteStore } from 'stores/cliente'
+import { primerDiaDelMes } from 'src/composables/FuncionesG'
 const mostrarModal = ref(false)
 const pdfData = ref(null)
 const $q = useQuasar()
 
 // --- Reactive State ---
-const startDate = ref(null)
-const endDate = ref(null)
+const startDate = ref(primerDiaDelMes().toISOString().slice(0, 10))
+const endDate = ref(date.formatDate(new Date(), 'YYYY-MM-DD'))
 const loading = ref(false) // To show loading spinner
 const reportData = ref([]) // To store fetched data
 const reportFetched = ref(false) // To indicate if a fetch attempt has been made
@@ -552,19 +567,6 @@ watch(
 )
 // --- Lifecycle Hook ---
 onMounted(async () => {
-  // Optionally set default dates, e.g., current month
-  const today = new Date()
-  const year = today.getFullYear()
-  const month = (today.getMonth() + 1).toString().padStart(2, '0')
-  const day = today.getDate().toString().padStart(2, '0')
-
-  // Set default to first day of current month and today
-  startDate.value = `${year}-${month}-01`
-  endDate.value = `${year}-${month}-${day}`
-
-  // Optionally fetch report on initial mount if desired
-  // fetchReport();
-
   const storedMd5 = idusuario_md5()
   if (storedMd5) {
     idmd5.value = storedMd5

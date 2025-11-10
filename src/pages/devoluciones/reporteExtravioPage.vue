@@ -68,6 +68,19 @@
           :loading="cargando"
           :pagination="pagination"
         >
+          <template v-slot:body-cell-opciones="props">
+            <q-td :props="props">
+              <div class="q-gutter-sm">
+                <q-btn
+                  icon="picture_as_pdf"
+                  color="red"
+                  dense
+                  flat
+                  @click="generarComprobante(props.row)"
+                />
+              </div>
+            </q-td>
+          </template>
         </q-table>
       </div>
     </q-card>
@@ -104,7 +117,8 @@ import { validarUsuario } from 'src/composables/FuncionesGenerales'
 import { PDF_REPORTE_EXTRAVIO } from 'src/utils/pdfReportGenerator'
 import { cambiarFormatoFecha } from 'src/composables/FuncionesG'
 import { idusuario_md5 } from 'src/composables/FuncionesGenerales'
-
+import { primerDiaDelMes } from 'src/composables/FuncionesG'
+import { PDFComprovanteExtravio } from 'src/utils/pdfReportGenerator'
 const idusuario = idusuario_md5()
 //pedf
 const pdfData = ref(null)
@@ -135,6 +149,7 @@ const columnas = [
   { name: 'almacen', label: 'Almacén', field: 'almacen', align: 'left' },
   { name: 'descripcion', label: 'Descripción', field: 'descripcion', align: 'left' },
   { name: 'autorizacion', label: 'Autorizacion', field: 'autorizacion', align: 'left' },
+  { name: 'opciones', label: 'Opciones', field: 'opciones', align: 'left' },
 ]
 
 const pagination = {
@@ -232,6 +247,7 @@ const generarReporte = async () => {
       descripcion: item.descripcion,
       autorizacion: tipo[item.autorizacion],
       idalmacen: item.idalmacen,
+      id: item.idrobo,
     }))
 
     // Guardar información del usuario y empresa para el PDF
@@ -268,6 +284,15 @@ const mostrarVistaPrevia = () => {
   pdfData.value = doc.output('dataurlstring')
   mostrarModal.value = true
 }
+const generarComprobante = async (robo) => {
+  console.log(robo)
+  // Cargar los detalles para el comprobante
+  const response = await api.get(`listaDetallerobo/${robo.id}`)
+  console.log(response.data)
+  const doc = PDFComprovanteExtravio(response.data)
+  pdfData.value = doc.output('dataurlstring')
+  mostrarModal.value = true
+}
 
 // Función de validación de usuario (simplificada)
 
@@ -275,7 +300,8 @@ const mostrarVistaPrevia = () => {
 onMounted(() => {
   // Establecer fechas por defecto (hoy)
   const hoy = new Date().toISOString().split('T')[0]
-  fechaInicio.value = hoy
+  fechaInicio.value = primerDiaDelMes().toISOString().slice(0, 10)
+  console.log(primerDiaDelMes().toISOString().slice(0, 10))
   fechaFin.value = hoy
 
   // Cargar almacenes

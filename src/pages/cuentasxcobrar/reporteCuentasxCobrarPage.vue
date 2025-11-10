@@ -1,6 +1,6 @@
 <template>
   <q-page ref="pageRef">
-    <q-btn label="Ir a Créditos" @click="scrollToCreditos" />
+    <!-- <q-btn label="Ir a Créditos" @click="scrollToCreditos" /> -->
 
     <div class="row flex justify-between q-ml-md">
       <div class="text-h6 text-primary">
@@ -265,6 +265,7 @@ import { useClienteStore } from 'stores/cliente'
 import { PDFreporteCreditos } from 'src/utils/pdfReportGenerator'
 import { exportToXLSX_Reporte_Creditos } from 'src/utils/XCLReportImport'
 import ReporteCreditosTable from 'src/components/cuentasxCobrar/Reportes/ReporteCreditosTable.vue'
+import { primerDiaDelMes } from 'src/composables/FuncionesG'
 const mostrarModal = ref(false)
 const pdfData = ref(null)
 const $q = useQuasar()
@@ -273,7 +274,7 @@ const clienteStore = useClienteStore()
 const tipoReporte = ref(false)
 // --- Variables reactivas ---
 const idmd5 = ref('')
-const startDate = ref(date.formatDate(new Date(), 'YYYY-MM-DD'))
+const startDate = ref(primerDiaDelMes().toISOString().slice(0, 10))
 const endDate = ref(date.formatDate(new Date(), 'YYYY-MM-DD'))
 const reportData = ref([])
 const loading = ref(false)

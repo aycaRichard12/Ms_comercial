@@ -106,6 +106,7 @@ import { api } from 'src/boot/axios'
 import { validarUsuario } from 'src/composables/FuncionesGenerales'
 import { PDF_REPORTE_DE_ROTACION_POR_ALMACEN } from 'src/utils/pdfReportGenerator'
 import { cambiarFormatoFecha } from 'src/composables/FuncionesG'
+import { primerDiaDelMes } from 'src/composables/FuncionesG'
 //pedf
 const pdfData = ref(null)
 const mostrarModal = ref(false)
@@ -281,7 +282,7 @@ const mostrarVistaPrevia = () => {
 onMounted(() => {
   // Establecer fechas por defecto (hoy)
   const hoy = new Date().toISOString().split('T')[0]
-  fechaInicio.value = hoy
+  fechaInicio.value = primerDiaDelMes().toISOString().slice(0, 10)
   fechaFin.value = hoy
 
   // Cargar almacenes

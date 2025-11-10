@@ -41,7 +41,11 @@
         require_once "pagosCompra.php";
         require_once "notaCreditoDebito.php";
         require_once "kardex.php";
-        if ($rutas[0] == "out") {
+        if (($rutas[0] ?? '') === "detectar_intencion") {
+            require_once "detectar_intencion.php";
+            exit; // Evita seguir ejecutando el resto del index
+        }
+        elseif ($rutas[0] == "out") {
             require_once "apisOut/index.php";
             return;
         }else{

@@ -88,11 +88,10 @@
         bordered
         flat
         separator="cell"
-        :pagination="paginacion"
       >
         <template v-slot:bottom-row>
           <q-tr>
-            <q-td colspan="11" class="text-right">Sumatorias</q-td>
+            <q-td colspan="10" class="text-right">Sumatorias</q-td>
             <q-td class="text-right">{{ sumatoriaStock }}</q-td>
             <q-td class="text-right">{{ sumatoriaCostoTotal }}</q-td>
             <q-td></q-td>
@@ -167,14 +166,14 @@ const columnas = [
     field: 'fecha',
     format: (val) => formatearFecha(val),
   },
-  { name: 'almacen', label: 'Almacén', field: 'almacen' },
-  { name: 'codigo', label: 'Código', field: 'codigo' },
-  { name: 'producto', label: 'Producto', field: 'producto' },
-  { name: 'categoria', label: 'Categoría', field: 'categoria' },
-  { name: 'subcategoria', label: 'Sub categoría', field: 'subcategoria' },
-  { name: 'descripcion', label: 'Descripción', field: 'descripcion' },
-  { name: 'unidad', label: 'Unidad', field: 'unidad' },
-  { name: 'pais', label: 'País', field: 'pais' },
+  { name: 'almacen', label: 'Almacén', field: 'almacen', align: 'left' },
+  { name: 'codigo', label: 'Código', field: 'codigo', align: 'left' },
+  { name: 'producto', label: 'Producto', field: 'producto', align: 'left' },
+  { name: 'categoria', label: 'Categoría', field: 'categoria', align: 'left' },
+  { name: 'subcategoria', label: 'Sub categoría', field: 'subcategoria', align: 'left' },
+  { name: 'descripcion', label: 'Descripción', field: 'descripcion', align: 'left' },
+  { name: 'unidad', label: 'Unidad', field: 'unidad', align: 'left' },
+  { name: 'pais', label: 'País', field: 'pais', align: 'left' },
   { name: 'stock', label: 'Stock', field: 'stock', align: 'right' },
   {
     name: 'costototal',
@@ -188,12 +187,9 @@ const columnas = [
     label: 'Estado',
     field: 'estado',
     format: (val) => estadoTexto(val),
+    align: 'left',
   },
 ]
-
-const paginacion = {
-  rowsPerPage: 10,
-}
 
 const sumatoriaStock = computed(() => {
   return formatearDecimal(
