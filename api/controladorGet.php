@@ -870,6 +870,10 @@ elseif ($ver[0] == "estadoCotizacion") {
     $controlador = new UseCotizacion();
     $controlador->estadoCotizacion($ver[1]);
 }
+elseif ($ver[0] == "revertirAnulacionVenta") {
+    $controlador = new UseVEnta();
+    $controlador->revertirAnulacionVenta($ver[1],$ver[2]);
+}
 
 if ($controlador === null) {
     // Acción por defecto si no se encuentra una ruta valida reportecotizacion cambiarestadodevolucion

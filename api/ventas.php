@@ -144,7 +144,8 @@ class ventas
         // Initialize response array
         $res = ["estado" => "error", "mensaje" => "Un error inesperado ha ocurrido."];
         $newClientId = null;
-
+        $count = 0; 
+        $numero = 0; 
         try {
             // Step 1: Get company ID and start a transaction
             $idempresa = $this->verificar->verificarIDEMPRESAMD5($idmd5);
@@ -250,7 +251,8 @@ class ventas
         $idempresa = $this->verificar->verificarIDEMPRESAMD5($idmd5);
         $res = []; // Initialize response array
         $defaulSucursalName = "Central " . $name; // Default name for the central branch
-
+        $count = 0; 
+        $numero = 0; 
         // --- 1. Validate NIT Duplication ---
         $verificarQuery = "SELECT COUNT(*) FROM cliente c WHERE c.idempresa = ? AND c.nit = ?;";
         $stmt = $this->cm->prepare($verificarQuery);
@@ -369,6 +371,8 @@ class ventas
     }
     public function registroClienteMinimal($name, $nombrecomercial, $canal, $tipo, $tipodocumento, $nit, $telefono, $idmd5)
     {
+        $count = 0; 
+        $numero = 0; 
         $idempresa = $this->verificar->verificarIDEMPRESAMD5($idmd5);
         $res = []; // Initialize response array
         $defaulSucursalName = "Central " . $name; // Default name for the central branch
@@ -3071,6 +3075,7 @@ class ventas
     public function cambiarestadodevolucion($id, $estado, $idmd5u, $tipo = NULL)
     {
         date_default_timezone_set('America/La_Paz');
+        $idventa = 0;
         $fecha = date("Y-m-d");
         if($tipo == NULL){
             $idusuario = $this->verificar->verificarIDUSERMD5($idmd5u);

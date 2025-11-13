@@ -434,7 +434,16 @@
             </div>
           </q-card-section>
         </q-card>
-
+        <q-card class="q-mb-md">
+          <q-card-section>
+            <div class="row q-col-gutter-x-md">
+              <div class="col-12 col-md-3">
+                <label for="tipocambio">Tipo de Cambio</label>
+                <q-input v-model="tipoCambio" type="number" step="0.01" dense flat outlined />
+              </div>
+            </div>
+          </q-card-section>
+        </q-card>
         <!-- Sección Pago -->
         <q-card class="my-card">
           <q-card-section>
@@ -771,7 +780,7 @@ const { validarNIT } = useNitValidator()
 const divisaActiva = useCurrencyStore()
 const leyendaActiva = useCurrencyLeyenda()
 leyendaActiva.cargarLeyendaActivo()
-
+const tipoCambio = ref(0)
 console.log(divisaActiva)
 console.log(leyendaActiva)
 // ====================== CONSTANTES Y UTILIDADES ====================== canal
@@ -1295,6 +1304,10 @@ const onSubmit = async () => {
     cartData.listaFactura.puertoDestino = puertodestino
     cartData.listaFactura.lugarDestino = lugardestino
     cartData.listaFactura.incoterm = incoterm
+    cartData.listaFactura.tipoCambio = tipoCambio.value
+    cartData.listaFactura.montoTotal *= tipoCambio.value
+    cartData.listaFactura.montoTotalSujetoIva = cartData.listaFactura.montoTotal
+
     cartData.listaFactura.incotermDetalle = detalleincoterm
     cartData.listaFactura.numeroDescripcionPaquetesBultos = descripcionPB
     cartData.listaFactura.informacionAdicional = infoadicional
@@ -1573,21 +1586,23 @@ const agregarGastoNacional = () => {
     valor: parseFloat(montoNacional.value).toFixed(2),
   })
   datos.listaFactura.totalGastosNacionalesFob = parseFloat(totalGastosNacionales.value).toFixed(2)
-  datos.listaFactura.montoTotal =
-    parseFloat(totalGastosNacionales.value).toFixed(2) +
-    parseFloat(totalGastosInternacionales.value).toFixed(2) +
-    parseFloat(datos.ventatotal).toFixed(2)
 
-  datos.listaFactura.totalGastosNacionalesFob =
-    parseFloat(totalGastosNacionales.value).toFixed(2) + parseFloat(datos.ventatotal).toFixed(2)
   datos.listaFactura.montoTotal =
-    parseFloat(totalGastosNacionales.value).toFixed(2) +
-    parseFloat(totalGastosInternacionales.value).toFixed(2) +
-    parseFloat(datos.ventatotal).toFixed(2)
+    Number(parseFloat(totalGastosNacionales.value).toFixed(2)) +
+    Number(parseFloat(totalGastosInternacionales.value).toFixed(2)) +
+    Number(parseFloat(datos.ventatotal).toFixed(2))
+  console.log(datos.listaFactura.montoTotal)
+  datos.listaFactura.totalGastosNacionalesFob =
+    Number(parseFloat(totalGastosNacionales.value).toFixed(2)) +
+    Number(parseFloat(datos.ventatotal).toFixed(2))
+  datos.listaFactura.montoTotal =
+    Number(parseFloat(totalGastosNacionales.value).toFixed(2)) +
+    Number(parseFloat(totalGastosInternacionales.value).toFixed(2)) +
+    Number(parseFloat(datos.ventatotal).toFixed(2))
   datos.listaFactura.montoTotalMoneda =
-    parseFloat(totalGastosNacionales.value).toFixed(2) +
-    parseFloat(totalGastosInternacionales.value).toFixed(2) +
-    parseFloat(datos.ventatotal).toFixed(2)
+    Number(parseFloat(totalGastosNacionales.value).toFixed(2)) +
+    Number(parseFloat(totalGastosInternacionales.value).toFixed(2)) +
+    Number(parseFloat(datos.ventatotal).toFixed(2))
   localStorage.setItem('carrito', JSON.stringify(datos))
   // Reset form
   descNacional.value = ''
@@ -1624,19 +1639,19 @@ const agregarGastoInternacional = () => {
   ).toFixed(2)
 
   datos.listaFactura.montoTotal =
-    parseFloat(totalGastosNacionales.value).toFixed(2) +
-    parseFloat(totalGastosInternacionales.value).toFixed(2) +
-    parseFloat(datos.ventatotal).toFixed(2)
+    Number(parseFloat(totalGastosNacionales.value).toFixed(2)) +
+    Number(parseFloat(totalGastosInternacionales.value).toFixed(2)) +
+    Number(parseFloat(datos.ventatotal).toFixed(2))
 
   datos.listaFactura.montoTotal =
-    parseFloat(totalGastosNacionales.value).toFixed(2) +
-    parseFloat(totalGastosInternacionales.value).toFixed(2) +
-    parseFloat(datos.ventatotal).toFixed(2)
+    Number(parseFloat(totalGastosNacionales.value).toFixed(2)) +
+    Number(parseFloat(totalGastosInternacionales.value).toFixed(2)) +
+    Number(parseFloat(datos.ventatotal).toFixed(2))
 
   datos.listaFactura.montoTotalMoneda =
-    parseFloat(totalGastosNacionales.value).toFixed(2) +
-    parseFloat(totalGastosInternacionales.value).toFixed(2) +
-    parseFloat(datos.ventatotal).toFixed(2)
+    Number(parseFloat(totalGastosNacionales.value).toFixed(2)) +
+    Number(parseFloat(totalGastosInternacionales.value).toFixed(2)) +
+    Number(parseFloat(datos.ventatotal).toFixed(2))
 
   localStorage.setItem('carrito', JSON.stringify(datos))
   descInternacional.value = ''
