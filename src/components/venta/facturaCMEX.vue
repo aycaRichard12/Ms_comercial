@@ -435,12 +435,14 @@
           </q-card-section>
         </q-card>
         <q-card class="q-mb-md">
-          <div class="row q-col-gutter-x-md">
-            <div class="col-12 col-md-3">
-              <label for="tipocambio">Tipo de Cambio</label>
-              <q-input v-model="tipoCambio" type="number" step="0.01" dense flat outlined />
+          <q-card-section>
+            <div class="row q-col-gutter-x-md">
+              <div class="col-12 col-md-3">
+                <label for="tipocambio">Tipo de Cambio</label>
+                <q-input v-model="tipoCambio" type="number" step="0.01" dense flat outlined />
+              </div>
             </div>
-          </div>
+          </q-card-section>
         </q-card>
         <!-- Sección Pago -->
         <q-card class="my-card">
