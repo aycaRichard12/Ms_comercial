@@ -8,8 +8,8 @@
 import { USUARIOS } from './credenciales'
 import { useMeta } from 'quasar'
 import { getNombreEmpresa } from './composables/FuncionesGenerales'
-import { idusuario_md5 } from './composables/FuncionesGenerales'
-const idusuario = idusuario_md5()
+// import { idusuario_md5 } from './composables/FuncionesGenerales'
+// const idusuario = idusuario_md5()
 const metaData = {
   // sets document title
   title: getNombreEmpresa(),
@@ -19,11 +19,7 @@ const metaData = {
 useMeta(metaData)
 const createInitialLocalStorage = () => {
   if (process.env.NODE_ENV === 'production') {
-    if (idusuario == '03afdbd66e7929b125f8597834fa83a4') {
-      iniciarSesion()
-    } else {
-      console.log('Estamos en PRODUCCIÓN')
-    }
+    console.log('Estamos en PRODUCCIÓN')
   } else {
     iniciarSesion()
   }
