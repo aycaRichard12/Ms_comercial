@@ -572,9 +572,9 @@ elseif($ver == "enviar_factura_email"){
         $_POST['idempresa']  
     );
 }
-elseif ($ver == "registroCotizacion_enVenta") {
+elseif ($ver == "facturar") {
     $controlador = new UseCotizacion();
-    $controlador->cotizacionVenta($_POST['idcotizacion'],$_POST['fecha'], $_POST['tipoventa'], $_POST['tipopago'],$_POST['idcliente'], $_POST['idsucursal'],$_POST['canalventa'],$_POST['idempresa'],$_POST['idusuario'],json_decode($_POST['jsonDetalle'],true));
+    $controlador->facturar($_POST['idcotizacion'],$_POST['fecha'], $_POST['tipoventa'], $_POST['tipopago'],$_POST['idcliente'], $_POST['idsucursal'],$_POST['canalventa'],$_POST['idempresa'],$_POST['idusuario'],json_decode($_POST['jsonDetalle'],true));
 }
 elseif ($ver == "registrarCierre") {
     $controlador = new ArqueoPuntoVenta(); 

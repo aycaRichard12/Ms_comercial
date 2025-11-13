@@ -711,4 +711,71 @@ class UseVEnta
         }
         return $res;
     }
+
+    public function revertirAnulacionVenta($idventa, $idmd5u)
+    {
+        date_default_timezone_set('America/La_Paz');
+        $fecha = date("Y-m-d");
+
+        $idusuario = $this->verificar->verificarIDUSERMD5($idmd5u);
+
+        $res = array("estado" => "error", "mensaje" => "Error desconocido: no se pudo revertir la anulación.");
+
+        // 1️⃣ Verificar que la venta esté anulada
+        $venta = $this->cm->query("SELECT estado FROM venta WHERE id_venta = '$idventa' LIMIT 1");
+        if ($venta->num_rows == 0) {
+            echo json_encode(array("estado" => "error", "mensaje" => "Venta no encontrada."));
+            return;
+        }
+
+        $ventaData = $this->cm->fetch($venta);
+        $estadoActual = $ventaData[0];
+
+        if ($estadoActual != 2) {
+            echo json_encode(array("estado" => "error", "mensaje" => "La venta no se encuentra anulada, no se puede revertir."));
+            return;
+        }
+
+        // 2️⃣ Revertir el estado de la venta y del cobro
+        $restaurarVenta = $this->cm->query("UPDATE venta SET estado='ACTIVO' WHERE id_venta='$idventa'");
+        $restaurarCobro = $this->cm->query("UPDATE estado_cobro SET estado='1' WHERE venta_id_venta='$idventa'");
+
+        if ($restaurarVenta === TRUE) {
+
+            // 3️⃣ Buscar el stock afectado en la anulación y restarlo (ya que se devolvió al anular)
+            $productos = $this->cm->query("
+                SELECT dv.id_detalle_venta, dv.cantidad, dv.productos_almacen_id_productos_almacen, s.id_stock, s.cantidad
+                FROM detalle_venta dv
+                INNER JOIN stock s ON dv.productos_almacen_id_productos_almacen = s.productos_almacen_id_productos_almacen
+                WHERE dv.venta_id_venta = '$idventa' AND s.estado = 1
+            ");
+
+            while ($prod = $this->cm->fetch($productos)) {
+                $codigo = "RV"; // RV = Reversión de Venta
+                $id_stock = $prod[3]; 
+                $cantidadVendida = $prod[1];
+                $cantidadActual = $prod[4];
+                $productos_almacen_id = $prod[2];
+                $nuevaCantidad = $cantidadActual - $cantidadVendida;
+
+                // Desactivar el stock actual
+                $this->cm->query("UPDATE stock SET estado=2 WHERE id_stock='$id_stock'");
+
+                // Insertar nuevo stock actualizado
+                $this->cm->query("INSERT INTO stock(cantidad, fecha, codigo, estado, productos_almacen_id_productos_almacen, idorigen)
+                                VALUES('$nuevaCantidad', '$fecha', '$codigo', 1, '$productos_almacen_id', '$idventa')");
+            }
+
+            // 4️⃣ Registrar reversión en tabla de anulaciones
+            $this->cm->query("INSERT INTO anulaciones(fecha, motivo, venta_id_venta, idusuario)
+                            VALUES('$fecha', 'Reversión de anulación por consolidación del emisor', '$idventa', '$idusuario')");
+
+            $res = array("estado" => "exito", "mensaje" => "La venta fue revertida correctamente y el stock se normalizó.");
+        } else {
+            $res = array("estado" => "error", "mensaje" => "No se pudao ctualizar el estado de la venta.");
+        }
+
+        echo json_encode($res);
+    }
+
 }

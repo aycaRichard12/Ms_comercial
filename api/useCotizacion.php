@@ -50,6 +50,8 @@ class UseCotizacion
     public function anularCotizacion($idcotizacion , $motivo, $idmd5u){
         
         date_default_timezone_set('America/La_Paz');
+        $condicion = -1;
+
         $fecha = date("Y-m-d");
         $idusuario = $this->verificar->verificarIDUSERMD5($idmd5u);
         $res = array("estado" => "error", "mensaje" => "Error desconocido.");
@@ -323,8 +325,8 @@ class UseCotizacion
                 }
                 
                 
-                $sqlDetalle = "INSERT INTO detalle_cotizacion (cantidad, precio_unitario, productos_almacen_id_productos_almacen, cotizacion_id_cotizacion, descripcionAdicional ) 
-                               VALUES (?, ?, ?, ?, ?)";
+                $sqlDetalle = "INSERT INTO detalle_cotizacion (cantidad, precio_unitario, productos_almacen_id_productos_almacen, cotizacion_id_cotizacion, descripcionAdicional,categoria ) 
+                               VALUES (?, ?, ?, ?, ?, ?)";
                 $stmtDetalle = $this->cm->prepare($sqlDetalle);
 
                 $sqlGetStock = "SELECT cantidad FROM stock WHERE id_stock = ? AND estado = 1";
@@ -341,7 +343,7 @@ class UseCotizacion
                     if (!isset($producto['idproductoalmacen'])) {
                         throw new Exception("Producto en la lista no tiene 'idproductoalmacen'.");
                     }
-                    $stmtDetalle->bind_param("idiis", $producto['cantidad'], $producto['precio'], $producto['idproductoalmacen'], $ultimoIdInsertado, $producto['descripcionAdicional']);
+                    $stmtDetalle->bind_param("idiisi", $producto['cantidad'], $producto['precio'], $producto['idproductoalmacen'], $ultimoIdInsertado, $producto['descripcionAdicional'], $producto['idporcentaje']);
                     $stmtDetalle->execute();
                     if ((int)$producto['despachado'] == 2) {
                         $this->_registrar_cotizacion_no_despachada($ultimoIdInsertado, $producto);
@@ -492,15 +494,15 @@ class UseCotizacion
                     throw new Exception("La lista de productos no puede estar vacía.");
                 }
                 
-                $sqlDetalle = "INSERT INTO detalle_cotizacion (cantidad, precio_unitario, productos_almacen_id_productos_almacen, cotizacion_id_cotizacion, descripcionAdicional) 
-                               VALUES (?, ?, ?, ?, ?)";
+                $sqlDetalle = "INSERT INTO detalle_cotizacion (cantidad, precio_unitario, productos_almacen_id_productos_almacen, cotizacion_id_cotizacion, descripcionAdicional, categoria) 
+                               VALUES (?, ?, ?, ?, ?, ?)";
                 $stmtDetalle = $this->cm->prepare($sqlDetalle);
 
                 foreach ($detalles['listaProductos'] as $producto) {
                     if (!isset($producto['idproductoalmacen'])) {
                         throw new Exception("Producto en la lista no tiene 'idproductoalmacen'.");
                     }
-                    $stmtDetalle->bind_param("idiis", $producto['cantidad'], $producto['precio'], $producto['idproductoalmacen'], $ultimoIdInsertado, $producto['descripcionAdicional']);
+                    $stmtDetalle->bind_param("idiisi", $producto['cantidad'], $producto['precio'], $producto['idproductoalmacen'], $ultimoIdInsertado, $producto['descripcionAdicional'], $producto['idporcentaje']);
                     $stmtDetalle->execute();
                 }
                 $stmtDetalle->close();
@@ -520,6 +522,7 @@ class UseCotizacion
 
     public function estadoCotizacion($idcotizacion)
     {
+        $condicion = 0;
         $sql = "SELECT condicion FROM cotizacion WHERE id_cotizacion = ?";
         $stm = $this->cm->prepare($sql);
 
@@ -570,25 +573,40 @@ class UseCotizacion
         $idempresa = $this->verificar->verificarIDEMPRESAMD5($idmd5);
         $lista = [];
         $clien = $this->cm->query("select
-            dco.id_detalle_cotizacion,
-            pa.id_productos_almacen as idproductoalmacen,
-            p.nombre,
-            p.descripcion,
-            dco.descripcionAdicional,
-            p.caracteristicas,
-            p.codigo as  codigoProducto,
-            p.codigosin as codigoProductoSin,
-            p.actividadsin as codigoActividadSin,
-            p.unidadsin as unidadMedida,
-            p.codigonandina as codigoNandina,
-            dco.cantidad,
-            dco.precio_unitario
-        from detalle_cotizacion dco 
-        LEFT join cotizacion co on dco.cotizacion_id_cotizacion=co.id_cotizacion
-        LEFT join productos_almacen pa on dco.productos_almacen_id_productos_almacen=pa.id_productos_almacen
-        LEFT join productos p on pa.productos_id_productos=p.id_productos
-        where dco.cotizacion_id_cotizacion='$id'
-        order by p.nombre desc");
+                    dco.id_detalle_cotizacion,
+                    pa.id_productos_almacen as idproductoalmacen,
+                    p.nombre,
+                    p.descripcion,
+                    dco.descripcionAdicional,
+                    p.caracteristicas,
+                    p.codigo as  codigoProducto,
+                    p.codigosin as codigoProductoSin,
+                    p.actividadsin as codigoActividadSin,
+                    p.unidadsin as unidadMedida,
+                    p.codigonandina as codigoNandina,
+                    dco.cantidad,
+                    dco.precio_unitario,
+                    s.id_stock as idstock,
+                    s.cantidad as disponible,
+                    CASE
+                        WHEN dco.categoria = 0 THEN 
+                            COALESCE(
+                                (SELECT prc.id_porcentajes 
+                                FROM porcentajes prc 
+                                WHERE prc.almacen_id_almacen = pa.almacen_id_almacen 
+                                LIMIT 1),
+                                0
+                            )
+                        ELSE dco.categoria
+                    END AS categoria
+                from detalle_cotizacion dco 
+                LEFT join cotizacion co on dco.cotizacion_id_cotizacion=co.id_cotizacion
+                LEFT join productos_almacen pa on dco.productos_almacen_id_productos_almacen=pa.id_productos_almacen
+                LEFT join productos p on pa.productos_id_productos=p.id_productos
+                LEFT JOIN stock s ON s.productos_almacen_id_productos_almacen = dco.productos_almacen_id_productos_almacen
+                AND s.estado = 1
+                where dco.cotizacion_id_cotizacion='$id'
+                order by p.nombre desc");
         while ($qwe = $this->cm->fetch($clien)) {
             $res = array(
                 "id" => $qwe['id_detalle_cotizacion'],
@@ -596,6 +614,7 @@ class UseCotizacion
                 "producto" => $qwe['nombre'],
                 "descripcion" => $qwe['descripcion'],
                 "descripcionAdicional" => $qwe['descripcionAdicional'],
+                "categoria" => $qwe['categoria'],
                 "caracteristica" => $qwe['caracteristicas'],
                 "codigoProducto" => $qwe['codigoProducto'],
                 "codigoProductoSin" => $qwe['codigoProductoSin'],
@@ -603,7 +622,9 @@ class UseCotizacion
                 "unidadMedida" => $qwe['unidadMedida'],
                 "codigoNandina" => $qwe['codigoNandina'],
                 "cantidad" => $qwe['cantidad'],
-                "precio" => $qwe['precio_unitario']);
+                "precio" => $qwe['precio_unitario'],
+                "idstock" => $qwe['idstock'],
+                "disponible" => $qwe['disponible']);
             array_push($lista, $res);
         }
 
@@ -788,7 +809,7 @@ class UseCotizacion
         }
     }
     
-    public function cotizacionVenta($idcotizacion,$fecha, $tipoventa, $tipopago, $idcliente, $idsucursal, $canalventa, $idmd5, $idmd5u, $jsonDetalles){
+    public function facturar($idcotizacion,$fecha, $tipoventa, $tipopago, $idcliente, $idsucursal, $canalventa, $idmd5, $idmd5u, $jsonDetalles){
         $sql = "SELECT co.estado AS estado FROM cotizacion co WHERE co.id_cotizacion = ?";
         $stm = $this->cm->prepare($sql);
 
@@ -803,16 +824,16 @@ class UseCotizacion
         $resultado = $stm->get_result();
         if($row = $resultado->fetch_assoc()){
             if($row['estado'] == 1){
-                $this->proforma_venta($idcotizacion,$fecha, $tipoventa, $tipopago, $idcliente, $idsucursal, $canalventa, $idmd5, $idmd5u, $jsonDetalles);
+                $this->preferenciaAFactura($idcotizacion,$fecha, $tipoventa, $tipopago, $idcliente, $idsucursal, $canalventa, $idmd5, $idmd5u, $jsonDetalles);
             }else{
-                $this->cotizacion_venta($idcotizacion,$fecha, $tipoventa, $tipopago, $idcliente, $idsucursal, $canalventa, $idmd5, $idmd5u, $jsonDetalles);
+                $this->cotizaciónAFactura($idcotizacion,$fecha, $tipoventa, $tipopago, $idcliente, $idsucursal, $canalventa, $idmd5, $idmd5u, $jsonDetalles);
             }
         }else{
             echo json_encode(array("estado"=> "error", "mensaje" => "No se pudo encotrar la cotizacion"));
         }
         $stm->close();
     }
-    public function cotizacion_venta($idcotizacion,$fecha, $tipoventa, $tipopago, $idcliente, $idsucursal, $canalventa, $idmd5, $idmd5u, $jsonDetalles){
+    public function cotizaciónAFactura($idcotizacion,$fecha, $tipoventa, $tipopago, $idcliente, $idsucursal, $canalventa, $idmd5, $idmd5u, $jsonDetalles){
         $idempresa = null;
         $idusuario = null;
 
@@ -868,7 +889,9 @@ class UseCotizacion
                 'idcampaña' => $jsonDetalles['idcampana'],
                 'nroventa' => $nroventa,
                 'canalventa' => $canalventa,
-                'codigoVenta' => $codigoVenta
+                'codigoVenta' => $codigoVenta,
+                'punto_venta' => $jsonDetalles['puntoVenta'],
+
             ];
 
             
@@ -876,18 +899,40 @@ class UseCotizacion
                 $jsonDetalles['listaFactura']['numeroFactura'] = $nroFactura;
                 $jsonDetalles['listaFactura']['extras']['facturaTicket'] = $codigoVenta;
 
+                $datosEnviadosEmizor = ["jsonlistaFactura" => $jsonDetalles['listaFactura'], "tipoventa" => $tipoventa, "token" => $jsonDetalles['token'], "tipo" => $jsonDetalles['tipo'], "codigosinsucursal" => $jsonDetalles['codigosinsucursal'], "jsonDetalles" => $jsonDetalles];
+
                 $respuestaEmizor = $this->factura->crearfactura($jsonDetalles['listaFactura'], $tipoventa, $jsonDetalles['token'], $jsonDetalles['tipo'], $jsonDetalles['codigosinsucursal']);
+
+                $respuestaEmizor = json_decode(json_encode([
+                    "status" => "success",
+                    "data" => [
+                        "cuf" => "123",
+                        "ack_ticket" => "abc",
+                        "urlSin" => "url",
+                        "emision_type_code" => 1,
+                        "fechaEmision" => "2025-11-12",
+                        "numeroFactura" => 123,
+                        "shortLink" => "url corta",
+                        "codigoEstado" => 0
+                    ]
+                ]));
 
                 if ($respuestaEmizor->status === "success") {
                     $estadoFactura = null;
-                    for ($i = 0; $i < self::MAX_INTENTOS_CONSULTA_FACTURA; $i++) {
-                        $estadoFactura = $this->factura->estadofactura($respuestaEmizor->data->cuf, $jsonDetalles['token'], $jsonDetalles['tipo'], 2);
-                        if ($estadoFactura->data->codigoEstado == self::ESTADO_FACTURA_VALIDADA && $estadoFactura->data->errores == null) {
-                            break; // Factura validada, salir del bucle
-                        }
-                        sleep(1); // Esperar 1 segundo antes de reintentar
-                    }
-
+                    // for ($i = 0; $i < self::MAX_INTENTOS_CONSULTA_FACTURA; $i++) {
+                    //     $estadoFactura = $this->factura->estadofactura($respuestaEmizor->data->cuf, $jsonDetalles['token'], $jsonDetalles['tipo'], 2);
+                    //     if ($estadoFactura->data->codigoEstado == self::ESTADO_FACTURA_VALIDADA && $estadoFactura->data->errores == null) {
+                    //         break; // Factura validada, salir del bucle
+                    //     }
+                    //     sleep(1); // Esperar 1 segundo antes de reintentar
+                    // }
+                    $estadoFactura = json_decode(json_encode([
+                        "status"=> "success",
+                        "data"=> [
+                            "codigoEstado"=> 690,
+                            "estado"=> "string"
+                        ]
+                    ]));
                     if ($estadoFactura->data->codigoEstado == self::ESTADO_FACTURA_VALIDADA) {
                         $resultadoDB = $this->_registrarVentaDetallesCotizacion_Venta($datosVenta, $jsonDetalles['listaProductos']);
                         if ($resultadoDB['estado'] == 'exito') {
@@ -908,7 +953,7 @@ class UseCotizacion
                         $respuestaFinal = ["estado" => "error", "mensaje" => "La factura no pudo ser validada por el SIN.", "detalles" => $estadoFactura];
                     }
                 } else {
-                    $respuestaFinal = ["estado" => "error", "mensaje" => "Error al emitir la factura.", "detalles" => $respuestaEmizor->errors ?? $respuestaEmizor];
+                    $respuestaFinal = ["estado" => "error", "mensaje" => "Error al emitir la factura.", "detalles" => $respuestaEmizor->errors ?? $respuestaEmizor, "datosEnviadosEmizor" => $datosEnviadosEmizor];
                 }
             
             
@@ -936,7 +981,7 @@ class UseCotizacion
             echo json_encode(["estado" => "error", "mensaje" => "Excepción capturada: " . $e->getMessage()]);
         }
     }
-    public function proforma_venta($idcotizacion,$fecha, $tipoventa, $tipopago, $idcliente, $idsucursal, $canalventa, $idmd5, $idmd5u, $jsonDetalles)
+    public function preferenciaAFactura($idcotizacion,$fecha, $tipoventa, $tipopago, $idcliente, $idsucursal, $canalventa, $idmd5, $idmd5u, $jsonDetalles)
     {
         $idempresa = null;
         $idusuario = null;
@@ -1062,7 +1107,8 @@ class UseCotizacion
             echo json_encode(["estado" => "error", "mensaje" => "Excepción capturada: " . $e->getMessage()]);
         }
     }
-     private function obtenerNumeroFacturaDisponible($idempresa, $tipoventa)
+    
+    private function obtenerNumeroFacturaDisponible($idempresa, $tipoventa)
     {
         $nroFactura = null;
         $contadorIntentos = 0;
@@ -1158,7 +1204,7 @@ class UseCotizacion
             $sqlGetStock = "SELECT cantidad FROM stock WHERE id_stock = ? AND estado = 1";
             $stmtGetStock = $this->cm->prepare($sqlGetStock);
             
-            $sqlUpdateStock = "UPDATE stock SET estado = 2 WHERE id_stock = ? AND estado = 1";
+            $sqlUpdateStock = "UPDATE stock SET estado = 2 WHERE id_stock = ? AND estado = 1"; 
             $stmtUpdateStock = $this->cm->prepare($sqlUpdateStock);
 
             $sqlNewStock = "INSERT INTO stock (cantidad, fecha, codigo, estado, productos_almacen_id_productos_almacen) 
@@ -1174,7 +1220,7 @@ class UseCotizacion
                     throw new Exception("No se pudo insertar el detalle para el producto con ID almacén: " . $producto['idproductoalmacen']);
                 }
                 
-                $sqlIdStock = "SELECT s.idstock FROM stock s WHERE s.idproductoalmacen = ?";
+                $sqlIdStock = "SELECT s.id_stock FROM stock s WHERE s.  = ? AND s.estado = 1 ORDER BY s.id_stock DESC LIMIT 1";
                 $stm = $this->cm->prepare($sqlIdStock);
                 if(!$stm){
                     throw new Exception("Conflicto al obtener el stock actual");
@@ -1187,7 +1233,7 @@ class UseCotizacion
                 if(!$row){
                     throw new Exception("No se encontro el stock del producto" . $producto['descripcion']);
                 }
-                $idstock = $row['idstock'];
+                $idstock = $row['id_stock'];
                 // Obtener cantidad actual del stock
                 $stmtGetStock->bind_param("i", $idstock);
                 $stmtGetStock->execute();

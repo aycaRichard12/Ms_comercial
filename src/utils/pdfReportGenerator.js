@@ -1605,7 +1605,7 @@ export async function PDFenviarFacturaCorreo(idcliente, detalleVenta, $q) {
     }
 
     const pdfBlob = doc.output('blob')
-
+    console.log(detallePlano[0])
     const formData = new FormData()
     // 'pdf' es el nombre del campo que PHP recibirá ($_FILES['pdf'])
     formData.append('ver', 'enviar_factura_email')
@@ -1648,6 +1648,11 @@ export async function PDFenviarFacturaCorreo(idcliente, detalleVenta, $q) {
 }
 
 export async function PDFenviarComprobanteCorreo(idcliente, data, $q) {
+  console.log(data)
+  const cotizacionDetalle = data[0]
+  const cotizacionInfo = cotizacionDetalle.cotizacion
+  const clienteInfo = cotizacionDetalle.cliente
+
   const doc = generarPdfCotizacion(data)
   try {
     const response = await api.get(`obtenerEmailCliente/${idcliente}`) // Cambia a tu ruta real
@@ -1669,8 +1674,8 @@ export async function PDFenviarComprobanteCorreo(idcliente, data, $q) {
     formData.append('ver', 'enviar_factura_email')
     formData.append('pdf', pdfBlob, `Comprobante.pdf`)
     formData.append('recipientEmail', clientEmail)
-    formData.append('invoiceNumber', '-')
-    formData.append('clientName', data[0]?.cliente)
+    formData.append('invoiceNumber', cotizacionInfo.nfactura || '')
+    formData.append('clientName', clienteInfo.nombrecomercial || '')
     formData.append('nombreEmpresa', nombreEmpresa)
     formData.append('direccionEmpresa', direccionEmpresa)
     formData.append('telefonoEmpresa', telefonoEmpresa)

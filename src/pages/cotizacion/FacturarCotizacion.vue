@@ -479,7 +479,7 @@ const props = defineProps({
 
 const cotizacion = props?.cotizacion
 console.log(cotizacion)
-
+const codigosinsucursal = ref([])
 // ====================== CONSTANTES Y UTILIDADES ======================
 const ERROR_TYPES = {
   QUASAR: 'QUASAR_NOT_AVAILABLE',
@@ -491,7 +491,7 @@ const ERROR_TYPES = {
 const correoPredeterminado = 'factura@yofinanciero.com'
 
 const CONSTANTES = {
-  ver: 'registroCotizacion_enVenta',
+  ver: 'facturar',
   idusuario: idusuario_md5(),
   idempresa: idempresa_md5(),
   tipoventa: 1,
@@ -660,6 +660,29 @@ const cargarCanales = async () => {
     console.error('Error cargando canales:', error)
   }
 }
+async function cargarAlmacenes(cotizacion) {
+  console.log(cotizacion)
+  const idalmacenCotizacion = cotizacion[0].almacen.idalmacen
+  try {
+    const endpoint = `/listaResponsableAlmacen/${CONSTANTES.idempresa}`
+    const { data } = await api.get(endpoint)
+
+    if (data[0] === 'error') throw new Error(data.error || 'Error al cargar almacenes')
+    console.log(data)
+    codigosinsucursal.value = data.find(
+      (item) =>
+        item.idusuario == CONSTANTES.idusuario &&
+        Number(item.idalmacen) === Number(idalmacenCotizacion),
+    )
+    console.log(codigosinsucursal.value)
+  } catch (error) {
+    console.error('Error al cargar almacenes:', error)
+    $q.notify({
+      type: 'negative',
+      message: 'Error al cargar los almacenes disponibles',
+    })
+  }
+}
 
 const cargarMetodoPagoFactura = async () => {
   try {
@@ -723,6 +746,7 @@ const cargarPuntoVentas = async () => {
         puntosVenta.value = filtrados.map((item) => ({
           label: item.nombre,
           value: item.codigosin,
+          Data: item,
         }))
         formData.value.puntoventa = puntosVenta.value[0]
       }
@@ -894,6 +918,10 @@ watch(
 
 const onSubmit = async () => {
   let loadingShown = false
+  const almacen = codigosinsucursal.value
+  const sucursales = almacen ? almacen.sucursales : []
+  const codigoSin = sucursales.length > 0 ? sucursales[0].codigosin : null
+  console.log(codigoSin)
   try {
     const cartData = JSON.parse(localStorage.getItem('carrito') || '{}')
     console.log(cartData)
@@ -925,6 +953,7 @@ const onSubmit = async () => {
     if (!cartData.listaProductos || !cartData.listaProductos.length) {
       throw { message: 'El carrito está vacío' }
     }
+    console.log(metodoPago)
 
     $q.loading.show({ message: 'Procesando venta...', timeout: 30000 })
     loadingShown = true
@@ -937,12 +966,19 @@ const onSubmit = async () => {
     variablePago !== 'directo'
       ? (cartData.pagosDivididos = pagosDivididos)
       : (cartData.pagosDivididos = [])
+
     cartData.variablePago = variablePago
     cartData.nropagos = cantidadPagos
     cartData.fechalimite = fechaLimite
     cartData.valorpagos = montoPagos
     cartData.dias = periodo
+    console.log(puntoventa)
+    cartData.puntoVenta = Number(puntoventa.Data.idpuntoventa)
+    cartData.puntoVentaSin = puntoventa.value
     cartData.listaFactura.fechaEmision = obtenerHoraISO8601()
+    cartData.listaFactura.codigoMetodoPago = metodoPago.value
+    cartData.codigosinsucursal = codigoSin
+
     const form = new FormData()
     form.append('ver', CONSTANTES.ver)
     form.append('idcotizacion', cotizacion[0].cotizacion.id)
@@ -966,18 +1002,19 @@ const onSubmit = async () => {
     form.append('tipopago', credito ? 'credito' : CONSTANTES.tipopago)
     form.append('periodopersonalizado', plazoPersonalizado)
     form.append('jsonDetalle', JSON.stringify(cartData))
+    const jsonObject = Object.fromEntries(form.entries())
 
-    for (let [k, v] of form.entries()) {
-      console.log(`${k}: ${v}`)
-    }
-
+    jsonObject['jsonDetalles'] = cartData
+    const json = Object.fromEntries(form.entries())
+    json.jsonDetalles = cartData
+    console.log('Datos a enviar al API:', jsonObject)
     //  Enviar al backend
     const response = await api.post('', form, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
     })
-
+    console.log('Respuesta del API:', response.data)
     if (!response.data || response.data.estado !== 'exito') {
       throw { message: response.data?.mensaje || 'Error al procesar la venta', response }
     }
@@ -1186,12 +1223,12 @@ function cargarProductos(cotizacion) {
       idproductoalmacen: producto.idproductoalmacen,
       cantidad: producto.cantidad,
       precio: producto.precio,
-      idstock: '',
-      idporcentaje: '',
-      candiponible: '',
+      idstock: producto.idstock,
+      idporcentaje: producto.categoria,
+      candiponible: producto.disponible,
       descripcion: producto.descripcion,
       codigo: producto.codigoProducto,
-      id: '',
+      id: producto.idproductoalmacen,
       subtotal: decimas(redondear(parseFloat(producto.cantidad) * parseFloat(producto.precio))),
       datosAdicionales: '',
       despachado: '',
@@ -1251,5 +1288,6 @@ onMounted(async () => {
   await cargarPuntoVentas()
   await listaCLientes()
   await cargarProductos(cotizacion)
+  await cargarAlmacenes(cotizacion)
 })
 </script>
