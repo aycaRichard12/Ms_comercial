@@ -42,7 +42,9 @@
     <template v-slot:bottom-row>
       <q-tr>
         <q-td colspan="3" class="text-right text-bold">Total:</q-td>
-        <q-td class="text-right text-bold">{{ decimas(cantidadTotal) }}</q-td>
+        <q-td class="text-right text-bold"
+          >{{ decimas(cantidadTotal) }} {{ divisaActiva.simbolo }}</q-td
+        >
       </q-tr>
     </template>
   </q-table>
@@ -75,6 +77,9 @@ import { useQuasar } from 'quasar'
 import { PDFComprovanteVenta } from 'src/utils/pdfReportGenerator'
 import { redondear } from 'src/composables/FuncionesG'
 import { decimas } from 'src/composables/FuncionesG'
+import { useCurrencyStore } from 'src/stores/currencyStore'
+// import { showDialog } from 'src/utils/dialogs'
+const divisaActiva = useCurrencyStore()
 const $q = useQuasar()
 const contenidousuario = validarUsuario()
 const idusuario = contenidousuario[0]?.idusuario
@@ -98,7 +103,12 @@ const columns = [
     field: (row) => row.cliente.split('-')[0],
   },
   { name: 'tipoventa', label: 'Tipo-Venta', field: 'tipoventa' },
-  { name: 'ventatotal', label: 'Monto', field: (row) => decimas(row.ventatotal), align: 'right' },
+  {
+    name: 'ventatotal',
+    label: 'Monto',
+    field: (row) => decimas(row.ventatotal) + ' ' + divisaActiva.simbolo,
+    align: 'right',
+  },
   { name: 'acciones', label: '', field: 'acciones', sortable: false },
 ]
 

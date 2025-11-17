@@ -973,25 +973,30 @@ const onSubmit = async () => {
     const json = Object.fromEntries(form.entries())
     json.jsonDetalles = cartData
     //  Enviar al backend
-    if (process.env.NODE_ENV === 'production') {
-      const response = await api.post('', form, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      })
+    console.log('Datos enviados al backend:', jsonObject)
+    const response = await api.post('', form, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    })
 
-      console.log('Respuesta de la API:', response)
-      if (!response.data || response.data.estado !== 'exito') {
-        throw { message: response.data?.mensaje || 'Error al procesar la venta', response }
-      }
-    } else {
-      console.log('Datos a enviar al backend (modo desarrollo):', jsonObject)
+    console.log('Respuesta de la API:', response)
+    if (!response.data || response.data.estado !== 'exito') {
+      throw { message: response.data?.mensaje || 'Error al procesar la venta', response }
     }
 
     //  Éxito
     $q.notify({ type: 'positive', message: 'Venta registrada con éxito' })
     emit('venta-registrada')
     resetForm()
+    $q.dialog({
+      title: 'Venta Exitosa',
+      message: 'Su Factura está listo. ¿Desea verlo?',
+      cancel: true,
+      persistent: true,
+    }).onOk(() => {
+      window.open(response.data.datosFactura.urlEmizor, '_blank', 'noopener,noreferrer')
+    })
   } catch (error) {
     // 🧠 Registro de errores variablPeago
     const errorType = error.type || ERROR_TYPES.API
