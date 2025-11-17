@@ -701,13 +701,15 @@ class mantenimiento
                 foreach ($objetoOriginal as $elemento) {
                     $objetoTransformadoP[$elemento->codigo] = array(
                         "descripcion" => $elemento->descripcion,
-                        "codigoActividad" => $elemento->codigoActividad
+                        "codigoActividad" => $elemento->codigoActividad,
+                        "codigoSIN" => $elemento->codigo
                     );
                 }
                 $objetoOriginalU = $unidadsinRespuesta->data;
                 $objetoTransformadoU = [];
                 foreach ($objetoOriginalU as $elemento) {
                     $objetoTransformadoU[$elemento->codigo] = array(
+                        "codigoSIN" => $elemento->codigo,
                         "descripcion" => $elemento->descripcion
                     );
                 }

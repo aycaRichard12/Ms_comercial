@@ -174,7 +174,8 @@ import { decimas, redondear } from 'src/composables/FuncionesG'
 import pagosCredito from './pagosCredito.vue'
 import { useQuasar } from 'quasar'
 import { showDialog } from 'src/utils/dialogs'
-
+import { useCurrencyStore } from 'src/stores/currencyStore'
+const divisaActiva = useCurrencyStore()
 const $q = useQuasar()
 const props = defineProps({
   rows: {
@@ -206,7 +207,18 @@ const columnas = [
   { name: 'codigo', label: 'Código', field: 'codigo' },
   { name: 'nfactura', label: 'N° Factura', align: 'right', field: 'nfactura' },
   { name: 'tipocompra', label: 'Tipo compra', field: 'tipocompra', align: 'center' },
-  { name: 'total', label: 'Total compra', align: 'right', field: 'total' },
+  {
+    name: 'total',
+    label: 'Total compra',
+    align: 'right',
+    field: (row) => {
+      const valor = parseFloat(row.total)
+
+      if (isNaN(valor)) return '0.00' // evita NaN
+
+      return decimas(redondear(valor)) + ' ' + divisaActiva.simbolo
+    },
+  },
   { name: 'autorizacion', label: 'Autorización', field: 'autorizacion', align: 'center' },
   { name: 'detalle', label: 'Detalle', field: 'detalle', align: 'right' },
   { name: 'opciones', label: 'Opciones', field: 'opciones', align: 'center' },

@@ -76,6 +76,7 @@ async function loadRows() {
     const tipo = getTipoFactura()
     let response
     const point = `listaProducto/${idempresa}/${token}/${tipo}` // Ruta con factura
+
     console.log('Endpoint:', point)
     response = await api.get(`${point}`) // Cambia a tu ruta con factura
     console.log(response)
@@ -317,6 +318,9 @@ const editUnit = async (row) => {
     caracteristica: item.caracteristica,
     vista: imagen + item.imagen,
     imagen: item.imagen,
+    codigosin: item.productosin[0].codigo,
+    unidadsin: item.unidadsin[0].codigo,
+    codigoNandina: item.codigonandina,
   }
   loadsubcategorias(item.idcategoria)
   isEditing.value = true

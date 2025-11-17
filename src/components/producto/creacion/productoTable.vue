@@ -56,6 +56,19 @@
         </q-img>
       </q-td>
     </template>
+    <template v-slot:body-cell-productosin="props">
+      <q-td :props="props">
+        <div class="text-truncate" @click.stop>
+          {{ props.row.productosin.descripcion }}
+
+          <q-popup-proxy>
+            <q-card class="q-pa-sm" style="max-width: 300px; white-space: normal">
+              {{ props.row.productosin.descripcion }}
+            </q-card>
+          </q-popup-proxy>
+        </div>
+      </q-td>
+    </template>
 
     <template v-slot:body-cell-opciones="props">
       <q-td :props="props" class="text-nowrap">
@@ -111,6 +124,7 @@ defineEmits(['add', 'edit-item', 'delete-item', 'toggle-status', 'mostrarReporte
 
 const columns = [
   { name: 'numero', label: 'N°', field: 'numero', align: 'right' },
+  { name: 'fecha', label: 'Fecha', field: 'fecha', align: 'left' },
   { name: 'codigo', label: 'Cod.', field: 'codigo', align: 'left' },
   { name: 'nombre', label: 'Nombre', field: 'nombre', align: 'left' },
   { name: 'descripcion', label: 'Descripción', field: 'descripcion', align: 'left' },
@@ -121,7 +135,9 @@ const columns = [
   { name: 'estadoproducto', label: 'Estado', field: 'estadoproducto', align: 'left' },
   { name: 'unidad', label: 'Unidad', field: 'unidad', align: 'left' },
   { name: 'caracteristica', label: 'Otras caract.', field: 'caracteristica', align: 'left' },
-  { name: 'fecha', label: 'Fecha', field: 'fecha', align: 'left' },
+  { name: 'productosin', label: 'Producto SIN', field: 'productosin', align: 'left' },
+  { name: 'codigonandina', label: 'CodigoNandina', field: 'codigonandina', align: 'left' },
+
   { name: 'imagen', label: 'Imagen', field: 'imagen', align: 'center' },
   { name: 'opciones', label: 'Opciones', field: 'opciones', sortable: false },
 ]
@@ -134,3 +150,11 @@ const ordenados = computed(() =>
 
 const search = ref('')
 </script>
+<style>
+.text-truncate {
+  max-width: 200px; /* ajusta según tu tabla */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+</style>
