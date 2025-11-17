@@ -440,29 +440,86 @@ const verDetalle = async (row) => {
     })
   }
 }
+// const crearMensaje = async (row) => {
+//   try {
+//     const response = await api.get(`obtenerEmailCliente/${row.idcliente}`) // Cambia a tu ruta real
+//     console.log(response.data) // res { email: 'ClienteVarios@one.com' }
+//     const clientEmail = response.data.email
+//     $q.dialog({
+//       title: 'Confirmar',
+//       message: `¿Enviar factura a correo  "${clientEmail}"?`,
+//       cancel: true,
+//       persistent: true,
+//     }).onOk(async () => {
+//       console.log(row.idcliente)
+
+//       await getDetalleVenta(row.idventa)
+//       if (detalleVenta.value) {
+//         enviarFacturaCorreo(row.idcliente)
+//       } else {
+//         $q.notify({
+//           type: 'negative',
+//           message: 'Venta sin items',
+//         })
+//       }
+//     })
+//   } catch (error) {
+//     console.error('Error al cargar datos:', error)
+//     $q.notify({
+//       type: 'negative',
+//       message: 'No se pudieron cargar los datos',
+//     })
+//   }
+// }
 const crearMensaje = async (row) => {
+  console.log(row)
   try {
     const response = await api.get(`obtenerEmailCliente/${row.idcliente}`) // Cambia a tu ruta real
-    console.log(response.data) // res { email: 'ClienteVarios@one.com' }
     const clientEmail = response.data.email
+
     $q.dialog({
-      title: 'Confirmar',
-      message: `¿Enviar factura a correo  "${clientEmail}"?`,
+      title: 'Seleccione una opción',
+      message: `¿Qué desea enviar al correo "${clientEmail}"?`,
+      options: {
+        type: 'radio',
+        model: null,
+        items: [
+          { label: 'Comprobante', value: 'comprobante' },
+          { label: 'Factura', value: 'factura' },
+        ],
+      },
       cancel: true,
       persistent: true,
-    }).onOk(async () => {
-      console.log(row.idcliente)
-
-      await getDetalleVenta(row.idventa)
-      if (detalleVenta.value) {
-        enviarFacturaCorreo(row.idcliente)
-      } else {
-        $q.notify({
-          type: 'negative',
-          message: 'Venta sin items',
-        })
-      }
     })
+      .onOk(async (opcion) => {
+        if (opcion === 'cancelar' || opcion === null) {
+          $q.notify({ type: 'info', message: 'Operación cancelada' })
+          return
+        }
+
+        console.log(`Elegiste: ${opcion}`)
+
+        await getDetalleVenta(row.idventa)
+
+        if (!detalleVenta.value) {
+          $q.notify({
+            type: 'negative',
+            message: 'Venta sin items',
+          })
+          return
+        }
+
+        if (opcion === 'comprobante') {
+          enviarComprobanteCorreo(row.idcliente)
+        }
+
+        if (opcion === 'factura') {
+          enviarFacturaCorreo(row.idcliente, row.shortlink)
+        }
+      })
+      .onCancel(() => {
+        $q.notify({ type: 'info', message: 'Operación cancelada' })
+      })
   } catch (error) {
     console.error('Error al cargar datos:', error)
     $q.notify({
@@ -471,8 +528,15 @@ const crearMensaje = async (row) => {
     })
   }
 }
-async function enviarFacturaCorreo(idcliente) {
+async function enviarComprobanteCorreo(idcliente) {
+  console.log(detalleVenta.value)
   PDFenviarFacturaCorreo(idcliente, detalleVenta, $q)
+}
+
+async function enviarFacturaCorreo(idcliente, shortlink) {
+  console.log(detalleVenta.value)
+
+  PDFenviarFacturaCorreo(idcliente, detalleVenta, $q, shortlink)
 }
 const getDetalleVenta = async (id) => {
   try {

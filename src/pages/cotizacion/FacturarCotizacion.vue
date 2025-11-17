@@ -1015,6 +1015,8 @@ const onSubmit = async () => {
       },
     })
     console.log('Respuesta del API:', response.data)
+    window.open(response.data.datosFactura.urlEmizor, '_blank', 'noopener,noreferrer')
+
     if (!response.data || response.data.estado !== 'exito') {
       throw { message: response.data?.mensaje || 'Error al procesar la venta', response }
     }

@@ -189,7 +189,10 @@
 
     <q-loading :showing="loading" />
     <modal-r v-model="mostrar" title="Facturar" @close="mostrar = false">
-      <FacturarCotizacion :cotizacion="cotizacionSeleccionada" />
+      <FacturarCotizacion
+        :cotizacion="cotizacionSeleccionada"
+        @venta-registrada="closeModalFactura"
+      />
     </modal-r>
     <q-dialog v-model="showPdfModal" persistent full-width full-height>
       <q-card class="q-pa-none" style="height: 100%; max-width: 100%">
@@ -435,6 +438,10 @@ const validarFechas = () => {
     // Opcional: ajustar la fecha de fin o inicio si hay error
     // fechaf.value = fechai.value;
   }
+}
+const closeModalFactura = () => {
+  mostrar.value = false
+  generarReporte()
 }
 
 const generarReporte = async () => {

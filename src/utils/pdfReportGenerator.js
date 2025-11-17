@@ -1588,9 +1588,25 @@ export function PDFreporteVentasPeriodo(filteredCompra, almacen) {
   return doc
 }
 
-export async function PDFenviarFacturaCorreo(idcliente, detalleVenta, $q) {
+export async function PDFenviarFacturaCorreo(idcliente, detalleVenta, $q, linkFactPdf = null) {
   const detallePlano = JSON.parse(JSON.stringify(detalleVenta.value))
-  const doc = PDFfacturaCorreo(detalleVenta)
+  let pdfBlob
+
+  // 1️⃣ Obtener documento PDF desde link o generarlo
+  if (linkFactPdf) {
+    console.log('📎 PDF recibido mediante link:', linkFactPdf)
+
+    const fetchPdf = await fetch(linkFactPdf)
+    if (!fetchPdf.ok) throw new Error('No se pudo descargar el PDF')
+    pdfBlob = await fetchPdf.blob()
+  } else {
+    console.log('🧾 Generando PDF desde función PDFfacturaCorreo...')
+
+    const doc = PDFfacturaCorreo(detalleVenta) // jsPDF instance
+    pdfBlob = doc.output('blob')
+  }
+
+  console.log(linkFactPdf)
   try {
     const response = await api.get(`obtenerEmailCliente/${idcliente}`) // Cambia a tu ruta real
     console.log(response.data) // res { email: 'ClienteVarios@one.com' }
@@ -1604,7 +1620,6 @@ export async function PDFenviarFacturaCorreo(idcliente, detalleVenta, $q) {
       return
     }
 
-    const pdfBlob = doc.output('blob')
     console.log(detallePlano[0])
     const formData = new FormData()
     // 'pdf' es el nombre del campo que PHP recibirá ($_FILES['pdf'])
