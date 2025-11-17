@@ -280,7 +280,7 @@ class UseVEnta
      * @param array $listaProductos Lista de productos a vender.
      * @return array Resultado de la operación.
      */
-    private function _registrarVentaDetallesEnDB($datosVenta, $listaProductos)
+    public function _registrarVentaDetallesEnDB($datosVenta, $listaProductos, $tipoRegistro = null)
     {
         if (empty($listaProductos)) {
             return ["estado" => "error", "mensaje" => "La lista de productos está vacía."];
@@ -350,24 +350,31 @@ class UseVEnta
                     $stmtGetStock->bind_param("i", $producto['idstock']);
                     $stmtGetStock->execute();
                     $cantidadActual = $stmtGetStock->get_result()->fetch_row()[0];
-                    $stmtUpdateStock->bind_param("i", $producto['idstock']);
-                    $stmtUpdateStock->execute();
-                    if ($stmtUpdateStock->affected_rows === 0) {
-                        throw new Exception("Conflicto al actualizar el stock para id: " . $producto['idstock'] . ". La venta fue cancelada.");
+                    if($tipoRegistro == null){
+                        $stmtUpdateStock->bind_param("i", $producto['idstock']);
+                        $stmtUpdateStock->execute();
+                        if ($stmtUpdateStock->affected_rows === 0) {
+                            throw new Exception("Conflicto al actualizar el stock para id: " . $producto['idstock'] . ". La venta fue cancelada.");
+                        }
                     }
+                    
                     if($cantidadActual == 0){
                         $this->_registrar_venta_no_despachada($ultimoIDventa, $producto);
                     }else{
                         if($cantidadActual <  $producto['cantidad'] ){
-                            $cantidadrestante = $producto['cantidad'] - $cantidadActual;
-                            $nuevaCantidad =0;
-                            $stmtNewStock->bind_param("dii", $nuevaCantidad, $producto['idproductoalmacen'], $ultimoIDventa);
-                            $stmtNewStock->execute();
-                            if ($stmtNewStock->affected_rows === 0) {
-                                throw new Exception("No se pudo crear el nuevo registro de stock para el producto con ID almacén: " . $producto['idproductoalmacen']);
+                            
+                            if($tipoRegistro == null){
+                                $cantidadrestante = $producto['cantidad'] - $cantidadActual;
+                                $nuevaCantidad =0;
+                                $stmtNewStock->bind_param("dii", $nuevaCantidad, $producto['idproductoalmacen'], $ultimoIDventa);
+                                $stmtNewStock->execute();
+                                if ($stmtNewStock->affected_rows === 0) {
+                                    throw new Exception("No se pudo crear el nuevo registro de stock para el producto con ID almacén: " . $producto['idproductoalmacen']);
+                                }
+                                $producto['cantidad'] = $cantidadrestante;
+                                $this->_registrar_venta_no_despachada($ultimoIDventa, $producto);
                             }
-                            $producto['cantidad'] = $cantidadrestante;
-                            $this->_registrar_venta_no_despachada($ultimoIDventa, $producto);
+                            
 
                         }
                     }
@@ -375,24 +382,33 @@ class UseVEnta
                 }else{
 
                     // Obtener cantidad actual del stock
-                    $stmtGetStock->bind_param("i", $producto['idstock']);
-                    $stmtGetStock->execute();
-                    $cantidadActual = $stmtGetStock->get_result()->fetch_row()[0];
+                    if($tipoRegistro == null){
+                        $stmtGetStock->bind_param("i", $producto['idstock']);
+                        $stmtGetStock->execute();
+                        $cantidadActual = $stmtGetStock->get_result()->fetch_row()[0];
+                    }
+                    
                     
                     // Invalidar stock antiguo
-                    $stmtUpdateStock->bind_param("i", $producto['idstock']);
-                    $stmtUpdateStock->execute();
-                    if ($stmtUpdateStock->affected_rows === 0) {
-                        throw new Exception("Conflicto al actualizar el stock para id: " . $producto['idstock'] . ". La venta fue cancelada.");
+                    if($tipoRegistro == null){
+                        $stmtUpdateStock->bind_param("i", $producto['idstock']);
+                        $stmtUpdateStock->execute();
+                        if ($stmtUpdateStock->affected_rows === 0) {
+                            throw new Exception("Conflicto al actualizar el stock para id: " . $producto['idstock'] . ". La venta fue cancelada.");
+                        }
                     }
+                    
 
                     // Crear nuevo registro de stock con la cantidad actualizada
-                    $nuevaCantidad = $cantidadActual - $producto['cantidad'];
-                    $stmtNewStock->bind_param("dii", $nuevaCantidad, $producto['idproductoalmacen'], $ultimoIDventa);
-                    $stmtNewStock->execute();
-                    if ($stmtNewStock->affected_rows === 0) {
-                        throw new Exception("No se pudo crear el nuevo registro de stock para el producto con ID almacén: " . $producto['idproductoalmacen']);
+                    if($tipoRegistro == null){
+                        $nuevaCantidad = $cantidadActual - $producto['cantidad'];
+                        $stmtNewStock->bind_param("dii", $nuevaCantidad, $producto['idproductoalmacen'], $ultimoIDventa);
+                        $stmtNewStock->execute();
+                        if ($stmtNewStock->affected_rows === 0) {
+                            throw new Exception("No se pudo crear el nuevo registro de stock para el producto con ID almacén: " . $producto['idproductoalmacen']);
+                        }
                     }
+                    
                 }
                 
             }

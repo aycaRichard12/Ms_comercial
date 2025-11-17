@@ -626,7 +626,10 @@ elseif ($ver == "cambiarTipoKardex") {
     $controlador = new Kardex();
     $controlador->cambiarTipoKardex($data['idempresa'], $data['tipo']);
 }
-
+elseif ($ver == "facturarjson") {
+    $controlador = new UseCotizacion();
+    $controlador->facturarjson($data);
+}
 
 
 

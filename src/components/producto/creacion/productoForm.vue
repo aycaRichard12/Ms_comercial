@@ -238,6 +238,7 @@ function filterUnidadFn(val, update) {
     FilterUnidadSIN.value = props.unidadSIN.filter((v) => v.label.toLowerCase().includes(needle))
   })
 }
+console.log(props.modelValue)
 watch(
   () => props.modelValue,
   (val) => {

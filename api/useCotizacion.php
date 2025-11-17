@@ -20,6 +20,7 @@ class UseCotizacion
     private $verificar;
     private $logger;
     private $factura;
+    private $useVenta;
 
 
         // --- CONSTANTES DE CLASE ---
@@ -38,6 +39,7 @@ class UseCotizacion
         $this->verificar = new Funciones();
         $this->logger = new LogErrores();
         $this->factura = new Facturacion();
+        $this->useVenta = new UseVEnta();
 
         // Asignación de conexiones a bases de datos
         $this->cm = $this->conexion->cm;
@@ -808,7 +810,53 @@ class UseCotizacion
             return ["estado" => "error", "mensaje" => "Error al eliminar cotización: " . $e->getMessage()];
         }
     }
-    
+    private function cambiarEstadoCotizacion($id) { /// solo cambiar el estado a cotizacion normal  
+        if (empty($id) || !is_numeric($id)) {
+            return ["estado" => "error", "mensaje" => "ID de cotización inválido"];
+        }
+
+        $this->cm->begin_transaction();
+
+        try {
+            
+
+            // 2. Eliminar la cotización principal
+            $sqlCotizacion = " UPDATE cotizacion
+                                SET estado = 2
+                                WHERE id_cotizacion = ?;
+";
+            $stmtCotizacion = $this->cm->prepare($sqlCotizacion);
+            if (!$stmtCotizacion) {
+                return ["estado" => "error", "mensaje" => $this->cm->error];
+            }
+            $stmtCotizacion->bind_param("i", $id);
+            $stmtCotizacion->execute();
+            $stmtCotizacion->close();
+
+            // 3. Confirmar cambios
+            $this->cm->commit();
+            return ["estado" => "exito", "mensaje" => "Cotización se cambio de estado correctamente"];
+
+        } catch (Exception $e) {
+            $this->cm->rollback();
+            $this->logger->registrar("cambiarEstadoCotizacion", "error", $e->getMessage(), $id, null, null);
+            return ["estado" => "error", "mensaje" => "Error al eliminar cotización: " . $e->getMessage()];
+        }
+    }
+    public function facturarjson($data){
+        $this->facturar(
+            $data['idcotizacion'],
+            $data['fecha'],
+            $data['tipoventa'],
+            $data['tipopago'],
+            $data['idcliente'],
+            $data['idsucursal'],
+            $data['canalventa'],
+            $data['idempresa'],
+            $data['idusuario'],
+            $data['jsonDetalles']
+        );
+    }
     public function facturar($idcotizacion,$fecha, $tipoventa, $tipopago, $idcliente, $idsucursal, $canalventa, $idmd5, $idmd5u, $jsonDetalles){
         $sql = "SELECT co.estado AS estado FROM cotizacion co WHERE co.id_cotizacion = ?";
         $stm = $this->cm->prepare($sql);
@@ -836,7 +884,7 @@ class UseCotizacion
     public function cotizaciónAFactura($idcotizacion,$fecha, $tipoventa, $tipopago, $idcliente, $idsucursal, $canalventa, $idmd5, $idmd5u, $jsonDetalles){
         $idempresa = null;
         $idusuario = null;
-
+        
         try {
             date_default_timezone_set('America/La_Paz');
             $respuestaFinal = [
@@ -902,20 +950,22 @@ class UseCotizacion
                 $datosEnviadosEmizor = ["jsonlistaFactura" => $jsonDetalles['listaFactura'], "tipoventa" => $tipoventa, "token" => $jsonDetalles['token'], "tipo" => $jsonDetalles['tipo'], "codigosinsucursal" => $jsonDetalles['codigosinsucursal'], "jsonDetalles" => $jsonDetalles];
 
                 $respuestaEmizor = $this->factura->crearfactura($jsonDetalles['listaFactura'], $tipoventa, $jsonDetalles['token'], $jsonDetalles['tipo'], $jsonDetalles['codigosinsucursal']);
-
                 $respuestaEmizor = json_decode(json_encode([
-                    "status" => "success",
-                    "data" => [
-                        "cuf" => "123",
-                        "ack_ticket" => "abc",
-                        "urlSin" => "url",
-                        "emision_type_code" => 1,
-                        "fechaEmision" => "2025-11-12",
-                        "numeroFactura" => 123,
-                        "shortLink" => "url corta",
-                        "codigoEstado" => 0
-                    ]
-                ]));
+                                    "status" => "success",
+                                    "data" => [
+                                        "cuf" => "123",
+                                        "ack_ticket" => "abc",
+                                        "urlSin" => "url",
+                                        "emision_type_code" => 1,
+                                        "fechaEmision" => "2025-11-12",
+                                        "numeroFactura" => 123,
+                                        "shortLink" => "url corta",
+                                        "codigoEstado" => 0,
+                                        "emission_type_code" => '1',
+                                        "xml_url" => "url xml"
+                                    ]
+                                ]));
+                
 
                 if ($respuestaEmizor->status === "success") {
                     $estadoFactura = null;
@@ -934,7 +984,9 @@ class UseCotizacion
                         ]
                     ]));
                     if ($estadoFactura->data->codigoEstado == self::ESTADO_FACTURA_VALIDADA) {
-                        $resultadoDB = $this->_registrarVentaDetallesCotizacion_Venta($datosVenta, $jsonDetalles['listaProductos']);
+                        
+                        $resultadoDB = $this->useVenta->_registrarVentaDetallesEnDB($datosVenta, $jsonDetalles['listaProductos']);
+                       
                         if ($resultadoDB['estado'] == 'exito') {
                             $this->factura->registrarFacturas($respuestaEmizor->data->ack_ticket, $estadoFactura->data->codigoEstado, $respuestaEmizor->data->cuf, $respuestaEmizor->data->emission_type_code, $respuestaEmizor->data->fechaEmision, $respuestaEmizor->data->numeroFactura, $respuestaEmizor->data->shortLink, $respuestaEmizor->data->urlSin, $respuestaEmizor->data->xml_url, $resultadoDB['idventa']);
                             
@@ -946,6 +998,8 @@ class UseCotizacion
                                     "urlsin" => $respuestaEmizor->data->urlSin ?? $respuestaEmizor->data->urlsin ?? null
                                 ]
                             ]);
+                            $this->cambiarEstadoCotizacion($idcotizacion);
+
                         }else{
                            $respuestaFinal = $resultadoDB; // Propagar error de la BD
                         }
@@ -1047,19 +1101,40 @@ class UseCotizacion
                 $jsonDetalles['listaFactura']['extras']['facturaTicket'] = $codigoVenta;
 
                 $respuestaEmizor = $this->factura->crearfactura($jsonDetalles['listaFactura'], $tipoventa, $jsonDetalles['token'], $jsonDetalles['tipo'], $jsonDetalles['codigosinsucursal']);
+                $respuestaEmizor = json_decode(json_encode([
+                    "status" => "success",
+                    "data" => [
+                        "cuf" => "123",
+                        "ack_ticket" => "abc",
+                        "urlSin" => "url",
+                        "emision_type_code" => 1,
+                        "fechaEmision" => "2025-11-12",
+                        "numeroFactura" => 123,
+                        "shortLink" => "url corta",
+                        "codigoEstado" => 0,
+                        "emission_type_code" => '1',
+                        "xml_url" => "xml url"
+                    ]
+                ]));
 
                 if ($respuestaEmizor->status === "success") {
                     $estadoFactura = null;
-                    for ($i = 0; $i < self::MAX_INTENTOS_CONSULTA_FACTURA; $i++) {
-                        $estadoFactura = $this->factura->estadofactura($respuestaEmizor->data->cuf, $jsonDetalles['token'], $jsonDetalles['tipo'], 2);
-                        if ($estadoFactura->data->codigoEstado == self::ESTADO_FACTURA_VALIDADA && $estadoFactura->data->errores == null) {
-                            break; // Factura validada, salir del bucle
-                        }
-                        sleep(1); // Esperar 1 segundo antes de reintentar
-                    }
-
+                    // for ($i = 0; $i < self::MAX_INTENTOS_CONSULTA_FACTURA; $i++) {
+                    //     $estadoFactura = $this->factura->estadofactura($respuestaEmizor->data->cuf, $jsonDetalles['token'], $jsonDetalles['tipo'], 2);
+                    //     if ($estadoFactura->data->codigoEstado == self::ESTADO_FACTURA_VALIDADA && $estadoFactura->data->errores == null) {
+                    //         break; // Factura validada, salir del bucle
+                    //     }
+                    //     sleep(1); // Esperar 1 segundo antes de reintentar
+                    // }
+                    $estadoFactura = json_decode(json_encode([
+                        "status"=> "success",
+                        "data"=> [
+                            "codigoEstado"=> 690,
+                            "estado"=> "string"
+                        ]
+                    ]));
                     if ($estadoFactura->data->codigoEstado == self::ESTADO_FACTURA_VALIDADA) {
-                        $resultadoDB = $this->_registrarVentaDetallesProformas_venta($datosVenta, $jsonDetalles['listaProductos']);
+                         $resultadoDB = $this->useVenta->_registrarVentaDetallesEnDB($datosVenta, $jsonDetalles['listaProductos'], 1);
                         if ($resultadoDB['estado'] == 'exito') {
                             $this->factura->registrarFacturas($respuestaEmizor->data->ack_ticket, $estadoFactura->data->codigoEstado, $respuestaEmizor->data->cuf, $respuestaEmizor->data->emission_type_code, $respuestaEmizor->data->fechaEmision, $respuestaEmizor->data->numeroFactura, $respuestaEmizor->data->shortLink, $respuestaEmizor->data->urlSin, $respuestaEmizor->data->xml_url, $resultadoDB['idventa']);
                             
@@ -1152,7 +1227,7 @@ class UseCotizacion
         return $nroFactura;
     }
 
-    private function _registrarVentaDetallesCotizacion_Venta($datosVenta, $listaProductos)
+    private function registrarVentaDetalleCotizacionAFactura($datosVenta, $listaProductos)
     {
         if (empty($listaProductos)) {
             return ["estado" => "error", "mensaje" => "La lista de productos está vacía."];
@@ -1178,15 +1253,14 @@ class UseCotizacion
         $this->cm->begin_transaction();
         try {
             // --- Insertar en la tabla 'venta' ---
-            $sqlVenta = "INSERT INTO venta (fecha_venta, tipo_venta, monto_total, descuento, tipo_pago, cliente_id_cliente1, divisas_id_divisas, id_usuario, nfactura, idsucursal, idcampaña, nroventa, estado, idcanal, codigoventa) 
-                         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?)";
+            $sqlVenta = "INSERT INTO venta (fecha_venta, tipo_venta, monto_total, descuento, tipo_pago, cliente_id_cliente1, divisas_id_divisas, id_usuario, nfactura, idsucursal, idcampaña, nroventa, estado, idcanal, codigoventa,punto_venta,leyenda)VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?, ?, ?)";
             $stmtVenta = $this->cm->prepare($sqlVenta);
             $stmtVenta->bind_param(
-                "ssddsiiisiisss",
+                "ssddsiiisiisssii",
                 $datosVenta['fecha'], $datosVenta['tipoventa'], $datosVenta['ventatotal'], $datosVenta['descuento'],
                 $datosVenta['tipopago'], $datosVenta['idcliente'], $datosVenta['iddivisa'], $datosVenta['idusuario'],
                 $datosVenta['nroFactura'], $datosVenta['idsucursal'], $datosVenta['idcampaña'], $datosVenta['nroventa'],
-                $datosVenta['canalventa'], $datosVenta['codigoVenta']
+                $datosVenta['canalventa'], $datosVenta['codigoVenta'], $datosVenta['punto_venta'],$datosVenta['leyenda']
             );
             $stmtVenta->execute();
             
@@ -1197,63 +1271,76 @@ class UseCotizacion
             $stmtVenta->close();
 
             // --- Insertar en 'detalle_venta' y actualizar 'stock' para cada producto ---
-            $sqlDetalle = "INSERT INTO detalle_venta (cantidad, precio_unitario, productos_almacen_id_productos_almacen, venta_id_venta, categoria) 
-                           VALUES (?, ?, ?, ?, ?)";
+            $sqlDetalle = "INSERT INTO detalle_venta (cantidad, precio_unitario, productos_almacen_id_productos_almacen, venta_id_venta, categoria, descripcion_adicional) 
+                           VALUES (?, ?, ?, ?, ?, ?)";
             $stmtDetalle = $this->cm->prepare($sqlDetalle);
 
             $sqlGetStock = "SELECT cantidad FROM stock WHERE id_stock = ? AND estado = 1";
             $stmtGetStock = $this->cm->prepare($sqlGetStock);
             
-            $sqlUpdateStock = "UPDATE stock SET estado = 2 WHERE id_stock = ? AND estado = 1"; 
+            $sqlUpdateStock = "UPDATE stock SET estado = 2 WHERE id_stock = ? AND estado = 1";
             $stmtUpdateStock = $this->cm->prepare($sqlUpdateStock);
 
-            $sqlNewStock = "INSERT INTO stock (cantidad, fecha, codigo, estado, productos_almacen_id_productos_almacen) 
-                            VALUES (?, NOW(), 'VE', 1, ?)";
-
+            $sqlNewStock = "INSERT INTO stock (cantidad, fecha, codigo, estado, productos_almacen_id_productos_almacen, idorigen) 
+                            VALUES (?, NOW(), 'VE', 1, ?, ?)";
             $stmtNewStock = $this->cm->prepare($sqlNewStock);
 
             foreach ($listaProductos as $producto) {
                 // Insertar detalle de venta
-                $stmtDetalle->bind_param("ddiis", $producto['cantidad'], $producto['precio'], $producto['idproductoalmacen'], $ultimoIDventa, $producto['idporcentaje']);
+                $stmtDetalle->bind_param("ddiiss", $producto['cantidad'], $producto['precio'], $producto['idproductoalmacen'], $ultimoIDventa, $producto['idporcentaje'], $producto['descripcionAdicional']);
                 $stmtDetalle->execute();
                 if ($stmtDetalle->affected_rows == 0) {
                     throw new Exception("No se pudo insertar el detalle para el producto con ID almacén: " . $producto['idproductoalmacen']);
                 }
-                
-                $sqlIdStock = "SELECT s.id_stock FROM stock s WHERE s.  = ? AND s.estado = 1 ORDER BY s.id_stock DESC LIMIT 1";
-                $stm = $this->cm->prepare($sqlIdStock);
-                if(!$stm){
-                    throw new Exception("Conflicto al obtener el stock actual");
-                    
-                }
-                $stm->bind_param('i',$producto['idproductoalmacen']);
-                $stm->execute();
-                $result = $stm->get_result();
-                $row = $result->fetch_assoc();
-                if(!$row){
-                    throw new Exception("No se encontro el stock del producto" . $producto['descripcion']);
-                }
-                $idstock = $row['id_stock'];
-                // Obtener cantidad actual del stock
-                $stmtGetStock->bind_param("i", $idstock);
-                $stmtGetStock->execute();
-                $cantidadActual = $stmtGetStock->get_result()->fetch_row()[0];
-                
-                // Invalidar stock antiguo
-                $stmtUpdateStock->bind_param("i", $idstock);
-                $stmtUpdateStock->execute();
-                if ($stmtUpdateStock->affected_rows === 0) {
-                    throw new Exception("Conflicto al actualizar el stock para id: " . $idstock . ". La venta fue cancelada.");
-                }
+                if ((int)$producto['despachado'] == 2) {
+                    // Obtener cantidad actual del stock
+                    $stmtGetStock->bind_param("i", $producto['idstock']);
+                    $stmtGetStock->execute();
+                    $cantidadActual = $stmtGetStock->get_result()->fetch_row()[0];
+                    $stmtUpdateStock->bind_param("i", $producto['idstock']);
+                    $stmtUpdateStock->execute();
+                    if ($stmtUpdateStock->affected_rows === 0) {
+                        throw new Exception("Conflicto al actualizar el stock para id: " . $producto['idstock'] . ". La venta fue cancelada.");
+                    }
+                    if($cantidadActual == 0){
+                        $this->_registrar_venta_no_despachada($ultimoIDventa, $producto);
+                    }else{
+                        if($cantidadActual <  $producto['cantidad'] ){
+                            $cantidadrestante = $producto['cantidad'] - $cantidadActual;
+                            $nuevaCantidad =0;
+                            $stmtNewStock->bind_param("dii", $nuevaCantidad, $producto['idproductoalmacen'], $ultimoIDventa);
+                            $stmtNewStock->execute();
+                            if ($stmtNewStock->affected_rows === 0) {
+                                throw new Exception("No se pudo crear el nuevo registro de stock para el producto con ID almacén: " . $producto['idproductoalmacen']);
+                            }
+                            $producto['cantidad'] = $cantidadrestante;
+                            $this->_registrar_venta_no_despachada($ultimoIDventa, $producto);
 
-                // Crear nuevo registro de stock con la cantidad actualizada
-                $nuevaCantidad = $cantidadActual - $producto['cantidad'];
-                $stmtNewStock->bind_param("di", $nuevaCantidad, $producto['idproductoalmacen']);
-                $stmtNewStock->execute();
-                if ($stmtNewStock->affected_rows === 0) {
-                    throw new Exception("No se pudo crear el nuevo registro de stock para el producto con ID almacén: " . $producto['idproductoalmacen']);
+                        }
+                    }
+                    
+                }else{
+
+                    // Obtener cantidad actual del stock
+                    $stmtGetStock->bind_param("i", $producto['idstock']);
+                    $stmtGetStock->execute();
+                    $cantidadActual = $stmtGetStock->get_result()->fetch_row()[0];
+                    
+                    // Invalidar stock antiguo
+                    $stmtUpdateStock->bind_param("i", $producto['idstock']);
+                    $stmtUpdateStock->execute();
+                    if ($stmtUpdateStock->affected_rows === 0) {
+                        throw new Exception("Conflicto al actualizar el stock para id: " . $producto['idstock'] . ". La venta fue cancelada.");
+                    }
+
+                    // Crear nuevo registro de stock con la cantidad actualizada
+                    $nuevaCantidad = $cantidadActual - $producto['cantidad'];
+                    $stmtNewStock->bind_param("dii", $nuevaCantidad, $producto['idproductoalmacen'], $ultimoIDventa);
+                    $stmtNewStock->execute();
+                    if ($stmtNewStock->affected_rows === 0) {
+                        throw new Exception("No se pudo crear el nuevo registro de stock para el producto con ID almacén: " . $producto['idproductoalmacen']);
+                    }
                 }
-                
                 
             }
 
@@ -1271,6 +1358,44 @@ class UseCotizacion
             $this->logger->registrar("_registrarVentaDetallesEnDB", "error", $e->getMessage(), $datosVenta, $datosVenta['idusuario'], null);
             return ["estado" => "error", "mensaje" => "Error en la base de datos: " . $e->getMessage()];
         }
+    }
+     private function _registrar_venta_no_despachada($idventa, $producto) {
+        $tipo = 1;
+
+        $sqlDetalle = "INSERT INTO ventas_no_despachadas (
+            id_venta, 
+            productos_almacen_id_productos_almacen, 
+            cantidad_pendiente,
+            precio_unitario,
+            categoria,
+            tipo
+        ) VALUES (?, ?, ?, ?, ?, ?)";
+
+        $stmtDetalle = $this->cm->prepare($sqlDetalle);
+        if (!$stmtDetalle) {
+            return "Error al preparar la consulta: " . $this->cm->error;
+        }
+
+        $stmtDetalle->bind_param(
+            "iiidii", // Ojo: usa "iiidii" si `cantidad` es int
+            $idventa,
+            $producto['idproductoalmacen'],
+            $producto['cantidad'],
+            $producto['precio'],
+            $producto['idporcentaje'],
+            $tipo
+        );
+
+        if (!$stmtDetalle->execute()) {
+            return "Error al ejecutar la consulta: " . $stmtDetalle->error;
+        }
+
+        if ($stmtDetalle->affected_rows === 0) {
+            return "No se pudo insertar el detalle para el producto con ID almacén: " . $producto['idproductoalmacen'];
+        }
+
+        $stmtDetalle->close();
+        return true; // Devuelve algo positivo si todo salió bien
     }
 
     private function _registrarVentaDetallesProformas_venta($datosVenta, $listaProductos)

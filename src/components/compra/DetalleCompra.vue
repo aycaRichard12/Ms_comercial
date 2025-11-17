@@ -59,7 +59,7 @@
             type="number"
             step="0.01"
             :rules="[(val) => val > 0 || 'El precio debe ser mayor a 0']"
-            suffix="Bs"
+            :suffix="divisaActiva.simbolo"
             dense
             outlined
             clearable
@@ -104,7 +104,9 @@
       </template>
 
       <template v-slot:body-cell-subtotal="props">
-        <q-td :props="props"> {{ (props.row.precio * props.row.cantidad).toFixed(2) }} Bs </q-td>
+        <q-td :props="props">
+          {{ (props.row.precio * props.row.cantidad).toFixed(2) }} {{ divisaActiva.simbolo }}
+        </q-td>
       </template>
 
       <template v-slot:body-cell-opciones="props" v-if="compra.autorizacion == 2">
@@ -137,6 +139,8 @@ import { useQuasar } from 'quasar'
 import { api } from 'src/boot/axios'
 import { decimas } from 'src/composables/FuncionesG'
 import { objectToFormData } from 'src/composables/FuncionesGenerales'
+import { useCurrencyStore } from 'src/stores/currencyStore'
+const divisaActiva = useCurrencyStore()
 
 const $q = useQuasar()
 

@@ -8,7 +8,7 @@
           v-model.number="formData.monto_total"
           id="monto"
           type="number"
-          prefix="$"
+          :prefix="divisaActiva.simbolo"
           dense
           outlined
           disable
@@ -102,7 +102,8 @@ import { api } from 'src/boot/axios'
 import { objectToFormData } from 'src/composables/FuncionesGenerales'
 import { showDialog } from 'src/utils/dialogs'
 import { obtenerFechaActualDato } from 'src/composables/FuncionesG'
-
+import { useCurrencyStore } from 'src/stores/currencyStore'
+const divisaActiva = useCurrencyStore()
 const emit = defineEmits(['cerrar'])
 
 function cerrarFormulario() {
@@ -142,10 +143,7 @@ const montoPorCuotaNumero = computed(() => {
  */
 const montoPorCuotaFormateado = computed(() => {
   const valor = montoPorCuotaNumero.value
-  return valor.toLocaleString('en-US', {
-    style: 'currency',
-    currency: 'USD',
-  })
+  return valor + ' ' + divisaActiva.simbolo
 })
 
 /**

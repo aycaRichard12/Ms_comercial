@@ -992,7 +992,7 @@ export function generarPdfCotizacion(data) {
         // Título centrado
         doc.setFontSize(10)
         doc.setFont(undefined, 'bold')
-        doc.text('COMPROBANTE', doc.internal.pageSize.getWidth() / 2, 15, {
+        doc.text('COTIZACIÓN', doc.internal.pageSize.getWidth() / 2, 15, {
           align: 'center',
         })
         console.log(cotizacionInfo)
