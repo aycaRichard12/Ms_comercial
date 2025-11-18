@@ -921,7 +921,10 @@ const cargarDatosIniciales = async () => {
         })),
       ]
     } else {
-      tiposVentaOptions.value = [{ value: 0, label: 'comprobante de venta' }]
+      tiposVentaOptions.value = [
+        { value: 0, label: 'comprobante de venta' },
+        { value: -1, label: 'cotizacion de venta' },
+      ]
     }
 
     // Cargar ventas
