@@ -99,8 +99,20 @@ if ($ver == "registrarResponsable") {
     $controlador = new configuracion();
     $controlador->editarCategoriaPrecio($_POST['id'], $_POST['tipo'], $_POST['porcentaje'], $_POST['idalmacen']);
 } elseif ($ver == "editarPrecioSugerido") {
+    $afectarTodosAlmacenesString = $_POST['afectarTodosAlmacenes'];
+
+    // Convertir el string "true" o "false" a un valor booleano (true o false)
+    $afectarTodosAlmacenesBooleano = ($afectarTodosAlmacenesString === "true");
+
     $controlador = new configuracion();
-    $controlador->editarPrecioSugerido($_POST['id'], $_POST['precio']);
+
+    // CORRECCIÓN: Usar $afectarTodosAlmacenesBooleano
+    $controlador->editarPrecioSugerido(
+        $_POST['id'], 
+        $_POST['precio'],
+        $afectarTodosAlmacenesBooleano, // <-- ¡Corregido el nombre!
+        $_POST['idproducto']
+    );
 } elseif ($ver == "registrarLeyendaFactura") {
     $controlador = new configuracion();
     $controlador->registroLeyendaFactura($_POST['nombre'], $_POST['codigosin'], $_POST['idempresa']);

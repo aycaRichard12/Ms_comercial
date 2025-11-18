@@ -141,7 +141,8 @@ const columnas = [
 const filtrados = computed(() => {
   const res = props.rows.filter((p) => {
     const matchesCateforia =
-      (!filtroscategoria.value || p.idporcentaje === filtroscategoria.value?.value) &&
+      (!filtroscategoria.value ||
+        Number(p.idporcentaje) === Number(filtroscategoria.value?.value)) &&
       filtroscategoria.value !== null
     const matchesCodigo =
       !filter.value ||
@@ -190,8 +191,9 @@ const cargarCategoriaPrecio = async () => {
     })
   }
 }
-function editarProducto(id) {
-  emit('edit', id)
+function editarProducto(row) {
+  console.log('Editar producto:', row)
+  emit('edit', row)
 }
 watch(
   () => props.almacenes,

@@ -2362,21 +2362,84 @@ class configuracion
     {
         $lista = [];
         $idempresa = $this->verificar->verificarIDEMPRESAMD5($idmd5);
+
         if ($idempresa === "false") {
             echo json_encode(array("error" => "El id de empresa no existe"));
             return;
         }
-        $consulta = $this->cm->query("select ps.id_precio_sugerido, ps.productos_almacen_id_productos_almacen, p.codigo, p.nombre, p.descripcion, ps.precio, pa.almacen_id_almacen, po.id_porcentajes, po.autorizado from precio_sugerido as ps 
-        inner join porcentajes as po on ps.porcentajes_id_porcentajes=po.id_porcentajes
-        inner join productos_almacen as pa on ps.productos_almacen_id_productos_almacen=pa.id_productos_almacen and ps.productos_almacen_id_productos_almacen=pa.id_productos_almacen
-        inner join productos as p on pa.productos_id_productos=p.id_productos
-        inner join almacen as a on pa.almacen_id_almacen=a.id_almacen
-        where a.idempresa='$idempresa'
-        order by ps.id_precio_sugerido desc");
-        while ($qwe = $this->cm->fetch($consulta)) {
-            $res = array("id" => $qwe[0], "idproductoalmacen" => $qwe[1], "codigo" => $qwe[2], "producto" => $qwe[3], "descripcion" => $qwe[4], "precio" => $qwe[5], "idalmacen" => $qwe[6], "idporcentaje" => $qwe[7], "estado" => $qwe[8]);
-            array_push($lista, $res);
+
+        // 1. Definir la consulta con el marcador de posición '?'
+        $sql = "SELECT 
+                    ps.id_precio_sugerido, 
+                    ps.productos_almacen_id_productos_almacen, 
+                    p.codigo, 
+                    p.nombre, 
+                    p.descripcion, 
+                    ps.precio, 
+                    pa.almacen_id_almacen, 
+                    po.id_porcentajes, 
+                    po.autorizado,
+                    p.id_productos
+                FROM 
+                    precio_sugerido AS ps 
+                INNER JOIN 
+                    porcentajes AS po ON ps.porcentajes_id_porcentajes = po.id_porcentajes
+                INNER JOIN 
+                    productos_almacen AS pa ON ps.productos_almacen_id_productos_almacen = pa.id_productos_almacen
+                INNER JOIN 
+                    productos AS p ON pa.productos_id_productos = p.id_productos
+                INNER JOIN 
+                    almacen AS a ON pa.almacen_id_almacen = a.id_almacen
+                WHERE 
+                    a.idempresa = ?  -- El marcador '?' es para la seguridad
+                ORDER BY 
+                    ps.id_precio_sugerido DESC";
+
+        // 2. Preparar la sentencia
+        // Se asume que $this->cm->prepare() devuelve un objeto de sentencia (MySQLi_STMT)
+        $stmt = $this->cm->prepare($sql);
+
+        // Si la preparación falló, maneja el error.
+        if ($stmt === false) {
+            // En un entorno real, NO muestres el error directamente, regístralo.
+            echo json_encode(array("error" => "Fallo al preparar la consulta."));
+            return;
         }
+
+        // 3. Vincular el parámetro (Binding)
+        // 's' significa que el parámetro $idempresa es de tipo string.
+        $stmt->bind_param("s", $idempresa);
+
+        // 4. Ejecutar la sentencia
+        $stmt->execute();
+
+        // 5. Obtener el resultado
+        // Se asume que $this->cm->get_result() funciona en tu implementación,
+        // o que $stmt->get_result() es el método directo de MySQLi.
+        $resultado = $stmt->get_result(); 
+
+        // 6. Procesar los resultados
+        if ($resultado) {
+            while ($qwe = $resultado->fetch_array(MYSQLI_NUM)) {
+                $res = array(
+                    "id" => $qwe[0], 
+                    "idproductoalmacen" => $qwe[1], 
+                    "codigo" => $qwe[2], 
+                    "producto" => $qwe[3], 
+                    "descripcion" => $qwe[4], 
+                    "precio" => $qwe[5], 
+                    "idalmacen" => $qwe[6], 
+                    "idporcentaje" => $qwe[7], 
+                    "estado" => $qwe[8],
+                    "idproducto" => $qwe[9]
+                );
+                array_push($lista, $res);
+            }
+        }
+        
+        // 7. Cerrar la sentencia y liberar recursos
+        $stmt->close();
+
         echo json_encode($lista);
     }
 
@@ -2420,13 +2483,22 @@ class configuracion
         }
     }
 
-    public function editarPrecioSugerido($idpreciosugerido, $precio)
+    public function editarPrecioSugerido($idpreciosugerido, $precio,$afectarTodosAlmacenes, $idproducto = null)
     {
         $res = "";
         $nuevoprecio = $this->verificar->redondear(floatval($precio));
         $consulta = $this->cm->query("select id_precio_sugerido from precio_sugerido WHERE id_precio_sugerido = '$idpreciosugerido'");
         if ($consulta->num_rows > 0) {
-            $registro = $this->cm->query("update precio_sugerido SET precio='$nuevoprecio' where id_precio_sugerido='$idpreciosugerido'");
+            if ($afectarTodosAlmacenes) {
+                // Actualizar todos los registros relacionados con el mismo producto en todos los almacenes
+                $registro = $this->cm->query("UPDATE precio_sugerido AS ps
+                    INNER JOIN productos_almacen AS pa ON ps.productos_almacen_id_productos_almacen = pa.id_productos_almacen
+                    SET ps.precio = '$nuevoprecio'
+                    WHERE pa.productos_id_productos = '$idproducto'");
+            } else {
+                // Actualizar solo el registro específico
+                $registro = $this->cm->query("update precio_sugerido SET precio='$nuevoprecio' where id_precio_sugerido='$idpreciosugerido'");
+            }
             if ($registro !== null) {
                 $res = array("estado" => "exito", "mensaje" => "Actualización exitosa");
             } else {

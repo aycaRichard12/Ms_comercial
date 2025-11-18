@@ -22,6 +22,7 @@
     <table-compra
       :rows="compras"
       :almacenes="almacenes"
+      :almacenSeleccionado="almacenSeleccionado"
       @detalleCompra="verDetalle"
       @add="toggleForm"
       @edit="editarCompra"
@@ -77,7 +78,7 @@ const compraStore = useCompraStore()
 const $q = useQuasar()
 const idempresa = idempresa_md5()
 const idusuario = idusuario_md5()
-
+const almacenSeleccionado = ref(null)
 const showForm = ref(false)
 const isEditing = ref(false)
 const almacenes = ref([])
@@ -152,7 +153,10 @@ async function enviarFormData(endpoint, data, mensajeExito, mensajeError) {
     console.log(response.data)
     if (response.data.estado === 'exito') {
       $q.notify({ type: 'positive', message: response.data.mensaje || mensajeExito })
-      iniciar()
+      almacenSeleccionado.value = almacenes.value.find((almacen) => almacen.value === data.almacen)
+      console.log(almacenSeleccionado.value)
+      //iniciar()
+
       return response
     } else {
       $q.notify({ type: 'negative', message: response.data.mensaje || mensajeError })
@@ -172,9 +176,11 @@ async function guardarRegistro(data) {
     'Hubo un problema al registrar la compra',
   )
   if (response?.data?.estado === 'exito') {
-    loadRows()
+    console.log('Compra guardada con éxito')
+    await loadRows()
     showForm.value = false
     showFormEdit.value = false
+    resetForm()
   }
 }
 
@@ -195,6 +201,7 @@ function resetForm() {
     nombre: 'CMP-',
     tipoRegistro: 2,
   }
+  console.log('Formulario reseteado', registroActual.value)
 }
 
 async function cargarProveedores() {
@@ -218,6 +225,7 @@ async function cargarAlmacenes() {
       label: item.almacen,
       value: item.idalmacen,
     }))
+    almacenSeleccionado.value = almacenes.value.length > 0 ? almacenes.value[0] : null
   } catch (error) {
     console.error('Error al cargar almacenes:', error)
     $q.notify({ type: 'negative', message: 'No se pudieron cargar los almacenes' })
