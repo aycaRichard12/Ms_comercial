@@ -66,6 +66,7 @@ const cargarListaAlmacenes = async () => {
 }
 
 const guardarPrecioBase = async (data) => {
+  console.log('Datos recibidos del formulario:', data)
   const formData = objectToFormData(data)
   for (let [k, v] of formData.entries()) {
     console.log(`${k}:${v}`)
@@ -101,6 +102,7 @@ const guardarPrecioBase = async (data) => {
   toggleForm()
 }
 const abrirFormularioEditar = async (item) => {
+  console.log('Editar item:', item)
   isEditing.value = true
   showForm.value = true
   console.log(item)
@@ -114,6 +116,9 @@ const abrirFormularioEditar = async (item) => {
         id: response.data?.datos?.id,
         descripcion: response.data?.datos?.codigo + ' ' + response.data?.datos?.descripcion,
         precioActual: response.data?.datos?.precio,
+        idproducto: item.idproducto,
+        afectarTodosAlmacenes: false,
+        idporcentaje: item.idporcentaje,
       }
 
       console.log(ProductoSeleccionado.value)

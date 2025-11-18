@@ -949,39 +949,39 @@ class UseCotizacion
                 $datosEnviadosEmizor = ["jsonlistaFactura" => $jsonDetalles['listaFactura'], "tipoventa" => $tipoventa, "token" => $jsonDetalles['token'], "tipo" => $jsonDetalles['tipo'], "codigosinsucursal" => $jsonDetalles['codigosinsucursal'], "jsonDetalles" => $jsonDetalles];
 
                 $respuestaEmizor = $this->factura->crearfactura($jsonDetalles['listaFactura'], $tipoventa, $jsonDetalles['token'], $jsonDetalles['tipo'], $jsonDetalles['codigosinsucursal']);
-                // $respuestaEmizor = json_decode(json_encode([
-                //                     "status" => "success",
-                //                     "data" => [
-                //                         "cuf" => "123",
-                //                         "ack_ticket" => "abc",
-                //                         "urlSin" => "url",
-                //                         "emision_type_code" => 1,
-                //                         "fechaEmision" => "2025-11-12",
-                //                         "numeroFactura" => 123,
-                //                         "shortLink" => "url corta",
-                //                         "codigoEstado" => 0,
-                //                         "emission_type_code" => '1',
-                //                         "xml_url" => "url xml"
-                //                     ]
-                //                 ]));
+                $respuestaEmizor = json_decode(json_encode([
+                                    "status" => "success",
+                                    "data" => [
+                                        "cuf" => "123",
+                                        "ack_ticket" => "abc",
+                                        "urlSin" => "url",
+                                        "emision_type_code" => 1,
+                                        "fechaEmision" => "2025-11-12",
+                                        "numeroFactura" => 123,
+                                        "shortLink" => "url corta",
+                                        "codigoEstado" => 0,
+                                        "emission_type_code" => '1',
+                                        "xml_url" => "url xml"
+                                    ]
+                                ]));
                 
 
                 if ($respuestaEmizor->status === "success") {
                     $estadoFactura = null;
-                    for ($i = 0; $i < self::MAX_INTENTOS_CONSULTA_FACTURA; $i++) {
-                        $estadoFactura = $this->factura->estadofactura($respuestaEmizor->data->cuf, $jsonDetalles['token'], $jsonDetalles['tipo'], 2);
-                        if ($estadoFactura->data->codigoEstado == self::ESTADO_FACTURA_VALIDADA && $estadoFactura->data->errores == null) {
-                            break; // Factura validada, salir del bucle
-                        }
-                        sleep(1); // Esperar 1 segundo antes de reintentar
-                    }
-                    // $estadoFactura = json_decode(json_encode([
-                    //     "status"=> "success",
-                    //     "data"=> [
-                    //         "codigoEstado"=> 690,
-                    //         "estado"=> "string"
-                    //     ]
-                    // ]));
+                    // for ($i = 0; $i < self::MAX_INTENTOS_CONSULTA_FACTURA; $i++) {
+                    //     $estadoFactura = $this->factura->estadofactura($respuestaEmizor->data->cuf, $jsonDetalles['token'], $jsonDetalles['tipo'], 2);
+                    //     if ($estadoFactura->data->codigoEstado == self::ESTADO_FACTURA_VALIDADA && $estadoFactura->data->errores == null) {
+                    //         break; // Factura validada, salir del bucle
+                    //     }
+                    //     sleep(1); // Esperar 1 segundo antes de reintentar
+                    // }
+                    $estadoFactura = json_decode(json_encode([
+                        "status"=> "success",
+                        "data"=> [
+                            "codigoEstado"=> 690,
+                            "estado"=> "string"
+                        ]
+                    ]));
                     if ($estadoFactura->data->codigoEstado == self::ESTADO_FACTURA_VALIDADA) {
                         
                         $resultadoDB = $this->useVenta->_registrarVentaDetallesEnDB($datosVenta, $jsonDetalles['listaProductos']);

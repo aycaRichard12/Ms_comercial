@@ -1,6 +1,15 @@
 <template>
   <q-form @submit.prevent="onSubmit">
     <div class="row q-col-gutter-x-md">
+      <div class="col-12 col-md-4 q-pa-sm">
+        <q-toggle
+          v-model="localData.afectarTodosAlmacenes"
+          label="Afectar Todos los Almacenes"
+          size="md"
+          color="primary"
+          dense
+        />
+      </div>
       <div class="col-12 col-md-4">
         <label for="producto">Descripción del producto*</label>
         <q-input v-model="localData.descripcion" id="producto" dense="" outlined="" disable />
@@ -40,7 +49,6 @@
 
 <script setup>
 import { ref, watch } from 'vue'
-
 const props = defineProps({
   editing: Boolean,
   modalValue: {

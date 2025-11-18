@@ -165,16 +165,13 @@
 
 <script setup>
 import { ref, computed, watch } from 'vue'
-import jsPDF from 'jspdf'
-import autoTable from 'jspdf-autotable'
-import { validarUsuario } from 'src/composables/FuncionesGenerales'
-import { cambiarFormatoFecha, obtenerFechaActualDato } from 'src/composables/FuncionesG'
-import { URL_APIE } from 'src/composables/services'
+
 import { decimas, redondear } from 'src/composables/FuncionesG'
 import pagosCredito from './pagosCredito.vue'
 import { useQuasar } from 'quasar'
 import { showDialog } from 'src/utils/dialogs'
 import { useCurrencyStore } from 'src/stores/currencyStore'
+import { PDF_REPORTE_COMPRAS } from 'src/utils/pdfReportGenerator'
 const divisaActiva = useCurrencyStore()
 const $q = useQuasar()
 const props = defineProps({
@@ -192,7 +189,12 @@ const props = defineProps({
     required: true,
     default: () => [],
   },
+  almacenSeleccionado: {
+    type: Object,
+    default: null,
+  },
 })
+console.log(props.almacenSeleccionado)
 const pdfData = ref(null)
 const busqueda = ref('')
 const filtroAlmacen = ref(null)
@@ -248,11 +250,9 @@ const processedRows = computed(() => {
 })
 
 watch(
-  () => props.almacenes,
-  (nuevo) => {
-    if (nuevo.length > 0 && !filtroAlmacen.value) {
-      filtroAlmacen.value = nuevo[0]
-    }
+  () => props.almacenSeleccionado,
+  (nuevoAlmacen) => {
+    filtroAlmacen.value = nuevoAlmacen
   },
   { immediate: true },
 )
@@ -279,122 +279,7 @@ function closeModalCredito() {
   emit('actualizarTablaPrincipal')
 }
 function imprimirReporte() {
-  console.log(filtroAlmacen.value)
-  const contenidousuario = validarUsuario()
-  const doc = new jsPDF({ orientation: 'portrait' })
-
-  const idempresa = contenidousuario[0]
-  const nombreEmpresa = idempresa.empresa.nombre
-  const direccionEmpresa = idempresa.empresa.direccion
-  const telefonoEmpresa = idempresa.empresa.telefono
-  const logoEmpresa = idempresa.empresa.logo // Ruta relativa o base64
-  const nombre = idempresa.nombre
-  const cargo = idempresa.cargo
-  const columns = [
-    { header: 'N°', dataKey: 'indice' },
-    { header: 'Fecha', dataKey: 'fecha' },
-    { header: 'Proveedor', dataKey: 'proveedor' },
-    { header: 'Lote', dataKey: 'lote' },
-    { header: 'Código', dataKey: 'codigo' },
-    { header: 'N° Factura', dataKey: 'nfactura' },
-    { header: 'Tipo', dataKey: 'tipocompra' },
-    { header: 'Total Compra', dataKey: 'total' },
-    { header: 'Estado', dataKey: 'autorizacion' },
-  ]
-
-  const datos = filteredCompra.value.map((item, indice) => ({
-    indice: indice + 1,
-    fecha: cambiarFormatoFecha(item.fecha),
-    proveedor: item.proveedor,
-    lote: item.lote,
-    codigo: item.codigo,
-    nfactura: item.nfactura,
-    tipocompra: item.tipocompra == 2 ? 'Contado' : 'Credito',
-    total: item.total == null ? 'Lista Vacia' : decimas(redondear(parseFloat(item.total))),
-    autorizacion: item.autorizacion == 2 ? 'No Autorizado' : 'Autorizado',
-  }))
-
-  autoTable(doc, {
-    columns,
-    body: datos,
-    styles: {
-      overflow: 'linebreak',
-      fontSize: 5,
-      cellPadding: 2,
-    },
-    headStyles: {
-      fillColor: [22, 160, 133],
-      textColor: 255,
-      halign: 'center',
-    },
-    columnStyles: {
-      indice: { cellWidth: 10, halign: 'center' },
-      fecha: { cellWidth: 15, halign: 'center' },
-      proveedor: { cellWidth: 30, halign: 'left' },
-      lote: { cellWidth: 30, halign: 'left' },
-      codigo: { cellWidth: 30, halign: 'left' },
-      nfactura: { cellWidth: 15, halign: 'right' },
-      tipocompra: { cellWidth: 15, halign: 'center' },
-      total: { cellWidth: 25, halign: 'right' },
-      autorizacion: { cellWidth: 25, halign: 'center' },
-    },
-    //20 + 15 + 20 + 25 + 30 + 20 + 20 + 25 + 20 + 15 + 20 + 15 + 20 = 265 mm
-
-    startY: 45,
-    margin: { horizontal: 5 },
-    theme: 'striped',
-    didDrawPage: () => {
-      if (doc.internal.getNumberOfPages() === 1) {
-        // Logo (requiere base64 o ruta absoluta en servidor si usas Node)
-        if (logoEmpresa) {
-          doc.addImage(`${URL_APIE}${logoEmpresa}`, 'PNG', 180, 8, 20, 20)
-        }
-
-        // Nombre y datos de empresa
-        doc.setFontSize(7)
-        doc.setFont(undefined, 'bold')
-        doc.text(nombreEmpresa, 5, 10)
-
-        doc.setFontSize(6)
-        doc.setFont(undefined, 'normal')
-        doc.text(direccionEmpresa, 5, 13)
-        doc.text(`Tel: ${telefonoEmpresa}`, 5, 16)
-
-        // Título centrado
-        doc.setFontSize(10)
-        doc.setFont(undefined, 'bold')
-        doc.text('COMPRAS', doc.internal.pageSize.getWidth() / 2, 15, { align: 'center' })
-
-        doc.setDrawColor(0) // Color negro
-        doc.setLineWidth(0.2) // Grosor de la línea
-        doc.line(5, 30, 200, 30) // De (x1=5, y1=25) a (x2=200, y2=25)
-
-        doc.setFontSize(7)
-        doc.setFont(undefined, 'bold')
-        doc.text('DATOS DEL REPORTE', 5, 35)
-
-        doc.setFontSize(6)
-        doc.setFont(undefined, 'normal')
-        doc.text('Nombre del Almacen: ' + filtroAlmacen.value.label, 5, 38)
-
-        doc.setFontSize(6)
-        doc.setFont(undefined, 'normal')
-        doc.text('Fecha de Impresion: ' + cambiarFormatoFecha(obtenerFechaActualDato()), 5, 41)
-
-        doc.setFontSize(7)
-        doc.setFont(undefined, 'bold')
-        doc.text('DATOS DEL ENCARGADO:', 200, 35, { align: 'right' })
-
-        doc.setFontSize(6)
-        doc.setFont(undefined, 'normal')
-        doc.text(nombre, 200, 38, { align: 'right' })
-
-        doc.setFontSize(6)
-        doc.setFont(undefined, 'normal')
-        doc.text(cargo, 200, 41, { align: 'right' })
-      }
-    },
-  })
+  const doc = PDF_REPORTE_COMPRAS(filteredCompra, filtroAlmacen)
 
   // doc.save('proveedores.pdf') ← comenta o elimina esta línea
   //doc.output('dataurlnewwindow') // ← muestra el PDF en una nueva ventana del navegador

@@ -1035,7 +1035,28 @@ const onSubmit = async () => {
     }
 
     //  Éxito
-    $q.notify({ type: 'positive', message: 'Venta registrada con éxito' })
+    if (
+      response &&
+      response.data &&
+      response.data.datosFactura &&
+      response.data.datosFactura.urlEmizor
+    ) {
+      // Si la URL existe, procede con el diálogo
+      $q.dialog({
+        title: 'Venta Exitosa',
+        message: 'Su Factura está listo. ¿Desea verlo?',
+        cancel: true,
+        persistent: true,
+      }).onOk(() => {
+        // La URL es segura de usar aquí
+        window.open(response.data.datosFactura.urlEmizor, '_blank', 'noopener,noreferrer')
+      })
+    } else {
+      $q.dialog({
+        title: 'Venta Exitosa',
+        message: 'La factura se generó correctamente.',
+      })
+    }
     emit('venta-registrada')
     resetForm()
   } catch (error) {

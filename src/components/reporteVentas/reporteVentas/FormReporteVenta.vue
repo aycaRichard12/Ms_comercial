@@ -476,17 +476,18 @@ const crearMensaje = async (row) => {
   try {
     const response = await api.get(`obtenerEmailCliente/${row.idcliente}`) // Cambia a tu ruta real
     const clientEmail = response.data.email
+    let opciones = [{ label: 'Comprobante', value: 'comprobante' }]
 
+    if (Number(row.tipoventa) !== 0) {
+      opciones.push({ label: 'Factura', value: 'factura' })
+    }
     $q.dialog({
       title: 'Seleccione una opción',
       message: `¿Qué desea enviar al correo "${clientEmail}"?`,
       options: {
         type: 'radio',
         model: null,
-        items: [
-          { label: 'Comprobante', value: 'comprobante' },
-          { label: 'Factura', value: 'factura' },
-        ],
+        items: opciones,
       },
       cancel: true,
       persistent: true,
