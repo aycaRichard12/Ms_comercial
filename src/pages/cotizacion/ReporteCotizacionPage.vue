@@ -145,6 +145,13 @@
             outline=""
           >
           </q-badge>
+          <q-badge
+            color="orange"
+            v-if="Number(props.row.estado) === 3 && Number(props.row.condicion) === 1"
+            label="DEV"
+            outline=""
+          >
+          </q-badge>
         </q-td>
       </template>
       <template v-slot:body-cell-acciones="props">
@@ -160,10 +167,10 @@
           />
           <q-btn
             v-if="
-              Number(tipoFactura) === 2 ||
-              (Number(tipoFactura) === 1 &&
-                Number(props.row.condicion) === 1 &&
-                Number(props.row.estado) != 2)
+              (Number(tipoFactura) === 2 || Number(tipoFactura) === 1) &&
+              Number(props.row.condicion) === 1 &&
+              Number(props.row.estado) !== 2 &&
+              Number(props.row.estado) !== 3
             "
             icon="payment"
             color="blue"

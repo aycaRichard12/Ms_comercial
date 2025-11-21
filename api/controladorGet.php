@@ -479,7 +479,7 @@ elseif ($ver[0] == "listaPuntoVentaFacturaCotizacion") {
     $controlador->listadevolucion($ver[1]);
 } elseif ($ver[0] == "verificardevolucion") {
     $controlador = new ventas();
-    $controlador->verificardevolucion($ver[1]);
+    $controlador->verificardevolucion($ver[1], $ver[2]);
 } elseif ($ver[0] == "verificarExistenciaDetalledevolucion") {
     $controlador = new ventas();
     $controlador->verificarIddevolucion($ver[1]);

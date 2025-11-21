@@ -367,9 +367,6 @@
                       type="number"
                       step="0.01"
                     >
-                      <template v-slot:prepend>
-                        <q-icon name="attach_money" color="orange" />
-                      </template>
                       <template v-slot:append>
                         <span class="divisaVE">{{ divisaActiva.simbolo }}</span>
                       </template>
@@ -437,9 +434,33 @@
         <q-card class="q-mb-md">
           <q-card-section>
             <div class="row q-col-gutter-x-md">
-              <div class="col-12 col-md-3">
-                <label for="tipocambio">Tipo de Cambio</label>
-                <q-input v-model="tipoCambio" type="number" step="0.01" dense flat outlined />
+              <div class="col-12 col-md-4">
+                <label for="tipodecambio">Tipo de Cambio</label>
+
+                <q-input
+                  id="tipodecambio"
+                  name="tipodecambio"
+                  dense
+                  outlined
+                  v-model="tipoCambio"
+                  type="number"
+                  step="0.01"
+                >
+                  <template v-slot:append>
+                    <span class="divisaVE">{{ divisaActiva.simbolo }}</span>
+                  </template>
+                </q-input>
+              </div>
+
+              <div class="col-12 col-md-4">
+                <label for="">Monto Total de Venta</label>
+                <q-field stack-label dense outlined readonly>
+                  <template v-slot:control>
+                    <div class="self-center full-width no-outline text-weight-bold" tabindex="0">
+                      {{ montoTotalVenta }} {{ divisaActiva.simbolo }}
+                    </div>
+                  </template>
+                </q-field>
               </div>
             </div>
           </q-card-section>
@@ -775,12 +796,12 @@ import MyRegistrationForm from '../clientes/admin/modalClienteForm.vue'
 import { objectToFormData } from 'src/composables/FuncionesGenerales'
 import { obtenerHoraISO8601, decimas } from 'src/composables/FuncionesG'
 import { useNitValidator } from 'src/composables/useNitValidator'
-
+const montoTotalVenta = ref(0)
 const { validarNIT } = useNitValidator()
 const divisaActiva = useCurrencyStore()
 const leyendaActiva = useCurrencyLeyenda()
 leyendaActiva.cargarLeyendaActivo()
-const tipoCambio = ref(0)
+const tipoCambio = ref(1)
 console.log(divisaActiva)
 console.log(leyendaActiva)
 // ====================== CONSTANTES Y UTILIDADES ====================== canal
@@ -1223,6 +1244,17 @@ watch(
     }
   },
 )
+watch(
+  () => tipoCambio.value,
+  (newVal) => {
+    actualizarMontoTotalVenta(newVal)
+  },
+)
+const actualizarMontoTotalVenta = (newVal) => {
+  const datos = JSON.parse(localStorage.getItem('carrito'))
+
+  montoTotalVenta.value = Number(datos.listaFactura.montoTotal) * Number(newVal)
+}
 const onSubmit = async () => {
   let loadingShown = false
   try {
@@ -1606,6 +1638,7 @@ const agregarGastoNacional = () => {
     Number(parseFloat(totalGastosNacionales.value).toFixed(2)) +
     Number(parseFloat(totalGastosInternacionales.value).toFixed(2)) +
     Number(parseFloat(datos.ventatotal).toFixed(2))
+  montoTotalVenta.value = datos.listaFactura.montoTotal
   datos.listaFactura.montoTotalMoneda =
     Number(parseFloat(totalGastosNacionales.value).toFixed(2)) +
     Number(parseFloat(totalGastosInternacionales.value).toFixed(2)) +
@@ -1684,5 +1717,6 @@ onMounted(() => {
   cargarMetodoPagoFactura()
   cargarPuntoVentas()
   crearFormularioFacturaExportacion()
+  actualizarMontoTotalVenta(1)
 })
 </script>
