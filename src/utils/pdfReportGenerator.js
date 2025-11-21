@@ -2347,7 +2347,9 @@ export function PDFextrabiosRobos(extravios) {
   return doc
 }
 
-export function PDFComprovanteExtravio(detalleExtravio) {
+export function PDFComprovanteExtravio(detalleExtravio, robo) {
+  const fecha = new Date().toLocaleString('es-BO')
+
   const doc = new jsPDF({ orientation: 'portrait' })
   const columns = [
     { header: 'N°', dataKey: 'indice' },
@@ -2385,7 +2387,7 @@ export function PDFComprovanteExtravio(detalleExtravio) {
 
     //20 + 15 + 20 + 25 + 30 + 20 + 20 + 25 + 20 + 15 + 20 + 15 + 20 = 265 mm
 
-    startY: 30,
+    startY: 45,
     margin: { horizontal: 5 },
     theme: 'striped',
     didDrawPage: () => {
@@ -2417,6 +2419,36 @@ export function PDFComprovanteExtravio(detalleExtravio) {
         doc.text('COMPROBANTE DE EXTRAVIO', doc.internal.pageSize.getWidth() / 2, 15, {
           align: 'center',
         })
+
+        doc.setDrawColor(0) // Color negro
+        doc.setLineWidth(0.2) // Grosor de la línea
+        doc.line(5, 30, 200, 30) // De (x1=5, y1=25) a (x2=200, y2=25)
+
+        doc.setFontSize(7)
+        doc.setFont(undefined, 'bold')
+        doc.text('DATOS MERMA:', 5, 35)
+
+        doc.setFontSize(6)
+        doc.setFont(undefined, 'normal')
+        doc.text('Almacen: ' + robo.almacen, 5, 38)
+        doc.setFontSize(6)
+        doc.setFont(undefined, 'normal')
+        doc.text('Fecha de Registro: ' + robo.fecha, 5, 41)
+        doc.setFont(undefined, 'normal')
+        doc.text('Estado: ' + (robo.autorizacion == 1 ? 'Autorizado' : 'No Autorizado'), 5, 44)
+
+        doc.setFontSize(7)
+        doc.setFont(undefined, 'bold')
+
+        doc.text('DATOS DEL ENCARGADO:', 200, 35, {
+          align: 'right',
+        })
+        doc.setFontSize(6)
+        doc.setFont(undefined, 'normal')
+        doc.text(nombre, 200, 38, { align: 'right' })
+        doc.text(cargo, 200, 41, { align: 'right' })
+
+        doc.text('Fecha Impresion: ' + fecha, 200, 44, { align: 'right' })
       }
     },
   })
@@ -2543,9 +2575,9 @@ export function PDFreporteMermas(mermas) {
   return doc
 }
 
-export function PDFComprovanteMerma(detallemerma) {
+export function PDFComprovanteMerma(detallemerma, merma) {
   const doc = new jsPDF({ orientation: 'portrait' })
-
+  const fecha = new Date().toLocaleString('es-BO')
   const columns = [
     { header: 'N°', dataKey: 'indice' },
     { header: 'Codigo', dataKey: 'codigo' },
@@ -2582,7 +2614,7 @@ export function PDFComprovanteMerma(detallemerma) {
 
     //20 + 15 + 20 + 25 + 30 + 20 + 20 + 25 + 20 + 15 + 20 + 15 + 20 = 265 mm
 
-    startY: 30,
+    startY: 45,
     margin: { horizontal: 5 },
     theme: 'striped',
     didDrawPage: () => {
@@ -2614,6 +2646,44 @@ export function PDFComprovanteMerma(detallemerma) {
         doc.text('COMPROBANTE DE MERMA', doc.internal.pageSize.getWidth() / 2, 15, {
           align: 'center',
         })
+
+        //       {
+        //   id: '40',
+        //   fecha: '2025-10-30',
+        //   descripcion: '-',
+        //   idalmacen: '93',
+        //   autorizacion: '1',
+        //   almacen: 'Bodega Norte Quillacollo'
+        // }
+        doc.setDrawColor(0) // Color negro
+        doc.setLineWidth(0.2) // Grosor de la línea
+        doc.line(5, 30, 200, 30) // De (x1=5, y1=25) a (x2=200, y2=25)
+
+        doc.setFontSize(7)
+        doc.setFont(undefined, 'bold')
+        doc.text('DATOS MERMA:', 5, 35)
+
+        doc.setFontSize(6)
+        doc.setFont(undefined, 'normal')
+        doc.text('Almacen: ' + merma.almacen, 5, 38)
+        doc.setFontSize(6)
+        doc.setFont(undefined, 'normal')
+        doc.text('Fecha de Registro: ' + merma.fecha, 5, 41)
+        doc.setFont(undefined, 'normal')
+        doc.text('Estado: ' + (merma.autorizacion == 1 ? 'Autorizado' : 'No Autorizado'), 5, 44)
+
+        doc.setFontSize(7)
+        doc.setFont(undefined, 'bold')
+
+        doc.text('DATOS DEL ENCARGADO:', 200, 35, {
+          align: 'right',
+        })
+        doc.setFontSize(6)
+        doc.setFont(undefined, 'normal')
+        doc.text(nombre, 200, 38, { align: 'right' })
+        doc.text(cargo, 200, 41, { align: 'right' })
+
+        doc.text('Fecha Impresion: ' + fecha, 200, 44, { align: 'right' })
       }
     },
   })

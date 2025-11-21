@@ -903,7 +903,7 @@ const generarComprobante = async (robo) => {
   // Cargar los detalles para el comprobante
   const response = await api.get(`listaDetallerobo/${robo.id}`)
   console.log(response.data)
-  const doc = PDFComprovanteExtravio(response.data)
+  const doc = PDFComprovanteExtravio(response.data, robo)
   pdfData.value = doc.output('dataurlstring')
   mostrarModal.value = true
 }
