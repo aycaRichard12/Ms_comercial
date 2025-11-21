@@ -1,0 +1,236 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <p>
+      hola en la clase de hoy del curso de procesamiento del lenguaje natural les voy a hablar sobre
+      el modelo vectorial para poder mostrar documentos que es la idea de tener vectores de bolsas
+      de palabras eso nos permiten calcular y tardará en lenguaje vectorial mente y lograr sobre
+      information cultivo que una disciplina afín en el ep aunque una disciplina independiente para
+      alguna gente que busca la idea de cómo buscar información en grandes colecciones de documentos
+      espera motivos para mediar los preguntémonos como un buscador como tac tac go o google son
+      capaces de dar un usuario retornar el usuario cuáles son todos los documentos relevantes por
+      la consulta una cuera que está formulada generalmente en lenguaje natural pero para los que no
+      contactan a cargo de un buscador que a diferencia de google no rastrea al usuario no se porta
+      también en muchos casos pero es un buscador bastante pero es un montón trae la búsqueda
+      privado haber buscado no estará dando en usar no identificar quiénes somos para de esa forma
+      recomendar no es la mejor publicidad posible o usar otros datos con todo lo que sabes google
+      sobre no sobre nosotros es bastante bueno para buscar preguntas de código en github y cosas
+      así y si no les gusta la piscina les gusta lo que salen a veces pueden ser estos bancos en
+      este signo inflamación que nos envía la búsqueda de un buscador como google entonces yo lo uso
+      también un montón cuando quiero buscar de chino tengo mi barragán de buscador quiere por
+      ejemplo pongo y pudo encontrar los papers se puede encontrar un paper un tutorial que está
+      publicado ok cómo pasa esto con un buscador es capaz de hacer esto saca un buscador recibe
+      esta consulta y me dice cuáles son los documentos más relevantes para esa consulta es una
+      pregunta difícil o sea usted cree en estos buscadores realmente tienen toda la web guardada en
+      su disco duro eso es poco probable porque sería muy caro de alguna forma ya empezó la
+      indexación de que el buscador lleva la web a algo que puede guardar en su disco y así puede y
+      que rápidamente voy a procesar la consulta y rankear documentos por nivel de realidad pensemos
+      le preguntamos la compañía que recibe mucho reclamo y le gustaría automáticamente de
+      procesarlo y ver qué tipo de reclamos recibir ya hacer un clustering de reclamo es una
+      pregunta que uno podría hacer en text mining en minería de datos sobre el texto ya estos
+      problemas estudiar en las disciplinas de los campos de roberson información que en la ciencia
+      de buscar información en colecciones de documentos y la minería y text mining que sería la
+      minería no sobre texto que la idea de encontrar automáticamente conocimiento a partir del
+      texto estas dos tienen mucho que ver con el lp pero en lv más que la idea de construir
+      algoritmos que estuve imputados tienen texto y generalmente son task esta tarea también
+      definía como traducción análisis de sentimiento o extracción de árboles en táctico sistemas de
+      pregunta-respuesta etcétera generalmente mendata mining text mining uno solamente quiere
+      contar conocimiento como información lo ven con recuperación información entonces sonaría muy
+      cercana se le ve y a veces uno puede decir que las fronteras entre las disciplinas son
+      bastante difusas a ese no es tan claro cuál es la diferencia para poder entender este mundo
+      que es lo que queremos llevar como basar el texto algo procesable vamos a tener que pasar
+      algunos conceptos al evasores tokens y tipos organización es un proceso muy importante en el
+      ep y en text mining e information de trial que la idea que como yo llevo una oración o un
+      documento en en pedacitos llamados tokens generalmente los tokens son palabras y eso tengo que
+      empezar ya que se puede ser trivial mente es solamente haciendo un split que considere sin
+      espacio hay muchos conceptos en que eso no funciona como con la puntuación con el míster y
+      medio conseguir eso como un solo toque y no como dos toques las librerías buenas de él ve como
+      identificase space y viene en cuanto quién sabe si no conocen en el ticket jcs it y spaces lb
+      en el ticket más antigua natural lenguas toolkit y ahí son las dos también para entonces o la
+      más famosa del país y tienen cosas como tokens importe en el ticket y tiene una oración y con
+      solamente con huerto que nadie pence y space y un poco más moderno usamos el mano el alma idea
+      un poco pero usan modelo manual la idea que permiten hacer muerto ustedes pueden poner en
+      producción pero la misma idea orden tiene un texto y puede hacer las cosas ya como postal y
+      cosas así generalmente un cuento utilizado también puede hacer ciertas transformaciones del
+      texto como remover que estos caracteres especiales como la puntuación hacerlo working trabajar
+      para palabras la idea siempre reducir el espacio así si a veces sí tengo una palabra con
+      mayúsculas y minúsculas y todo el vaso minúscula ahora van a hacer después la información lo
+      vamos a entender ahora contamos lo que es un tipo ya pero eso va a ser un proceso de
+      organización tengo hay live y mal en widgets and program y lenguas y visto que sería high life
+      jiménez muchas and program ley muchas qué es un tipo un tipo es una clase de toque que tiene
+      un único una secuencia única de caracteres como a 23 los tipos de un en un documento o en un
+      corpus orden según cuerpos en una colección de documentos es básicamente tengo de identificar
+      todos los tokens públicos dentro de un documento y la idea entonces generalmente como va
+      recorriendo el corpus para recorriendo el cuerpo se hace tu organización y cuando cuente una
+      palabra repetida no la considera como una palabra nueva de seguir formando mi vocabulario
+      ahora estoy importante que lo vamos a ir explicando paso a paso a medida que vamos pero la
+      idea entonces si yo quiero traer los tipos de esta oración hay line gmail hay muchos and
+      program bingley muchas está de aquí de distracción que cualquier estudiante de departamentos
+      de la computación haciendo un lp le diese gustar porque le guste tanto el lenguaje humano de
+      programación bueno si uno no está los tipos que va a pasar aquí lenguajes que estaban dos
+      veces no lo considera la segunda vez con un tipo estos son los tipos esto el vocabulario el
+      vocabulario es el conjunto de todos los tipos que salen de mi cuerpo pero yo también le puedo
+      hacer una normalización y cuando llama la atención lo que extraigo de un término que el
+      concepto que más se usa los términos bien y cortos que una organización es el proceso en que
+      yo creo clase de equivalente entre distintos tipos para que mi vocabulario sea un poco más
+      pequeño y suave entonces además a entender mejor el aflac siguiente ya pero que claramente con
+      cosas como la organización es que uno quiere que los plurales y los singulares está en el
+      mismo tipo el mismo término entonces uno aplica cosas que se personas y personas a uno le
+      gustaría que él sea el mismo objeto en el en el vocabulario y con eso de sordos en espacio y
+      como más adelante vamos a crear lectores quiero que esos vectores no tengan tantas dimensiones
+      es el vocabulario de importantísimo es el conjunto de todos los términos que son tokens únicos
+      normalizados dentro de mi colección de documentos que yo llamo corpus de ese me corto en
+      muchos escenarios a mi otra quiero reducir mi vocabulario y muchas palabras van a ser muy
+      frecuentes que a mí no me importan mucho entonces yo quiero reducir mi vocabulario y eliminar
+      términos que no son muy informativos sobre todo el tema y recuperación de formación si uno
+      quiere buscar en un documento las palabras más frecuentes del vocabulario generalmente es un
+      poco informativas estas llamas estos words e incluye cosas como artículos pronombres
+      preposiciones conjunciones ustedes pueden ver una lista de estos en inglés cosas como jaén en
+      y house de button borrar esto puede ser malo en algunas tareas de leve no lo hagan siempre por
+      ejemplo borrar donde el análisis de sentimiento demora en la negación entonces pero en
+      búsqueda generalmente pero no nunca juicios si no le interesa más que nada documentos que
+      contenga sus palabras entonces también de la tarea si vale la pena hacer esto provocar esto
+      por eso no saca tenemos una lista esto por suelo no agresiva que tiene cosas como like porque
+      un verbo auxiliar donde hay pero bueno frecuente también como un comparativo a por eso a veces
+      puede estar una lista destructores esta dieta esto por ciento la pixar la convirtió solamente
+      en pizza muy distributiva ya entonces busquemos a cada una lista esto esfuerzo tengo dos
+      cristo y la que viene con el medicaid en el ticket de 500 de estas cosas vamos tenía like
+      lifeline hay varias listas pero like no está lo original sólo tienen que depender por eso va a
+      depender la aplicación algunas listas son más agresivas ya estoy listo laden de payton y puedo
+      hacer cosas como importar en el ticket programación sentence el otro hay muchas pues tokens
+      puede ser igual a en el ticket to work for in ice 2 gente ok cuando la da de que cuando yo
+      creo mis términos que son los que definen mi vocabulario yo lo que yo que todos seres crear
+      estas clases de equivalencia entre tipos ya existen algoritmos para hacer eso la idea que yo
+      le decía por ejemplo si tengo un objetivo como español que tienen género como bonito bonita me
+      gustaría llevarlo solamente una sola cosa igual que los plurales con los singulares para los
+      verbos me gustaría llevar todos sus posibles conjugaciones alumnos ya para soy un algoritmo
+      hay reglas por ejemplo hasta el algoritmo de porter e en algún deporte tiene tipo de reglas ss
+      lo lleváis s las terminaciones y esa es otra historia inglés en cierto ese es el de franceses
+      trenes s lejana o katsuya okada que sus lakers pony pony entonces si uno con relación a la ley
+      muchas han programa muchas highlights lang programa de reducción que se libera de una
+      reducción en mi vocabulario si yo por ejemplo le aplicase a esta oración en el algoritmo de
+      porter y además le borra los tumores de una agresión que devoró like y andy me quedarían estos
+      términos en mi vocabulario acá hay un demo online del algoritmo porter está laborando bueno
+      prestes pero es la idea el clip de acá como hacer streaming tienen que importar periódica de
+      puntos tema import por del sistema inicializar los extremos porter este man larga para
+      imprimir con otro toque de la oración pero todo eso es ps puntos [Música] en taiz terminé de
+      raíz de ésta el problema algo más elegante que hacer obviamente no tenía rutina para regular
+      por ejemplo puede dejar cualquier cosa entonces algo más elegante una forma de organización
+      más elegante se llama el lema 16 john en lingüística en morfología agua se habla que las
+      palabras tienen su lema que el muerte más básico una palabra entonces la matización
+      generalmente requiere un procesamiento más más profundo de la oración que quiere crear la
+      equivalencia diccionario a veces no tiene que hacer un par de speech mingote tiene que estar
+      es elevar palabra ver un sustantivo pronombre en su contexto permite de transformarlas para su
+      raíz entonces la idea que a su análisis morfológico usando diccionario de referencia y a veces
+      post time para clarificar densidad de equivalencia entre tipos por ejemplo el token studies si
+      nosotros le hacemos también con el método de porter lo hallarás daddy y con haciendo
+      climatización me gustaría llevarlo hasta 10 aquí se ve que la raíz de esta dice estar con él
+      porter y acá le hagamos that is y lo lleva a esto lo lleva a estado realmente él es tener
+      solamente una regla fuerza bruta otras o algo más un poco más inteligente por ejemplo porque
+      tenga lugar con con un climatizador entonces los realizadores aquí hay que importarlos acá
+      vamos a un world net me matáis en losetas a un world network en una base de datos gigantesca
+      léxica del inglés que tiene todos los signos animo a las confirmaciones los antónimos que
+      tiene muchas caras homónimos hitos a jerarquías léxica de gigantes con un recurso léxico más
+      importante que no puede usar tiene un y ser igual al world net de matrices y hacemos el lema
+      thaiser punto les ponemos studies a lo mejor de datos en muchos casos a veces conviene usar la
+      matización así no le pasa algo raro hashtag con un lenguaje twitter realmente tiene que hacer
+      esto debe estar haciendo son los establos de una tabla de equivalencias summers entonces si un
+      cuerpo de una colección de documentos las cuales yo los procesos usando tu organización los
+      tokens son estas palabras que me salen y yo identifico todas las paradas únicas que encuentro
+      tengo mis tipos y si yo le aplicó una normalización días de mingo villa tesei zinc obtengo
+      términos generalmente mis términos se le vocabulario a todos los términos distintos que yo
+      encuentro en un cuerpo enemigo el vocabulario del corpus y eso creo se va haciendo el
+      procesamiento de estas clases de equivalencia reduzco el espacio de vocabulario que como vamos
+      a ver más adelante eso influye en el tamaño de inspectores ya esto la ley empírica súper
+      importante que nos lleva a entender algunas propiedades del lenguaje la ley de cit fue
+      propuesta por el señor george kingsley cif y una ley que nos habla sólo la distribución de las
+      frecuencias de las palabras en una colección de documentos que enseñamos cuerpos entonces lo
+      que nos dice que la frecuencia de un término en un corpus es inversamente proporcional a su
+      ranking era una tabla de frecuencias ha sido todo motoras para la autora términos de mi corpus
+      y lo que cuenta de su frecuencia y lo ordenó primero recientemente sea primero el más
+      frecuente segundo el segundo menos frecuente y así esta frecuencia va a ser proporcional a
+      esto está ahí como les decía entonces en la ley de shift vemos que la frecuencia de una
+      palabra e decrece con su ranking estos tenemos una constante que generalmente la frecuencia
+      elabora con frecuente y después tenemos el ranking está un exponente gran fuerte calle por
+      ejemplo estamos haciendo que si la palabra más frecuente ocurre 10.000 veces y pet alguno la
+      segunda frecuente ocurría la mitad es 5.000 veces y la tercera más frecuente es la mitad es
+      decir saber don sería sería hace donde se consigue la mitad de reconocer un tercio y así
+      sucesivamente y es un diseño que ha destruido una ley de potencia una paolo que muchos
+      fenómenos de naturaleza tienen ese tipo de distribución que son atribuciones que tienen una
+      cola larga es normal y generalmente es muy poco probable ver cosas que se alejen más de tres
+      veces de las indicaciones estándar mientras que las para vos lo tenemos que hay unos pocos
+      objetos que son muy mayoritarios que ocurre en nuestra cuenta mente y los otros son cada vez
+      menos frecuentes pero igual ocurre entonces como las palabras que se usan poco pruebas se usan
+      a la larga no realmente se es que una constante que depende la conexión y también un parámetro
+      depende el cuerpo esta colección cómo se ajusta electorales de cita secreta vale uno se dice
+      que tú que que está esto sigue una distribución decir con quién y si no una gestión cipf like
+      porque en propietarias eres menor que 105 y década de más lento mayor esto no está relacionado
+      a un principio del mínimo esfuerzo que finalmente usamos pocas palabras para describir extras
+      ideas como les decía la ley de algún tipo de potencia ustedes pueden tomar cualquier corpus y
+      extraer su vocabulario por esto por simplemente porque generalmente se borra son las más
+      frecuentes de la ley según la ley según el lenguaje y van a saber exactamente qué las
+      frecuencias siguen esta distribución de las palabras de se usan mucho después viene como la
+      mitad de eso después viene como un tercio esto y así nosotros son en un gráfico los blogs se
+      obtienen una en una recta conveniente pero - piedra del mundo seguir ascendiendo generalmente
+      encontrar las palabras más frecuentes en un corpus puede ser útil para definir la lista esto
+      pulse en bajar un poco de ya hablemos con la tecnología y entender un poco más con el proceso
+      extraer aulario del cuerpo se habrán propiedades que tienen estadísticas que tienen las
+      palabras y ahora leemos las estructuras de datos que se usan para hacer recuperación de
+      información personalista de boteo y el índice invertido entonces tenemos una colección de
+      documentos de nuestros cuerpos del buscador de extraje mediante un proceso de organización y
+      algún proceso de normalización pues este domingo de matización el post english ter el
+      documento de el poste que es un término perdón con términos es la lista una lista puede ser
+      imaginemos analizar las hadas de todos los documentos donde el término aparece al menos una
+      vez y otros documentos se identifican por su aire así tengo un documento ahora tengo labradas
+      brutos su posting list va a ser la lista en todos los documentos donde alguna vez ocurrió este
+      documento a este correr el documento 1 el documento 2 el documento 4 de documentos 11 y el
+      índice invertido es una estructura de datos tipo diccionario que más vea todos los términos
+      del vocabulario con sus bolitas de un posteo correspondiente y esto es generalmente lo que
+      hacen los buscadores buscadores crean este tipo de estructura de datos donde más bien todas
+      las palabras posibles porque porque después una buena consulta llegan a cué dictamen tiene
+      unos términos y si hago un modelo simple como los que vamos a ver ahora tipo rector space
+      model que podría arrancar los documentos según la cual solamente usando la información que
+      está en su lista de usted construir eficientemente ligeramente lo que lo que puede tener
+      entonces guardado un buscador veamos ahora las componentes más importantes del motor de
+      búsqueda search engine entonces un buscador web search engine es un sistema de recuperación de
+      información que está diseñado para poder resolver necesidad de información por parte de su
+      usual búsqueda en recuperación información siempre se habla de línea droid x de que el sistema
+      quiere resolver necesidades de información que generalmente se expresan en lenguaje natural
+      hay tal link entre información que tribal y n y finalmente lo que hacen modelos rankear en
+      base a relevancia es a la idea de un documento rankeado bien arriba significa que el el
+      buscador el sistema recuperación de información cree que el documento relevante para esa
+      necesidad de información los componentes que tienen entonces un buscador en un cooler los
+      buscadores no nacen conociendo todo lo que está en la web entonces tienen que partir
+      conociendo algunas páginas semillas y después es un programa un agente un robot que se va que
+      parece a estas páginas y cada que veo un link sigue navegando a través de sus links el
+      indexador el que va a cada día una página nueva mantiene un índice invertido de este tiempo en
+      verdad no tienen los mejores modernos en cosas más sofisticadas pero un modelo del buscador
+      tico el altavista que es usada el año 97 por ahí antes o 98 antes de que google será famoso
+      delante de usar este tipo de cosas después está el cuadro y profesor que es básicamente un
+      está encargado de recibir esta query lengua natural y procesarla y después ir por el índice
+      encontrando los documentos más relevantes sólo importa el presente es muy importante porque me
+      permiten tiempo rápido procesar la consulta no tengo que estar recorriendo la web cada vez que
+      me llega una consulta tengo una estructura un diccionario que tienen cosas que tienen un
+      resumen por decirlo así pero guardado sobre las páginas y un índice que le permite saber qué
+      información tienen y después de la función de rankings que en la que se encarga de procesar la
+      consulta con sobre el índice y ver cuáles son los documentos más relevantes un sistema básico
+      como el que vamos a ver ahora ahora es una función de ranking que conseguirá el semen y la
+      similitud entre la cv puede y un documento así son parecidas porque tienes palabras en común
+      los rankings más alto la etapa última de la interfaz de usuario que recibe los documentos que
+      recibe los documentos y le muestra la respuesta al usuario esta sería la arquitectura basado
+      en el libro de manning de informationweek está la web que como un gran grado de documentos que
+      se vinculan por medio de links está el crol que navega por medio de estos links y que este
+      índice invertido y el usuario entonces se comunica con esto con el buscador de hasta una
+      interfaz de búsqueda donde la cuera y procesada y ranqueado y también está el hojas que un
+      índice independiente donde son los cosas donde uno paga donde hay gente pago publicidad para
+      que la gente haga clic en esa españa de ser un modelo negocio del plan de los buscadores y
+      ahora empecemos a hablar y les voy a introducir lo que es el modelo vectorial pero lo voy a
+      hablar con más detalle en el próximo vídeo
+    </p>
+  </body>
+</html>
