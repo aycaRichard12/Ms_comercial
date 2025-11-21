@@ -373,7 +373,7 @@ class Nota_Debito_Credito
             if ($stmt->execute()) {
                 $id_nota = $this->cm->insert_id;
                 //$this->registrarDetalleNota($detalle,$id_nota);
-                $iddevolucion = $this->funcionesVenta->registrodevolucion($motivo, $id_venta, $md5E, 1, $detalle);
+                $iddevolucion = $this->funcionesVenta->registrodevolucion($motivo, $id_venta, $md5E, 1, $detalle, 'VE');
                 $res = $this->funcionesVenta->cambiarestadodevolucion($iddevolucion, 1, $id_usuario, 1);
                 $this->cm->commit();
                 return json_encode(["estado" => "exito", "mensaje" => "Nota Credito Debito creado correctamente.", "idNota" => $id_nota,"respuestaEmizor"=>$respuestaEmizor, "sucursal"=>$sucursa, "tipo"=>$tipo_factura]);

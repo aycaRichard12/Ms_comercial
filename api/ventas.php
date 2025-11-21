@@ -2852,8 +2852,142 @@ class ventas
         }
         echo json_encode($res);
     }
-
     public function listadevolucion($idmd5)
+    {
+        $idempresa = $this->verificar->verificarIDEMPRESAMD5($idmd5);
+
+        if ($idempresa === "false") {
+            echo json_encode([
+                "estado" => "",
+                "mensaje" => "El id de empresa no existe"
+            ]);
+            return;
+        }
+
+        $lista = [];
+        $fuentes = [
+            "cotizacion" => "SELECT
+                    de.id_devoluciones,
+                    de.autorizacion,
+                    de.fecha_devolucion,
+                    de.motivo,
+                    de.venta_id_venta,
+                    cot.fecha_cotizacion AS fecha_venta,
+                    c.nombre,
+                    c.nombrecomercial,
+                    c.nit,
+                    s.nombre AS sucursal,
+                    '' AS numeroFactura,
+                    '' AS cuf,
+                    '' AS shortLink,
+                    '' AS urlSin,
+                    -1 AS tipo_venta,
+                    pa.almacen_id_almacen,
+                    c.ciudad,
+                    cot.num AS nfactura
+                FROM devoluciones de
+                LEFT JOIN cotizacion cot ON de.venta_id_venta = cot.id_cotizacion
+                LEFT JOIN cliente c ON cot.cliente_id_cliente = c.id_cliente
+                LEFT JOIN sucursal s ON cot.idsucursal = s.id_sucursal
+                LEFT JOIN detalle_cotizacion dcot ON cot.id_cotizacion = dcot.cotizacion_id_cotizacion
+                LEFT JOIN productos_almacen pa ON dcot.productos_almacen_id_productos_almacen = pa.id_productos_almacen
+                WHERE c.idempresa = ?
+                GROUP BY de.id_devoluciones
+                ORDER BY de.id_devoluciones DESC
+            ",
+            "venta" => "SELECT 
+                    de.id_devoluciones,
+                    de.autorizacion,
+                    de.fecha_devolucion,
+                    de.motivo,
+                    de.venta_id_venta,
+                    v.fecha_venta,
+                    c.nombre,
+                    c.nombrecomercial,
+                    c.nit,
+                    s.nombre AS sucursal,
+                    vf.numeroFactura,
+                    vf.cuf,
+                    vf.shortLink,
+                    vf.urlSin,
+                    v.tipo_venta,
+                    pa.almacen_id_almacen,
+                    c.ciudad,
+                    v.nfactura
+                FROM devoluciones de  
+                LEFT JOIN venta v ON de.venta_id_venta = v.id_venta
+                LEFT JOIN cliente c ON v.cliente_id_cliente1 = c.id_cliente
+                LEFT JOIN sucursal s ON v.idsucursal = s.id_sucursal
+                LEFT JOIN ventas_facturadas vf ON v.id_venta = vf.venta_id_venta
+                LEFT JOIN detalle_venta dv ON v.id_venta = dv.venta_id_venta
+                LEFT JOIN productos_almacen pa ON dv.productos_almacen_id_productos_almacen = pa.id_productos_almacen
+                WHERE c.idempresa = ?
+                GROUP BY de.id_devoluciones
+                ORDER BY de.id_devoluciones DESC
+            "
+        ];
+
+        // ================================
+        // PROCESAR TODAS LAS FUENTES
+        // ================================
+        foreach ($fuentes as $origen => $sql) {
+
+            $stm = $this->cm->prepare($sql);
+            if(!$stm){
+                return [];
+            }
+
+            $stm->bind_param('i',$idempresa);
+
+            $stm->execute();
+            
+            $result = $stm->get_result();
+
+            if(!$result){
+                return [];
+            }
+
+            while ($row = $result->fetch_assoc()) {
+                $row["origen"] = $origen; // guardar de qué tipo de venta viene
+                $lista[] = $this->mapDevolucion($row);
+            }
+        }
+
+        // ================================
+        // ORDENAR TODO POR ID (DESC)
+        // ================================
+        usort($lista, function ($a, $b) {
+            return $b["id"] <=> $a["id"];
+        });
+
+        echo json_encode($lista);
+    }
+    private function mapDevolucion($row)
+    {
+        return [
+            "id"             => $row["id_devoluciones"] ?? null,
+            "autorizacion"   => $row["autorizacion"] ?? null,
+            "fechadevolucion"=> $row["fecha_devolucion"] ?? null,
+            "motivo"         => $row["motivo"] ?? null,
+            "idventa"        => $row["venta_id_venta"] ?? null,
+            "fechaventa"     => $row["fecha_venta"] ?? null,
+            "cliente"        => $row["nombre"] ?? null,
+            "nombrecomercial"=> $row["nombrecomercial"] ?? null,
+            "nrodoc"         => $row["nit"] ?? null,
+            "sucursal"       => $row["sucursal"] ?? null,
+            "nrofactura"     => $row["numeroFactura"] ?? null,
+            "cuf"            => $row["cuf"] ?? null,
+            "shortlink"      => $row["shortLink"] ?? null,
+            "urlsin"         => $row["urlSin"] ?? null,
+            "tipoventa"      => $row["tipo_venta"] ?? null,
+            "idalmacen"      => $row["almacen_id_almacen"] ?? null,
+            "ciudad"         => $row["ciudad"] ?? null,
+            "nfactura"       => $row["nfactura"] ?? null,
+            "origen"         => $row["origen"] ?? null
+        ];
+    }
+
+    public function listadevolucion_($idmd5)
     {
         $lista = [];
         $idempresa = $this->verificar->verificarIDEMPRESAMD5($idmd5);
@@ -2861,7 +2995,60 @@ class ventas
             echo json_encode(array("estado" => "", "mensaje" => "El id de empresa no existe"));
             return;
         }
-        $consulta = $this->cm->query("SELECT de.id_devoluciones, de.autorizacion, de.fecha_devolucion, de.motivo, de.venta_id_venta, v.fecha_venta, c.nombre, c.nombrecomercial, c.nit, s.nombre, vf.numeroFactura, vf.cuf, vf.shortLink, vf.urlSin, v.tipo_venta, pa.almacen_id_almacen, c.ciudad, v.nfactura FROM devoluciones de  
+        $consultaCOT = $this->cm->query("SELECT
+                                        de.id_devoluciones, 
+                                        de.autorizacion, 
+                                        de.fecha_devolucion, 
+                                        de.motivo, 
+                                        de.venta_id_venta, 
+                                        cot.fecha_cotizacion, 
+                                        c.nombre, 
+                                        c.nombrecomercial, 
+                                        c.nit, 
+                                        s.nombre, 
+                                        '' as numeroFactura, 
+                                        '' as cuf, 
+                                        '' as shortLink, 
+                                        '' as urlSin, 
+                                        -1 as tipo_venta, 
+                                        pa.almacen_id_almacen, 
+                                        c.ciudad, 
+                                        cot.num 
+                                FROM devoluciones de    
+                                LEFT JOIN cotizacion cot ON de.venta_id_venta=cot.id_cotizacion
+                                LEFT JOIN cliente c ON cot.cliente_id_cliente=c.id_cliente
+                                LEFT JOIN sucursal s ON cot.idsucursal=s.id_sucursal
+                                LEFT JOIN detalle_cotizacion dcot ON cot.id_cotizacion=dcot.cotizacion_id_cotizacion
+                                LEFT JOIN productos_almacen pa ON dcot.productos_almacen_id_productos_almacen=pa.id_productos_almacen
+                                WHERE c.idempresa = 50
+                                GROUP BY de.id_devoluciones
+                                ORDER BY de.id_devoluciones DESC");
+        
+        while ($qwe = $this->cm->fetch($consultaCOT)) {
+            $res = array("id" => $qwe[0], "autorizacion" => $qwe[1], "fechadevolucion" => $qwe[2], "motivo" => $qwe[3], "idventa" => $qwe[4], "fechaventa" => $qwe[5], "cliente" => $qwe[6], "nombrecomercial" => $qwe[7], "nrodoc" => $qwe[8], "sucursal" => $qwe[9], "nrofactura" => $qwe[10], "cuf" => $qwe[11], "shortlink" => $qwe[12], "urlsin" => $qwe[13], "tipoventa" => $qwe[14], "idalmacen" => $qwe[15], "ciudad" => $qwe[16], "nfactura" => $qwe[17]);
+            array_push($lista, $res);
+        }
+        
+        $consulta = $this->cm->query("SELECT 
+            de.id_devoluciones, 
+            de.autorizacion, 
+            de.fecha_devolucion, 
+            de.motivo, 
+            de.venta_id_venta, 
+            v.fecha_venta, 
+            c.nombre, 
+            c.nombrecomercial, 
+            c.nit, 
+            s.nombre, 
+            vf.numeroFactura, 
+            vf.cuf, 
+            vf.shortLink, 
+            vf.urlSin, 
+            v.tipo_venta, 
+            pa.almacen_id_almacen, 
+            c.ciudad, 
+            v.nfactura 
+        FROM devoluciones de  
         LEFT JOIN venta v ON de.venta_id_venta=v.id_venta
         LEFT JOIN cliente c ON v.cliente_id_cliente1=c.id_cliente
         LEFT JOIN sucursal s ON v.idsucursal=s.id_sucursal
@@ -2871,18 +3058,36 @@ class ventas
         WHERE c.idempresa = '$idempresa'
         GROUP BY de.id_devoluciones
         ORDER BY de.id_devoluciones DESC");
+
         while ($qwe = $this->cm->fetch($consulta)) {
-            $res = array("id" => $qwe[0], "autorizacion" => $qwe[1], "fechadevolucion" => $qwe[2], "motivo" => $qwe[3], "idventa" => $qwe[4], "fechaventa" => $qwe[5], "cliente" => $qwe[6], "nombrecomercial" => $qwe[7], "nrodoc" => $qwe[8], "sucursal" => $qwe[9], "nrofactura" => $qwe[10], "cuf" => $qwe[11], "shortlink" => $qwe[12], "urlsin" => $qwe[13], "tipoventa" => $qwe[14], "idalmacen" => $qwe[15], "ciudad" => $qwe[16], "nfactura" => $qwe[17]);
+            $res = array("id" => $qwe[0], 
+            "autorizacion" => $qwe[1], 
+            "fechadevolucion" => $qwe[2], 
+            "motivo" => $qwe[3], 
+            "idventa" => $qwe[4], 
+            "fechaventa" => $qwe[5], 
+            "cliente" => $qwe[6], 
+            "nombrecomercial" => $qwe[7], 
+            "nrodoc" => $qwe[8], 
+            "sucursal" => $qwe[9], 
+            "nrofactura" => $qwe[10], 
+            "cuf" => $qwe[11], 
+            "shortlink" => $qwe[12], 
+            "urlsin" => $qwe[13], 
+            "tipoventa" => $qwe[14], 
+            "idalmacen" => $qwe[15], 
+            "ciudad" => $qwe[16], 
+            "nfactura" => $qwe[17]);
             array_push($lista, $res);
         }
         echo json_encode($lista);
     }
 
-    public function verificardevolucion($id)
+    public function verificardevolucion($id, $tipo_dev  = null)
     {
         $res = "";
         try {
-            $consulta = $this->cm->query("SELECT id_devoluciones FROM devoluciones WHERE venta_id_venta = '$id' AND autorizacion = '2' ORDER BY id_devoluciones DESC LIMIT 1");
+            $consulta = $this->cm->query("SELECT id_devoluciones FROM devoluciones WHERE venta_id_venta = '$id' AND autorizacion = '2' AND tipo_dev = '$tipo_dev' ORDER BY id_devoluciones DESC LIMIT 1");
             if ($consulta) {
                 if ($consulta->num_rows > 0) {
                     $qwe = $this->cm->fetch($consulta);
@@ -2898,16 +3103,18 @@ class ventas
         }
     }
 
-    public function registrodevolucion($motivo, $idventa, $idmd5, $tipo = NULL, $detalle = NULL){
+    public function registrodevolucion($motivo, $idventa, $idmd5, $tipo = NULL, $detalle = NULL, $tipo_dev = NULL){
         date_default_timezone_set('America/La_Paz');
         $fecha = date("Y-m-d H:i:s");
         $idusuario = $this->verificar->verificarIDUSERMD5($idmd5);
         $res = [];
         try {
-            $consulta = $this->cm->query("
-                SELECT id_devoluciones 
-                FROM devoluciones 
-                WHERE venta_id_venta = '$idventa' AND autorizacion = '2' 
+
+            $this->cm->begin_transaction();
+
+            $consulta = $this->cm->query("SELECT id_devoluciones
+                FROM devoluciones
+                WHERE venta_id_venta = '$idventa' AND autorizacion = '2' AND tipo_dev = '$tipo_dev'
                 ORDER BY id_devoluciones DESC 
                 LIMIT 1
             ");
@@ -2916,6 +3123,8 @@ class ventas
             }
             if ($consulta->num_rows > 0) {
                 $qwe = $this->cm->fetch($consulta);
+                $this->cm->rollback();
+
                 $res = [
                     "estado" => 100,
                     "codigo" => 1,
@@ -2924,22 +3133,29 @@ class ventas
                 ];
             } else {
                 $registro = $this->cm->query("
-                    INSERT INTO devoluciones(autorizacion, fecha_devolucion, motivo, venta_id_venta, idusuario)
-                    VALUES ('2', '$fecha', '$motivo', '$idventa', '$idusuario')
+                    INSERT INTO devoluciones(autorizacion, fecha_devolucion, motivo, venta_id_venta, idusuario, tipo_dev)
+                    VALUES ('2', '$fecha', '$motivo', '$idventa', '$idusuario', '$tipo_dev')
                 ");
                 $iddev = $this->cm->insert_id;
+                 if (!$registro || !$iddev) {
+                    throw new Exception("Error al registrar la cabecera de devolución.");
+                }
                 if ($registro && $iddev) {
                     if ($tipo == NULL) {
-                        $listaventa = $this->cm->query("
-                            SELECT * FROM detalle_venta WHERE venta_id_venta = '$idventa'
-                        ");
-                        $res = $this->registrarDetalleDevolucion($listaventa, $iddev, false);
-                    } else {
-                        if($tipo == 1){
-                            $res = $this->registrarDetalleDevolucion($detalle, $iddev, true);
+                        $sql = '';
+                        if($tipo_dev == 'VE'){
+                            $sql = "SELECT id_detalle_venta, cantidad, precio_unitario, productos_almacen_id_productos_almacen FROM detalle_venta WHERE venta_id_venta = '$idventa'";
+                        }elseif($tipo_dev == 'COT'){
+                            $sql = "SELECT id_detalle_cotizacion, cantidad, precio_unitario, productos_almacen_id_productos_almacen FROM detalle_cotizacion WHERE cotizacion_id_cotizacion = '$idventa'";
                         }
                         
-                    }
+                        $listaventa = $this->cm->query($sql);
+                        $res = $this->registrarDetalleDevolucion($listaventa, $iddev, false);
+                    } else if($tipo == 1){
+                            $res = $this->registrarDetalleDevolucion($detalle, $iddev, true);
+                        
+                        
+                    } 
                 } else {
                     $res = [
                         "estado" => 99,
@@ -2947,6 +3163,9 @@ class ventas
                     ];
                 }
             }
+
+            $this->cm->commit();
+
             if ($tipo == NULL) {
                 echo json_encode($res);
             }else{
@@ -2956,6 +3175,9 @@ class ventas
             }
             
         } catch (Exception $e) {
+
+            $this->cm->rollback();
+
             if ($tipo == NULL) {
                 echo json_encode([
                     "estado" => "error",
@@ -2969,41 +3191,80 @@ class ventas
             
         }
     }
-
-
     public function registrarDetalleDevolucion($listaventa, $iddev, $esArray = false)
     {
         if (!$listaventa) {
             return ["estado" => 99, "mensaje" => "No se pudo encontrar la venta o los detalles."];
         }
 
+        $insertados = [];
+
         if ($esArray) {
+
             foreach ($listaventa as $item) {
+
                 $idproducto = $item['id'] ?? $item->id ?? null;
                 $cantidad = $item['cantidad'] ?? $item->cantidad ?? 0;
                 $precio = $item['precioUnitario'] ?? $item->precioUnitario ?? 0;
                 $esPerdida = ($item['esPerdida'] ?? $item->esPerdida ?? false) ? 1 : 0;
                 $cantidadPerdida = $item['cantidadPerdida'] ?? $item->cantidadPerdida ?? 0;
 
-                $this->cm->query("
+                // Validaciones
+                if (!$idproducto) continue;
+
+                $cantidad = $cantidad;
+                $precio = floatval($precio);
+                $cantidadPerdida = $cantidadPerdida;
+
+                // SQL seguro
+                $sql = "
                     INSERT INTO detalle_devolucion(
-                        cantidad, precio, perdida, cantidadperdida, 
+                        cantidad, precio, perdida, cantidadperdida,
                         devoluciones_id_devoluciones, producto_almacen_id_producto_almacen
-                    ) VALUES (
-                        '$cantidad', '$precio', '$esPerdida', '$cantidadPerdida', '$iddev', '$idproducto'
-                    )
-                ");
+                    ) VALUES (?, ?, ?, ?, ?, ?)
+                ";
+
+                $stm = $this->cm->prepare($sql);
+                $stm->bind_param('idiiii', $cantidad, $precio, $esPerdida, $cantidadPerdida, $iddev, $idproducto);
+                $stm->execute();
+
+                $insertados[] = [
+                    "idproducto" => $idproducto,
+                    "cantidad" => $cantidad,
+                    "precio" => $precio,
+                    "perdida" => $esPerdida,
+                    "cantidadPerdida" => $cantidadPerdida
+                ];
             }
+
         } else {
-            while ($qwe = $this->cm->fetch($listaventa)) {
-                $this->cm->query("
+
+            while ($row = $this->cm->fetch($listaventa)) {
+
+                $cantidad = $row[1];
+                $precio = floatval($row[2]);
+                $idproducto = $row[3];
+
+                $sql = "
                     INSERT INTO detalle_devolucion(
-                        cantidad, precio, perdida, cantidadperdida, 
+                        cantidad, precio, perdida, cantidadperdida,
                         devoluciones_id_devoluciones, producto_almacen_id_producto_almacen
-                    ) VALUES (
-                        '$qwe[1]', '$qwe[2]', '0', '0', '$iddev', '$qwe[3]'
-                    )
-                ");
+                    ) VALUES (?, ?, ?, ?, ?, ?)
+                ";
+                $perdida = 0;
+                $cantidadPerdida = 0;
+
+                $stm = $this->cm->prepare($sql);
+                $stm->bind_param('idiiii', $cantidad, $precio, $perdida, $cantidadPerdida, $iddev, $idproducto);
+                $stm->execute();
+
+                $insertados[] = [
+                    "idproducto" => $idproducto,
+                    "cantidad" => $cantidad,
+                    "precio" => $precio,
+                    "perdida" => 0,
+                    "cantidadPerdida" => 0
+                ];
             }
         }
 
@@ -3011,9 +3272,56 @@ class ventas
             "estado" => 100,
             "mensaje" => "Devolución registrada correctamente.",
             "id" => $iddev,
-            "codigo" => 2
+            "codigo" => 2,
+            "insertados" => $insertados
         ];
     }
+ 
+    // public function registrarDetalleDevolucion($listaventa, $iddev, $esArray = false)
+    // {
+    //     if (!$listaventa) {
+    //         return ["estado" => 99, "mensaje" => "No se pudo encontrar la venta o los detalles."];
+    //     }
+
+    //     if ($esArray) {
+    //         foreach ($listaventa as $item) {
+    //             $idproducto = $item['id'] ?? $item->id ?? null;
+    //             $cantidad = $item['cantidad'] ?? $item->cantidad ?? 0;
+    //             $precio = $item['precioUnitario'] ?? $item->precioUnitario ?? 0;
+    //             $esPerdida = ($item['esPerdida'] ?? $item->esPerdida ?? false) ? 1 : 0;
+    //             $cantidadPerdida = $item['cantidadPerdida'] ?? $item->cantidadPerdida ?? 0;
+
+    //             $this->cm->query("
+    //                 INSERT INTO detalle_devolucion(
+    //                     cantidad, precio, perdida, cantidadperdida, 
+    //                     devoluciones_id_devoluciones, producto_almacen_id_producto_almacen
+    //                 ) VALUES (
+    //                     '$cantidad', '$precio', '$esPerdida', '$cantidadPerdida', '$iddev', '$idproducto'
+    //                 )
+    //             ");
+    //         }
+    //     } else {
+    //         while ($qwe = $this->cm->fetch($listaventa)) {
+    //             $this->cm->query("
+    //                 INSERT INTO detalle_devolucion(
+    //                     cantidad, precio, perdida, cantidadperdida, 
+    //                     devoluciones_id_devoluciones, producto_almacen_id_producto_almacen
+    //                 ) VALUES (
+    //                     '$qwe[1]', '$qwe[2]', '0', '0', '$iddev', '$qwe[3]'
+    //                 )
+    //             ");
+    //         }
+    //     }
+
+    //     return [
+    //         "estado" => 100,
+    //         "mensaje" => "Devolución registrada correctamente.",
+    //         "id" => $iddev,
+    //         "codigo" => 2,
+    //         "datos" => $this->cm->fetch($listaventa)
+    //     ];
+    // }
+   
 
 
     public function eliminardevolucion($dato){
@@ -3071,12 +3379,267 @@ class ventas
             echo json_encode($res);
         }
     }
-
     public function cambiarestadodevolucion($id, $estado, $idmd5u, $tipo = NULL)
+    {
+        // --- 1. Inicialización y Seguridad ---
+        date_default_timezone_set('America/La_Paz');
+        
+        // Asegurar que $idusuario se inicialice
+        $idusuario = 0;
+        if ($tipo === NULL) {
+            // Asumiendo que verificarIDUSERMD5 devuelve el ID de usuario
+            $idusuario = $this->verificar->verificarIDUSERMD5($idmd5u);
+        } elseif ($tipo == 1) {
+            $idusuario = $idmd5u;
+        }
+        
+        $idventa = 0;
+        $tipo_dev = "";
+        $fecha = date("Y-m-d");
+        $codigo_stock = "DEV";
+        $res = ["devolucion" => [], "perdidas" => [], "estado" => ""];
+        $con = 0;
+
+        try {
+            $this->cm->begin_transaction();
+
+            // --- 2. Obtener datos de la Devolución (USO DE PREPARED STATEMENT) ---
+            $sql = "SELECT venta_id_venta AS idventa, tipo_dev FROM devoluciones WHERE id_devoluciones = ?";
+            $stm = $this->cm->prepare($sql);
+            
+            // El id de devolución es un entero (i)
+            $stm->bind_param('i', $id);
+            $stm->execute();
+            
+            // Obtener resultado
+            $stm->bind_result($idventa, $tipo_dev);
+            $stm->fetch(); 
+            $stm->close(); // Cerrar statement inmediatamente
+
+            if (!$idventa) {
+                throw new Exception("No existe la devolución con ID: " . $id);
+            }
+
+            $codigo_stock = ($tipo_dev == "COT") ? "DEV COT" : "DEV VE";
+            
+            // --- 3. Actualizar autorización de la Devolución (USO DE PREPARED STATEMENT) ---
+            $sql_update_auth = "UPDATE devoluciones SET autorizacion = ? WHERE id_devoluciones = ?";
+            $stm_update_auth = $this->cm->prepare($sql_update_auth);
+            
+            // El estado es un string (s) o entero si solo usas 0/1, id es entero (i)
+            $stm_update_auth->bind_param('ii', $estado, $id);
+            if (!$stm_update_auth->execute()) {
+                throw new Exception("Error al actualizar autorización");
+            }
+            $stm_update_auth->close();
+
+            // --- 4. Actualizar Stock para productos devueltos (NO merma) ---
+            $sqlStock = "SELECT 
+                            dv.producto_almacen_id_producto_almacen, 
+                            (IFNULL(s.cantidad, 0) + dv.cantidad) AS nuevo_stock_total 
+                        FROM detalle_devolucion dv
+                        LEFT JOIN productos_almacen pa ON dv.producto_almacen_id_producto_almacen = pa.id_productos_almacen
+                        LEFT JOIN stock AS s ON pa.id_productos_almacen = s.productos_almacen_id_productos_almacen AND s.estado = '1'
+                        WHERE dv.devoluciones_id_devoluciones = ?";
+
+            $stmStock = $this->cm->prepare($sqlStock);
+            $stmStock->bind_param('i', $id);
+            $stmStock->execute();
+            $resultStock = $stmStock->get_result(); // Obtener resultados para iterar
+            $stmStock->close();
+
+            while ($stock = $resultStock->fetch_assoc()) {
+                $id_producto_almacen = $stock['producto_almacen_id_producto_almacen'];
+                $nueva_cantidad = $stock['nuevo_stock_total'];
+
+                // 4a. Cerrar stock anterior para ese producto (USO DE PREPARED STATEMENT)
+                $sql_close_stock = "UPDATE stock SET estado = 2 WHERE productos_almacen_id_productos_almacen = ? AND estado = 1";
+                $stm_close_stock = $this->cm->prepare($sql_close_stock);
+                $stm_close_stock->bind_param('i', $id_producto_almacen);
+                if (!$stm_close_stock->execute()) {
+                    throw new Exception("Error al cerrar stock anterior para producto: " . $id_producto_almacen);
+                }
+                $stm_close_stock->close();
+                
+                // 4b. Insertar nuevo stock (USO DE PREPARED STATEMENT)
+                $sql_insert_stock = "INSERT INTO stock(cantidad, fecha, codigo, estado, productos_almacen_id_productos_almacen, idorigen) VALUES (?, ?, ?, 1, ?, ?)";
+                $stm_insert_stock = $this->cm->prepare($sql_insert_stock);
+                $stm_insert_stock->bind_param('issii', $nueva_cantidad, $fecha, $codigo_stock, $id_producto_almacen, $idventa);
+                
+                if (!$stm_insert_stock->execute()) {
+                    throw new Exception("Error al insertar nuevo stock para producto: " . $id_producto_almacen);
+                }
+                $stm_insert_stock->close();
+            }
+            $res['devolucion'] = ["estado" => 100, "mensaje" => "Stock de devolución actualizado"];
+            
+            // --- 5. Manejo de Merma/Pérdidas ---
+            
+            // 5a. Contar si hay mermas (USO DE PREPARED STATEMENT)
+            $sql_merma_count = "SELECT COUNT(perdida) AS merma FROM detalle_devolucion WHERE perdida = '1' AND devoluciones_id_devoluciones = ?";
+            $stm_merma_count = $this->cm->prepare($sql_merma_count);
+            $stm_merma_count->bind_param('i', $id);
+            $stm_merma_count->execute();
+            $merma_result = $stm_merma_count->get_result();
+            $merma = $merma_result->fetch_assoc()['merma'];
+            $stm_merma_count->close();
+            
+            if ($merma > 0) {
+                // 5b. Obtener datos de cabecera para Merma (Mejorado para evitar JOINs innecesarios) (USO DE PREPARED STATEMENT)
+                $sql_dev_data = "SELECT d.motivo, pa.almacen_id_almacen 
+                                FROM devoluciones d
+                                JOIN detalle_devolucion dve ON d.id_devoluciones = dve.devoluciones_id_devoluciones
+                                JOIN productos_almacen pa ON dve.producto_almacen_id_producto_almacen = pa.id_productos_almacen
+                                WHERE d.id_devoluciones = ? LIMIT 1"; // LIMIT 1 para asegurar un solo almacén/motivo
+                $stm_dev_data = $this->cm->prepare($sql_dev_data);
+                $stm_dev_data->bind_param('i', $id);
+                $stm_dev_data->execute();
+                $dev_result = $stm_dev_data->get_result();
+                $dev = $dev_result->fetch_assoc();
+                $stm_dev_data->close();
+                
+                if (!$dev) throw new Exception("No se encontró Información de Merma de cabecera");
+                
+                // 5c. Insertar Merma (USO DE PREPARED STATEMENT)
+                $sql_insert_merma = "INSERT INTO mermas_desperdicios (fecha_informe, descripcion, almacen_id_almacen, autorizacion, idusuario, devoluciones_id_devoluciones)
+                                    VALUES (?, ?, ?, '1', ?, ?)";
+                $stm_insert_merma = $this->cm->prepare($sql_insert_merma);
+                // $dev['motivo'] y $dev['almacen_id_almacen']
+                $stm_insert_merma->bind_param('ssiii', $fecha, $dev['motivo'], $dev['almacen_id_almacen'], $idusuario, $id);
+                
+                if (!$stm_insert_merma->execute()) {
+                    throw new Exception("Error al registrar merma");
+                }
+                $idMerma = $this->cm->insert_id;
+                $stm_insert_merma->close();
+
+                // 5d. Obtener detalles de la Merma (USO DE PREPARED STATEMENT)
+                $sql_detalle_perdida = "SELECT cantidadperdida, producto_almacen_id_producto_almacen 
+                                        FROM detalle_devolucion 
+                                        WHERE devoluciones_id_devoluciones = ? AND perdida = '1'";
+
+                $stm_detalle_perdida = $this->cm->prepare($sql_detalle_perdida);
+                $stm_detalle_perdida->bind_param('i', $id);
+                $stm_detalle_perdida->execute();
+                $detallePerdidaResult = $stm_detalle_perdida->get_result();
+                $stm_detalle_perdida->close(); // Statement cerrado, ahora se usa el resultset
+                
+                while ($qwe = $detallePerdidaResult->fetch_assoc()) {
+                    $cantidad_perdida = $qwe['cantidadperdida'];
+                    $id_producto_almacen = $qwe['producto_almacen_id_producto_almacen'];
+
+                    // 5e. Insertar Detalle Merma (USO DE PREPARED STATEMENT)
+                    $sql_insert_detalle_merma = "INSERT INTO detalle_mermas (cantidad, mermas_desperdicios_id_mermas_desperdicios, productos_almacen_id_productos_almacen)
+                                                VALUES (?, ?, ?)";
+                    $stm_insert_detalle_merma = $this->cm->prepare($sql_insert_detalle_merma);
+                    $stm_insert_detalle_merma->bind_param('iii', $cantidad_perdida, $idMerma, $id_producto_almacen);
+                    
+                    if (!$stm_insert_detalle_merma->execute()) {
+                        throw new Exception("Error al registrar detalle merma para producto: " . $id_producto_almacen);
+                    }
+                    $stm_insert_detalle_merma->close();
+                    
+                    // 5f. Actualizar Stock por Merma (Buscar stock activo) (USO DE PREPARED STATEMENT)
+                    $sql_stock_merma = "SELECT id_stock, cantidad FROM stock 
+                                        WHERE productos_almacen_id_productos_almacen = ? AND estado = '1' 
+                                        ORDER BY id_stock DESC LIMIT 1";
+                    $stm_stock_merma = $this->cm->prepare($sql_stock_merma);
+                    $stm_stock_merma->bind_param('i', $id_producto_almacen);
+                    $stm_stock_merma->execute();
+                    $stock_merma_result = $stm_stock_merma->get_result();
+                    $stock = $stock_merma_result->fetch_assoc();
+                    $stm_stock_merma->close();
+
+                    if (!$stock) {
+                        throw new Exception("No existe stock activo para merma del producto: " . $id_producto_almacen);
+                    }
+
+                    $id_stock_anterior = $stock['id_stock'];
+                    $stock_anterior_cantidad = $stock['cantidad'];
+                    $nuevaCantidad = $stock_anterior_cantidad - $cantidad_perdida;
+
+                    // 5g. Cerrar stock anterior (USO DE PREPARED STATEMENT)
+                    $sql_close_merma_stock = "UPDATE stock SET estado = '2' WHERE id_stock = ?";
+                    $stm_close_merma_stock = $this->cm->prepare($sql_close_merma_stock);
+                    $stm_close_merma_stock->bind_param('i', $id_stock_anterior);
+                    
+                    if (!$stm_close_merma_stock->execute()) {
+                        throw new Exception("Error al cerrar stock por merma (ID Stock: " . $id_stock_anterior . ")");
+                    }
+                    $stm_close_merma_stock->close();
+
+                    // 5h. Insertar nuevo stock restante (USO DE PREPARED STATEMENT)
+                    $codigo_merma = ($tipo_dev == "COT") ? "MER COT" : "MER VE";
+
+                    $sql_insert_merma_stock = "INSERT INTO stock(cantidad, fecha, codigo, estado, productos_almacen_id_productos_almacen, idorigen) 
+                                            VALUES (?, ?, ?, '1', ?, ?)";
+                    $stm_insert_merma_stock = $this->cm->prepare($sql_insert_merma_stock);
+                    $stm_insert_merma_stock->bind_param('issii', $nuevaCantidad, $fecha, $codigo_merma, $id_producto_almacen, $idventa);
+                    
+                    if (!$stm_insert_merma_stock->execute()) {
+                        throw new Exception("Error al insertar stock restante por merma");
+                    }
+                    $stm_insert_merma_stock->close();
+
+                    $con++;
+                }
+                
+                // Lógica de respuesta mejorada para Merma
+                if ($merma == $con) {
+                    $res['perdidas'] = ["estado" => 100, "mensaje" => "Mermas registradas exitosamente."];
+                } else {
+                    // Esta lógica parece extraña si ya se manejó con excepciones, pero se mantiene la estructura
+                    $res['perdidas'] = ["estado" => 101, "mensaje" => "No se procesaron todas las mermas."];
+                }
+            }
+            
+            // --- 6. Actualizar estado de Venta/Cotización (USO DE PREPARED STATEMENT) ---
+            
+            // Solo actualiza si la autorización es '1'
+            if ($estado == '1' || $estado == 1) {
+                $sql_update_venta = ($tipo_dev == "COT") 
+                                    ? "UPDATE cotizacion SET estado = '3' WHERE id_cotizacion = ?" 
+                                    : "UPDATE venta SET estado = '3' WHERE id_venta = ?";
+
+                $stm_update_venta = $this->cm->prepare($sql_update_venta);
+                // $idventa se obtuvo en el paso 2
+                $stm_update_venta->bind_param('i', $idventa);
+                
+                if (!$stm_update_venta->execute()) {
+                    throw new Exception("Error al cambiar estado de Venta/Cotización (ID: " . $idventa . ")");
+                }
+                $stm_update_venta->close();
+            }
+            
+            $res['estado'] = 100;
+            $this->cm->commit();
+
+            // --- 7. Respuesta final ---
+            if ($tipo === NULL) {
+                echo json_encode($res);
+            } elseif ($tipo == 1) {
+                return 100;
+            }
+
+        } catch (Exception $e) {
+            $this->cm->rollback();
+
+            // --- 8. Manejo de Errores (Rollback) ---
+            if ($tipo === NULL) {
+                $res = ["estado" => "error", "mensaje" => $e->getMessage()];
+                echo json_encode($res);
+            } elseif ($tipo == 1) {
+                return 0;
+            }
+        }
+    }
+    public function cambiarestadodevolucion_($id, $estado, $idmd5u, $tipo = NULL)
     {
         date_default_timezone_set('America/La_Paz');
         $idventa = 0;
+        $tipo_dev = "";
         $fecha = date("Y-m-d");
+        $codigo = "DEV";
         if($tipo == NULL){
             $idusuario = $this->verificar->verificarIDUSERMD5($idmd5u);
 
@@ -3091,17 +3654,23 @@ class ventas
         try {
             
             // 1. SELECT query (Prepared Statement)
-            $sql = "SELECT venta_id_venta AS idventa FROM devoluciones WHERE id_devoluciones = ?";
+            $sql = "SELECT venta_id_venta AS idventa , tipo_dev  FROM devoluciones WHERE id_devoluciones = ?";
             $stm = $this->cm->prepare($sql);
             $stm->bind_param('i', $id);
             $stm->execute();
             
             // OPTION A: If you need the result ($idventa), fetch it here:
-            $stm->bind_result($idventa);
+            $stm->bind_result($idventa, $tipo_dev);
             $stm->fetch(); 
             
             // 2. CRITICAL FIX: Close the prepared statement before the next query.
             $stm->close(); 
+
+            if($tipo_dev == 'VE'){
+                $codigo = "DEV";
+            }else if($tipo_dev == 'COT'){
+                $codigo = "DEV COT";
+            }
                 
             // 3. Next query (Regular Query) - Now the connection is free
             $registro = $this->cm->query("update devoluciones SET autorizacion='$estado' where id_devoluciones='$id'");
@@ -3114,7 +3683,7 @@ class ventas
                 while ($stock = $this->cm->fetch($nuevostock)) {
                     $cambioestado = $this->cm->query("update stock set estado=2 where productos_almacen_id_productos_almacen='$stock[0]' and estado=1");
                     if ($cambioestado === TRUE) {
-                        $registrostock = $this->cm->query("insert into stock(id_stock,cantidad,fecha,codigo,estado,productos_almacen_id_productos_almacen, idorigen) value(null,'$stock[1]','$fecha','DEV',1,'$stock[0]', '$idventa')");
+                        $registrostock = $this->cm->query("insert into stock(id_stock,cantidad,fecha,codigo,estado,productos_almacen_id_productos_almacen, idorigen) value(null, '$stock[1]', '$fecha', $codigo, 1, '$stock[0]', '$idventa')");
                     }
                 }
                 $zxc = array("estado" => 100, "mensaje" => "Todos los productos seleccionados tienen nuevo stock");

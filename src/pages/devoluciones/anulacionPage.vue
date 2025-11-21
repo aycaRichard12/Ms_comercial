@@ -333,6 +333,7 @@
         </div>
 
         <q-table
+          title="Devoluciones"
           :rows="ventasDevueltasFiltradas"
           :columns="columnasDevueltas"
           row-key="id"
@@ -361,7 +362,7 @@
             <q-td :props="props">
               <div class="q-gutter-xs">
                 <q-btn
-                  v-if="Number(props.row.tipoventa) === 0"
+                  v-if="Number(props.row.tipoventa) <= 0"
                   icon="picture_as_pdf"
                   color="negative"
                   dense
@@ -491,6 +492,7 @@
         </div>
 
         <q-table
+          title="Devoluciones"
           :rows="detallesDevolucion"
           :columns="columnasDetalleDevolucion"
           row-key="id"
@@ -575,7 +577,14 @@
 
         <q-card-actions align="right">
           <q-btn flat label="Cancelar" color="negative" @click="cancelarDevolucion" />
-          <q-btn flat label="Confirmar" color="primary" @click="confirmarDevolucion" />
+          <q-btn
+            flat
+            label="Confirmar"
+            color="primary"
+            @click="
+              confirmarDevolucion(motivoDevolucion, ventaADevolver, idusuario, tipo_devolucion)
+            "
+          />
         </q-card-actions>
       </q-card>
     </q-dialog>
@@ -617,8 +626,9 @@ import { validarUsuario } from 'src/composables/FuncionesG'
 import { PDFdetalleVentaInicio } from 'src/utils/pdfReportGenerator'
 import RegistrarNotaCreditoDebito from 'src/pages/NotasCreditoDebito/RegistrarNotaCreditoDebito.vue'
 import { generarPdfCotizacion } from 'src/utils/pdfReportGenerator'
-import { idempresa_md5 } from 'src/composables/FuncionesGenerales'
+import { idempresa_md5, idusuario_md5 } from 'src/composables/FuncionesGenerales'
 const idempresa = idempresa_md5()
+const idusuario = idusuario_md5()
 const $q = useQuasar()
 
 // Estado de la aplicación
@@ -673,7 +683,7 @@ const motivoDevolucion = ref('')
 const ventaADevolver = ref(null)
 const pdfData = ref(null)
 const modalComprobantePDF = ref(false)
-
+const tipo_devolucion = ref(null)
 //DetalleVenta
 const detalleVenta = ref([])
 
@@ -1155,14 +1165,19 @@ const handleAccion = (row) => {
       anularVentas(dataValue)
     }
   } else if (value == 2) {
+    console.log('Devolución')
+    console.log(TipoVenta)
+    console.log(dataValue)
     if (TipoVenta == 0) {
-      devolucion(dataValue)
+      devolucion(dataValue, 'VE')
     } else if (TipoVenta == 1) {
       const rowVenta = {
         idventa: row.id,
         ...row,
       }
       abrirModal(rowVenta)
+    } else if (TipoVenta == -1) {
+      devolucion(dataValue, 'COT')
     }
   } else if (value == 3) {
     if (TipoVenta == -1) {
@@ -1307,9 +1322,12 @@ const estadoCotizacion = async (idcotizacion) => {
   }
 }
 
-const devolucion = async (id) => {
+const devolucion = async (id, codigo) => {
+  console.log(id)
+  console.log(codigo)
   try {
-    const response = await api.get(`verificardevolucion/${id}`)
+    const response = await api.get(`verificardevolucion/${id}/${codigo}`)
+    console.log(response.data)
 
     if (response.data.estado === 100) {
       if (response.data.codigo === 1) {
@@ -1326,6 +1344,7 @@ const devolucion = async (id) => {
         await listarDatosDetalleDevolucion(response.data.id)
       } else {
         // Crear nueva devolución
+        tipo_devolucion.value = codigo
         ventaADevolver.value = id
         modalMotivoDevolucion.value = true
       }
@@ -1341,8 +1360,9 @@ const devolucion = async (id) => {
   }
 }
 
-const confirmarDevolucion = async () => {
-  if (!motivoDevolucion.value) {
+const confirmarDevolucion = async (motivo, venta, idusuario, tipo) => {
+  console.log(motivo)
+  if (!motivo) {
     $q.notify({
       type: 'warning',
       message: 'Ingrese un motivo de devolución',
@@ -1351,19 +1371,16 @@ const confirmarDevolucion = async () => {
   }
 
   try {
-    const usuarioResponse = validarUsuario()
-    const usuario = usuarioResponse[0]
-    const idusuario = usuario?.idusuario
-
     $q.loading.show({
       message: 'Registrando devolución...',
     })
 
     const formData = new FormData()
     formData.append('ver', 'registroDevolucion')
-    formData.append('idventa', ventaADevolver.value)
-    formData.append('motivo', motivoDevolucion.value)
+    formData.append('idventa', venta)
+    formData.append('motivo', motivo)
     formData.append('idusuario', idusuario)
+    formData.append('tipo_dev', tipo)
 
     for (let [k, v] of formData.entries()) {
       console.log(`${k}: ${v}`)
@@ -1568,6 +1585,8 @@ const autorizarDevolucion = async (id) => {
       })
 
     const response = await api.get(`autorizarDevolucion/${id}/1/${idusuario}`)
+    console.log(response.data)
+    console.log(response)
 
     if (response.data.estado === 100) {
       $q.notify({

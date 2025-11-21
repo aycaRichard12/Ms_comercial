@@ -484,7 +484,7 @@ elseif ($ver == "editarCliente") {
     $controlador->editardetallerobo($_POST['id'], $_POST['idproductoalmacen'], $_POST['cantidad']);
 } elseif ($ver == "registroDevolucion") {
     $controlador = new ventas();
-    $controlador->registrodevolucion($_POST['motivo'], $_POST['idventa'], $_POST['idusuario']);
+    $controlador->registrodevolucion($_POST['motivo'], $_POST['idventa'], $_POST['idusuario'], null, null, $_POST['tipo_dev']);
 } elseif ($ver == "actualizarDetalleDev") {
     $controlador = new ventas();
     $controlador->editardevolucion($_POST['id'], $_POST['cantidad'], $_POST['perdida'], $_POST['cantidadperdida']);
