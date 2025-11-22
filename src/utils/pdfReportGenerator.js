@@ -2447,7 +2447,6 @@ export function PDFComprovanteExtravio(detalleExtravio, robo) {
         doc.setFont(undefined, 'normal')
         doc.text(nombre, 200, 38, { align: 'right' })
         doc.text(cargo, 200, 41, { align: 'right' })
-
         doc.text('Fecha Impresion: ' + fecha, 200, 44, { align: 'right' })
       }
     },

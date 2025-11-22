@@ -883,6 +883,7 @@ class UseCotizacion
     public function cotizaciónAFactura($idcotizacion,$fecha, $tipoventa, $tipopago, $idcliente, $idsucursal, $canalventa, $idmd5, $idmd5u, $jsonDetalles){
         $idempresa = null;
         $idusuario = null;
+        $ultimo = 0;
         
         try {
             date_default_timezone_set('America/La_Paz');
@@ -907,9 +908,20 @@ class UseCotizacion
             }
 
             // --- 2. GENERACIÓN DE CÓDIGOS Y NÚMEROS DE VENTA ---
-            $consultanroventa = $this->cm->query("SELECT count(v.id_venta) FROM venta v LEFT JOIN cliente c ON v.cliente_id_cliente1=c.id_cliente WHERE c.idempresa='$idempresa'");
-            $resp = $this->cm->fetch($consultanroventa);
-            $nroventa = $resp[0] + 1; // La lógica original sumaba 2, ajustado a +1 que es más común. Si +2 era intencional, se puede revertir.
+            $stmt = $this->cm->prepare("
+                SELECT COALESCE(MAX(v.nroventa), 0) AS ultimo
+                FROM venta v
+                INNER JOIN cliente c ON v.cliente_id_cliente1 = c.id_cliente
+                WHERE c.idempresa = ?
+                FOR UPDATE
+            ");
+            $stmt->bind_param("i", $idempresa);
+            $stmt->execute();
+            $stmt->bind_result($ultimo);
+            $stmt->fetch();
+            $stmt->close();
+
+            $nroventa = $ultimo + 1;
 
             $codigoVenta = str_pad($idcliente, 6, '0', STR_PAD_LEFT) .
                            str_replace('-', '', substr($fecha, 0, 10)) .
@@ -949,39 +961,19 @@ class UseCotizacion
                 $datosEnviadosEmizor = ["jsonlistaFactura" => $jsonDetalles['listaFactura'], "tipoventa" => $tipoventa, "token" => $jsonDetalles['token'], "tipo" => $jsonDetalles['tipo'], "codigosinsucursal" => $jsonDetalles['codigosinsucursal'], "jsonDetalles" => $jsonDetalles];
 
                 $respuestaEmizor = $this->factura->crearfactura($jsonDetalles['listaFactura'], $tipoventa, $jsonDetalles['token'], $jsonDetalles['tipo'], $jsonDetalles['codigosinsucursal']);
-                $respuestaEmizor = json_decode(json_encode([
-                                    "status" => "success",
-                                    "data" => [
-                                        "cuf" => "123",
-                                        "ack_ticket" => "abc",
-                                        "urlSin" => "url",
-                                        "emision_type_code" => 1,
-                                        "fechaEmision" => "2025-11-12",
-                                        "numeroFactura" => 123,
-                                        "shortLink" => "url corta",
-                                        "codigoEstado" => 0,
-                                        "emission_type_code" => '1',
-                                        "xml_url" => "url xml"
-                                    ]
-                                ]));
+                
                 
 
                 if ($respuestaEmizor->status === "success") {
                     $estadoFactura = null;
-                    // for ($i = 0; $i < self::MAX_INTENTOS_CONSULTA_FACTURA; $i++) {
-                    //     $estadoFactura = $this->factura->estadofactura($respuestaEmizor->data->cuf, $jsonDetalles['token'], $jsonDetalles['tipo'], 2);
-                    //     if ($estadoFactura->data->codigoEstado == self::ESTADO_FACTURA_VALIDADA && $estadoFactura->data->errores == null) {
-                    //         break; // Factura validada, salir del bucle
-                    //     }
-                    //     sleep(1); // Esperar 1 segundo antes de reintentar
-                    // }
-                    $estadoFactura = json_decode(json_encode([
-                        "status"=> "success",
-                        "data"=> [
-                            "codigoEstado"=> 690,
-                            "estado"=> "string"
-                        ]
-                    ]));
+                    for ($i = 0; $i < self::MAX_INTENTOS_CONSULTA_FACTURA; $i++) {
+                        $estadoFactura = $this->factura->estadofactura($respuestaEmizor->data->cuf, $jsonDetalles['token'], $jsonDetalles['tipo'], 2);
+                        if ($estadoFactura->data->codigoEstado == self::ESTADO_FACTURA_VALIDADA && $estadoFactura->data->errores == null) {
+                            break; // Factura validada, salir del bucle
+                        }
+                        sleep(1); // Esperar 1 segundo antes de reintentar
+                    }
+                  
                     if ($estadoFactura->data->codigoEstado == self::ESTADO_FACTURA_VALIDADA) {
                         
                         $resultadoDB = $this->useVenta->_registrarVentaDetallesEnDB($datosVenta, $jsonDetalles['listaProductos']);
@@ -1038,7 +1030,7 @@ class UseCotizacion
     {
         $idempresa = null;
         $idusuario = null;
-
+        $ultimo = 0;
         try {
             date_default_timezone_set('America/La_Paz');
             $respuestaFinal = [
@@ -1062,9 +1054,20 @@ class UseCotizacion
             }
 
             // --- 2. GENERACIÓN DE CÓDIGOS Y NÚMEROS DE VENTA --- 
-            $consultanroventa = $this->cm->query("SELECT count(v.id_venta) FROM venta v LEFT JOIN cliente c ON v.cliente_id_cliente1=c.id_cliente WHERE c.idempresa='$idempresa'");
-            $resp = $this->cm->fetch($consultanroventa);
-            $nroventa = $resp[0] + 2; // La lógica original sumaba 2, ajustado a +1 que es más común. Si +2 era intencional, se puede revertir.
+              $stmt = $this->cm->prepare("
+                SELECT COALESCE(MAX(v.nroventa), 0) AS ultimo
+                FROM venta v
+                INNER JOIN cliente c ON v.cliente_id_cliente1 = c.id_cliente
+                WHERE c.idempresa = ?
+                FOR UPDATE
+            ");
+            $stmt->bind_param("i", $idempresa);
+            $stmt->execute();
+            $stmt->bind_result($ultimo);
+            $stmt->fetch();
+            $stmt->close();
+
+            $nroventa = $ultimo + 1;
 
             $codigoVenta = str_pad($idcliente, 6, '0', STR_PAD_LEFT) .
                            str_replace('-', '', substr($fecha, 0, 10)) .
