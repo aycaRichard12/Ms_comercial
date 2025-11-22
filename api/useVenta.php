@@ -143,7 +143,7 @@ class UseVEnta
 
         $idempresa = null;
         $idusuario = null;
-
+        $ultimo = 0;
         try {
             date_default_timezone_set('America/La_Paz');
             $respuestaFinal = [
@@ -167,9 +167,20 @@ class UseVEnta
             }
 
             // --- 2. GENERACIÓN DE CÓDIGOS Y NÚMEROS DE VENTA ---
-            $consultanroventa = $this->cm->query("SELECT count(v.id_venta) FROM venta v LEFT JOIN cliente c ON v.cliente_id_cliente1=c.id_cliente WHERE c.idempresa='$idempresa'");
-            $resp = $this->cm->fetch($consultanroventa);
-            $nroventa = $resp[0] + 1; // La lógica original sumaba 2, ajustado a +1 que es más común. Si +2 era intencional, se puede revertir.
+            $stmt = $this->cm->prepare("
+                SELECT COALESCE(MAX(v.nroventa), 0) AS ultimo
+                FROM venta v
+                INNER JOIN cliente c ON v.cliente_id_cliente1 = c.id_cliente
+                WHERE c.idempresa = ?
+                FOR UPDATE
+            ");
+            $stmt->bind_param("i", $idempresa);
+            $stmt->execute();
+            $stmt->bind_result($ultimo);
+            $stmt->fetch();
+            $stmt->close();
+
+            $nroventa = $ultimo + 1;
 
             $codigoVenta = str_pad($idcliente, 6, '0', STR_PAD_LEFT) .
                            str_replace('-', '', substr($fecha, 0, 10)) .

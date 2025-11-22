@@ -1578,7 +1578,7 @@ class ventas
 
                 $res = array("estado" => "exito", "mensaje" => "Se actualizó correctamente", "datosFactura" => $estadoventa);
             } else {
-                $res = array("estado" => "error", "mensaje" => "Ocurrió un problema al actualizar el estado de la venta.", "datosFactura" => $estadoventa);
+                $res = array("estado" => "error", "mensaje" => "Ocurrió un problema al actualizar el estado de la venta.", "datosFactura" => $estadoventa);  
             }
 
         } else {
@@ -1649,7 +1649,12 @@ class ventas
         // 3. Respuesta Final
         echo json_encode($res);
     }
+    public function anularComprobante(){
+        
+    }
+    public function anularFactura(){
 
+    }
     public function registroCotizacion($idcliente, $idsucursal, $jsonProductos)
     {
         $fecha = date("Y-m-d");

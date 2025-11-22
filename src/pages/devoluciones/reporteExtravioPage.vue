@@ -72,8 +72,8 @@
             <q-td :props="props">
               <div class="q-gutter-sm">
                 <q-btn
-                  icon="picture_as_pdf"
-                  color="red"
+                  icon="visibility"
+                  color="blue"
                   dense
                   flat
                   @click="generarComprobante(props.row)"
@@ -106,6 +106,39 @@
         </q-card>
       </q-dialog>
     </q-card-section>
+    <q-dialog v-model="modalDetalleExtravio" persistent>
+      <q-card class="responsive-dialog">
+        <q-card-section class="bg-primary flex justify-between text-h6 text-white">
+          <div>Lista de Productos</div>
+          <q-btn
+            color="white"
+            icon="close"
+            @click="modalDetalleExtravio = false"
+            flat
+            round
+            dense
+          />
+        </q-card-section>
+        <q-card-section>
+          <q-table
+            :rows="productosDetalleExtravio"
+            :columns="columnsExtravio"
+            row-key="id"
+            flat
+            bordered
+            dense
+          >
+            <template v-slot:body-cell-cantidad="props">
+              <q-td :props="props">{{ props.row.cantidad }}</q-td>
+            </template>
+          </q-table>
+        </q-card-section>
+
+        <q-card-actions align="right">
+          <q-btn flat label="Cerrar" color="primary" @click="modalDetalleExtravio = false" />
+        </q-card-actions>
+      </q-card>
+    </q-dialog>
   </q-page>
 </template>
 
@@ -118,11 +151,23 @@ import { PDF_REPORTE_EXTRAVIO } from 'src/utils/pdfReportGenerator'
 import { cambiarFormatoFecha } from 'src/composables/FuncionesG'
 import { idusuario_md5 } from 'src/composables/FuncionesGenerales'
 import { primerDiaDelMes } from 'src/composables/FuncionesG'
-import { PDFComprovanteExtravio } from 'src/utils/pdfReportGenerator'
 const idusuario = idusuario_md5()
 //pedf
 const pdfData = ref(null)
 const mostrarModal = ref(false)
+
+//modal Extravio
+const modalDetalleExtravio = ref(false)
+const productosDetalleExtravio = ref([])
+const columnsExtravio = [
+  { name: 'index', label: 'N°', field: 'index', align: 'left' },
+  { name: 'producto', label: 'Producto', field: 'producto', align: 'left' },
+  { name: 'codigo', label: 'Código', field: 'codigo', align: 'center' },
+  { name: 'descripcion', label: 'Descripción', field: 'descripcion', align: 'left' },
+  { name: 'caracteristica', label: 'Característica', field: 'caracteristica', align: 'left' },
+  { name: 'cantidad', label: 'Cantidad', field: 'cantidad', align: 'right' },
+  { name: 'codigolote', label: 'Código Lote', field: 'codigolote', align: 'center' },
+]
 
 const $q = useQuasar()
 const cargando = ref(false)
@@ -289,9 +334,14 @@ const generarComprobante = async (robo) => {
   // Cargar los detalles para el comprobante
   const response = await api.get(`listaDetallerobo/${robo.id}`)
   console.log(response.data)
-  const doc = PDFComprovanteExtravio(response.data)
-  pdfData.value = doc.output('dataurlstring')
-  mostrarModal.value = true
+  productosDetalleExtravio.value = response.data.map((obj, index) => {
+    return {
+      index: index + 1,
+      ...obj,
+    }
+  })
+
+  modalDetalleExtravio.value = true
 }
 
 // Función de validación de usuario (simplificada)

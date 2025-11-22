@@ -72,8 +72,8 @@
             <q-td :props="props">
               <q-btn
                 dense
-                color="red"
-                icon="picture_as_pdf"
+                icon="visibility"
+                color="blue"
                 flat
                 @click="showComprobante(props.row)"
               />
@@ -104,6 +104,32 @@
         </q-card>
       </q-dialog>
     </q-card-section>
+    <q-dialog v-model="modalDetalleMerma" persistent>
+      <q-card class="responsive-dialog">
+        <q-card-section class="bg-primary flex justify-between text-h6 text-white">
+          <div>Lista de Productos</div>
+          <q-btn color="white" icon="close" @click="modalDetalleMerma = false" flat round dense />
+        </q-card-section>
+        <q-card-section>
+          <q-table
+            :rows="productosDetalleMerma"
+            :columns="columnsMerma"
+            row-key="id"
+            flat
+            bordered
+            dense
+          >
+            <template v-slot:body-cell-cantidad="props">
+              <q-td :props="props">{{ props.row.cantidad }}</q-td>
+            </template>
+          </q-table>
+        </q-card-section>
+
+        <q-card-actions align="right">
+          <q-btn flat label="Cerrar" color="primary" @click="modalDetalleMerma = false" />
+        </q-card-actions>
+      </q-card>
+    </q-dialog>
   </q-page>
 </template>
 
@@ -116,7 +142,6 @@ import { PDF_REPORTE_MERMA } from 'src/utils/pdfReportGenerator'
 import { cambiarFormatoFecha } from 'src/composables/FuncionesG'
 import { idusuario_md5 } from 'src/composables/FuncionesGenerales'
 import { primerDiaDelMes } from 'src/composables/FuncionesG'
-import { PDFComprovanteMerma } from 'src/utils/pdfReportGenerator'
 const idusuario = idusuario_md5()
 //pedf
 const pdfData = ref(null)
@@ -124,6 +149,19 @@ const mostrarModal = ref(false)
 
 const $q = useQuasar()
 const cargando = ref(false)
+
+//modal Extravio
+const modalDetalleMerma = ref(false)
+const productosDetalleMerma = ref([])
+const columnsMerma = [
+  { name: 'index', label: 'N°', field: 'index', align: 'left' },
+  { name: 'producto', label: 'Producto', field: 'producto', align: 'left' },
+  { name: 'codigo', label: 'Código', field: 'codigo', align: 'center' },
+  { name: 'descripcion', label: 'Descripción', field: 'descripcion', align: 'left' },
+  { name: 'caracteristica', label: 'Característica', field: 'caracteristica', align: 'left' },
+  { name: 'cantidad', label: 'Cantidad', field: 'cantidad', align: 'right' },
+  { name: 'codigolote', label: 'Código Lote', field: 'codigolote', align: 'center' },
+]
 
 // Datos del formulario
 const fechaInicio = ref('')
@@ -287,10 +325,15 @@ const mostrarVistaPrevia = () => {
 const showComprobante = async (item) => {
   try {
     const response = await api.get(`listaDetallemerma/${item.id}`)
+    console.log(response.data)
+    productosDetalleMerma.value = response.data.map((obj, index) => {
+      return {
+        index: index + 1,
+        ...obj,
+      }
+    })
 
-    const doc = PDFComprovanteMerma(response.data)
-    pdfData.value = doc.output('dataurlstring')
-    mostrarModal.value = true
+    modalDetalleMerma.value = true
   } catch (error) {
     console.error('Error al cargar comprobante:', error)
     $q.notify({

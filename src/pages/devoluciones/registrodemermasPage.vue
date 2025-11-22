@@ -1033,7 +1033,7 @@ const showComprobante = async (item) => {
     const response = await api.get(`listaDetallemerma/${item.id}`)
     comprobanteDetails.value = response.data
     console.log(response.data)
-    const doc = PDFComprovanteMerma(response.data)
+    const doc = PDFComprovanteMerma(response.data, item)
     pdfData.value = doc.output('dataurlstring')
     mostrarModal.value = true
   } catch (error) {

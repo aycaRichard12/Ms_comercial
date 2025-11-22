@@ -4,9 +4,10 @@
       <q-card-section>
         <div class="row q-col-gutter-md">
           <div class="col-12 col-md-4">
+            <label for="cliente">Cliente*</label>
             <q-select
               v-model="formData.cliente"
-              label="Cliente*"
+              id="cliente"
               :options="filteredClients"
               option-label="label"
               option-value="value"
@@ -29,9 +30,10 @@
           </div>
 
           <div class="col-12 col-md-4">
+            <label for="sucursal">Sucursal*</label>
             <q-select
               v-model="formData.sucursal"
-              label="Sucursal*"
+              id="sucursal"
               :options="branchOptions"
               option-label="label"
               option-value="value"
@@ -65,9 +67,10 @@
       <q-card-section>
         <div class="row q-col-gutter-md">
           <div class="col-12 col-md-4">
+            <label for="tipodoc">Tipo de documento*</label>
             <q-select
               v-model="formData.tipodoc"
-              label="Tipo de documento*"
+              id="tipodoc"
               :options="typeDocOptions"
               option-label="label"
               option-value="value"
@@ -80,9 +83,10 @@
             />
           </div>
           <div class="col-12 col-md-4">
+            <label for="numDoc">Número de documento*</label>
             <q-input
               v-model="formData.nroDoc"
-              label="Número de documento*"
+              id="numDoc"
               type="number"
               :rules="[(val) => !!val || 'Campo obligatorio']"
               :disable="!formData.cliente"
@@ -94,9 +98,10 @@
             />
           </div>
           <div class="col-12 col-md-4">
+            <label for="fecha">Fecha*</label>
             <q-input
               v-model="formData.fecha"
-              label="Fecha*"
+              id="fecha"
               type="date"
               outlined
               dense
@@ -111,9 +116,10 @@
       <q-card-section>
         <div class="row q-col-gutter-md">
           <div class="col-12 col-md-6">
+            <label for="puntoventa">Punto de venta*</label>
             <q-select
               v-model="formData.puntoventa"
-              label="Punto de venta*"
+              id="puntoventa"
               :options="puntosVenta"
               option-label="label"
               option-value="value"
@@ -125,9 +131,10 @@
             />
           </div>
           <div class="col-12 col-md-6">
+            <label for="canalventa">Canal de venta*</label>
             <q-select
               v-model="formData.canal"
-              label="Canal de venta*"
+              id="canalventa"
               :options="salesChannels"
               option-label="label"
               option-value="value"
@@ -160,9 +167,10 @@
         <div v-if="formData.variablePago === 'directo'">
           <div class="row q-col-gutter-md">
             <div class="col-12 col-md-6">
+              <label for="metodopago">Método de pago*</label>
               <q-select
                 v-model="formData.metodoPago"
-                label="Método de pago*"
+                id="metodopago"
                 :options="metodoPago"
                 option-label="label"
                 option-value="value"
@@ -182,9 +190,10 @@
             class="row q-col-gutter-md q-mb-sm items-center"
           >
             <div class="col-12 col-md-5">
+              <label for="metodopagouno">Método de pago*</label>
               <q-select
                 v-model="payment.metodoPago"
-                label="Método de pago*"
+                label="metodopagouno"
                 :options="metodoPago"
                 option-label="label"
                 option-value="value"
@@ -196,9 +205,10 @@
               />
             </div>
             <div class="col-12 col-md-3">
+              <label for="monto">Monto ( {{ divisaActiva.simbolo }} )</label>
               <q-input
+                id="monto"
                 v-model="payment.monto"
-                :label="'Monto (' + divisaActiva.simbolo + ')'"
                 type="number"
                 min="0"
                 step="0.01"
@@ -211,9 +221,10 @@
               />
             </div>
             <div class="col-12 col-md-3">
+              <label for="porcentaje">Porcentaje (%)</label>
               <q-input
                 v-model="payment.porcentaje"
-                label="Porcentaje (%)"
+                id="porcentaje"
                 type="number"
                 min="0"
                 max="100"
@@ -286,9 +297,10 @@
 
         <div v-if="formData.credito" class="row q-col-gutter-md">
           <div class="col-12 col-md-4">
+            <label for="cuota">Cuotas*</label>
             <q-input
               v-model="formData.cantidadPagos"
-              label="Cuotas*"
+              id="cuota"
               type="number"
               min="0"
               outlined
@@ -301,9 +313,10 @@
           </div>
 
           <div class="col-12 col-md-4">
+            <label for="montocuota">Monto por cuota*</label>
             <q-input
               v-model="formData.montoPagos"
-              label="Monto por cuota*"
+              id="montocuota"
               :disable="!formData.credito"
               outlined
               dense
@@ -320,9 +333,10 @@
           </div>
 
           <div class="col-12 col-md-4">
+            <label for="periodicidad">Periodicidad*</label>
             <q-select
               v-model="formData.periodo"
-              label="Periodicidad*"
+              id="periodicidad"
               :options="periodOptions"
               option-label="label"
               option-value="value"
@@ -338,9 +352,10 @@
           </div>
 
           <div v-if="formData.periodo === 0" class="col-12 col-md-4">
+            <label for="plazodias">Plazo (días)*</label>
             <q-input
               v-model="formData.plazoPersonalizado"
-              label="Plazo (días)*"
+              id="plazodias"
               type="number"
               min="0"
               outlined
@@ -353,9 +368,10 @@
           </div>
 
           <div class="col-12 col-md-4">
+            <label for="fechalimite">Fecha Límite*</label>
             <q-input
               v-model="formData.fechaLimite"
-              label="Fecha límite*"
+              label="fechalimite"
               type="date"
               outlined
               dense
