@@ -105,7 +105,6 @@ import { useQuasar } from 'quasar'
 import { api } from 'src/boot/axios'
 import { validarUsuario } from 'src/composables/FuncionesGenerales'
 import { PDF_REPORTE_DE_ROTACION_POR_ALMACEN } from 'src/utils/pdfReportGenerator'
-import { cambiarFormatoFecha } from 'src/composables/FuncionesG'
 import { primerDiaDelMes } from 'src/composables/FuncionesG'
 //pedf
 const pdfData = ref(null)
@@ -266,8 +265,8 @@ const mostrarVistaPrevia = () => {
     return
   }
   const doc = PDF_REPORTE_DE_ROTACION_POR_ALMACEN(datosFiltrados.value, {
-    fechaInicio: cambiarFormatoFecha(fechaInicio.value),
-    fechaFin: cambiarFormatoFecha(fechaFin.value),
+    fechaInicio: fechaInicio.value,
+    fechaFin: fechaFin.value,
     almacen: nombreAlmacenSeleccionado.value,
     empresa: empresa.value,
     usuario: usuario.value,

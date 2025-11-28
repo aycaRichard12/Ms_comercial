@@ -10,11 +10,6 @@
               :label="mostrarFormulario ? 'Cancelar Registro' : 'Nuevo Registro'"
               @click="toggleFormulario"
             />
-            <q-btn color="primary" class="btn-res q-ml-md" @click="crearReporte">
-              <q-icon name="picture_as_pdf" class="icono" />
-
-              <span class="texto">Reporte</span>
-            </q-btn>
           </div>
         </div>
 
@@ -50,7 +45,7 @@
         <q-dialog v-model="mostrarFormulario" persistent>
           <q-card class="responsive-dialog">
             <q-card-section class="bg-primary text-white text-h6 flex justify-between">
-              <div>Registrar Robo</div>
+              <div>Registrar Extravio</div>
               <q-btn icon="close" @click="cancelarRegistro" dense flat round />
             </q-card-section>
 
@@ -892,8 +887,8 @@ const generarPDF = () => {
     })
     return
   }
-
-  const doc = PDFextrabiosRobos(datosTabla)
+  const almacen = almacenesOptions.value.find((obj) => obj.value == idAlmacenFiltro.value)
+  const doc = PDFextrabiosRobos(datosTabla, almacen)
   pdfData.value = doc.output('dataurlstring')
   mostrarModal.value = true
 }
@@ -906,14 +901,6 @@ const generarComprobante = async (robo) => {
   const doc = PDFComprovanteExtravio(response.data, robo)
   pdfData.value = doc.output('dataurlstring')
   mostrarModal.value = true
-}
-
-const crearReporte = () => {
-  // Implementar navegación a componente de reportes si es necesario
-  $q.notify({
-    type: 'info',
-    message: 'Función de reportes en desarrollo',
-  })
 }
 
 // Watchers

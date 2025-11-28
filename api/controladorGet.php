@@ -812,6 +812,16 @@ elseif($ver[0]== "getLogoBase64"){
     }
 
 }
+elseif($ver[0]== "getComercialImagenProducto"){
+    $controlador = new Notificaciones();
+    $respuesta = $controlador->getComercialImagenProducto($ver[1],$ver[2]); // idventaND, idproductoalmacen, cantidad
+    if ($respuesta) {
+        echo json_encode(["base64" => $respuesta]);
+    } else {
+        echo json_encode(["error" => "Imagen no encontrada"]);
+    }
+
+}
 elseif($ver[0]== "cierres_registrados"){
     $controlador = new ArqueoPuntoVenta();
     $controlador->cierres_registrados($ver[1],$ver[2]); // idventaND, idproductoalmacen, cantidad

@@ -5,38 +5,64 @@ import autoTable from 'jspdf-autotable'
 import { cambiarFormatoFecha } from 'src/composables/FuncionesG'
 import { obtenerFechaActualDato } from 'src/composables/FuncionesG'
 import { numeroALetras } from 'src/composables/FuncionesG'
-import { imagen } from 'src/boot/url'
 import { api } from 'src/boot/axios'
 import { cargarLogoBase64 } from 'src/composables/FuncionesG'
-import { convertirAMayusculas } from 'src/composables/FuncionesG'
+import { getComercialImagenProducto } from 'src/composables/FuncionesG'
+// import { convertirAMayusculas } from 'src/composables/FuncionesG'
 import { useCurrencyStore } from 'src/stores/currencyStore'
+import { obtenerHora } from 'src/composables/FuncionesG'
 const divisaActiva = useCurrencyStore().simbolo
 
 // Variables globales
 let logoBase64 = null
 let contenidousuario = null
 let idempresa = null
+let datosUsuario = null
 let logoEmpresa = null
-let ColoEncabezadoTabla = [128, 128, 128] // Negro
 let nombreEmpresa = null
 let direccionEmpresa = null
 let telefonoEmpresa = null
-let nombre = null
+let encargadoNombre = null
 let cargo = null
 let email_emizor = null
+let estado = null
+let ciudad = null
+//let region = null
+let pais = null
+let nit = null
+let telefono = null
+let celular = null
+let email = null
+let web = null
+
+let fontSize = 10
+let fontSizeCabezal = 10
+let cellPadding = 1
+let ColoEncabezadoTabla = [128, 128, 128] // Negro
+
+console.log(fontSizeCabezal)
 const tipo = { 1: 'Pedido Compra', 2: 'Pedido Movimiento' }
 
 async function initPdfReportGenerator() {
   contenidousuario = validarUsuario()
-  idempresa = contenidousuario[0]
-  logoEmpresa = idempresa.empresa.logo
+  datosUsuario = contenidousuario[0]
+  logoEmpresa = datosUsuario.empresa.logo
   logoBase64 = await cargarLogoBase64(logoEmpresa)
-  nombreEmpresa = idempresa.empresa.nombre
-  direccionEmpresa = idempresa.empresa.direccion
-  telefonoEmpresa = idempresa.empresa.telefono
-  nombre = idempresa.nombre
-  cargo = idempresa.cargo
-  email_emizor = idempresa.empresa.email
+  nombreEmpresa = datosUsuario.empresa.nombre
+  direccionEmpresa = datosUsuario.empresa.direccion
+  telefonoEmpresa = datosUsuario.empresa.telefono
+  encargadoNombre = datosUsuario.nombre
+  cargo = datosUsuario.cargo
+  email_emizor = datosUsuario.empresa.email
+  pais = datosUsuario.empresa.opais
+  estado = datosUsuario.empresa.oestado
+  //region = datosUsuario.region
+  ciudad = datosUsuario.empresa.ociudad
+  nit = datosUsuario.empresa.nit
+  telefono = datosUsuario.empresa.telefono
+  celular = datosUsuario.empresa.ocelular
+  email = datosUsuario.empresa.email
+  web = datosUsuario.empresa.ositioweb
 }
 
 export function getLogoBase64() {
@@ -71,88 +97,66 @@ export default function imprimirReporte(detallePedido) {
     cantidad: decimas(item.cantidad),
   }))
 
-  autoTable(doc, {
+  const columnStyles = {
+    indice: { cellWidth: 15, halign: 'center' },
+    descripcion: { cellWidth: 100, halign: 'left' },
+    cantidad: { cellWidth: 85, halign: 'right' },
+  }
+
+  //   ,angle: 90, valign: 'middle'
+  const headerColumnStyles = {
+    indice: { cellWidth: 15, halign: 'center' },
+    descripcion: { cellWidth: 100, halign: 'left' },
+    cantidad: { cellWidth: 85, halign: 'right' },
+  }
+  const Izquierda = {
+    titulo: 'DATOS ORDEN',
+    campos: [
+      {
+        label: '',
+        valor: detallePlano[0].empresa.direccion || '',
+      },
+      {
+        label: '',
+        valor: detallePlano[0].empresa.email || '',
+      },
+      {
+        label: 'Fecha de Orden',
+        valor: cambiarFormatoFecha(detallePlano[0].fecha) || '',
+      },
+    ],
+  }
+  const derecho = {
+    titulo: 'DATOS DEL USUARIO',
+    campos: [
+      {
+        label: '',
+        valor: detallePlano[0].usuarios[0].usuario || '',
+      },
+      {
+        label: '',
+        valor: detallePlano[0].usuarios[0].cargo || '',
+      },
+      {
+        label: '',
+        valor: 'Tipo ' + tipo[detallePlano[0].tipopedido] || '',
+      },
+    ],
+  }
+
+  dibujarCuerpoTabla(
+    doc,
     columns,
-    body: datos,
-    styles: {
-      overflow: 'linebreak',
-      fontSize: 5,
-      cellPadding: 2,
-    },
-    headStyles: {
-      fillColor: ColoEncabezadoTabla,
-      textColor: 255,
-      halign: 'center',
-    },
-    columnStyles: {
-      indice: { cellWidth: 15, halign: 'center' },
-      descripcion: { cellWidth: 100, halign: 'left' },
-      cantidad: { cellWidth: 80, halign: 'right' },
-    },
-    didParseCell: function (data) {
-      if (data.row.index >= datos.length - 3) {
-        data.cell.styles.halign = 'left'
-      }
-    },
-    startY: 50,
-    margin: { horizontal: 5 },
-    theme: 'striped',
-    didDrawPage: () => {
-      if (doc.internal.getNumberOfPages() === 1) {
-        if (logoBase64) {
-          const pageWidth = doc.internal.pageSize.getWidth() // Ancho total página
-          const imgWidth = 20 // Ancho del logo en mm
-          const imgHeight = 20 // Alto del logo en mm
-          const xPos = pageWidth - imgWidth - 5 // 10mm de margen derecho
-          const yPos = 5 // margen superior
-          console.log(logoBase64)
-          doc.addImage(logoBase64, 'JPEG', xPos, yPos, imgWidth, imgHeight)
-        }
-
-        doc.setFontSize(7)
-        doc.setFont(undefined, 'bold')
-        doc.text(nombreEmpresa, 5, 10)
-
-        doc.setFontSize(6)
-        doc.setFont(undefined, 'normal')
-        doc.text(direccionEmpresa, 5, 13)
-        doc.text(`Tel: ${telefonoEmpresa}`, 5, 16)
-
-        doc.setFontSize(10)
-        doc.setFont(undefined, 'bold')
-        doc.text('ORDEN PEDIDO', doc.internal.pageSize.getWidth() / 2, 15, {
-          align: 'center',
-        })
-
-        doc.setDrawColor(0)
-        doc.setLineWidth(0.2)
-        doc.line(5, 30, 200, 30)
-
-        doc.setFontSize(7)
-        doc.setFont(undefined, 'bold')
-        doc.text('DATOS ORDEN:', 5, 35)
-
-        doc.setFontSize(6)
-        doc.setFont(undefined, 'normal')
-        const cliente = `${detallePlano[0].almacen}`
-        doc.text(cliente, 5, 38)
-
-        doc.text(detallePlano[0].empresa.direccion, 5, 41)
-        doc.text(detallePlano[0].empresa.email, 5, 44)
-        doc.text('Fecha de Orden: ' + cambiarFormatoFecha(detallePlano[0].fecha), 5, 47)
-
-        doc.setFontSize(7)
-        doc.setFont(undefined, 'bold')
-        doc.text('DATOS DEL USUARIO:', 200, 35, { align: 'right' })
-
-        doc.setFontSize(6)
-        doc.setFont(undefined, 'normal')
-        doc.text(detallePlano[0].usuarios[0].usuario, 200, 38, { align: 'right' })
-        doc.text(detallePlano[0].usuarios[0].cargo, 200, 41, { align: 'right' })
-        doc.text('Tipo ' + tipo[detallePlano[0].tipopedido], 200, 44, { align: 'right' })
-      }
-    },
-  })
+    datos,
+    'ORDEN PEDIDO',
+    columnStyles,
+    headerColumnStyles,
+    Izquierda,
+    derecho,
+    true,
+    null,
+    null,
+  )
   return doc
 }
 export function PDFreporteCuentasXCobrarPeriodo(reportData, startDate, endDate) {
@@ -205,123 +209,47 @@ export function PDFreporteCuentasXCobrarPeriodo(reportData, startDate, endDate) 
   }
   datos.push(pieTable)
 
-  autoTable(doc, {
-    columns: columns,
-    body: datos,
-    styles: {
-      overflow: 'linebreak',
-      fontSize: 6, // Slightly increased for readability
-      cellPadding: 1, // Reduced padding to fit more columns
-    },
-    headStyles: {
-      fillColor: ColoEncabezadoTabla,
-      textColor: 255,
-      halign: 'center',
-      fontSize: 7, // Header font size
-    },
-    columnStyles: {
-      indice: { cellWidth: 15, halign: 'center' }, // Adjusted width
-      fecha_actual: { cellWidth: 20, halign: 'center' },
-      nombre_cliente: { cellWidth: 40, halign: 'left' },
-      nombre_comercial: { cellWidth: 40, halign: 'left' },
-      monto_total_venta: { cellWidth: 20, halign: 'right' },
-      descuento_venta: { cellWidth: 20, halign: 'right' },
-      saldo_estado_cobro: { cellWidth: 20, halign: 'right' },
-      monto_detalle_cobro: { cellWidth: 25, halign: 'right' },
-      // photo_detalle_cobro: { cellWidth: 20, halign: 'center' }, // If you re-add photo, adjust width
-    },
-    startY: 45,
-    margin: { horizontal: 5 },
-    theme: 'striped',
-    didDrawPage: () => {
-      // Use 'data' parameter provided by autoTable
-      // Only draw header on the first page
-      // Or draw on every page: if (doc.internal.getNumberOfPages() === 1) { ... }
-      // This header will appear on every page for multi-page reports
-      doc.setFontSize(7)
-      doc.setFont(undefined, 'normal') // Reset font style
+  const columnStyles = {
+    indice: { cellWidth: 15, halign: 'center' }, // Adjusted width
+    fecha_actual: { cellWidth: 20, halign: 'center' },
+    nombre_cliente: { cellWidth: 40, halign: 'left' },
+    nombre_comercial: { cellWidth: 40, halign: 'left' },
+    monto_total_venta: { cellWidth: 20, halign: 'right' },
+    descuento_venta: { cellWidth: 20, halign: 'right' },
+    saldo_estado_cobro: { cellWidth: 20, halign: 'right' },
+    monto_detalle_cobro: { cellWidth: 25, halign: 'right' },
+  }
 
-      // Header content
-      doc.setDrawColor(0) // Black
-      doc.setLineWidth(0.2) // Line thickness
+  //   ,angle: 90, valign: 'middle'
+  const headerColumnStyles = {
+    indice: { cellWidth: 15, halign: 'center' }, // Adjusted width
+    fecha_actual: { cellWidth: 20, halign: 'center' },
+    nombre_cliente: { cellWidth: 40, halign: 'left' },
+    nombre_comercial: { cellWidth: 40, halign: 'left' },
+    monto_total_venta: { cellWidth: 20, halign: 'right' },
+    descuento_venta: { cellWidth: 20, halign: 'right' },
+    saldo_estado_cobro: { cellWidth: 20, halign: 'right' },
+    monto_detalle_cobro: { cellWidth: 25, halign: 'right' },
+  }
 
-      // Line before header
-      if (doc.internal.getNumberOfPages() === 1) {
-        if (logoBase64) {
-          const pageWidth = doc.internal.pageSize.getWidth() // Ancho total página
-          const imgWidth = 20 // Ancho del logo en mm
-          const imgHeight = 20 // Alto del logo en mm
-          const xPos = pageWidth - imgWidth - 5 // 10mm de margen derecho
-          const yPos = 5 // margen superior
-          console.log(logoBase64)
-          doc.addImage(logoBase64, 'JPEG', xPos, yPos, imgWidth, imgHeight)
-        }
-        // If logoEmpresa is a URL, it's more complex. Consider using it as Base64.
-        // doc.addImage(`${URL_APIE}${logoEmpresa}`, 'PNG', 180, 8, 20, 20) // If using URL, uncomment and ensure URL_APIE is defined
+  const fechas = {
+    inicio: startDate.value,
 
-        // Company Info (Left)
-        doc.setFontSize(7)
-        doc.setFont(undefined, 'bold')
-        doc.text(nombreEmpresa, 5, 10)
-        doc.setFontSize(6)
-        doc.setFont(undefined, 'normal')
-        doc.text(direccionEmpresa, 5, 13)
-        doc.text(`Tel: ${telefonoEmpresa}`, 5, 16)
-
-        // Report Title (Center)
-        doc.setFontSize(10)
-        doc.setFont(undefined, 'bold')
-        doc.text('REPORTE DE COBROS DIARIOS', doc.internal.pageSize.getWidth() / 2, 15, {
-          align: 'center',
-        })
-
-        // Line after header before data section
-        doc.line(5, 30, doc.internal.pageSize.getWidth() - 5, 30)
-
-        // Report Data Info (Left below line)
-        doc.setFontSize(7)
-        doc.setFont(undefined, 'bold')
-        doc.text('DATOS DEL REPORTE', 5, 35)
-        doc.setFontSize(6)
-        doc.setFont(undefined, 'normal')
-        doc.text(
-          `Fecha Inicio: ${cambiarFormatoFecha(startDate.value)} - Fecha Fin: ${cambiarFormatoFecha(endDate.value)}`,
-          5,
-          38,
-        )
-
-        // User Data (Right below line)
-        doc.setFontSize(7)
-        doc.setFont(undefined, 'bold')
-        doc.text('DATOS DEL ENCARGADO:', doc.internal.pageSize.getWidth() - 5, 35, {
-          align: 'right',
-        })
-        doc.setFontSize(6)
-        doc.setFont(undefined, 'normal')
-        doc.text(nombre, doc.internal.pageSize.getWidth() - 5, 38, { align: 'right' })
-        doc.text(cargo, doc.internal.pageSize.getWidth() - 5, 41, { align: 'right' })
-      }
-      // Logo (if base64)
-
-      // Footer (Page Number)
-      const pageNumber = doc.internal.getNumberOfPages()
-      doc.setFontSize(8)
-      doc.text(
-        `Página ${pageNumber}`,
-        doc.internal.pageSize.getWidth() - 15,
-        doc.internal.pageSize.getHeight() - 10,
-        { align: 'right' },
-      )
-      doc.text(
-        `Fecha de Impresión: ${cambiarFormatoFecha(obtenerFechaActualDato())}`,
-        15,
-        doc.internal.pageSize.getHeight() - 10,
-        { align: 'left' },
-      )
-    },
-  })
-
-  // Set the PDF data URL and show the modal didParseCell
+    final: endDate.value,
+  }
+  dibujarCuerpoTabla(
+    doc,
+    columns,
+    datos,
+    'REPORTE DE COBROS DIARIOS',
+    columnStyles,
+    headerColumnStyles,
+    null,
+    null,
+    true,
+    fechas,
+    null,
+  )
   return doc
 }
 
@@ -332,19 +260,12 @@ export function PDFreporteCreditos(
   clienteSeleccionado = null,
   sucursalSeleccionada = null,
 ) {
-  const contenidousuario = validarUsuario()
   const doc = new jsPDF({
     orientation: 'landscape', // Usamos horizontal para más columnas
     unit: 'mm',
   })
 
   // Datos de la empresa
-  const idempresa = contenidousuario[0]
-  const nombreEmpresa = idempresa.empresa.nombre
-  const direccionEmpresa = idempresa.empresa.direccion
-  const telefonoEmpresa = idempresa.empresa.telefono
-  const nombreUsuario = idempresa.nombre
-  const cargoUsuario = idempresa.cargo
 
   // Configuración de columnas
   const columns = [
@@ -392,151 +313,85 @@ export function PDFreporteCreditos(
     idsucursal: row.idsucursal,
   }))
 
-  // Configuración de autoTable
-  autoTable(doc, {
-    columns: columns,
-    body: datos,
-    styles: {
-      fontSize: 7,
-      cellPadding: 3,
-      overflow: 'linebreak',
-      valign: 'middle',
-    },
-    headStyles: {
-      fillColor: [128, 128, 128], // Negro
-      textColor: 255,
-      halign: 'center',
-      fontSize: 7,
-      fontStyle: 'bold',
-    },
-    bodyStyles: {
-      halign: 'center',
-    },
-    columnStyles: {
-      numero: { cellWidth: 10 },
-      fechaventa: { cellWidth: 20 },
-      razonsocial: { cellWidth: 25, halign: 'left' },
-      sucursal: { cellWidth: 25, halign: 'left' },
-      fechalimite: { cellWidth: 20 },
-      ncuotas: { cellWidth: 15 },
-      cuotasprocesadas: { cellWidth: 25 },
-      valorcuotas: { cellWidth: 18, halign: 'right' },
-      totalventa: { cellWidth: 18, halign: 'right' },
-      totalcobrado: { cellWidth: 18, halign: 'right' },
-      saldo: { cellWidth: 18, halign: 'right' },
-      totalatrasado: { cellWidth: 18, halign: 'right' },
-      totalanulado: { cellWidth: 18, halign: 'right' },
+  const columnStyles = {
+    numero: { cellWidth: 10, halign: 'center' },
+    fechaventa: { cellWidth: 30, halign: 'left', angle: 45 },
+    razonsocial: { cellWidth: 25, halign: 'left' },
+    sucursal: { cellWidth: 25, halign: 'left' },
+    fechalimite: { cellWidth: 20, halign: 'left' },
+    ncuotas: { cellWidth: 15, halign: 'right' },
+    cuotasprocesadas: { cellWidth: 25, halign: 'right' },
+    valorcuotas: { cellWidth: 18, halign: 'right' },
+    totalventa: { cellWidth: 18, halign: 'right' },
+    totalcobrado: { cellWidth: 18, halign: 'right' },
+    saldo: { cellWidth: 18, halign: 'right' },
+    totalatrasado: { cellWidth: 18, halign: 'right' },
+    totalanulado: { cellWidth: 18, halign: 'right' },
 
-      moradias: { cellWidth: 15 },
-      estado: { cellWidth: 15 },
-    },
-    startY: 45,
-    margin: { horizontal: 10 },
-    theme: 'grid',
-    didDrawPage: (data) => {
-      // Encabezado en cada página
-      doc.setFontSize(8)
-      doc.setFont(undefined, 'normal')
+    moradias: { cellWidth: 15, halign: 'right' },
+    estado: { cellWidth: 15, halign: 'right' },
+  }
 
-      // Solo agregar logo en primera página
-      if (data.pageNumber === 1) {
-        if (logoBase64) {
-          const pageWidth = doc.internal.pageSize.getWidth() // Ancho total página
-          const imgWidth = 20 // Ancho del logo en mm
-          const imgHeight = 20 // Alto del logo en mm
-          const xPos = pageWidth - imgWidth - 10 // 10mm de margen derecho
-          const yPos = 5 // margen superior
+  //   ,angle: 90, valign: 'middle'
+  const headerColumnStyles = {
+    numero: { cellWidth: 10, halign: 'center', angle: 45, valign: 'middle' },
+    fechaventa: { cellWidth: 30, halign: 'left', angle: 90, valign: 'middle' },
+    razonsocial: { cellWidth: 25, halign: 'left', angle: 90, valign: 'middle' },
+    sucursal: { cellWidth: 25, halign: 'left', angle: 90, valign: 'middle' },
+    fechalimite: { cellWidth: 20, halign: 'left', angle: 90, valign: 'middle' },
+    ncuotas: { cellWidth: 15, halign: 'right', angle: 90, valign: 'middle' },
+    cuotasprocesadas: { cellWidth: 25, halign: 'right', angle: 90, valign: 'middle' },
+    valorcuotas: { cellWidth: 18, halign: 'right', angle: 45, valign: 'middle' },
+    totalventa: { cellWidth: 18, halign: 'right', angle: 90, valign: 'middle' },
+    totalcobrado: { cellWidth: 18, halign: 'right', angle: 90, valign: 'middle' },
+    saldo: { cellWidth: 18, halign: 'right', angle: 90, valign: 'middle' },
+    totalatrasado: { cellWidth: 18, halign: 'right', angle: 90, valign: 'middle' },
+    totalanulado: { cellWidth: 18, halign: 'right', angle: 90, valign: 'middle' },
 
-          doc.addImage(logoBase64, 'JPEG', xPos, yPos, imgWidth, imgHeight)
-        }
+    moradias: { cellWidth: 15, halign: 'right', angle: 90, valign: 'middle' },
+    estado: { cellWidth: 15, halign: 'right', angle: 90, valign: 'middle' },
+  }
 
-        // Información de la empresa
-        doc.setFontSize(10)
-        doc.setFont(undefined, 'bold')
-        doc.text(nombreEmpresa, 10, 10)
-        doc.setFontSize(8)
-        doc.setFont(undefined, 'normal')
-        doc.text(direccionEmpresa, 10, 15)
-        doc.text(`Tel: ${telefonoEmpresa}`, 10, 20)
+  let filtrosText = ''
+  if (clienteSeleccionado) {
+    filtrosText += `Cliente: ${clienteSeleccionado.nombre} `
+  }
+  if (sucursalSeleccionada) {
+    filtrosText += `Sucursal: ${sucursalSeleccionada.nombre}`
+  }
+  const Izquierda = {
+    titulo: 'DATOS DEL CLIENTE',
+    campos: [
+      {
+        label: 'Filtros',
+        valor: filtrosText || 'Todos los Clientes',
+      },
+    ],
+  }
 
-        // Título del reporte
-        doc.setFontSize(12)
-        doc.setFont(undefined, 'bold')
-        doc.text('REPORTE DE CRÉDITOS', doc.internal.pageSize.getWidth() / 2, 15, {
-          align: 'center',
-        })
+  const fechas = {
+    inicio: startDate,
 
-        // Fechas del reporte
-        doc.setFontSize(9)
-        doc.text(
-          `Del ${cambiarFormatoFecha(startDate)} al ${cambiarFormatoFecha(endDate)}`,
-          doc.internal.pageSize.getWidth() / 2,
-          22,
-          { align: 'center' },
-        )
-
-        // Filtros aplicados
-        let filtrosText = ''
-        if (clienteSeleccionado) {
-          filtrosText += `Cliente: ${clienteSeleccionado.nombre} `
-        }
-        if (sucursalSeleccionada) {
-          filtrosText += `Sucursal: ${sucursalSeleccionada.nombre}`
-        }
-
-        if (filtrosText) {
-          doc.setFontSize(8)
-          doc.text(`Filtros: ${filtrosText}`, 35, 28)
-        }
-
-        // Usuario generador
-        doc.setFontSize(8)
-        doc.text(
-          `Generado por: ${nombreUsuario} - ${cargoUsuario}`,
-          doc.internal.pageSize.getWidth() - 10,
-          28,
-          { align: 'right' },
-        )
-
-        // Línea separadora
-        doc.setDrawColor(0)
-        doc.setLineWidth(0.2)
-        doc.line(10, 32, doc.internal.pageSize.getWidth() - 10, 32)
-      }
-
-      // Pie de página (número de página)
-      const pageCount = doc.internal.getNumberOfPages()
-      doc.setFontSize(8)
-      doc.text(
-        `Página ${data.pageNumber} de ${pageCount}`,
-        doc.internal.pageSize.getWidth() - 10,
-        doc.internal.pageSize.getHeight() - 5,
-        { align: 'right' },
-      )
-      doc.text(
-        `Fecha impresión: ${cambiarFormatoFecha(obtenerFechaActualDato())}`,
-        10,
-        doc.internal.pageSize.getHeight() - 5,
-      )
-    },
-  })
-
+    final: endDate,
+  }
+  dibujarCuerpoTabla(
+    doc,
+    columns,
+    datos,
+    'REPORTE DE CRÉDITOS',
+    columnStyles,
+    headerColumnStyles,
+    Izquierda,
+    null,
+    true,
+    fechas,
+    null,
+  )
   return doc
 }
 
-// Función auxiliar para obtener texto del estado
-
-// Función auxiliar para calcular días de mora
-
 export function PDFreporteStockProductosIndividual(processedRows) {
-  console.log(processedRows.value)
-  const contenidousuario = validarUsuario()
   const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' })
-
-  const idempresa = contenidousuario[0]
-  const nombreEmpresa = idempresa.empresa.nombre
-  const direccionEmpresa = idempresa.empresa.direccion
-  const telefonoEmpresa = idempresa.empresa.telefono
 
   const columns = [
     { header: 'N°', dataKey: 'indice' },
@@ -582,89 +437,136 @@ export function PDFreporteStockProductosIndividual(processedRows) {
   )
 
   datos.push({ stockminimo: 'Total:', stock: totalstock, costo: decimas(costoTotal) })
-  autoTable(doc, {
+
+  const columnStyles = {
+    indice: { cellWidth: 10, halign: 'center' },
+    fecha: { cellWidth: 15, halign: 'center' },
+    almacen: { cellWidth: 25, halign: 'left' },
+    codigo: { cellWidth: 20, halign: 'left' },
+    producto: { cellWidth: 30, halign: 'left' },
+    categoria: { cellWidth: 30, halign: 'left' },
+    subcategoria: { cellWidth: 25, halign: 'left' },
+    descripcion: { cellWidth: 40, halign: 'left' },
+    unidad: { cellWidth: 13, halign: 'center' },
+    pais: { cellWidth: 20, halign: 'center' },
+    stockminimo: { cellWidth: 15, halign: 'right' },
+    stock: { cellWidth: 15, halign: 'right' },
+    costo: { cellWidth: 15, halign: 'right' },
+    estado: { cellWidth: 15, halign: 'center' },
+  }
+  const headerColumnStyles = {
+    indice: { cellWidth: 10, halign: 'center' },
+    fecha: { cellWidth: 15, halign: 'center' },
+    almacen: { cellWidth: 25, halign: 'left' },
+    codigo: { cellWidth: 20, halign: 'left' },
+    producto: { cellWidth: 30, halign: 'left' },
+    categoria: { cellWidth: 30, halign: 'left' },
+    subcategoria: { cellWidth: 25, halign: 'left' },
+    descripcion: { cellWidth: 40, halign: 'left' },
+    unidad: { cellWidth: 13, halign: 'center' },
+    pais: { cellWidth: 20, halign: 'center' },
+    stockminimo: { cellWidth: 15, halign: 'right' },
+    stock: { cellWidth: 15, halign: 'right' },
+    costo: { cellWidth: 15, halign: 'right' },
+    estado: { cellWidth: 15, halign: 'center' },
+  }
+
+  dibujarCuerpoTabla(
+    doc,
     columns,
-    body: datos,
-    styles: {
-      overflow: 'linebreak',
-      fontSize: 5,
-      cellPadding: 2,
-    },
-    headStyles: {
-      fillColor: ColoEncabezadoTabla,
-      textColor: 255,
-      halign: 'center',
-    },
-    columnStyles: {
-      indice: { cellWidth: 10, halign: 'center' },
-      fecha: { cellWidth: 15, halign: 'center' },
-      almacen: { cellWidth: 25, halign: 'left' },
-      codigo: { cellWidth: 20, halign: 'left' },
-      producto: { cellWidth: 30, halign: 'left' },
-      categoria: { cellWidth: 30, halign: 'left' },
-      subcategoria: { cellWidth: 25, halign: 'left' },
-      descripcion: { cellWidth: 40, halign: 'left' },
-      unidad: { cellWidth: 10, halign: 'center' },
-      pais: { cellWidth: 20, halign: 'center' },
-      stockminimo: { cellWidth: 15, halign: 'right' },
-      stock: { cellWidth: 15, halign: 'right' },
-      costo: { cellWidth: 15, halign: 'right' },
-      estado: { cellWidth: 15, halign: 'center' },
-    },
-    // didParseCell: function (data) {
-    //   // Ejemplo: destacar la última fila (que contiene el Monto Total)
-    //   // if (data.row.index === datos.length - 1) {
-    //   //   data.cell.styles.halign = 'left'
-    //   // }
-    //   // if (data.row.index === datos.length - 2) {
-    //   //   data.cell.styles.halign = 'left'
-    //   // }
-    //   // if (data.row.index === datos.length - 3) {
-    //   //   data.cell.styles.halign = 'left'
-    //   // }
-    //   // También puedes aplicar estilo a una fila específica, por ejemplo la de índice 2:
-    //   // if (data.row.index === 2) {
-    //   //   data.cell.styles.fontStyle = 'italic'
-    //   //   data.cell.styles.fillColor = [255, 240, 200]
-    //   // }
-    // },
-    //20 + 15 + 20 + 25 + 30 + 20 + 20 + 25 + 20 + 15 + 20 + 15 + 20 = 265 mm
+    datos,
+    'REPORTE PRODUCTOS',
+    columnStyles,
+    headerColumnStyles,
+    null,
+    null,
+    true,
+    null,
+    null,
+  )
+  // autoTable(doc, {
+  //   columns,
+  //   body: datos,
+  //   styles: {
+  //     overflow: 'linebreak',
+  //     fontSize: fontSize,
+  //     cellPadding: cellPadding,
+  //   },
+  //   headStyles: {
+  //     fillColor: ColoEncabezadoTabla,
+  //     textColor: 255,
+  //     halign: 'center',
+  //   },
+  //   columnStyles: {
+  //     indice: { cellWidth: 10, halign: 'center' },
+  //     fecha: { cellWidth: 15, halign: 'center' },
+  //     almacen: { cellWidth: 25, halign: 'left' },
+  //     codigo: { cellWidth: 20, halign: 'left' },
+  //     producto: { cellWidth: 30, halign: 'left' },
+  //     categoria: { cellWidth: 30, halign: 'left' },
+  //     subcategoria: { cellWidth: 25, halign: 'left' },
+  //     descripcion: { cellWidth: 40, halign: 'left' },
+  //     unidad: { cellWidth: 10, halign: 'center' },
+  //     pais: { cellWidth: 20, halign: 'center' },
+  //     stockminimo: { cellWidth: 15, halign: 'right' },
+  //     stock: { cellWidth: 15, halign: 'right' },
+  //     costo: { cellWidth: 15, halign: 'right' },
+  //     estado: { cellWidth: 15, halign: 'center' },
+  //   },
+  //   // didParseCell: function (data) {
+  //   //   // Ejemplo: destacar la última fila (que contiene el Monto Total)
+  //   //   // if (data.row.index === datos.length - 1) {
+  //   //   //   data.cell.styles.halign = 'left'
+  //   //   // }
+  //   //   // if (data.row.index === datos.length - 2) {
+  //   //   //   data.cell.styles.halign = 'left'
+  //   //   // }
+  //   //   // if (data.row.index === datos.length - 3) {
+  //   //   //   data.cell.styles.halign = 'left'
+  //   //   // }
+  //   //   // También puedes aplicar estilo a una fila específica, por ejemplo la de índice 2:
+  //   //   // if (data.row.index === 2) {
+  //   //   //   data.cell.styles.fontStyle = 'italic'
+  //   //   //   data.cell.styles.fillColor = [255, 240, 200]
+  //   //   // }
+  //   // },
+  //   //20 + 15 + 20 + 25 + 30 + 20 + 20 + 25 + 20 + 15 + 20 + 15 + 20 = 265 mm
 
-    startY: 30,
-    margin: { horizontal: 5 },
-    theme: 'striped',
-    didDrawPage: () => {
-      if (doc.internal.getNumberOfPages() === 1) {
-        // Logo (requiere base64 o ruta absoluta en servidor si usas Node)
-        if (logoBase64) {
-          const pageWidth = doc.internal.pageSize.getWidth() // Ancho total página
-          const imgWidth = 20 // Ancho del logo en mm
-          const imgHeight = 20 // Alto del logo en mm
-          const xPos = pageWidth - imgWidth - 5 // 10mm de margen derecho
-          const yPos = 5 // margen superior
-          console.log(logoBase64)
-          doc.addImage(logoBase64, 'JPEG', xPos, yPos, imgWidth, imgHeight)
-        }
+  //   startY: 30,
+  //   margin: { horizontal: 5 },
+  //   theme: 'striped',
+  //   didDrawPage: () => {
+  //     if (doc.internal.getNumberOfPages() === 1) {
+  //       // Logo (requiere base64 o ruta absoluta en servidor si usas Node)
+  //       if (logoBase64) {
+  //         const pageWidth = doc.internal.pageSize.getWidth() // Ancho total página
+  //         const imgWidth = 20 // Ancho del logo en mm
+  //         const imgHeight = 20 // Alto del logo en mm
+  //         const xPos = pageWidth - imgWidth - 5 // 10mm de margen derecho
+  //         const yPos = 5 // margen superior
+  //         console.log(logoBase64)
+  //         doc.addImage(logoBase64, 'JPEG', xPos, yPos, imgWidth, imgHeight)
+  //       }
 
-        // Nombre y datos de empresa
-        doc.setFontSize(7)
-        doc.setFont(undefined, 'bold')
-        doc.text(nombreEmpresa, 5, 10)
+  //       // Nombre y datos de empresa
+  //       doc.setFontSize(7)
+  //       doc.setFont(undefined, 'bold')
+  //       doc.text(nombreEmpresa, 5, 10)
 
-        doc.setFontSize(6)
-        doc.setFont(undefined, 'normal')
-        doc.text(direccionEmpresa, 5, 13)
-        doc.text(`Tel: ${telefonoEmpresa}`, 5, 16)
+  //       doc.setFontSize(6)
+  //       doc.setFont(undefined, 'normal')
+  //       doc.text(direccionEmpresa, 5, 13)
+  //       doc.text(`Tel: ${telefonoEmpresa}`, 5, 16)
 
-        // Título centrado
-        doc.setFontSize(10)
-        doc.setFont(undefined, 'bold')
-        doc.text('REPORTE PRODUCTOS', doc.internal.pageSize.getWidth() / 2, 15, {
-          align: 'center',
-        })
-      }
-    },
-  })
+  //       // Título centrado
+  //       doc.setFontSize(10)
+  //       doc.setFont(undefined, 'bold')
+  //       doc.text('REPORTE PRODUCTOS', doc.internal.pageSize.getWidth() / 2, 15, {
+  //         align: 'center',
+  //       })
+  //     }
+  //   },
+  // })
 
   // doc.save('proveedores.pdf') ← comenta o elimina esta línea
   //doc.output('dataurlnewwindow') // ← muestra el PDF en una nueva ventana del navegador
@@ -672,15 +574,7 @@ export function PDFreporteStockProductosIndividual(processedRows) {
 }
 
 export function PDFreporteStockProductosIndividual_img(processedRows) {
-  console.log(processedRows.value)
-  const contenidousuario = validarUsuario()
   const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' })
-
-  const idempresa = contenidousuario[0]
-  const nombreEmpresa = idempresa.empresa.nombre
-  const direccionEmpresa = idempresa.empresa.direccion
-  const telefonoEmpresa = idempresa.empresa.telefono
-
   const columns = [
     { header: 'N°', dataKey: 'indice' },
     { header: 'Código', dataKey: 'codigo' },
@@ -694,19 +588,6 @@ export function PDFreporteStockProductosIndividual_img(processedRows) {
     { header: 'Imagen', dataKey: 'imagen' },
   ]
 
-  // Helper function to add images (you might need to adjust this based on your image handling)
-  const addImageToCell = (imagePath) => {
-    try {
-      // This should return an image object or data that jsPDF-autoTable can handle
-      // You might need to implement proper image loading logic here
-      console.log(imagen + imagePath)
-      return { image: imagen + imagePath, width: 15, height: 15 }
-    } catch (error) {
-      console.error('Error loading image:', error)
-      return ''
-    }
-  }
-
   const datos = processedRows.value.map((item, indice) => ({
     indice: indice + 1,
     codigo: item.codigo,
@@ -717,9 +598,10 @@ export function PDFreporteStockProductosIndividual_img(processedRows) {
     unidad: item.unidad,
     stock: item.stock,
     costo: decimas(redondear(parseFloat(item.costounitario) * parseFloat(item.stock))),
-    imagen: item.imagen ? addImageToCell(item.imagen) : '', // Handle cases where image might be missing
+    imagen: getComercialImagenProducto(item.imagen), // Handle cases where image might be missing
   }))
 
+  console.log(datos)
   const totalstock = processedRows.value.reduce(
     (sum, dato) => sum + redondear(parseFloat(dato.stock)),
     0,
@@ -729,8 +611,6 @@ export function PDFreporteStockProductosIndividual_img(processedRows) {
     (sum, dato) => sum + redondear(parseFloat(dato.stock) * parseFloat(dato.costounitario)),
     0,
   )
-
-  // Add summary row (better approach)
   datos.push({
     indice: '',
     codigo: '',
@@ -744,86 +624,51 @@ export function PDFreporteStockProductosIndividual_img(processedRows) {
     imagen: '',
   })
 
-  autoTable(doc, {
+  const columnStyles = {
+    indice: { cellWidth: 10, halign: 'center' },
+    codigo: { cellWidth: 30, halign: 'left' },
+    producto: { cellWidth: 40, halign: 'left' },
+    categoria: { cellWidth: 40, halign: 'left' },
+    subcategoria: { cellWidth: 30, halign: 'left' },
+    descripcion: { cellWidth: 50, halign: 'left' },
+    unidad: { cellWidth: 20, halign: 'center' },
+    stock: { cellWidth: 15, halign: 'right' },
+    costo: { cellWidth: 15, halign: 'right' },
+    imagen: { cellWidth: 40, halign: 'center' },
+  }
+  const headerColumnStyles = {
+    indice: { cellWidth: 10, halign: 'center' },
+    codigo: { cellWidth: 30, halign: 'left' },
+    producto: { cellWidth: 40, halign: 'left' },
+    categoria: { cellWidth: 40, halign: 'left' },
+    subcategoria: { cellWidth: 30, halign: 'left' },
+    descripcion: { cellWidth: 50, halign: 'left' },
+    unidad: { cellWidth: 20, halign: 'center' },
+    stock: { cellWidth: 15, halign: 'right' },
+    costo: { cellWidth: 15, halign: 'right' },
+    imagen: { cellWidth: 40, halign: 'center' },
+  }
+
+  dibujarCuerpoTabla(
+    doc,
     columns,
-    body: datos,
-    styles: {
-      overflow: 'linebreak',
-      fontSize: 5,
-      cellPadding: 2,
-    },
-    headStyles: {
-      fillColor: ColoEncabezadoTabla,
-      textColor: 255,
-      halign: 'center',
-    },
-    columnStyles: {
-      indice: { cellWidth: 10, halign: 'center' },
-      codigo: { cellWidth: 30, halign: 'left' },
-      producto: { cellWidth: 40, halign: 'left' },
-      categoria: { cellWidth: 40, halign: 'left' },
-      subcategoria: { cellWidth: 30, halign: 'left' },
-      descripcion: { cellWidth: 50, halign: 'left' },
-      unidad: { cellWidth: 20, halign: 'center' },
-      stock: { cellWidth: 15, halign: 'right' },
-      costo: { cellWidth: 15, halign: 'right' },
-      imagen: { cellWidth: 40, halign: 'center' },
-    },
-    startY: 30,
-    margin: { horizontal: 5 },
-    theme: 'striped',
-    didDrawPage: (data) => {
-      // Only add header on first page
-      if (data.pageNumber === 1) {
-        // Logo
-        if (logoBase64) {
-          const pageWidth = doc.internal.pageSize.getWidth() // Ancho total página
-          const imgWidth = 20 // Ancho del logo en mm
-          const imgHeight = 20 // Alto del logo en mm
-          const xPos = pageWidth - imgWidth - 5 // 10mm de margen derecho
-          const yPos = 5 // margen superior
-          console.log(logoBase64)
-          doc.addImage(logoBase64, 'JPEG', xPos, yPos, imgWidth, imgHeight)
-        }
-
-        // Company info
-        doc.setFontSize(7)
-        doc.setFont(undefined, 'bold')
-        doc.text(nombreEmpresa, 5, 10)
-
-        doc.setFontSize(6)
-        doc.setFont(undefined, 'normal')
-        doc.text(direccionEmpresa, 5, 13)
-        doc.text(`Tel: ${telefonoEmpresa}`, 5, 16)
-
-        // Title
-        doc.setFontSize(10)
-        doc.setFont(undefined, 'bold')
-        doc.text('REPORTE PRODUCTOS', doc.internal.pageSize.getWidth() / 2, 15, {
-          align: 'center',
-        })
-      }
-
-      // Footer with page number
-      const pageCount = doc.internal.getNumberOfPages()
-      doc.setFontSize(8)
-      doc.text(
-        `Página ${data.pageNumber} de ${pageCount}`,
-        doc.internal.pageSize.getWidth() / 2,
-        doc.internal.pageSize.getHeight() - 10,
-        { align: 'center' },
-      )
-    },
-  })
+    datos,
+    'REPORTE PRODUCTOS',
+    columnStyles,
+    headerColumnStyles,
+    null,
+    null,
+    true,
+    null,
+    null,
+  )
 
   return doc
 }
 
 export function generarPdfCotizacion(data) {
-  console.log(data)
   const comprobanteData = []
   const cotizacionDetalle = data[0]
-  console.log(cotizacionDetalle)
 
   const empresaInfo = cotizacionDetalle.empresa
   const usuarioInfo = cotizacionDetalle.usuario
@@ -864,16 +709,9 @@ export function generarPdfCotizacion(data) {
   comprobanteData.descuento = cotizacionInfo.descuento
   comprobanteData.subtotal = redondear(currentSubtotal)
   comprobanteData.montoTotal = redondear(currentSubtotal - cotizacionInfo.descuento)
-  console.log(comprobanteData)
   const detallePlano = comprobanteData
-  console.log(detallePlano)
-  const contenidousuario = validarUsuario()
-  const doc = new jsPDF({ orientation: 'portrait' })
 
-  const idempresa = contenidousuario[0]
-  const nombreEmpresa = idempresa.empresa.nombre
-  const direccionEmpresa = idempresa.empresa.direccion
-  const telefonoEmpresa = idempresa.empresa.telefono
+  const doc = new jsPDF({ orientation: 'portrait' })
 
   const columns = [
     { header: 'N°', dataKey: 'indice' },
@@ -883,9 +721,6 @@ export function generarPdfCotizacion(data) {
     { header: 'Total', dataKey: 'total' },
   ]
 
-  detallePlano.detalle.map((item) => {
-    console.log(item)
-  })
   const datos = detallePlano.detalle.map((item, indice) => ({
     indice: indice + 1,
     descripcion: item.descripcion,
@@ -908,145 +743,76 @@ export function generarPdfCotizacion(data) {
   // Fila para Monto Total
   datos.push({ precio: 'MONTO TOTAL', total: decimas(montototal) })
 
-  autoTable(doc, {
+  const columnStyles = {
+    indice: { cellWidth: 15, halign: 'center' },
+    descripcion: { cellWidth: 55, halign: 'left' },
+    cantidad: { cellWidth: 40, halign: 'right' },
+    precio: { cellWidth: 40, halign: 'right' },
+    total: { cellWidth: 50, halign: 'right' },
+  }
+  const headerColumnStyles = {
+    indice: { cellWidth: 15, halign: 'center' },
+    descripcion: { cellWidth: 55, halign: 'left' },
+    cantidad: { cellWidth: 40, halign: 'right' },
+    precio: { cellWidth: 40, halign: 'right' },
+    total: { cellWidth: 50, halign: 'right' },
+  }
+  const Izquierda = {
+    titulo: 'DATOS DEL CLIENTE',
+    campos: [
+      {
+        label: '',
+        valor: detallePlano.clienteDisplay,
+      },
+      {
+        label: '',
+        valor: detallePlano.direccion || '',
+      },
+      {
+        label: '',
+        valor: detallePlano.email || '',
+      },
+      {
+        label: 'Fecha de Venta',
+        valor: detallePlano.fecha || '',
+      },
+    ],
+  }
+  const derecho = {
+    titulo: 'DATOS DEL VENDEDOR',
+    campos: [
+      {
+        label: '',
+        valor: detallePlano.usuario || 'Todos los Almacenes',
+      },
+      {
+        label: '',
+        valor: detallePlano.cargo || '',
+      },
+    ],
+  }
+  const nfactura = cotizacionInfo.nfactura || ''
+  const divisa = divisaCotizacion.divisa || ''
+  const extras = {
+    expresadoDivisa: divisa,
+    numFactura: nfactura,
+    descripcionAdicional: 'descripcionAdicional',
+    descripcion: 'descripcion',
+  }
+
+  dibujarCuerpoTabla(
+    doc,
     columns,
-    body: datos,
-    styles: {
-      overflow: 'linebreak',
-      fontSize: 5,
-      cellPadding: 2,
-      minCellHeight: 7,
-    },
-    headStyles: {
-      fillColor: ColoEncabezadoTabla,
-      textColor: 255,
-      halign: 'center',
-    },
-    columnStyles: {
-      indice: { cellWidth: 15, halign: 'center' },
-      descripcion: { cellWidth: 50, halign: 'left' },
-      cantidad: { cellWidth: 40, halign: 'right' },
-      precio: { cellWidth: 40, halign: 'right' },
-      total: { cellWidth: 50, halign: 'right' },
-    },
-    didDrawCell: function (data) {
-      if (data.column.dataKey === 'descripcion' && data.cell.section === 'body') {
-        // Asegurarse de que el índice es válido para el detalle de productos
-        const detailIndex = data.row.index
-        // La tabla tiene filas adicionales para subtotales, descuentos y montos totales
-        // Estas filas deben excluirse de la búsqueda de 'descripcionAdicional'
-        if (detailIndex < detallePlano.detalle.length) {
-          const item = detallePlano.detalle[detailIndex]
-          if (item && item.descripcionAdicional) {
-            const text = convertirAMayusculas(doc.splitTextToSize(item.descripcionAdicional, 45))
-            doc.setFontSize(4)
-            doc.setTextColor(100)
-            doc.text(
-              text,
-              data.cell.x + 2,
-              data.cell.y + data.cell.height - 1, // justo debajo del texto principal
-            )
-            doc.setTextColor(0)
-          }
-        }
-      }
-    },
-    didParseCell: function (data) {
-      // Destacar las últimas filas (SUBTOTAL, DESCUENTO, MONTO TOTAL)
-      if (data.row.index >= datos.length - 3) {
-        // La primera columna de estas filas es donde está el texto (precio)
-        if (data.column.dataKey === 'precio') {
-          data.cell.styles.halign = 'left'
-          data.cell.styles.fontStyle = 'bold' // Opcional: poner el texto en negrita
-        }
-        // La columna Total debe seguir alineada a la derecha, por lo que no la modificamos aquí.
-      }
-    },
-
-    startY: 50,
-    margin: { horizontal: 5 },
-    theme: 'striped',
-    didDrawPage: () => {
-      if (doc.internal.getNumberOfPages() === 1) {
-        // Logo (requiere base64 o ruta absoluta en servidor si usas Node)
-        if (logoBase64) {
-          const pageWidth = doc.internal.pageSize.getWidth() // Ancho total página
-          const imgWidth = 20 // Ancho del logo en mm
-          const imgHeight = 20 // Alto del logo en mm
-          const xPos = pageWidth - imgWidth - 5 // 10mm de margen derecho
-          const yPos = 5 // margen superior
-          doc.addImage(logoBase64, 'JPEG', xPos, yPos, imgWidth, imgHeight)
-        }
-
-        // Nombre y datos de empresa
-        doc.setFontSize(7)
-        doc.setFont(undefined, 'bold')
-        doc.text(nombreEmpresa, 5, 10)
-
-        doc.setFontSize(6)
-        doc.setFont(undefined, 'normal')
-        doc.text(direccionEmpresa, 5, 13)
-        doc.text(`Tel: ${telefonoEmpresa}`, 5, 16)
-        doc.text(`Punto Venta: ${cotizacionInfo.puntoVenta}`, 5, 19)
-
-        // Título centrado
-        doc.setFontSize(10)
-        doc.setFont(undefined, 'bold')
-        doc.text('COTIZACIÓN', doc.internal.pageSize.getWidth() / 2, 15, {
-          align: 'center',
-        })
-        console.log(cotizacionInfo)
-        const nfactura = cotizacionInfo.nfactura || ''
-        const divisa = divisaCotizacion.divisa || ''
-        doc.setFontSize(10)
-        doc.setFont(undefined, 'normal')
-        doc.text('Nro. ' + nfactura, doc.internal.pageSize.getWidth() / 2, 19, {
-          align: 'center',
-        })
-
-        doc.setFontSize(6)
-        doc.setFont(undefined, 'normal')
-        doc.text('(Expresados en ' + divisa + ')', doc.internal.pageSize.getWidth() / 2, 22, {
-          align: 'center',
-        })
-
-        doc.setDrawColor(0) // Color negro
-        doc.setLineWidth(0.2) // Grosor de la línea
-        doc.line(5, 30, 200, 30) // De (x1=5, y1=25) a (x2=200, y2=25)
-
-        doc.setFontSize(7)
-        doc.setFont(undefined, 'bold')
-        doc.text('DATOS DEL CLIENTE:', 5, 35)
-
-        doc.setFontSize(6)
-        doc.setFont(undefined, 'normal')
-        doc.text(detallePlano.clienteDisplay, 5, 38)
-        doc.setFontSize(6)
-        doc.setFont(undefined, 'normal')
-        doc.text(detallePlano.direccion, 5, 41)
-
-        doc.setFontSize(6)
-        doc.setFont(undefined, 'normal')
-        doc.text(detallePlano.email, 5, 44)
-
-        doc.setFontSize(6)
-        doc.setFont(undefined, 'normal')
-        doc.text('Fecha de Venta: ' + cambiarFormatoFecha(detallePlano.fecha), 5, 47)
-
-        doc.setFontSize(7)
-        doc.setFont(undefined, 'bold')
-        doc.text('DATOS DEL VENDEDOR:', 200, 35, { align: 'right' })
-
-        doc.setFontSize(6)
-        doc.setFont(undefined, 'normal')
-        doc.text(detallePlano.usuario, 200, 38, { align: 'right' })
-
-        doc.setFontSize(6)
-        doc.setFont(undefined, 'normal')
-        doc.text(detallePlano.cargo, 200, 41, { align: 'right' })
-      }
-    },
-  })
+    datos,
+    'COTIZACIÓN',
+    columnStyles,
+    headerColumnStyles,
+    Izquierda,
+    derecho,
+    false,
+    null,
+    extras,
+  )
 
   // --- Lógica para el Watermark "Anulado" ---
   if (condicion == 2) {
@@ -1076,15 +842,7 @@ export function generarPdfCotizacion(data) {
 }
 
 export function PDFfacturaCorreo(detalleVenta) {
-  const contenidousuario = validarUsuario()
   const doc = new jsPDF({ orientation: 'portrait' })
-
-  const usuario = contenidousuario[0]
-  const nombreEmpresa = usuario.empresa.nombre
-
-  const direccionEmpresa = usuario.empresa.direccion
-  const telefonoEmpresa = usuario.empresa.telefono
-
   const columns = [
     { header: 'N°', dataKey: 'indice' },
     { header: 'Descripción', dataKey: 'descripcion' },
@@ -1095,15 +853,14 @@ export function PDFfacturaCorreo(detalleVenta) {
 
   const detallePlano = JSON.parse(JSON.stringify(detalleVenta.value))
 
-  detallePlano[0].detalle[0].map((item) => {
-    console.log(item)
-  })
+  const punto_venta = detallePlano[0].nombre_punto_venta
   const datos = detallePlano[0].detalle[0].map((item, indice) => ({
     indice: indice + 1,
     descripcion: item.descripcion,
     cantidad: decimas(item.cantidad),
     precio: decimas(item.precio),
     total: decimas(redondear(parseFloat(item.cantidad) * parseFloat(item.precio))),
+    descripcionAdicional: item.descripcionAdicional,
   }))
   const subtotal = detallePlano[0].detalle[0].reduce(
     (sum, dato) => sum + redondear(parseFloat(dato.cantidad) * parseFloat(dato.precio)),
@@ -1119,146 +876,91 @@ export function PDFfacturaCorreo(detalleVenta) {
     { precio: 'DESCUENTO', total: decimas(descuento) },
     { precio: 'MONTO TOTAL', total: decimas(montototal), descripcion: montoTexto },
   )
-  autoTable(doc, {
+  const columnStyles = {
+    indice: { cellWidth: 15, halign: 'center' },
+    descripcion: { cellWidth: 55, halign: 'left' },
+    cantidad: { cellWidth: 40, halign: 'right' },
+    precio: { cellWidth: 40, halign: 'right' },
+    total: { cellWidth: 50, halign: 'right' },
+  }
+  const headerColumnStyles = {
+    indice: { cellWidth: 15, halign: 'center' },
+    descripcion: { cellWidth: 55, halign: 'left' },
+    cantidad: { cellWidth: 40, halign: 'right' },
+    precio: { cellWidth: 40, halign: 'right' },
+    total: { cellWidth: 50, halign: 'right' },
+  }
+  const Izquierda = {
+    titulo: 'DATOS DEL CLIENTE',
+    campos: [
+      {
+        label: '',
+        valor:
+          detallePlano[0].cliente ||
+          '' + ' ' + detallePlano[0].nombrecomercial ||
+          '' + ' ' + detallePlano[0].sucursal ||
+          '',
+      },
+      {
+        label: '',
+        valor: detallePlano[0].direccion || '',
+      },
+      {
+        label: '',
+        valor: detallePlano[0].email || '',
+      },
+    ],
+  }
+  const derecho = {
+    titulo: 'DATOS DEL VENDEDOR',
+    campos: [
+      {
+        label: '',
+        valor: detallePlano[0].usuario[0].usuario || 'Todos los Almacenes',
+      },
+      {
+        label: '',
+        valor: detallePlano[0].usuario[0].cargo || '',
+      },
+      {
+        label: '',
+        valor: 'Venta a' + detallePlano[0].tipopago || '',
+      },
+      {
+        label: 'Punto Venta',
+        valor: punto_venta || '',
+      },
+    ],
+  }
+  const nfactura = detallePlano[0].nfactura || ''
+  const divisa = detallePlano[0].divisa || ''
+  const extras = {
+    expresadoDivisa: divisa,
+    numFactura: nfactura,
+    descripcionAdicional: 'descripcionAdicional',
+    descripcion: 'descripcion',
+  }
+
+  dibujarCuerpoTabla(
+    doc,
     columns,
-    body: datos,
-    styles: {
-      overflow: 'linebreak',
-      fontSize: 5,
-      cellPadding: 2,
-    },
-    headStyles: {
-      fillColor: ColoEncabezadoTabla,
-      textColor: 255,
-      halign: 'center',
-    },
-    columnStyles: {
-      indice: { cellWidth: 15, halign: 'center' },
-      descripcion: { cellWidth: 50, halign: 'left' },
-      cantidad: { cellWidth: 40, halign: 'right' },
-      precio: { cellWidth: 40, halign: 'right' },
-      total: { cellWidth: 50, halign: 'right' },
-    },
-    didParseCell: function (data) {
-      // Ejemplo: destacar la última fila (que contiene el Monto Total)
-      if (data.row.index === datos.length - 1) {
-        data.cell.styles.halign = 'left'
-      }
-      if (data.row.index === datos.length - 2) {
-        data.cell.styles.halign = 'left'
-      }
-      if (data.row.index === datos.length - 3) {
-        data.cell.styles.halign = 'left'
-      }
-    },
-    //20 + 15 + 20 + 25 + 30 + 20 + 20 + 25 + 20 + 15 + 20 + 15 + 20 = 265 mm
+    datos,
+    'COMPROBANTE DE VENTA',
+    columnStyles,
+    headerColumnStyles,
+    Izquierda,
+    derecho,
+    false,
+    null,
+    extras,
+  )
 
-    startY: 50,
-    margin: { horizontal: 5 },
-    theme: 'striped',
-    didDrawPage: () => {
-      if (doc.internal.getNumberOfPages() === 1) {
-        // Logo (requiere base64 o ruta absoluta en servidor si usas Node)
-        if (logoBase64) {
-          const pageWidth = doc.internal.pageSize.getWidth() // Ancho total página
-          const imgWidth = 20 // Ancho del logo en mm
-          const imgHeight = 20 // Alto del logo en mm
-          const xPos = pageWidth - imgWidth - 5 // 10mm de margen derecho
-          const yPos = 5 // margen superior
-          console.log(logoBase64)
-          doc.addImage(logoBase64, 'JPEG', xPos, yPos, imgWidth, imgHeight)
-        }
-
-        // Nombre y datos de empresa
-        doc.setFontSize(7)
-        doc.setFont(undefined, 'bold')
-        doc.text(nombreEmpresa, 5, 10)
-
-        doc.setFontSize(6)
-        doc.setFont(undefined, 'normal')
-        doc.text(direccionEmpresa, 5, 13)
-        doc.text(`Tel: ${telefonoEmpresa}`, 5, 16)
-
-        // Título centrado
-        doc.setFontSize(10)
-        doc.setFont(undefined, 'bold')
-        doc.text('COMPROBANTE DE VENTA', doc.internal.pageSize.getWidth() / 2, 15, {
-          align: 'center',
-        })
-        const nfactura = detallePlano[0].nfactura || ''
-        const divisa = detallePlano[0].divisa || ''
-        doc.setFontSize(10)
-        doc.setFont(undefined, 'normal')
-        doc.text('Nro. ' + nfactura, doc.internal.pageSize.getWidth() / 2, 19, {
-          align: 'center',
-        })
-
-        doc.setFontSize(6)
-        doc.setFont(undefined, 'normal')
-        doc.text('(Expresados en ' + divisa + ')', doc.internal.pageSize.getWidth() / 2, 22, {
-          align: 'center',
-        })
-
-        doc.setDrawColor(0) // Color negro
-        doc.setLineWidth(0.2) // Grosor de la línea
-        doc.line(5, 30, 200, 30) // De (x1=5, y1=25) a (x2=200, y2=25)
-
-        doc.setFontSize(7)
-        doc.setFont(undefined, 'bold')
-        doc.text('DATOS DEL CLIENTE:', 5, 35)
-
-        doc.setFontSize(6)
-        doc.setFont(undefined, 'normal')
-        doc.text(
-          detallePlano[0].cliente +
-            ' ' +
-            detallePlano[0].nombrecomercial +
-            ' ' +
-            detallePlano[0].sucursal,
-          5,
-          38,
-        )
-        doc.setFontSize(6)
-        doc.setFont(undefined, 'normal')
-        doc.text(detallePlano[0].direccion, 5, 41)
-
-        doc.setFontSize(6)
-        doc.setFont(undefined, 'normal')
-        doc.text(detallePlano[0].email, 5, 44)
-
-        doc.setFontSize(6)
-        doc.setFont(undefined, 'normal')
-        doc.text('Fecha de Venta: ' + cambiarFormatoFecha(detallePlano[0].fecha), 5, 47)
-
-        doc.setFontSize(7)
-        doc.setFont(undefined, 'bold')
-        doc.text('DATOS DEL VENDEDOR:', 200, 35, { align: 'right' })
-
-        doc.setFontSize(6)
-        doc.setFont(undefined, 'normal')
-        doc.text(detallePlano[0].usuario[0].usuario, 200, 38, { align: 'right' })
-
-        doc.setFontSize(6)
-        doc.setFont(undefined, 'normal')
-        doc.text(detallePlano[0].usuario[0].cargo, 200, 41, { align: 'right' })
-
-        doc.setFontSize(6)
-        doc.setFont(undefined, 'normal')
-        doc.text('Venta a' + detallePlano[0].tipopago, 200, 44, { align: 'right' })
-      }
-    },
-  })
   return doc
 }
 
 export function PDFComprovanteVenta(detalleVenta) {
-  const contenidousuario = validarUsuario()
   const doc = new jsPDF({ orientation: 'portrait' })
 
-  const idempresa = contenidousuario[0]
-  const nombreEmpresa = idempresa.empresa.nombre
-  const direccionEmpresa = idempresa.empresa.direccion
-  const telefonoEmpresa = idempresa.empresa.telefono
   const columns = [
     { header: 'N°', dataKey: 'indice' },
     { header: 'Descripción', dataKey: 'descripcion' },
@@ -1276,10 +978,13 @@ export function PDFComprovanteVenta(detalleVenta) {
   })
   const datos = detallePlano[0].detalle[0].map((item, indice) => ({
     indice: indice + 1,
-    descripcion: item.descripcion,
+    descripcion:
+      item.descripcion +
+      (item.descripcionAdicional ? '\n (' + item.descripcionAdicional + ')' : ''),
     cantidad: decimas(item.cantidad),
     precio: decimas(item.precio),
     total: decimas(redondear(parseFloat(item.cantidad) * parseFloat(item.precio))),
+    descripcionAdicional: item.descripcionAdicional,
   }))
   const subtotal = detallePlano[0].detalle[0].reduce(
     (sum, dato) => sum + redondear(parseFloat(dato.cantidad) * parseFloat(dato.precio)),
@@ -1295,154 +1000,87 @@ export function PDFComprovanteVenta(detalleVenta) {
     { precio: 'DESCUENTO', total: decimas(descuento) },
     { precio: 'MONTO TOTAL', total: decimas(montototal), descripcion: montoTexto },
   )
-  autoTable(doc, {
-    columns,
-    body: datos,
-    styles: {
-      overflow: 'linebreak',
-      fontSize: 5,
-      cellPadding: 2,
-      minCellHeight: 7,
-    },
-    headStyles: {
-      fillColor: ColoEncabezadoTabla,
-      textColor: 255,
-      halign: 'center',
-    },
-    columnStyles: {
-      indice: { cellWidth: 15, halign: 'center' },
-      descripcion: { cellWidth: 50, halign: 'left' },
-      cantidad: { cellWidth: 40, halign: 'right' },
-      precio: { cellWidth: 40, halign: 'right' },
-      total: { cellWidth: 50, halign: 'right' },
-    },
-    didDrawCell: function (data) {
-      if (data.column.dataKey === 'descripcion' && data.cell.section === 'body') {
-        const item = detallePlano[0].detalle[0][data.row.index]
-        if (item && item.descripcionAdicional) {
-          const text = convertirAMayusculas(doc.splitTextToSize(item.descripcionAdicional, 45))
-          doc.setFontSize(4)
-          doc.setTextColor(100)
-          doc.text(
-            text,
-            data.cell.x + 2,
-            data.cell.y + data.cell.height - 1, // justo debajo del texto principal
-          )
-          doc.setTextColor(0)
-        }
-      }
-    },
-    didParseCell: function (data) {
-      // Ejemplo: destacar la última fila (que contiene el Monto Total)
-      if (data.row.index === datos.length - 1) {
-        data.cell.styles.halign = 'left'
-      }
-      if (data.row.index === datos.length - 2) {
-        data.cell.styles.halign = 'left'
-      }
-      if (data.row.index === datos.length - 3) {
-        data.cell.styles.halign = 'left'
-      }
-    },
-    //20 + 15 + 20 + 25 + 30 + 20 + 20 + 25 + 20 + 15 + 20 + 15 + 20 = 265 mm
 
-    startY: 50,
-    margin: { horizontal: 5 },
-    theme: 'striped',
-
-    didDrawPage: () => {
-      if (doc.internal.getNumberOfPages() === 1) {
-        // Logo (requiere base64 o ruta absoluta en servidor si usas Node)
-        if (logoBase64) {
-          const pageWidth = doc.internal.pageSize.getWidth() // Ancho total página
-          const imgWidth = 20 // Ancho del logo en mm
-          const imgHeight = 20 // Alto del logo en mm
-          const xPos = pageWidth - imgWidth - 5 // 10mm de margen derecho
-          const yPos = 5 // margen superior
-          console.log(logoBase64)
-          doc.addImage(logoBase64, 'JPEG', xPos, yPos, imgWidth, imgHeight)
-        }
-
-        // Nombre y datos de empresa
-        doc.setFontSize(7)
-        doc.setFont(undefined, 'bold')
-        doc.text(nombreEmpresa, 5, 10)
-
-        doc.setFontSize(6)
-        doc.setFont(undefined, 'normal')
-        doc.text(direccionEmpresa, 5, 13)
-        doc.text(`Tel: ${telefonoEmpresa}`, 5, 16)
-        doc.text(`Punto Venta: ${punto_venta}`, 5, 19)
-
-        // Título centrado
-        doc.setFontSize(10)
-        doc.setFont(undefined, 'bold')
-        doc.text('COMPROBANTE DE VENTA', doc.internal.pageSize.getWidth() / 2, 15, {
-          align: 'center',
-        })
-        const nfactura = detallePlano[0].nfactura || ''
-        const divisa = detallePlano[0].divisa || ''
-        doc.setFontSize(10)
-        doc.setFont(undefined, 'normal')
-        doc.text('Nro. ' + nfactura, doc.internal.pageSize.getWidth() / 2, 19, {
-          align: 'center',
-        })
-
-        doc.setFontSize(6)
-        doc.setFont(undefined, 'normal')
-        doc.text('(Expresados en ' + divisa + ')', doc.internal.pageSize.getWidth() / 2, 22, {
-          align: 'center',
-        })
-
-        doc.setDrawColor(0) // Color negro
-        doc.setLineWidth(0.2) // Grosor de la línea
-        doc.line(5, 30, 200, 30) // De (x1=5, y1=25) a (x2=200, y2=25)
-
-        doc.setFontSize(7)
-        doc.setFont(undefined, 'bold')
-        doc.text('DATOS DEL CLIENTE:', 5, 35)
-
-        doc.setFontSize(6)
-        doc.setFont(undefined, 'normal')
-        doc.text(
+  const columnStyles = {
+    indice: { cellWidth: 15, halign: 'center' },
+    descripcion: { cellWidth: 55, halign: 'left' },
+    cantidad: { cellWidth: 40, halign: 'right' },
+    precio: { cellWidth: 40, halign: 'right' },
+    total: { cellWidth: 50, halign: 'right' },
+  }
+  const headerColumnStyles = {
+    indice: { cellWidth: 15, halign: 'center' },
+    descripcion: { cellWidth: 55, halign: 'left' },
+    cantidad: { cellWidth: 40, halign: 'right' },
+    precio: { cellWidth: 40, halign: 'right' },
+    total: { cellWidth: 50, halign: 'right' },
+  }
+  const Izquierda = {
+    titulo: 'DATOS DEL CLIENTE',
+    campos: [
+      {
+        label: '',
+        valor:
           detallePlano[0].cliente +
-            ' ' +
-            detallePlano[0].nombrecomercial +
-            ' ' +
-            detallePlano[0].sucursal,
-          5,
-          38,
-        )
-        doc.setFontSize(6)
-        doc.setFont(undefined, 'normal')
-        doc.text(detallePlano[0].direccion, 5, 41)
+          ' ' +
+          detallePlano[0].nombrecomercial +
+          ' ' +
+          detallePlano[0].sucursal,
+      },
+      {
+        label: '',
+        valor: detallePlano[0].direccion || '',
+      },
+      {
+        label: '',
+        valor: detallePlano[0].email || '',
+      },
+    ],
+  }
+  const derecho = {
+    titulo: 'DATOS DEL VENDEDOR',
+    campos: [
+      {
+        label: '',
+        valor: detallePlano[0].usuario[0].usuario || 'Todos los Almacenes',
+      },
+      {
+        label: '',
+        valor: detallePlano[0].usuario[0].cargo || '',
+      },
+      {
+        label: '',
+        valor: 'Venta a' + detallePlano[0].tipopago || '',
+      },
+      {
+        label: 'Punto Venta',
+        valor: punto_venta || '',
+      },
+    ],
+  }
+  const nfactura = detallePlano[0].nfactura || ''
+  const divisa = detallePlano[0].divisa || ''
+  const extras = {
+    expresadoDivisa: divisa,
+    numFactura: nfactura,
+    descripcionAdicional: 'descripcionAdicional',
+    descripcion: 'descripcion',
+  }
 
-        doc.setFontSize(6)
-        doc.setFont(undefined, 'normal')
-        doc.text(detallePlano[0].email, 5, 44)
+  dibujarCuerpoTabla(
+    doc,
+    columns,
+    datos,
+    'COMPROBANTE DE VENTA',
+    columnStyles,
+    headerColumnStyles,
+    Izquierda,
+    derecho,
+    false,
+    null,
+    extras,
+  )
 
-        doc.setFontSize(6)
-        doc.setFont(undefined, 'normal')
-        doc.text('Fecha de Venta: ' + cambiarFormatoFecha(detallePlano[0].fecha), 5, 47)
-
-        doc.setFontSize(7)
-        doc.setFont(undefined, 'bold')
-        doc.text('DATOS DEL VENDEDOR:', 200, 35, { align: 'right' })
-
-        doc.setFontSize(6)
-        doc.setFont(undefined, 'normal')
-        doc.text(detallePlano[0].usuario[0].usuario, 200, 38, { align: 'right' })
-
-        doc.setFontSize(6)
-        doc.setFont(undefined, 'normal')
-        doc.text(detallePlano[0].usuario[0].cargo, 200, 41, { align: 'right' })
-
-        doc.setFontSize(6)
-        doc.setFont(undefined, 'normal')
-        doc.text('Venta a' + detallePlano[0].tipopago, 200, 44, { align: 'right' })
-      }
-    },
-  })
   return doc
 }
 
@@ -1455,8 +1093,8 @@ export function PDFreporteVentasPeriodo(filteredCompra, almacen) {
     { header: 'Cliente', dataKey: 'cliente' },
     { header: 'Sucursal', dataKey: 'sucursal' },
     { header: 'Tipo-Venta', dataKey: 'tipoventa' },
-    { header: 'Tipo-Pago', dataKey: 'tipopago' },
-    { header: 'Nro.Factura', dataKey: 'nfactura' },
+    { header: 'Pago', dataKey: 'tipopago' },
+    { header: 'Nro. Factura', dataKey: 'nfactura' },
     { header: 'Canal', dataKey: 'canal' },
     { header: 'Total', dataKey: 'total' },
     { header: 'Dscto', dataKey: 'descuento' },
@@ -1494,97 +1132,58 @@ export function PDFreporteVentasPeriodo(filteredCompra, almacen) {
     descuento: decimas(descuento),
     ventatotal: decimas(total + descuento),
   })
+  const columnStyles = {
+    indice: { cellWidth: 10, halign: 'center' },
+    fecha: { cellWidth: 20, halign: 'left' },
+    cliente: { cellWidth: 25, halign: 'left' },
+    sucursal: { cellWidth: 25, halign: 'left' },
+    tipoventa: { cellWidth: 25, halign: 'center' },
+    tipopago: { cellWidth: 15, halign: 'center' },
+    nfactura: { cellWidth: 15, halign: 'center' },
+    canal: { cellWidth: 20, halign: 'left' },
+    total: { cellWidth: 15, halign: 'right' },
+    descuento: { cellWidth: 15, halign: 'right' },
+    ventatotal: { cellWidth: 15, halign: 'right' },
+  }
+  const headerColumnStyles = {
+    indice: { cellWidth: 10, halign: 'center' },
+    fecha: { cellWidth: 20, halign: 'left' },
+    cliente: { cellWidth: 25, halign: 'left' },
+    sucursal: { cellWidth: 25, halign: 'left' },
+    tipoventa: { cellWidth: 25, halign: 'center' },
+    tipopago: { cellWidth: 15, halign: 'center' },
+    nfactura: { cellWidth: 15, halign: 'center' },
+    canal: { cellWidth: 20, halign: 'left' },
+    total: { cellWidth: 15, halign: 'right' },
+    descuento: { cellWidth: 15, halign: 'right' },
+    ventatotal: { cellWidth: 15, halign: 'right' },
+  }
+  const alm = almacen.value || { label: 'Todos los Almacenes', value: 0 }
+  console.log(alm)
+  const Izquierda = {
+    titulo: 'DATOS DEL REPORTE',
+    campos: [
+      {
+        label: 'Nombre del Almacen',
+        valor: alm.label || '',
+      },
+    ],
+  }
 
-  console.log(almacen.value)
-  autoTable(doc, {
+  dibujarCuerpoTabla(
+    doc,
     columns,
-    body: datos,
-    styles: {
-      overflow: 'linebreak',
-      fontSize: 5,
-      cellPadding: 2,
-    },
-    headStyles: {
-      fillColor: ColoEncabezadoTabla,
-      textColor: 255,
-      halign: 'center',
-    },
-    columnStyles: {
-      indice: { cellWidth: 10, halign: 'center' },
-      fecha: { cellWidth: 15, halign: 'left' },
-      cliente: { cellWidth: 25, halign: 'left' },
-      sucursal: { cellWidth: 25, halign: 'left' },
-      tipoventa: { cellWidth: 25, halign: 'center' },
-      tipopago: { cellWidth: 15, halign: 'center' },
-      nfactura: { cellWidth: 15, halign: 'center' },
-      canal: { cellWidth: 20, halign: 'left' },
-      total: { cellWidth: 15, halign: 'right' },
-      descuento: { cellWidth: 15, halign: 'right' },
-      ventatotal: { cellWidth: 15, halign: 'right' },
-    },
-    //20 + 15 + 20 + 25 + 30 + 20 + 20 + 25 + 20 + 15 + 20 + 15 + 20 = 265 mm
+    datos,
+    'REPORTE VENTAS',
+    columnStyles,
+    headerColumnStyles,
+    Izquierda,
+    null,
+    true,
+    null,
+    null,
+  )
 
-    startY: 45,
-    margin: { horizontal: 5 },
-    theme: 'striped',
-    didDrawPage: () => {
-      if (doc.internal.getNumberOfPages() === 1) {
-        // Logo (requiere base64 o ruta absoluta en servidor si usas Node)
-        if (logoBase64) {
-          const pageWidth = doc.internal.pageSize.getWidth() // Ancho total página
-          const imgWidth = 20 // Ancho del logo en mm
-          const imgHeight = 20 // Alto del logo en mm
-          const xPos = pageWidth - imgWidth - 5 // 10mm de margen derecho
-          const yPos = 5 // margen superior
-          console.log(logoBase64)
-          doc.addImage(logoBase64, 'JPEG', xPos, yPos, imgWidth, imgHeight)
-        }
-
-        // Nombre y datos de empresa
-        doc.setFontSize(7)
-        doc.setFont(undefined, 'bold')
-        doc.text(nombreEmpresa, 5, 10)
-
-        doc.setFontSize(6)
-        doc.setFont(undefined, 'normal')
-        doc.text(direccionEmpresa, 5, 13)
-        doc.text(`Tel: ${telefonoEmpresa}`, 5, 16)
-
-        // Título centrado
-        doc.setFontSize(10)
-        doc.setFont(undefined, 'bold')
-        doc.text('REPORTE VENTAS', doc.internal.pageSize.getWidth() / 2, 15, { align: 'center' })
-
-        doc.setDrawColor(0) // Color negro
-        doc.setLineWidth(0.2) // Grosor de la línea
-        doc.line(5, 30, 200, 30) // De (x1=5, y1=25) a (x2=200, y2=25)
-
-        doc.setFontSize(7)
-        doc.setFont(undefined, 'bold')
-        doc.text('DATOS DEL REPORTE', 5, 35)
-
-        doc.setFontSize(6)
-        doc.setFont(undefined, 'normal')
-        doc.text('Nombre del Almacen: ' + (almacen.value?.label || 'Todo los Almacenes'), 5, 38)
-
-        doc.setFontSize(6)
-        doc.setFont(undefined, 'normal')
-        doc.text('Fecha de Impresion: ' + cambiarFormatoFecha(obtenerFechaActualDato()), 5, 41)
-
-        doc.setFontSize(7)
-        doc.setFont(undefined, 'bold')
-        doc.text('DATOS DEL ENCARGADO:', 200, 35, { align: 'right' })
-
-        doc.setFontSize(6)
-        doc.setFont(undefined, 'normal')
-        doc.text(nombre, 200, 38, { align: 'right' })
-
-        doc.setFontSize(6)
-        doc.setFont(undefined, 'normal')
-        doc.text(cargo, 200, 41, { align: 'right' })
-      }
-    },
-  })
   return doc
 }
 
@@ -1765,140 +1364,77 @@ export async function PDFdetalleVentaInicio(detalleVenta) {
     { precio: 'MONTO TOTAL', total: decimas(montototal), descripcion: montoTexto },
   )
 
-  console.log(datos)
-  autoTable(doc, {
+  const columnStyles = {
+    indice: { cellWidth: 15, halign: 'center' },
+    descripcion: { cellWidth: 55, halign: 'left' },
+    cantidad: { cellWidth: 40, halign: 'right' },
+    precio: { cellWidth: 40, halign: 'right' },
+    total: { cellWidth: 50, halign: 'right' },
+  }
+  const headerColumnStyles = {
+    indice: { cellWidth: 15, halign: 'center' },
+    descripcion: { cellWidth: 55, halign: 'left' },
+    cantidad: { cellWidth: 40, halign: 'right' },
+    precio: { cellWidth: 40, halign: 'right' },
+    total: { cellWidth: 50, halign: 'right' },
+  }
+  const Izquierda = {
+    titulo: 'DATOS DEL CLIENTE',
+    campos: [
+      {
+        label: '',
+        valor:
+          detallePlano[0].cliente ||
+          '' + ' ' + detallePlano[0].nombrecomercial ||
+          '' + ' ' + detallePlano[0].sucursal ||
+          '',
+      },
+      {
+        label: '',
+        valor: detallePlano[0].direccion || '',
+      },
+      {
+        label: '',
+        valor: detallePlano[0].email || '',
+      },
+    ],
+  }
+  const derecho = {
+    titulo: 'DATOS DEL VENDEDOR',
+    campos: [
+      {
+        label: '',
+        valor: detallePlano[0].usuario[0].usuario || 'Todos los Almacenes',
+      },
+      {
+        label: '',
+        valor: detallePlano[0].usuario[0].cargo || '',
+      },
+      {
+        label: '',
+        valor: 'Venta a' + detallePlano[0].tipopago || '',
+      },
+    ],
+  }
+  const nfactura = detallePlano[0].nfactura || ''
+  const divisa = detallePlano[0].divisa || ''
+  const extras = {
+    expresadoDivisa: divisa,
+    numFactura: nfactura,
+  }
+  dibujarCuerpoTabla(
+    doc,
     columns,
-    body: datos,
-    styles: {
-      overflow: 'linebreak',
-      fontSize: 5,
-      cellPadding: 2,
-    },
-    headStyles: {
-      fillColor: ColoEncabezadoTabla,
-      textColor: 255,
-      halign: 'center',
-    },
-    columnStyles: {
-      indice: { cellWidth: 15, halign: 'center' },
-      descripcion: { cellWidth: 50, halign: 'left' },
-      cantidad: { cellWidth: 40, halign: 'right' },
-      precio: { cellWidth: 40, halign: 'right' },
-      total: { cellWidth: 50, halign: 'right' },
-    },
-    didParseCell: function (data) {
-      // Ejemplo: destacar la última fila (que contiene el Monto Total)
-      if (data.row.index === datos.length - 1) {
-        data.cell.styles.halign = 'left'
-      }
-      if (data.row.index === datos.length - 2) {
-        data.cell.styles.halign = 'left'
-      }
-      if (data.row.index === datos.length - 3) {
-        data.cell.styles.halign = 'left'
-      }
-      // También puedes aplicar estilo a una fila específica, por ejemplo la de índice 2:
-      // if (data.row.index === 2) {
-      //   data.cell.styles.fontStyle = 'italic'
-      //   data.cell.styles.fillColor = [255, 240, 200]
-      // }
-    },
-    //20 + 15 + 20 + 25 + 30 + 20 + 20 + 25 + 20 + 15 + 20 + 15 + 20 = 265 mm
-
-    startY: 50,
-    margin: { horizontal: 5 },
-    theme: 'striped',
-    didDrawPage: () => {
-      if (doc.internal.getNumberOfPages() === 1) {
-        if (logoBase64) {
-          const pageWidth = doc.internal.pageSize.getWidth() // Ancho total página
-          const imgWidth = 20 // Ancho del logo en mm
-          const imgHeight = 20 // Alto del logo en mm
-          const xPos = pageWidth - imgWidth - 5 // 10mm de margen derecho
-          const yPos = 5 // margen superior
-          console.log(logoBase64)
-          doc.addImage(logoBase64, 'JPEG', xPos, yPos, imgWidth, imgHeight)
-        }
-
-        // Nombre y datos de empresa
-        doc.setFontSize(7)
-        doc.setFont(undefined, 'bold')
-        doc.text(nombreEmpresa, 5, 10)
-
-        doc.setFontSize(6)
-        doc.setFont(undefined, 'normal')
-        doc.text(direccionEmpresa, 5, 13)
-        doc.text(`Tel: ${telefonoEmpresa}`, 5, 16)
-
-        // Título centrado
-        doc.setFontSize(10)
-        doc.setFont(undefined, 'bold')
-        doc.text('COMPROBANTE DE VENTA', doc.internal.pageSize.getWidth() / 2, 15, {
-          align: 'center',
-        })
-        const nfactura = detallePlano[0].nfactura || ''
-        const divisa = detallePlano[0].divisa || ''
-        doc.setFontSize(10)
-        doc.setFont(undefined, 'normal')
-        doc.text('Nro. ' + nfactura, doc.internal.pageSize.getWidth() / 2, 19, {
-          align: 'center',
-        })
-
-        doc.setFontSize(6)
-        doc.setFont(undefined, 'normal')
-        doc.text('(Expresados en ' + divisa + ')', doc.internal.pageSize.getWidth() / 2, 22, {
-          align: 'center',
-        })
-
-        doc.setDrawColor(0) // Color negro
-        doc.setLineWidth(0.2) // Grosor de la línea
-        doc.line(5, 30, 200, 30) // De (x1=5, y1=25) a (x2=200, y2=25)
-
-        doc.setFontSize(7)
-        doc.setFont(undefined, 'bold')
-        doc.text('DATOS DEL CLIENTE:', 5, 35)
-
-        doc.setFontSize(6)
-        doc.setFont(undefined, 'normal')
-        doc.text(
-          detallePlano[0].cliente +
-            ' ' +
-            detallePlano[0].nombrecomercial +
-            ' ' +
-            detallePlano[0].sucursal,
-          5,
-          38,
-        )
-        doc.setFontSize(6)
-        doc.setFont(undefined, 'normal')
-        doc.text(detallePlano[0].direccion, 5, 41)
-
-        doc.setFontSize(6)
-        doc.setFont(undefined, 'normal')
-        doc.text(detallePlano[0].email, 5, 44)
-
-        doc.setFontSize(6)
-        doc.setFont(undefined, 'normal')
-        doc.text('Fecha de Venta: ' + cambiarFormatoFecha(detallePlano[0].fecha), 5, 47)
-
-        doc.setFontSize(7)
-        doc.setFont(undefined, 'bold')
-        doc.text('DATOS DEL VENDEDOR:', 200, 35, { align: 'right' })
-
-        doc.setFontSize(6)
-        doc.setFont(undefined, 'normal')
-        doc.text(detallePlano[0].usuario[0].usuario, 200, 38, { align: 'right' })
-
-        doc.setFontSize(6)
-        doc.setFont(undefined, 'normal')
-        doc.text(detallePlano[0].usuario[0].cargo, 200, 41, { align: 'right' })
-
-        doc.setFontSize(6)
-        doc.setFont(undefined, 'normal')
-        doc.text('Venta a' + detallePlano[0].tipopago, 200, 44, { align: 'right' })
-      }
-    },
-  })
+    datos,
+    'COMPROBANTE DE VENTA',
+    columnStyles,
+    headerColumnStyles,
+    Izquierda,
+    derecho,
+    false,
+    null,
+    extras,
+  )
 
   return doc
 }
@@ -1963,7 +1499,7 @@ export async function PDFenviarFacturaCorreoAlInicio(idcliente, detalleVenta, $q
   }
 }
 
-export function DPFReporteCotizacion(cotizaciones) {
+export function DPFReporteCotizacion(cotizaciones, almacen) {
   console.log(cotizaciones.value)
   const doc = new jsPDF({ orientation: 'portrait' })
 
@@ -2011,223 +1547,59 @@ export function DPFReporteCotizacion(cotizaciones) {
   datos.push(pieTable)
   console.log(datos)
 
-  autoTable(doc, {
-    columns: columns,
-    body: datos,
-    styles: {
-      overflow: 'linebreak',
-      fontSize: 6, // Slightly increased for readability
-      cellPadding: 1, // Reduced padding to fit more columns
-    },
-    headStyles: {
-      fillColor: ColoEncabezadoTabla,
-      textColor: 255,
-      halign: 'center',
-      fontSize: 7, // Header font size
-    },
-    columnStyles: {
-      nro: { cellWidth: 15, halign: 'center' }, // Adjusted width
-      fecha: { cellWidth: 25, halign: 'center' },
-      cliente: { cellWidth: 50, halign: 'left' },
-      sucursal: { cellWidth: 50, halign: 'left' },
-      descuento: { cellWidth: 20, halign: 'right' },
-      cotizaciontotal: { cellWidth: 20, halign: 'right' },
-      total: { cellWidth: 20, halign: 'right' },
+  const columnStyles = {
+    nro: { cellWidth: 15, halign: 'center' }, // Adjusted width
+    fecha: { cellWidth: 25, halign: 'left' },
+    cliente: { cellWidth: 50, halign: 'left' },
+    sucursal: { cellWidth: 50, halign: 'left' },
+    cotizaciontotal: { cellWidth: 20, halign: 'right' },
 
-      // photo_detalle_cobro: { cellWidth: 20, halign: 'center' }, // If you re-add photo, adjust width
-    },
-    startY: 30,
-    margin: { horizontal: 5 },
-    theme: 'striped',
-    didDrawPage: () => {
-      // Use 'data' parameter provided by autoTable
-      // Only draw header on the first page
-      // Or draw on every page: if (doc.internal.getNumberOfPages() === 1) { ... }
-      // This header will appear on every page for multi-page reports
-      doc.setFontSize(7)
-      doc.setFont(undefined, 'normal') // Reset font style
+    descuento: { cellWidth: 20, halign: 'right' },
+    total: { cellWidth: 20, halign: 'right' },
+  }
+  const headerColumnStyles = {
+    nro: { cellWidth: 15, halign: 'center' }, // Adjusted width
+    fecha: { cellWidth: 25, halign: 'left' },
+    cliente: { cellWidth: 50, halign: 'left' },
+    sucursal: { cellWidth: 50, halign: 'left' },
+    cotizaciontotal: { cellWidth: 20, halign: 'right' },
+    descuento: { cellWidth: 20, halign: 'right' },
 
-      // Header content
-      doc.setDrawColor(0) // Black
-      doc.setLineWidth(0.2) // Line thickness
+    total: { cellWidth: 20, halign: 'right' },
+  }
+  const Izquierda = {
+    titulo: 'DATOS REPORTE',
+    campos: [
+      {
+        label: 'Almacén',
+        valor: almacen.almacen || 'Todos los Almacenes',
+      },
+    ],
+  }
 
-      // Line before header
-      if (doc.internal.getNumberOfPages() === 1) {
-        if (logoBase64) {
-          const pageWidth = doc.internal.pageSize.getWidth() // Ancho total página
-          const imgWidth = 20 // Ancho del logo en mm
-          const imgHeight = 20 // Alto del logo en mm
-          const xPos = pageWidth - imgWidth - 5 // 10mm de margen derecho
-          const yPos = 5 // margen superior
-          console.log(logoBase64)
-          doc.addImage(logoBase64, 'JPEG', xPos, yPos, imgWidth, imgHeight)
-        }
-        // If logoEmpresa is a URL, it's more complex. Consider using it as Base64.
-        // doc.addImage(`${URL_APIE}${logoEmpresa}`, 'PNG', 180, 8, 20, 20) // If using URL, uncomment and ensure URL_APIE is defined
+  dibujarCuerpoTabla(
+    doc,
+    columns,
+    datos,
+    'REPORTE COTIZACIONES',
+    columnStyles,
+    headerColumnStyles,
+    Izquierda,
+    null,
+    true,
+    null,
+  )
 
-        // Company Info (Left)
-        doc.setFontSize(7)
-        doc.setFont(undefined, 'bold')
-        doc.text(nombreEmpresa, 5, 10)
-        doc.setFontSize(6)
-        doc.setFont(undefined, 'normal')
-        doc.text(direccionEmpresa, 5, 13)
-        doc.text(`Tel: ${telefonoEmpresa}`, 5, 16)
-
-        // Report Title (Center)
-        doc.setFontSize(10)
-        doc.setFont(undefined, 'bold')
-        doc.text('REPORTE COTIZACIONES', doc.internal.pageSize.getWidth() / 2, 15, {
-          align: 'center',
-        })
-
-        // Line after header before data section
-
-        // Report Data Info (Left below line)
-      }
-      // Logo (if base64)
-
-      // Footer (Page Number)
-      const pageNumber = doc.internal.getNumberOfPages()
-      doc.setFontSize(8)
-      doc.text(
-        `Página ${pageNumber}`,
-        doc.internal.pageSize.getWidth() - 15,
-        doc.internal.pageSize.getHeight() - 10,
-        { align: 'right' },
-      )
-      doc.text(
-        `Fecha de Impresión: ${cambiarFormatoFecha(obtenerFechaActualDato())}`,
-        15,
-        doc.internal.pageSize.getHeight() - 10,
-        { align: 'left' },
-      )
-    },
-  })
-
-  // Set the PDF data URL and show the modal didParseCell
   return doc
 }
 
 export function PDFConprovanteCotizacion(cotizacion) {
   console.log(cotizacion[0].detalle)
   const doc = new jsPDF({ orientation: 'portrait' })
-
-  const columns = [
-    { header: 'N°', dataKey: 'nro' },
-    { header: 'Codigo', dataKey: 'codigoProducto' },
-    { header: 'Producto', dataKey: 'descripcion' },
-    { header: 'Cantidad', dataKey: 'cantidad' },
-    { header: 'Precio', dataKey: 'precio' },
-    { header: 'SubTotal', dataKey: 'subtotal' },
-  ]
-
-  const datos = cotizacion[0].detalle.map((key, indice) => ({
-    nro: indice + 1,
-    codigoProducto: key.codigoProducto,
-    descripcion: key.descripcion,
-    cantidad: key.cantidad,
-    precio: decimas(parseFloat(key.precio)),
-    subtotal: decimas(parseFloat(key.cantidad) * parseFloat(key.precio)),
-  }))
-  const total = datos.reduce((sum, u) => {
-    return decimas(parseFloat(sum) + parseFloat(u.subtotal))
-  }, 0)
-
-  const pieTable = {
-    precio: 'Total:',
-    subtotal: decimas(parseFloat(total)),
-  }
-  datos.push(pieTable)
-
-  autoTable(doc, {
-    columns: columns,
-    body: datos,
-    styles: {
-      overflow: 'linebreak',
-      fontSize: 6,
-      cellPadding: 1,
-    },
-    headStyles: {
-      fillColor: ColoEncabezadoTabla,
-      textColor: 255,
-      halign: 'center',
-      fontSize: 7,
-    },
-
-    columnStyles: {
-      nro: { cellWidth: 15, halign: 'center' },
-      codigoProducto: { cellWidth: 50, halign: 'left' },
-      descripcion: { cellWidth: 50, halign: 'left' },
-      cantidad: { cellWidth: 30, halign: 'right' },
-      precio: { cellWidth: 25, halign: 'right' },
-      subtotal: { cellWidth: 30, halign: 'right' },
-    },
-    startY: 30,
-    margin: { horizontal: 5 },
-    theme: 'striped',
-    didDrawPage: () => {
-      doc.setFontSize(7)
-      doc.setFont(undefined, 'normal')
-      doc.setDrawColor(0) // Black
-      doc.setLineWidth(0.2) // Line thickness
-      if (doc.internal.getNumberOfPages() === 1) {
-        if (logoBase64) {
-          const pageWidth = doc.internal.pageSize.getWidth() // Ancho total página
-          const imgWidth = 20 // Ancho del logo en mm
-          const imgHeight = 20 // Alto del logo en mm
-          const xPos = pageWidth - imgWidth - 5 // 10mm de margen derecho
-          const yPos = 5 // margen superior
-          console.log(logoBase64)
-          doc.addImage(logoBase64, 'JPEG', xPos, yPos, imgWidth, imgHeight)
-        }
-
-        // If logoEmpresa is a URL, it's more complex. Consider using it as Base64.
-        // doc.addImage(`${URL_APIE}${logoEmpresa}`, 'PNG', 180, 8, 20, 20) // If using URL, uncomment and ensure URL_APIE is defined
-
-        // Company Info (Left)
-        doc.setFontSize(7)
-        doc.setFont(undefined, 'bold')
-        doc.text(nombreEmpresa, 5, 10)
-        doc.setFontSize(6)
-        doc.setFont(undefined, 'normal')
-        doc.text(direccionEmpresa, 5, 13)
-        doc.text(`Tel: ${telefonoEmpresa}`, 5, 16)
-
-        // Report Title (Center)
-        doc.setFontSize(10)
-        doc.setFont(undefined, 'bold')
-        doc.text('COMPROBANTE', doc.internal.pageSize.getWidth() / 2, 15, {
-          align: 'center',
-        })
-
-        // Line after header before data section
-
-        // Report Data Info (Left below line)
-      }
-      // Logo (if base64)
-
-      // Footer (Page Number)
-      const pageNumber = doc.internal.getNumberOfPages()
-      doc.setFontSize(8)
-      doc.text(
-        `Página ${pageNumber}`,
-        doc.internal.pageSize.getWidth() - 15,
-        doc.internal.pageSize.getHeight() - 10,
-        { align: 'right' },
-      )
-      doc.text(
-        `Fecha de Impresión: ${cambiarFormatoFecha(obtenerFechaActualDato())}`,
-        15,
-        doc.internal.pageSize.getHeight() - 10,
-        { align: 'left' },
-      )
-    },
-  })
   return doc
 }
 
-export function PDFextrabiosRobos(extravios) {
+export function PDFextrabiosRobos(extravios, almacen) {
   const doc = new jsPDF({ orientation: 'portrait' })
 
   // Columns for jsPDF-autoTable
@@ -2247,109 +1619,50 @@ export function PDFextrabiosRobos(extravios) {
     descripcion: key.descripcion,
     autorizacion: Number(key.autorizacion) === 1 ? 'Autorizado' : 'No Autorizado',
   }))
-  // Data for jsPDF-autoTable - map from `reportData.
-  // value
 
-  autoTable(doc, {
-    columns: columns,
-    body: datos,
-    styles: {
-      overflow: 'linebreak',
-      fontSize: 6, // Slightly increased for readability
-      cellPadding: 1, // Reduced padding to fit more columns
-    },
-    headStyles: {
-      fillColor: ColoEncabezadoTabla,
-      textColor: 255,
-      halign: 'center',
-      fontSize: 7, // Header font size
-    },
-    columnStyles: {
-      nro: { cellWidth: 15, halign: 'center' }, // Adjusted width
-      fecha: { cellWidth: 30, halign: 'center' },
-      almacen: { cellWidth: 50, halign: 'left' },
-      descripcion: { cellWidth: 80, halign: 'left' },
-      autorizacion: { cellWidth: 20, halign: 'left' },
+  const columnStyles = {
+    nro: { cellWidth: 15, halign: 'center' }, // Adjusted width
+    fecha: { cellWidth: 30, halign: 'center' },
+    almacen: { cellWidth: 50, halign: 'left' },
+    descripcion: { cellWidth: 80, halign: 'left' },
+    autorizacion: { cellWidth: 25, halign: 'left' },
+  }
+  const headerColumnStyles = {
+    nro: { cellWidth: 15, halign: 'center' }, // Adjusted width
+    fecha: { cellWidth: 30, halign: 'center' },
+    almacen: { cellWidth: 50, halign: 'left' },
+    descripcion: { cellWidth: 80, halign: 'left' },
+    autorizacion: { cellWidth: 25, halign: 'left' },
+  }
 
-      // photo_detalle_cobro: { cellWidth: 20, halign: 'center' }, // If you re-add photo, adjust width
-    },
-    startY: 30,
-    margin: { horizontal: 5 },
-    theme: 'striped',
-    didDrawPage: () => {
-      // Use 'data' parameter provided by autoTable
-      // Only draw header on the first page
-      // Or draw on every page: if (doc.internal.getNumberOfPages() === 1) { ... }
-      // This header will appear on every page for multi-page reports
-      doc.setFontSize(7)
-      doc.setFont(undefined, 'normal') // Reset font style
+  const Izquierda = {
+    titulo: 'DATOS MERMA',
+    campos: [
+      {
+        label: 'Almacén',
+        valor: almacen.label || 'Todos los Almacenes',
+      },
+    ],
+  }
 
-      // Header content
-      doc.setDrawColor(0) // Black
-      doc.setLineWidth(0.2) // Line thickness
-
-      // Line before header
-      if (doc.internal.getNumberOfPages() === 1) {
-        if (logoBase64) {
-          const pageWidth = doc.internal.pageSize.getWidth() // Ancho total página
-          const imgWidth = 20 // Ancho del logo en mm
-          const imgHeight = 20 // Alto del logo en mm
-          const xPos = pageWidth - imgWidth - 5 // 10mm de margen derecho
-          const yPos = 5 // margen superior
-          console.log(logoBase64)
-          doc.addImage(logoBase64, 'JPEG', xPos, yPos, imgWidth, imgHeight)
-        }
-
-        // If logoEmpresa is a URL, it's more complex. Consider using it as Base64.
-        // doc.addImage(`${URL_APIE}${logoEmpresa}`, 'PNG', 180, 8, 20, 20) // If using URL, uncomment and ensure URL_APIE is defined
-
-        // Company Info (Left)
-        doc.setFontSize(7)
-        doc.setFont(undefined, 'bold')
-        doc.text(nombreEmpresa, 5, 10)
-        doc.setFontSize(6)
-        doc.setFont(undefined, 'normal')
-        doc.text(direccionEmpresa, 5, 13)
-        doc.text(`Tel: ${telefonoEmpresa}`, 5, 16)
-
-        // Report Title (Center)
-        doc.setFontSize(10)
-        doc.setFont(undefined, 'bold')
-        doc.text('REPORTE DE MERMAS', doc.internal.pageSize.getWidth() / 2, 15, {
-          align: 'center',
-        })
-
-        // Line after header before data section
-
-        // Report Data Info (Left below line)
-      }
-      // Logo (if base64)
-
-      // Footer (Page Number)
-      const pageNumber = doc.internal.getNumberOfPages()
-      doc.setFontSize(8)
-      doc.text(
-        `Página ${pageNumber}`,
-        doc.internal.pageSize.getWidth() - 15,
-        doc.internal.pageSize.getHeight() - 10,
-        { align: 'right' },
-      )
-      doc.text(
-        `Fecha de Impresión: ${cambiarFormatoFecha(obtenerFechaActualDato())}`,
-        15,
-        doc.internal.pageSize.getHeight() - 10,
-        { align: 'left' },
-      )
-    },
-  })
+  dibujarCuerpoTabla(
+    doc,
+    columns,
+    datos,
+    'REPORTE DE EXTRAVIO',
+    columnStyles,
+    headerColumnStyles,
+    Izquierda,
+    null,
+    true,
+    null,
+  )
 
   // Set the PDF data URL and show the modal didParseCell
   return doc
 }
 
 export function PDFComprovanteExtravio(detalleExtravio, robo) {
-  const fecha = new Date().toLocaleString('es-BO')
-
   const doc = new jsPDF({ orientation: 'portrait' })
   const columns = [
     { header: 'N°', dataKey: 'indice' },
@@ -2357,106 +1670,60 @@ export function PDFComprovanteExtravio(detalleExtravio, robo) {
     { header: 'Descripción', dataKey: 'descripcion' },
     { header: 'Cantidad', dataKey: 'cantidad' },
   ]
-  console.log(detalleExtravio)
 
   const datos = detalleExtravio.map((item, indice) => ({
     indice: indice + 1,
     ...item,
   }))
-  console.log(datos)
+  const columnStyles = {
+    indice: { cellWidth: 15, halign: 'center' },
+    codigo: { cellWidth: 50, halign: 'left' },
+    descripcion: { cellWidth: 70, halign: 'left' },
+    cantidad: { cellWidth: 65, halign: 'right' },
+  }
+  const headerColumnStyles = {
+    indice: { cellWidth: 15, halign: 'center' },
+    codigo: { cellWidth: 50, halign: 'left' },
+    descripcion: { cellWidth: 70, halign: 'left' },
+    cantidad: { cellWidth: 65, halign: 'right' },
+  }
 
-  autoTable(doc, {
+  const Izquierda = {
+    titulo: 'DATOS MERMA',
+    campos: [
+      {
+        label: 'Almacén',
+        valor: robo.almacen || 'Todos los Almacenes',
+      },
+      {
+        label: 'Fecha de Registro',
+        valor: cambiarFormatoFecha(robo.fecha) || '',
+      },
+      {
+        label: 'Almacén',
+        valor: (robo.autorizacion == 1 ? 'Autorizado' : 'No Autorizado') || '',
+      },
+    ],
+  }
+
+  dibujarCuerpoTabla(
+    doc,
     columns,
-    body: datos,
-    styles: {
-      overflow: 'linebreak',
-      fontSize: 5,
-      cellPadding: 2,
-    },
-    headStyles: {
-      fillColor: ColoEncabezadoTabla,
-      textColor: 255,
-      halign: 'center',
-    },
-    columnStyles: {
-      indice: { cellWidth: 15, halign: 'center' },
-      codigo: { cellWidth: 50, halign: 'left' },
-      descripcion: { cellWidth: 70, halign: 'left' },
-      cantidad: { cellWidth: 65, halign: 'right' },
-    },
+    datos,
+    'COMPROBANTE DE EXTRAVIO',
+    columnStyles,
+    headerColumnStyles,
+    Izquierda,
+    null,
+    true,
+    null,
+  )
 
-    //20 + 15 + 20 + 25 + 30 + 20 + 20 + 25 + 20 + 15 + 20 + 15 + 20 = 265 mm
-
-    startY: 45,
-    margin: { horizontal: 5 },
-    theme: 'striped',
-    didDrawPage: () => {
-      if (doc.internal.getNumberOfPages() === 1) {
-        // Logo (requiere base64 o ruta absoluta en servidor si usas Node)
-        if (logoBase64) {
-          const pageWidth = doc.internal.pageSize.getWidth() // Ancho total página
-          const imgWidth = 20 // Ancho del logo en mm
-          const imgHeight = 20 // Alto del logo en mm
-          const xPos = pageWidth - imgWidth - 5 // 10mm de margen derecho
-          const yPos = 5 // margen superior
-          console.log(logoBase64)
-          doc.addImage(logoBase64, 'JPEG', xPos, yPos, imgWidth, imgHeight)
-        }
-
-        // Nombre y datos de empresa
-        doc.setFontSize(7)
-        doc.setFont(undefined, 'bold')
-        doc.text(nombreEmpresa, 5, 10)
-
-        doc.setFontSize(6)
-        doc.setFont(undefined, 'normal')
-        doc.text(direccionEmpresa, 5, 13)
-        doc.text(`Tel: ${telefonoEmpresa}`, 5, 16)
-
-        // Título centrado
-        doc.setFontSize(10)
-        doc.setFont(undefined, 'bold')
-        doc.text('COMPROBANTE DE EXTRAVIO', doc.internal.pageSize.getWidth() / 2, 15, {
-          align: 'center',
-        })
-
-        doc.setDrawColor(0) // Color negro
-        doc.setLineWidth(0.2) // Grosor de la línea
-        doc.line(5, 30, 200, 30) // De (x1=5, y1=25) a (x2=200, y2=25)
-
-        doc.setFontSize(7)
-        doc.setFont(undefined, 'bold')
-        doc.text('DATOS MERMA:', 5, 35)
-
-        doc.setFontSize(6)
-        doc.setFont(undefined, 'normal')
-        doc.text('Almacen: ' + robo.almacen, 5, 38)
-        doc.setFontSize(6)
-        doc.setFont(undefined, 'normal')
-        doc.text('Fecha de Registro: ' + robo.fecha, 5, 41)
-        doc.setFont(undefined, 'normal')
-        doc.text('Estado: ' + (robo.autorizacion == 1 ? 'Autorizado' : 'No Autorizado'), 5, 44)
-
-        doc.setFontSize(7)
-        doc.setFont(undefined, 'bold')
-
-        doc.text('DATOS DEL ENCARGADO:', 200, 35, {
-          align: 'right',
-        })
-        doc.setFontSize(6)
-        doc.setFont(undefined, 'normal')
-        doc.text(nombre, 200, 38, { align: 'right' })
-        doc.text(cargo, 200, 41, { align: 'right' })
-        doc.text('Fecha Impresion: ' + fecha, 200, 44, { align: 'right' })
-      }
-    },
-  })
   return doc
 }
 
-export function PDFreporteMermas(mermas) {
+export function PDFreporteMermas(mermas, almacen) {
   const doc = new jsPDF({ orientation: 'portrait' })
-
   // Columns for jsPDF-autoTable
   const columns = [
     { header: 'N', dataKey: 'nro' },
@@ -2474,101 +1741,44 @@ export function PDFreporteMermas(mermas) {
     descripcion: key.descripcion,
     autorizacion: Number(key.autorizacion) === 1 ? 'Autorizado' : 'No Autorizado',
   }))
-  // Data for jsPDF-autoTable - map from `reportData.
-  // value
 
-  autoTable(doc, {
-    columns: columns,
-    body: datos,
-    styles: {
-      overflow: 'linebreak',
-      fontSize: 6, // Slightly increased for readability
-      cellPadding: 1, // Reduced padding to fit more columns
-    },
-    headStyles: {
-      fillColor: ColoEncabezadoTabla,
-      textColor: 255,
-      halign: 'center',
-      fontSize: 7, // Header font size
-    },
-    columnStyles: {
-      nro: { cellWidth: 15, halign: 'center' }, // Adjusted width
-      fecha: { cellWidth: 30, halign: 'center' },
-      almacen: { cellWidth: 50, halign: 'left' },
-      descripcion: { cellWidth: 80, halign: 'left' },
-      autorizacion: { cellWidth: 20, halign: 'left' },
+  const columnStyles = {
+    nro: { cellWidth: 15, halign: 'center' }, // Adjusted width
+    fecha: { cellWidth: 30, halign: 'center' },
+    almacen: { cellWidth: 50, halign: 'left' },
+    descripcion: { cellWidth: 80, halign: 'left' },
+    autorizacion: { cellWidth: 25, halign: 'left' },
+  }
+  const headerColumnStyles = {
+    nro: { cellWidth: 15, halign: 'center' }, // Adjusted width
+    fecha: { cellWidth: 30, halign: 'center' },
+    almacen: { cellWidth: 50, halign: 'left' },
+    descripcion: { cellWidth: 80, halign: 'left' },
+    autorizacion: { cellWidth: 25, halign: 'left' },
+  }
 
-      // photo_detalle_cobro: { cellWidth: 20, halign: 'center' }, // If you re-add photo, adjust width
-    },
-    startY: 30,
-    margin: { horizontal: 5 },
-    theme: 'striped',
-    didDrawPage: () => {
-      // Use 'data' parameter provided by autoTable
-      // Only draw header on the first page
-      // Or draw on every page: if (doc.internal.getNumberOfPages() === 1) { ... }
-      // This header will appear on every page for multi-page reports
-      doc.setFontSize(7)
-      doc.setFont(undefined, 'normal') // Reset font style
+  const Izquierda = {
+    titulo: 'DATOS DEL REPORTE',
+    campos: [
+      {
+        label: 'Almacén',
+        valor: almacen.label || 'Todos los Almacenes',
+      },
+    ],
+  }
 
-      // Header content
-      doc.setDrawColor(0) // Black
-      doc.setLineWidth(0.2) // Line thickness
-
-      // Line before header
-      if (doc.internal.getNumberOfPages() === 1) {
-        if (logoBase64) {
-          const pageWidth = doc.internal.pageSize.getWidth() // Ancho total página
-          const imgWidth = 20 // Ancho del logo en mm
-          const imgHeight = 20 // Alto del logo en mm
-          const xPos = pageWidth - imgWidth - 5 // 10mm de margen derecho
-          const yPos = 5 // margen superior
-          console.log(logoBase64)
-          doc.addImage(logoBase64, 'JPEG', xPos, yPos, imgWidth, imgHeight)
-        }
-
-        // If logoEmpresa is a URL, it's more complex. Consider using it as Base64.
-        // doc.addImage(`${URL_APIE}${logoEmpresa}`, 'PNG', 180, 8, 20, 20) // If using URL, uncomment and ensure URL_APIE is defined
-
-        // Company Info (Left)
-        doc.setFontSize(7)
-        doc.setFont(undefined, 'bold')
-        doc.text(nombreEmpresa, 5, 10)
-        doc.setFontSize(6)
-        doc.setFont(undefined, 'normal')
-        doc.text(direccionEmpresa, 5, 13)
-        doc.text(`Tel: ${telefonoEmpresa}`, 5, 16)
-
-        // Report Title (Center)
-        doc.setFontSize(10)
-        doc.setFont(undefined, 'bold')
-        doc.text('REPORTE DE MERMAS', doc.internal.pageSize.getWidth() / 2, 15, {
-          align: 'center',
-        })
-
-        // Line after header before data section
-
-        // Report Data Info (Left below line)
-      }
-      // Logo (if base64)
-
-      // Footer (Page Number)
-      const pageNumber = doc.internal.getNumberOfPages()
-      doc.setFontSize(8)
-      doc.text(
-        `Página ${pageNumber}`,
-        doc.internal.pageSize.getWidth() - 15,
-        doc.internal.pageSize.getHeight() - 10,
-        { align: 'right' },
-      )
-      doc.text(
-        `Fecha de Impresión: ${cambiarFormatoFecha(obtenerFechaActualDato())}`,
-        15,
-        doc.internal.pageSize.getHeight() - 10,
-        { align: 'left' },
-      )
-    },
-  })
+  dibujarCuerpoTabla(
+    doc,
+    columns,
+    datos,
+    'REPORTE DE MERMAS',
+    columnStyles,
+    headerColumnStyles,
+    Izquierda,
+    null,
+    true,
+    null,
+  )
 
   // Set the PDF data URL and show the modal didParseCell
   return doc
@@ -2576,116 +1786,62 @@ export function PDFreporteMermas(mermas) {
 
 export function PDFComprovanteMerma(detallemerma, merma) {
   const doc = new jsPDF({ orientation: 'portrait' })
-  const fecha = new Date().toLocaleString('es-BO')
   const columns = [
     { header: 'N°', dataKey: 'indice' },
     { header: 'Codigo', dataKey: 'codigo' },
     { header: 'Descripción', dataKey: 'descripcion' },
     { header: 'Cantidad', dataKey: 'cantidad' },
   ]
-  console.log(detallemerma)
 
   const datos = detallemerma.map((item, indice) => ({
     indice: indice + 1,
     ...item,
   }))
-  console.log(datos)
 
-  autoTable(doc, {
+  const columnStyles = {
+    indice: { cellWidth: 15, halign: 'center' },
+    codigo: { cellWidth: 50, halign: 'left' },
+    descripcion: { cellWidth: 70, halign: 'left' },
+    cantidad: { cellWidth: 65, halign: 'right' },
+  }
+  const headerColumnStyles = {
+    indice: { cellWidth: 15, halign: 'center' },
+    codigo: { cellWidth: 50, halign: 'left' },
+    descripcion: { cellWidth: 70, halign: 'left' },
+    cantidad: { cellWidth: 65, halign: 'right' },
+  }
+
+  const Izquierda = {
+    titulo: 'DATOS DEL REPORTE',
+    campos: [
+      {
+        label: 'Almacén',
+        valor: merma.almacen || 'Todos los Almacenes',
+      },
+      {
+        label: 'Fecha de Registro',
+        valor: merma.fecha || '-',
+      },
+      {
+        label: 'Estado',
+        valor: (merma.autorizacion == 1 ? 'Autorizado' : 'No Autorizado') || '',
+      },
+    ],
+  }
+
+  dibujarCuerpoTabla(
+    doc,
     columns,
-    body: datos,
-    styles: {
-      overflow: 'linebreak',
-      fontSize: 5,
-      cellPadding: 2,
-    },
-    headStyles: {
-      fillColor: ColoEncabezadoTabla,
-      textColor: 255,
-      halign: 'center',
-    },
-    columnStyles: {
-      indice: { cellWidth: 15, halign: 'center' },
-      codigo: { cellWidth: 50, halign: 'left' },
-      descripcion: { cellWidth: 70, halign: 'left' },
-      cantidad: { cellWidth: 65, halign: 'right' },
-    },
+    datos,
+    'COMPROBANTE DE MERMA',
+    columnStyles,
+    headerColumnStyles,
+    Izquierda,
+    null,
+    true,
+    null,
+  )
 
-    //20 + 15 + 20 + 25 + 30 + 20 + 20 + 25 + 20 + 15 + 20 + 15 + 20 = 265 mm
-
-    startY: 45,
-    margin: { horizontal: 5 },
-    theme: 'striped',
-    didDrawPage: () => {
-      if (doc.internal.getNumberOfPages() === 1) {
-        // Logo (requiere base64 o ruta absoluta en servidor si usas Node)
-        if (logoBase64) {
-          const pageWidth = doc.internal.pageSize.getWidth() // Ancho total página
-          const imgWidth = 20 // Ancho del logo en mm
-          const imgHeight = 20 // Alto del logo en mm
-          const xPos = pageWidth - imgWidth - 5 // 10mm de margen derecho
-          const yPos = 5 // margen superior
-          console.log(logoBase64)
-          doc.addImage(logoBase64, 'JPEG', xPos, yPos, imgWidth, imgHeight)
-        }
-
-        // Nombre y datos de empresa
-        doc.setFontSize(7)
-        doc.setFont(undefined, 'bold')
-        doc.text(nombreEmpresa, 5, 10)
-
-        doc.setFontSize(6)
-        doc.setFont(undefined, 'normal')
-        doc.text(direccionEmpresa, 5, 13)
-        doc.text(`Tel: ${telefonoEmpresa}`, 5, 16)
-
-        // Título centrado
-        doc.setFontSize(10)
-        doc.setFont(undefined, 'bold')
-        doc.text('COMPROBANTE DE MERMA', doc.internal.pageSize.getWidth() / 2, 15, {
-          align: 'center',
-        })
-
-        //       {
-        //   id: '40',
-        //   fecha: '2025-10-30',
-        //   descripcion: '-',
-        //   idalmacen: '93',
-        //   autorizacion: '1',
-        //   almacen: 'Bodega Norte Quillacollo'
-        // }
-        doc.setDrawColor(0) // Color negro
-        doc.setLineWidth(0.2) // Grosor de la línea
-        doc.line(5, 30, 200, 30) // De (x1=5, y1=25) a (x2=200, y2=25)
-
-        doc.setFontSize(7)
-        doc.setFont(undefined, 'bold')
-        doc.text('DATOS MERMA:', 5, 35)
-
-        doc.setFontSize(6)
-        doc.setFont(undefined, 'normal')
-        doc.text('Almacen: ' + merma.almacen, 5, 38)
-        doc.setFontSize(6)
-        doc.setFont(undefined, 'normal')
-        doc.text('Fecha de Registro: ' + merma.fecha, 5, 41)
-        doc.setFont(undefined, 'normal')
-        doc.text('Estado: ' + (merma.autorizacion == 1 ? 'Autorizado' : 'No Autorizado'), 5, 44)
-
-        doc.setFontSize(7)
-        doc.setFont(undefined, 'bold')
-
-        doc.text('DATOS DEL ENCARGADO:', 200, 35, {
-          align: 'right',
-        })
-        doc.setFontSize(6)
-        doc.setFont(undefined, 'normal')
-        doc.text(nombre, 200, 38, { align: 'right' })
-        doc.text(cargo, 200, 41, { align: 'right' })
-
-        doc.text('Fecha Impresion: ' + fecha, 200, 44, { align: 'right' })
-      }
-    },
-  })
   return doc
 }
 
@@ -2718,106 +1874,63 @@ export function PDFKardex(kardex, almacenLabel, productoLabel, fechaiR, fechafR)
     Saldo: divisaActiva + ' ' + parseFloat(item.Saldo).toFixed(2),
   }))
 
-  autoTable(doc, {
+  const columnStyles = {
+    c: { cellWidth: 10, halign: 'center' },
+    Fecha: { cellWidth: 20, halign: 'center' },
+    Concepto: { cellWidth: 25, halign: 'left' },
+    Entrada: { cellWidth: 15, halign: 'right' },
+    Salida: { cellWidth: 15, halign: 'right' },
+    Existencia: { cellWidth: 20, halign: 'right' },
+    costouniario: { cellWidth: 20, halign: 'right' },
+    Debe: { cellWidth: 20, halign: 'right' },
+    Haber: { cellWidth: 25, halign: 'right' },
+    Saldo: { cellWidth: 30, halign: 'right' },
+  }
+  const headerColumnStyles = {
+    c: { cellWidth: 10, halign: 'center' },
+    Fecha: { cellWidth: 20, halign: 'center' },
+    Concepto: { cellWidth: 25, halign: 'left' },
+    Entrada: { cellWidth: 15, halign: 'right' },
+    Salida: { cellWidth: 15, halign: 'right' },
+    Existencia: { cellWidth: 20, halign: 'right' },
+    costouniario: { cellWidth: 20, halign: 'right' },
+    Debe: { cellWidth: 20, halign: 'right' },
+    Haber: { cellWidth: 25, halign: 'right' },
+    Saldo: { cellWidth: 30, halign: 'right' },
+  }
+
+  const Izquierda = {
+    titulo: 'DATOS DEL REPORTE',
+    campos: [
+      {
+        label: 'Almacén',
+        valor: almacenLabel || 'Todos los Almacenes',
+      },
+      {
+        label: 'Producto',
+        valor: productoLabel || '',
+      },
+    ],
+  }
+
+  const fechas = {
+    inicio: fechaiR,
+
+    final: fechafR,
+  }
+
+  dibujarCuerpoTabla(
+    doc,
     columns,
-    body: datos,
-    styles: {
-      overflow: 'linebreak',
-      fontSize: 5,
-      cellPadding: 2,
-    },
-    headStyles: {
-      fillColor: [128, 128, 128], // Negro
-      textColor: 255,
-      halign: 'center',
-      fontSize: 7,
-      fontStyle: 'bold',
-    },
-    columnStyles: {
-      c: { cellWidth: 10, halign: 'center' },
-      Fecha: { cellWidth: 20, halign: 'center' },
-      Concepto: { cellWidth: 25, halign: 'left' },
-      Entrada: { cellWidth: 15, halign: 'right' },
-      Salida: { cellWidth: 15, halign: 'right' },
-      Existencia: { cellWidth: 20, halign: 'right' },
-      costouniario: { cellWidth: 20, halign: 'right' },
-      Debe: { cellWidth: 20, halign: 'right' },
-      Haber: { cellWidth: 25, halign: 'right' },
-      Saldo: { cellWidth: 25, halign: 'right' },
-    },
-    //20 + 15 + 20 + 25 + 30 + 20 + 20 + 25 + 20 + 15 + 20 + 15 + 20 = 265 mm
-
-    startY: 46,
-    margin: { horizontal: 5 },
-    theme: 'striped',
-    didDrawPage: () => {
-      if (doc.internal.getNumberOfPages() === 1) {
-        // Logo (requiere base64 o ruta absoluta en servidor si usas Node)
-        if (logoBase64) {
-          const pageWidth = doc.internal.pageSize.getWidth() // Ancho total página
-          const imgWidth = 20 // Ancho del logo en mm
-          const imgHeight = 20 // Alto del logo en mm
-          const xPos = pageWidth - imgWidth - 10 // 10mm de margen derecho
-          const yPos = 5 // margen superior
-
-          doc.addImage(logoBase64, 'JPEG', xPos, yPos, imgWidth, imgHeight)
-        }
-
-        // Nombre y datos de empresa
-        doc.setFontSize(7)
-        doc.setFont(undefined, 'bold')
-        doc.text(nombreEmpresa, 5, 10)
-
-        doc.setFontSize(6)
-        doc.setFont(undefined, 'normal')
-        doc.text(direccionEmpresa, 5, 13)
-        doc.text(`Tel: ${telefonoEmpresa}`, 5, 16)
-
-        // Título centrado
-        doc.setFontSize(10)
-        doc.setFont(undefined, 'bold')
-        doc.text('REPORTE KARDEX', doc.internal.pageSize.getWidth() / 2, 15, { align: 'center' })
-
-        doc.setFontSize(6)
-        doc.setFont(undefined, 'normal')
-        doc.text('Entre ' + fechaiR + ' Y ' + fechafR, doc.internal.pageSize.getWidth() / 2, 18, {
-          align: 'center',
-        })
-
-        doc.setDrawColor(0) // Color negro
-        doc.setLineWidth(0.2) // Grosor de la línea
-        doc.line(5, 30, 200, 30) // De (x1=5, y1=25) a (x2=200, y2=25)
-
-        doc.setFontSize(7)
-        doc.setFont(undefined, 'bold')
-        doc.text('DATOS DEL REPORTE', 5, 35)
-
-        doc.setFontSize(6)
-        doc.setFont(undefined, 'normal')
-        doc.text('Almacén: ' + almacenLabel, 5, 38)
-
-        doc.setFontSize(6)
-        doc.setFont(undefined, 'normal')
-        doc.text('Producto: ' + productoLabel, 5, 41)
-
-        doc.setFontSize(6)
-        doc.setFont(undefined, 'normal')
-        doc.text('Fecha de Impresion: ' + cambiarFormatoFecha(obtenerFechaActualDato()), 5, 44)
-
-        doc.setFontSize(7)
-        doc.setFont(undefined, 'bold')
-        doc.text('DATOS DEL ENCARGADO:', 200, 35, { align: 'right' })
-
-        doc.setFontSize(6)
-        doc.setFont(undefined, 'normal')
-        doc.text(nombre, 200, 38, { align: 'right' })
-
-        doc.setFontSize(6)
-        doc.setFont(undefined, 'normal')
-        doc.text(cargo, 200, 41, { align: 'right' })
-      }
-    },
-  })
+    datos,
+    'REPORTE KARDEX',
+    columnStyles,
+    headerColumnStyles,
+    Izquierda,
+    null,
+    true,
+    fechas,
+  )
   return doc
 }
 
@@ -2871,7 +1984,7 @@ export function PDFCierreCaja(datosCierreCaja) {
   doc.text('DATOS DEL ENCARGADO:', 200, 35, { align: 'right' })
   doc.setFontSize(6)
   doc.setFont(undefined, 'normal')
-  doc.text(nombre, 200, 38, { align: 'right' })
+  doc.text(encargadoNombre, 200, 38, { align: 'right' })
   doc.text(cargo, 200, 41, { align: 'right' })
 
   // === TABLA 1: Conceptos ===
@@ -3001,12 +2114,12 @@ export function PDFpedidos(ordenados, tipoestados, filtroAlmacen) {
 
     { header: 'Observación', dataKey: 'observacion' },
     { header: 'Autorización', dataKey: 'autorizacion' },
-    { header: 'Esatado', dataKey: 'estado' },
+    { header: 'Estado', dataKey: 'estado' },
   ]
 
   const datos = ordenados.value.map((item, indice) => ({
     indice: indice + 1,
-    fecha: item.fecha,
+    fecha: cambiarFormatoFecha(item.fecha),
     codigo: item.codigo,
     nropedido: item.nropedido,
     tipopedido: Number(item.tipopedido) === 1 ? 'Pedido Compra' : 'Pedido Movimiento',
@@ -3017,98 +2130,54 @@ export function PDFpedidos(ordenados, tipoestados, filtroAlmacen) {
     autorizacion: item.autorizacion == 2 ? 'No Autorizado' : 'Autorizado',
   }))
 
-  autoTable(doc, {
+  const columnStyles = {
+    indice: { cellWidth: 10, halign: 'center' },
+    fecha: { cellWidth: 15, halign: 'left' },
+    codigo: { cellWidth: 25, halign: 'left' },
+    nropedido: { cellWidth: 10, halign: 'center' },
+    tipopedido: { cellWidth: 25, halign: 'left' },
+    almacenorigen: { cellWidth: 20, halign: 'left' },
+    almacen: { cellWidth: 20, halign: 'left' },
+    observacion: { cellWidth: 35, halign: 'left' },
+    estado: { cellWidth: 20, halign: 'left' },
+    autorizacion: { cellWidth: 20, halign: 'left' },
+  }
+  const headerColumnStyles = {
+    indice: { cellWidth: 10, halign: 'center' },
+    fecha: { cellWidth: 15, halign: 'left' },
+    codigo: { cellWidth: 25, halign: 'left' },
+    nropedido: { cellWidth: 10, halign: 'center' },
+    tipopedido: { cellWidth: 25, halign: 'left' },
+    almacenorigen: { cellWidth: 20, halign: 'left' },
+    almacen: { cellWidth: 20, halign: 'left' },
+    observacion: { cellWidth: 35, halign: 'left' },
+    estado: { cellWidth: 20, halign: 'left' },
+    autorizacion: { cellWidth: 20, halign: 'left' },
+  }
+
+  const almacen = filtroAlmacen.value
+  const Izquierda = {
+    titulo: 'DATOS DEL REPORTE',
+    campos: [
+      {
+        label: 'Almacén',
+        valor: almacen.label || 'Todos los Almacenes',
+      },
+    ],
+  }
+
+  dibujarCuerpoTabla(
+    doc,
     columns,
-    body: datos,
-    styles: {
-      overflow: 'linebreak',
-      fontSize: 5,
-      cellPadding: 2,
-    },
-    headStyles: {
-      fillColor: [128, 128, 128], // Negro
-      textColor: 255,
-      halign: 'center',
-    },
-    columnStyles: {
-      indice: { cellWidth: 10, halign: 'center' },
-      fecha: { cellWidth: 15, halign: 'left' },
-      codigo: { cellWidth: 25, halign: 'left' },
-      nropedido: { cellWidth: 10, halign: 'center' },
-      tipopedido: { cellWidth: 25, halign: 'left' },
-      almacenorigen: { cellWidth: 20, halign: 'left' },
-      almacen: { cellWidth: 20, halign: 'left' },
-      observacion: { cellWidth: 35, halign: 'left' },
-      estado: { cellWidth: 15, halign: 'left' },
-      autorizacion: { cellWidth: 20, halign: 'left' },
-    },
-    //20 + 15 + 20 + 25 + 30 + 20 + 20 + 25 + 20 + 15 + 20 + 15 + 20 = 265 mm
-
-    startY: 45,
-    margin: { horizontal: 5 },
-    theme: 'striped',
-    didDrawPage: () => {
-      if (doc.internal.getNumberOfPages() === 1) {
-        // Logo (requiere base64 o ruta absoluta en servidor si usas Node)
-        if (logoBase64) {
-          const pageWidth = doc.internal.pageSize.getWidth() // Ancho total página
-          const imgWidth = 20 // Ancho del logo en mm
-          const imgHeight = 20 // Alto del logo en mm
-          const xPos = pageWidth - imgWidth - 10 // 10mm de margen derecho
-          const yPos = 5 // margen superior
-
-          doc.addImage(logoBase64, 'JPEG', xPos, yPos, imgWidth, imgHeight)
-        }
-
-        // Nombre y datos de empresa
-        doc.setFontSize(7)
-        doc.setFont(undefined, 'bold')
-        doc.text(nombreEmpresa, 5, 10)
-
-        doc.setFontSize(6)
-        doc.setFont(undefined, 'normal')
-        doc.text(direccionEmpresa, 5, 13)
-        doc.text(`Tel: ${telefonoEmpresa}`, 5, 16)
-
-        // Título centrado
-        doc.setFontSize(10)
-        doc.setFont(undefined, 'bold')
-        doc.text('PEDIDOS', doc.internal.pageSize.getWidth() / 2, 15, { align: 'center' })
-
-        doc.setDrawColor(0) // Color negro
-        doc.setLineWidth(0.2) // Grosor de la línea
-        doc.line(5, 30, 200, 30) // De (x1=5, y1=25) a (x2=200, y2=25)
-
-        doc.setFontSize(7)
-        doc.setFont(undefined, 'bold')
-        doc.text('DATOS DEL REPORTE', 5, 35)
-        console.log(filtroAlmacen.value)
-        doc.setFontSize(6)
-        doc.setFont(undefined, 'normal')
-        doc.text(
-          'Nombre del Almacen: ' + (filtroAlmacen.value?.label || 'Todos los Almacenes'),
-          5,
-          38,
-        )
-
-        doc.setFontSize(6)
-        doc.setFont(undefined, 'normal')
-        doc.text('Fecha de Impresion: ' + cambiarFormatoFecha(obtenerFechaActualDato()), 5, 41)
-
-        doc.setFontSize(7)
-        doc.setFont(undefined, 'bold')
-        doc.text('DATOS DEL ENCARGADO:', 200, 35, { align: 'right' })
-
-        doc.setFontSize(6)
-        doc.setFont(undefined, 'normal')
-        doc.text(nombre, 200, 38, { align: 'right' })
-
-        doc.setFontSize(6)
-        doc.setFont(undefined, 'normal')
-        doc.text(cargo, 200, 41, { align: 'right' })
-      }
-    },
-  })
+    datos,
+    'PEDIDOS',
+    columnStyles,
+    headerColumnStyles,
+    Izquierda,
+    null,
+    true,
+    null,
+  )
   return doc
 }
 
@@ -3120,8 +2189,6 @@ export function PDFalmacenes(props) {
     { header: 'Nombre', dataKey: 'nombre' },
     { header: 'Codigo', dataKey: 'codigo' },
     { header: 'Dirección', dataKey: 'direccion' },
-    { header: 'Teléfono', dataKey: 'telefono' },
-    { header: 'Email', dataKey: 'email' },
     { header: 'Tipo almacén', dataKey: 'tipoalmacen' },
     { header: 'Stock min', dataKey: 'stockmin' },
     { header: 'Stock max', dataKey: 'stockmax' },
@@ -3134,8 +2201,6 @@ export function PDFalmacenes(props) {
     nombre: item.nombre,
     codigo: item.codigo,
     direccion: item.direccion,
-    telefono: item.telefono,
-    email: item.email,
     tipoalmacen: item.tipoalmacen,
     stockmin: item.stockmin,
     stockmax: item.stockmax,
@@ -3143,61 +2208,41 @@ export function PDFalmacenes(props) {
     estado: Number(item.estado) === 1 ? 'Activo' : 'Inactivo',
   }))
 
-  autoTable(doc, {
+  const columnStyles = {
+    indice: { cellWidth: 10, halign: 'center' },
+    nombre: { cellWidth: 25, halign: 'left' },
+    codigo: { cellWidth: 15, halign: 'left' },
+    direccion: { cellWidth: 45, halign: 'left' },
+    tipoalmacen: { cellWidth: 25, halign: 'left' },
+    stockmin: { cellWidth: 15, halign: 'right' },
+    stockmax: { cellWidth: 15, halign: 'right' },
+    sucursal: { cellWidth: 35, halign: 'left' },
+    estado: { cellWidth: 15, halign: 'left' },
+  }
+  const headerColumnStyles = {
+    indice: { cellWidth: 10, halign: 'center' },
+    nombre: { cellWidth: 25, halign: 'left' },
+    codigo: { cellWidth: 15, halign: 'left' },
+    direccion: { cellWidth: 45, halign: 'left' },
+    tipoalmacen: { cellWidth: 25, halign: 'left' },
+    stockmin: { cellWidth: 15, halign: 'right' },
+    stockmax: { cellWidth: 15, halign: 'right' },
+    sucursal: { cellWidth: 35, halign: 'left' },
+    estado: { cellWidth: 15, halign: 'left' },
+  }
+
+  dibujarCuerpoTabla(
+    doc,
     columns,
-    body: datos,
-    styles: {
-      overflow: 'linebreak',
-      fontSize: 5,
-      cellPadding: 2,
-    },
-    headStyles: {
-      fillColor: ColoEncabezadoTabla,
-      textColor: 255,
-      halign: 'center',
-    },
-    columnStyles: {
-      indice: { cellWidth: 10, halign: 'center' },
-      nombre: { cellWidth: 15, halign: 'left' },
-      codigo: { cellWidth: 15, halign: 'left' },
-      direccion: { cellWidth: 30, halign: 'left' },
-      telefono: { cellWidth: 15, halign: 'right' },
-      email: { cellWidth: 30, halign: 'left' },
-      tipoalmacen: { cellWidth: 15, halign: 'left' },
-      stockmin: { cellWidth: 15, halign: 'center' },
-      stockmax: { cellWidth: 15, halign: 'center' },
-      sucursal: { cellWidth: 25, halign: 'left' },
-      estado: { cellWidth: 15, halign: 'center' },
-    },
-    startY: 45,
-    margin: { horizontal: 5 },
-    theme: 'striped',
-    didDrawPage: () => {
-      if (doc.internal.getNumberOfPages() === 1) {
-        if (logoBase64) {
-          const pageWidth = doc.internal.pageSize.getWidth() // Ancho total página
-          const imgWidth = 20 // Ancho del logo en mm
-          const imgHeight = 20 // Alto del logo en mm
-          const xPos = pageWidth - imgWidth - 10 // 10mm de margen derecho
-          const yPos = 5 // margen superior
-          console.log(logoBase64)
-          doc.addImage(logoBase64, 'JPEG', xPos, yPos, imgWidth, imgHeight)
-        }
-        doc.setFontSize(7)
-        doc.setFont(undefined, 'bold')
-        doc.text(nombreEmpresa, 5, 10)
-
-        doc.setFontSize(6)
-        doc.setFont(undefined, 'normal')
-        doc.text(direccionEmpresa, 5, 13)
-        doc.text(`Tel: ${telefonoEmpresa}`, 5, 16)
-
-        doc.setFontSize(10)
-        doc.setFont(undefined, 'bold')
-        doc.text('ALMACENES', doc.internal.pageSize.getWidth() / 2, 15, { align: 'center' })
-      }
-    },
-  })
+    datos,
+    'ALMACENES',
+    columnStyles,
+    headerColumnStyles,
+    null,
+    null,
+    true,
+    null,
+  )
 
   return doc
 }
@@ -3228,101 +2273,63 @@ export function PDF_REPORTE_DE_ROTACION_POR_ALMACEN(reporte, datosFormulario) {
     r: item.r,
   }))
 
-  autoTable(doc, {
+  const columnStyles = {
+    index: { cellWidth: 10, halign: 'center' },
+    codigo: { cellWidth: 20, halign: 'left' },
+    producto: { cellWidth: 30, halign: 'left' },
+    categoria: { cellWidth: 20, halign: 'left' },
+    descripcion: { cellWidth: 40, halign: 'left' },
+    unidad: { cellWidth: 20, halign: 'left' },
+    cantidadventas: { cellWidth: 20, halign: 'right' },
+    cantidadIE: { cellWidth: 20, halign: 'right' },
+    r: { cellWidth: 20, halign: 'right' },
+  }
+  const headerColumnStyles = {
+    index: { cellWidth: 10, halign: 'center' },
+    codigo: { cellWidth: 20, halign: 'left' },
+    producto: { cellWidth: 30, halign: 'left' },
+    categoria: { cellWidth: 20, halign: 'left' },
+    descripcion: { cellWidth: 40, halign: 'left' },
+    unidad: { cellWidth: 20, halign: 'left' },
+    cantidadventas: { cellWidth: 20, halign: 'right' },
+    cantidadIE: { cellWidth: 20, halign: 'right' },
+    r: { cellWidth: 20, halign: 'right' },
+  }
+
+  const Izquierda = {
+    titulo: 'DATOS DEL REPORTE',
+    campos: [
+      {
+        label: 'Almacén',
+        valor: datosFormulario.almacen || '',
+      },
+    ],
+  }
+  const fechas = {
+    inicio: datosFormulario.fechaInicio,
+
+    final: datosFormulario.fechaFin,
+  }
+  const derecho = {
+    titulo: 'DATOS DEL ENCARGADO',
+    campos: [
+      { label: '', valor: datosFormulario.usuario.nombre },
+      { label: '', valor: datosFormulario.usuario.cargo },
+    ],
+  }
+
+  dibujarCuerpoTabla(
+    doc,
     columns,
-    body: datos,
-    styles: {
-      overflow: 'linebreak',
-      fontSize: 5,
-      cellPadding: 2,
-    },
-    headStyles: {
-      fillColor: ColoEncabezadoTabla,
-      textColor: 255,
-      halign: 'center',
-    },
-    columnStyles: {
-      index: { cellWidth: 10, halign: 'center' },
-      codigo: { cellWidth: 20, halign: 'left' },
-      producto: { cellWidth: 30, halign: 'left' },
-      categoria: { cellWidth: 20, halign: 'left' },
-      descripcion: { cellWidth: 40, halign: 'left' },
-      unidad: { cellWidth: 20, halign: 'left' },
-      cantidadventas: { cellWidth: 20, halign: 'right' },
-      cantidadIE: { cellWidth: 20, halign: 'right' },
-      r: { cellWidth: 20, halign: 'right' },
-    },
-    startY: 45,
-    margin: { horizontal: 5 },
-    theme: 'striped',
-    didDrawPage: () => {
-      if (doc.internal.getNumberOfPages() === 1) {
-        if (logoBase64) {
-          const pageWidth = doc.internal.pageSize.getWidth() // Ancho total página
-          const imgWidth = 20 // Ancho del logo en mm
-          const imgHeight = 20 // Alto del logo en mm
-          const xPos = pageWidth - imgWidth - 5 // 10mm de margen derecho
-          const yPos = 5 // margen superior
-          console.log(logoBase64)
-          doc.addImage(logoBase64, 'JPEG', xPos, yPos, imgWidth, imgHeight)
-        }
-        doc.setFontSize(7)
-        doc.setFont(undefined, 'bold')
-        doc.text(nombreEmpresa, 5, 10)
-
-        doc.setFontSize(6)
-        doc.setFont(undefined, 'normal')
-        doc.text(direccionEmpresa, 5, 13)
-        doc.text(`Tel: ${telefonoEmpresa}`, 5, 16)
-
-        doc.setFontSize(10)
-        doc.setFont(undefined, 'bold')
-        doc.text(
-          'REPORTE DE INDICE DE ROTACION POR ALMACEN',
-          doc.internal.pageSize.getWidth() / 2,
-          15,
-          { align: 'center' },
-        )
-        doc.setFontSize(6)
-        doc.setFont(undefined, 'normal')
-        doc.text(
-          'ENTRE ' + datosFormulario.fechaInicio + ' Y ' + datosFormulario.fechaFin,
-          doc.internal.pageSize.getWidth() / 2,
-          18,
-          {
-            align: 'center',
-          },
-        )
-
-        doc.setDrawColor(0) // Color negro
-        doc.setLineWidth(0.2) // Grosor de la línea
-        doc.line(5, 30, 205, 30) // De (x1=5, y1=25) a (x2=200, y2=25)
-
-        doc.setFontSize(7)
-        doc.setFont(undefined, 'bold')
-        doc.text('DATOS DEL REPORTE', 5, 35)
-        doc.setFontSize(6)
-        doc.setFont(undefined, 'normal')
-        doc.text('Almacén: ' + datosFormulario.almacen, 5, 38)
-
-        doc.setFontSize(6)
-        doc.setFont(undefined, 'normal')
-        doc.text('Fecha de Impresion: ' + cambiarFormatoFecha(obtenerFechaActualDato()), 5, 41)
-
-        doc.setFontSize(7)
-        doc.setFont(undefined, 'bold')
-        doc.text('DATOS DEL ENCARGADO:', 205, 35, { align: 'right' })
-
-        doc.setFontSize(6)
-        doc.setFont(undefined, 'normal')
-        doc.text(datosFormulario.usuario.nombre, 205, 38, { align: 'right' })
-
-        doc.setFontSize(6)
-        doc.setFont(undefined, 'normal')
-        doc.text(datosFormulario.usuario.cargo, 205, 41, { align: 'right' })
-      }
-    },
-  })
+    datos,
+    'REPORTE DE INDICE DE ROTACION POR ALMACEN',
+    columnStyles,
+    headerColumnStyles,
+    Izquierda,
+    derecho,
+    false,
+    fechas,
+  )
 
   return doc
 }
@@ -3353,105 +2360,64 @@ export function PDF_REPORTE_DE_ROTACION_POR_CLIENTE(reporte, datosFormulario) {
     r: item.r,
   }))
 
-  autoTable(doc, {
+  const columnStyles = {
+    index: { cellWidth: 10, halign: 'center' },
+    codigo: { cellWidth: 20, halign: 'left' },
+    producto: { cellWidth: 30, halign: 'left' },
+    categoria: { cellWidth: 20, halign: 'left' },
+    descripcion: { cellWidth: 40, halign: 'left' },
+    unidad: { cellWidth: 20, halign: 'left' },
+    cantidadventas: { cellWidth: 20, halign: 'right' },
+    cantidadIE: { cellWidth: 20, halign: 'right' },
+    r: { cellWidth: 20, halign: 'right' },
+  }
+  const headerColumnStyles = {
+    index: { cellWidth: 10, halign: 'center' },
+    codigo: { cellWidth: 20, halign: 'left' },
+    producto: { cellWidth: 30, halign: 'left' },
+    categoria: { cellWidth: 20, halign: 'left' },
+    descripcion: { cellWidth: 40, halign: 'left' },
+    unidad: { cellWidth: 20, halign: 'left' },
+    cantidadventas: { cellWidth: 20, halign: 'right' },
+    cantidadIE: { cellWidth: 20, halign: 'right' },
+    r: { cellWidth: 20, halign: 'right' },
+  }
+
+  const cliente = datosFormulario.cliente + ' / ' + datosFormulario.sucursal
+  const Izquierda = {
+    titulo: 'DATOS DEL REPORTE',
+    campos: [
+      {
+        label: 'Razon Social: ',
+        valor: cliente || '',
+      },
+    ],
+  }
+  const fechas = {
+    inicio: datosFormulario.fechaInicio,
+
+    final: datosFormulario.fechaFin,
+  }
+  const derecho = {
+    titulo: 'DATOS DEL ENCARGADO',
+    campos: [
+      { label: '', valor: datosFormulario.usuario.nombre },
+      { label: '', valor: datosFormulario.usuario.cargo },
+    ],
+  }
+
+  dibujarCuerpoTabla(
+    doc,
     columns,
-    body: datos,
-    styles: {
-      overflow: 'linebreak',
-      fontSize: 5,
-      cellPadding: 2,
-    },
-    headStyles: {
-      fillColor: ColoEncabezadoTabla,
-      textColor: 255,
-      halign: 'center',
-    },
-    columnStyles: {
-      index: { cellWidth: 10, halign: 'center' },
-      codigo: { cellWidth: 20, halign: 'left' },
-      producto: { cellWidth: 30, halign: 'left' },
-      categoria: { cellWidth: 20, halign: 'left' },
-      descripcion: { cellWidth: 40, halign: 'left' },
-      unidad: { cellWidth: 20, halign: 'left' },
-      cantidadventas: { cellWidth: 20, halign: 'right' },
-      cantidadIE: { cellWidth: 20, halign: 'right' },
-      r: { cellWidth: 20, halign: 'right' },
-    },
-    startY: 45,
-    margin: { horizontal: 5 },
-    theme: 'striped',
-    didDrawPage: () => {
-      if (doc.internal.getNumberOfPages() === 1) {
-        if (logoBase64) {
-          const pageWidth = doc.internal.pageSize.getWidth() // Ancho total página
-          const imgWidth = 20 // Ancho del logo en mm
-          const imgHeight = 20 // Alto del logo en mm
-          const xPos = pageWidth - imgWidth - 5 // 10mm de margen derecho
-          const yPos = 5 // margen superior
-          console.log(logoBase64)
-          doc.addImage(logoBase64, 'JPEG', xPos, yPos, imgWidth, imgHeight)
-        }
-        doc.setFontSize(7)
-        doc.setFont(undefined, 'bold')
-        doc.text(nombreEmpresa, 5, 10)
-
-        doc.setFontSize(6)
-        doc.setFont(undefined, 'normal')
-        doc.text(direccionEmpresa, 5, 13)
-        doc.text(`Tel: ${telefonoEmpresa}`, 5, 16)
-
-        doc.setFontSize(10)
-        doc.setFont(undefined, 'bold')
-        doc.text(
-          'REPORTE DE INDICE DE ROTACION POR CLIENTE',
-          doc.internal.pageSize.getWidth() / 2,
-          15,
-          { align: 'center' },
-        )
-        doc.setFontSize(6)
-        doc.setFont(undefined, 'normal')
-        doc.text(
-          'ENTRE ' + datosFormulario.fechaInicio + ' Y ' + datosFormulario.fechaFin,
-          doc.internal.pageSize.getWidth() / 2,
-          18,
-          {
-            align: 'center',
-          },
-        )
-
-        doc.setDrawColor(0) // Color negro
-        doc.setLineWidth(0.2) // Grosor de la línea
-        doc.line(5, 30, 205, 30) // De (x1=5, y1=25) a (x2=200, y2=25)
-
-        doc.setFontSize(7)
-        doc.setFont(undefined, 'bold')
-        doc.text('DATOS DEL REPORTE', 5, 35)
-        doc.setFontSize(6)
-        doc.setFont(undefined, 'normal')
-        doc.text(
-          'Razon Social: ' + datosFormulario.cliente + ' / ' + datosFormulario.sucursal,
-          5,
-          38,
-        )
-
-        doc.setFontSize(6)
-        doc.setFont(undefined, 'normal')
-        doc.text('Fecha de Impresion: ' + cambiarFormatoFecha(obtenerFechaActualDato()), 5, 41)
-
-        doc.setFontSize(7)
-        doc.setFont(undefined, 'bold')
-        doc.text('DATOS DEL ENCARGADO:', 205, 35, { align: 'right' })
-
-        doc.setFontSize(6)
-        doc.setFont(undefined, 'normal')
-        doc.text(datosFormulario.usuario.nombre, 205, 38, { align: 'right' })
-
-        doc.setFontSize(6)
-        doc.setFont(undefined, 'normal')
-        doc.text(datosFormulario.usuario.cargo, 205, 41, { align: 'right' })
-      }
-    },
-  })
+    datos,
+    'REPORTE DE INDICE DE ROTACION POR CLIENTE',
+    columnStyles,
+    headerColumnStyles,
+    Izquierda,
+    derecho,
+    false,
+    fechas,
+  )
 
   return doc
 }
@@ -3483,98 +2449,58 @@ export function PDF_REPORTE_DE_ROTACION_POR_GLOBAL(reporte, datosFormulario) {
     r: item.r,
   }))
 
-  autoTable(doc, {
+  const columnStyles = {
+    index: { cellWidth: 10, halign: 'center' },
+    codigo: { cellWidth: 20, halign: 'left' },
+    producto: { cellWidth: 30, halign: 'left' },
+    categoria: { cellWidth: 20, halign: 'left' },
+    descripcion: { cellWidth: 40, halign: 'left' },
+    unidad: { cellWidth: 20, halign: 'left' },
+    cantidadventas: { cellWidth: 20, halign: 'right' },
+    cantidadIE: { cellWidth: 20, halign: 'right' },
+    r: { cellWidth: 20, halign: 'right' },
+  }
+  const headerColumnStyles = {
+    index: { cellWidth: 10, halign: 'center' },
+    codigo: { cellWidth: 20, halign: 'left' },
+    producto: { cellWidth: 30, halign: 'left' },
+    categoria: { cellWidth: 20, halign: 'left' },
+    descripcion: { cellWidth: 40, halign: 'left' },
+    unidad: { cellWidth: 20, halign: 'left' },
+    cantidadventas: { cellWidth: 20, halign: 'right' },
+    cantidadIE: { cellWidth: 20, halign: 'right' },
+    r: { cellWidth: 20, halign: 'right' },
+  }
+
+  const Izquierda = {
+    titulo: 'DATOS DEL REPORTE',
+    campos: [{ label: 'Almacen', valor: datosFormulario.almacen || '' }],
+  }
+  const fechas = {
+    inicio: datosFormulario.fechaInicio,
+
+    final: datosFormulario.fechaFin,
+  }
+  const derecho = {
+    titulo: 'DATOS DEL ENCARGADO',
+    campos: [
+      { label: '', valor: datosFormulario.usuario.nombre },
+      { label: '', valor: datosFormulario.usuario.cargo },
+    ],
+  }
+
+  dibujarCuerpoTabla(
+    doc,
     columns,
-    body: datos,
-    styles: {
-      overflow: 'linebreak',
-      fontSize: 5,
-      cellPadding: 2,
-    },
-    headStyles: {
-      fillColor: ColoEncabezadoTabla,
-      textColor: 255,
-      halign: 'center',
-    },
-    columnStyles: {
-      index: { cellWidth: 10, halign: 'center' },
-      codigo: { cellWidth: 20, halign: 'left' },
-      producto: { cellWidth: 30, halign: 'left' },
-      categoria: { cellWidth: 20, halign: 'left' },
-      descripcion: { cellWidth: 40, halign: 'left' },
-      unidad: { cellWidth: 20, halign: 'left' },
-      cantidadventas: { cellWidth: 20, halign: 'right' },
-      cantidadIE: { cellWidth: 20, halign: 'right' },
-      r: { cellWidth: 20, halign: 'right' },
-    },
-    startY: 45,
-    margin: { horizontal: 5 },
-    theme: 'striped',
-    didDrawPage: () => {
-      if (doc.internal.getNumberOfPages() === 1) {
-        if (logoBase64) {
-          const pageWidth = doc.internal.pageSize.getWidth() // Ancho total página
-          const imgWidth = 20 // Ancho del logo en mm
-          const imgHeight = 20 // Alto del logo en mm
-          const xPos = pageWidth - imgWidth - 5 // 10mm de margen derecho
-          const yPos = 5 // margen superior
-          console.log(logoBase64)
-          doc.addImage(logoBase64, 'JPEG', xPos, yPos, imgWidth, imgHeight)
-        }
-        doc.setFontSize(7)
-        doc.setFont(undefined, 'bold')
-        doc.text(nombreEmpresa, 5, 10)
-
-        doc.setFontSize(6)
-        doc.setFont(undefined, 'normal')
-        doc.text(direccionEmpresa, 5, 13)
-        doc.text(`Tel: ${telefonoEmpresa}`, 5, 16)
-
-        doc.setFontSize(10)
-        doc.setFont(undefined, 'bold')
-        doc.text('REPORTE DE INDICE DE ROTACION GLOBAL', doc.internal.pageSize.getWidth() / 2, 15, {
-          align: 'center',
-        })
-        doc.setFontSize(6)
-        doc.setFont(undefined, 'normal')
-        doc.text(
-          'ENTRE ' + datosFormulario.fechaInicio + ' Y ' + datosFormulario.fechaFin,
-          doc.internal.pageSize.getWidth() / 2,
-          18,
-          {
-            align: 'center',
-          },
-        )
-
-        doc.setDrawColor(0) // Color negro
-        doc.setLineWidth(0.2) // Grosor de la línea
-        doc.line(5, 30, 205, 30) // De (x1=5, y1=25) a (x2=200, y2=25)
-
-        doc.setFontSize(7)
-        doc.setFont(undefined, 'bold')
-        doc.text('DATOS DEL REPORTE', 5, 35)
-        doc.setFontSize(6)
-        doc.setFont(undefined, 'normal')
-        doc.text('Almacen: ' + datosFormulario.almacen, 5, 38)
-
-        doc.setFontSize(6)
-        doc.setFont(undefined, 'normal')
-        doc.text('Fecha de Impresion: ' + cambiarFormatoFecha(obtenerFechaActualDato()), 5, 41)
-
-        doc.setFontSize(7)
-        doc.setFont(undefined, 'bold')
-        doc.text('DATOS DEL ENCARGADO:', 205, 35, { align: 'right' })
-
-        doc.setFontSize(6)
-        doc.setFont(undefined, 'normal')
-        doc.text(datosFormulario.usuario.nombre, 205, 38, { align: 'right' })
-
-        doc.setFontSize(6)
-        doc.setFont(undefined, 'normal')
-        doc.text(datosFormulario.usuario.cargo, 205, 41, { align: 'right' })
-      }
-    },
-  })
+    datos,
+    'REPORTE DE INDICE DE ROTACION GLOBAL',
+    columnStyles,
+    headerColumnStyles,
+    Izquierda,
+    derecho,
+    false,
+    fechas,
+  )
 
   return doc
 }
@@ -3600,96 +2526,54 @@ export function PDF_REPORTE_CAMPANAS(reporte, datosFormulario) {
     est: item.est,
   }))
 
-  autoTable(doc, {
+  const columnStyles = {
+    n: { cellWidth: 10, halign: 'center' },
+    almacen: { cellWidth: 30, halign: 'left' },
+    nombre: { cellWidth: 40, halign: 'left' },
+    porcentaje: { cellWidth: 30, halign: 'left' },
+    fechainicio: { cellWidth: 30, halign: 'left' },
+    fechafinal: { cellWidth: 30, halign: 'left' },
+    est: { cellWidth: 30, halign: 'right' },
+  }
+  const headerColumnStyles = {
+    n: { cellWidth: 10, halign: 'center' },
+    almacen: { cellWidth: 30, halign: 'left' },
+    nombre: { cellWidth: 40, halign: 'left' },
+    porcentaje: { cellWidth: 30, halign: 'left' },
+    fechainicio: { cellWidth: 30, halign: 'left' },
+    fechafinal: { cellWidth: 30, halign: 'left' },
+    est: { cellWidth: 30, halign: 'right' },
+  }
+
+  const Izquierda = {
+    titulo: 'DATOS DEL REPORTE',
+    campos: [{ label: 'Almacen', valor: datosFormulario.almacen || '' }],
+  }
+  const fechas = {
+    inicio: datosFormulario.fechaInicio,
+
+    final: datosFormulario.fechaFin,
+  }
+  const derecho = {
+    titulo: 'DATOS DEL ENCARGADO',
+    campos: [
+      { label: '', valor: datosFormulario.usuario.nombre },
+      { label: '', valor: datosFormulario.usuario.cargo },
+    ],
+  }
+
+  dibujarCuerpoTabla(
+    doc,
     columns,
-    body: datos,
-    styles: {
-      overflow: 'linebreak',
-      fontSize: 5,
-      cellPadding: 2,
-    },
-    headStyles: {
-      fillColor: ColoEncabezadoTabla,
-      textColor: 255,
-      halign: 'center',
-    },
-    columnStyles: {
-      n: { cellWidth: 10, halign: 'center' },
-      almacen: { cellWidth: 30, halign: 'left' },
-      nombre: { cellWidth: 40, halign: 'left' },
-      porcentaje: { cellWidth: 30, halign: 'left' },
-      fechainicio: { cellWidth: 30, halign: 'left' },
-      fechafinal: { cellWidth: 30, halign: 'left' },
-      est: { cellWidth: 30, halign: 'right' },
-    },
-    startY: 45,
-    margin: { horizontal: 5 },
-    theme: 'striped',
-    didDrawPage: () => {
-      if (doc.internal.getNumberOfPages() === 1) {
-        if (logoBase64) {
-          const pageWidth = doc.internal.pageSize.getWidth() // Ancho total página
-          const imgWidth = 20 // Ancho del logo en mm
-          const imgHeight = 20 // Alto del logo en mm
-          const xPos = pageWidth - imgWidth - 5 // 10mm de margen derecho
-          const yPos = 5 // margen superior
-          console.log(logoBase64)
-          doc.addImage(logoBase64, 'JPEG', xPos, yPos, imgWidth, imgHeight)
-        }
-        doc.setFontSize(7)
-        doc.setFont(undefined, 'bold')
-        doc.text(nombreEmpresa, 5, 10)
-
-        doc.setFontSize(6)
-        doc.setFont(undefined, 'normal')
-        doc.text(direccionEmpresa, 5, 13)
-        doc.text(`Tel: ${telefonoEmpresa}`, 5, 16)
-
-        doc.setFontSize(10)
-        doc.setFont(undefined, 'bold')
-        doc.text('REPORTE DE INDICE DE ROTACION GLOBAL', doc.internal.pageSize.getWidth() / 2, 15, {
-          align: 'center',
-        })
-        doc.setFontSize(6)
-        doc.setFont(undefined, 'normal')
-        doc.text(
-          'ENTRE ' + datosFormulario.fechaInicio + ' Y ' + datosFormulario.fechaFin,
-          doc.internal.pageSize.getWidth() / 2,
-          18,
-          {
-            align: 'center',
-          },
-        )
-
-        doc.setDrawColor(0) // Color negro
-        doc.setLineWidth(0.2) // Grosor de la línea
-        doc.line(5, 30, 205, 30) // De (x1=5, y1=25) a (x2=200, y2=25)
-
-        doc.setFontSize(7)
-        doc.setFont(undefined, 'bold')
-        doc.text('DATOS DEL REPORTE', 5, 35)
-        doc.setFontSize(6)
-        doc.setFont(undefined, 'normal')
-        doc.text('Almacen: ' + datosFormulario.almacen, 5, 38)
-
-        doc.setFontSize(6)
-        doc.setFont(undefined, 'normal')
-        doc.text('Fecha de Impresion: ' + cambiarFormatoFecha(obtenerFechaActualDato()), 5, 41)
-
-        doc.setFontSize(7)
-        doc.setFont(undefined, 'bold')
-        doc.text('DATOS DEL ENCARGADO:', 205, 35, { align: 'right' })
-
-        doc.setFontSize(6)
-        doc.setFont(undefined, 'normal')
-        doc.text(datosFormulario.usuario.nombre, 205, 38, { align: 'right' })
-
-        doc.setFontSize(6)
-        doc.setFont(undefined, 'normal')
-        doc.text(datosFormulario.usuario.cargo, 205, 41, { align: 'right' })
-      }
-    },
-  })
+    datos,
+    'REPORTES CAMPAÑAS',
+    columnStyles,
+    headerColumnStyles,
+    Izquierda,
+    derecho,
+    false,
+    fechas,
+  )
 
   return doc
 }
@@ -3714,95 +2598,52 @@ export function PDF_REPORTE_CAMPANAS_VENTAS(reporte, datosFormulario) {
     nventas: item.nventas,
   }))
 
-  autoTable(doc, {
+  const columnStyles = {
+    n: { cellWidth: 10, halign: 'center' },
+    almacen: { cellWidth: 40, halign: 'left' },
+    nombre: { cellWidth: 40, halign: 'left' },
+    fechainicio: { cellWidth: 40, halign: 'left' },
+    fechafinal: { cellWidth: 30, halign: 'left' },
+    nventas: { cellWidth: 40, halign: 'right' },
+  }
+  const headerColumnStyles = {
+    n: { cellWidth: 10, halign: 'center' },
+    almacen: { cellWidth: 40, halign: 'left' },
+    nombre: { cellWidth: 40, halign: 'left' },
+    fechainicio: { cellWidth: 40, halign: 'left' },
+    fechafinal: { cellWidth: 30, halign: 'left' },
+    nventas: { cellWidth: 40, halign: 'right' },
+  }
+
+  const Izquierda = {
+    titulo: 'DATOS DEL REPORTE',
+    campos: [{ label: 'Almacen', valor: datosFormulario.almacen || '' }],
+  }
+  const fechas = {
+    inicio: datosFormulario.fechaInicio,
+
+    final: datosFormulario.fechaFin,
+  }
+  const derecho = {
+    titulo: 'DATOS DEL ENCARGADO',
+    campos: [
+      { label: '', valor: datosFormulario.usuario.nombre },
+      { label: '', valor: datosFormulario.usuario.cargo },
+    ],
+  }
+
+  dibujarCuerpoTabla(
+    doc,
     columns,
-    body: datos,
-    styles: {
-      overflow: 'linebreak',
-      fontSize: 5,
-      cellPadding: 2,
-    },
-    headStyles: {
-      fillColor: ColoEncabezadoTabla,
-      textColor: 255,
-      halign: 'center',
-    },
-    columnStyles: {
-      n: { cellWidth: 10, halign: 'center' },
-      almacen: { cellWidth: 40, halign: 'left' },
-      nombre: { cellWidth: 40, halign: 'left' },
-      fechainicio: { cellWidth: 40, halign: 'left' },
-      fechafinal: { cellWidth: 30, halign: 'left' },
-      nventas: { cellWidth: 40, halign: 'right' },
-    },
-    startY: 45,
-    margin: { horizontal: 5 },
-    theme: 'striped',
-    didDrawPage: () => {
-      if (doc.internal.getNumberOfPages() === 1) {
-        if (logoBase64) {
-          const pageWidth = doc.internal.pageSize.getWidth() // Ancho total página
-          const imgWidth = 20 // Ancho del logo en mm
-          const imgHeight = 20 // Alto del logo en mm
-          const xPos = pageWidth - imgWidth - 5 // 10mm de margen derecho
-          const yPos = 5 // margen superior
-          console.log(logoBase64)
-          doc.addImage(logoBase64, 'JPEG', xPos, yPos, imgWidth, imgHeight)
-        }
-        doc.setFontSize(7)
-        doc.setFont(undefined, 'bold')
-        doc.text(nombreEmpresa, 5, 10)
-
-        doc.setFontSize(6)
-        doc.setFont(undefined, 'normal')
-        doc.text(direccionEmpresa, 5, 13)
-        doc.text(`Tel: ${telefonoEmpresa}`, 5, 16)
-
-        doc.setFontSize(10)
-        doc.setFont(undefined, 'bold')
-        doc.text('REPORTE DE INDICE DE ROTACION GLOBAL', doc.internal.pageSize.getWidth() / 2, 15, {
-          align: 'center',
-        })
-        doc.setFontSize(6)
-        doc.setFont(undefined, 'normal')
-        doc.text(
-          'ENTRE ' + datosFormulario.fechaInicio + ' Y ' + datosFormulario.fechaFin,
-          doc.internal.pageSize.getWidth() / 2,
-          18,
-          {
-            align: 'center',
-          },
-        )
-
-        doc.setDrawColor(0) // Color negro
-        doc.setLineWidth(0.2) // Grosor de la línea
-        doc.line(5, 30, 205, 30) // De (x1=5, y1=25) a (x2=200, y2=25)nventas
-
-        doc.setFontSize(7)
-        doc.setFont(undefined, 'bold')
-        doc.text('DATOS DEL REPORTE', 5, 35)
-        doc.setFontSize(6)
-        doc.setFont(undefined, 'normal')
-        doc.text('Almacen: ' + datosFormulario.almacen, 5, 38)
-
-        doc.setFontSize(6)
-        doc.setFont(undefined, 'normal')
-        doc.text('Fecha de Impresion: ' + cambiarFormatoFecha(obtenerFechaActualDato()), 5, 41)
-
-        doc.setFontSize(7)
-        doc.setFont(undefined, 'bold')
-        doc.text('DATOS DEL ENCARGADO:', 205, 35, { align: 'right' })
-
-        doc.setFontSize(6)
-        doc.setFont(undefined, 'normal')
-        doc.text(datosFormulario.usuario.nombre, 205, 38, { align: 'right' })
-
-        doc.setFontSize(6)
-        doc.setFont(undefined, 'normal')
-        doc.text(datosFormulario.usuario.cargo, 205, 41, { align: 'right' })
-      }
-    },
-  })
+    datos,
+    'REPORTES CAMPAÑA VENTA',
+    columnStyles,
+    headerColumnStyles,
+    Izquierda,
+    derecho,
+    false,
+    fechas,
+  )
 
   return doc
 }
@@ -3826,95 +2667,52 @@ export function PDF_REPORTE_MOVIMIENTOS(reporte, datosFormulario) {
     aut: item.aut,
   }))
 
-  autoTable(doc, {
+  const columnStyles = {
+    n: { cellWidth: 10, halign: 'center' },
+    fecha: { cellWidth: 40, halign: 'left' },
+    almacenorigen: { cellWidth: 40, halign: 'left' },
+    almacendestino: { cellWidth: 40, halign: 'left' },
+    descripcion: { cellWidth: 30, halign: 'left' },
+    aut: { cellWidth: 40, halign: 'right' },
+  }
+  const headerColumnStyles = {
+    n: { cellWidth: 10, halign: 'center' },
+    fecha: { cellWidth: 40, halign: 'left' },
+    almacenorigen: { cellWidth: 40, halign: 'left' },
+    almacendestino: { cellWidth: 40, halign: 'left' },
+    descripcion: { cellWidth: 30, halign: 'left' },
+    aut: { cellWidth: 40, halign: 'right' },
+  }
+
+  const Izquierda = {
+    titulo: 'DATOS DEL REPORTE',
+    campos: [{ label: 'Almacen', valor: datosFormulario.almacen || '' }],
+  }
+  const fechas = {
+    inicio: datosFormulario.fechaInicio,
+
+    final: datosFormulario.fechaFin,
+  }
+  const derecho = {
+    titulo: 'DATOS DEL ENCARGADO',
+    campos: [
+      { label: '', valor: datosFormulario.usuario.nombre },
+      { label: '', valor: datosFormulario.usuario.cargo },
+    ],
+  }
+
+  dibujarCuerpoTabla(
+    doc,
     columns,
-    body: datos,
-    styles: {
-      overflow: 'linebreak',
-      fontSize: 5,
-      cellPadding: 2,
-    },
-    headStyles: {
-      fillColor: ColoEncabezadoTabla,
-      textColor: 255,
-      halign: 'center',
-    },
-    columnStyles: {
-      n: { cellWidth: 10, halign: 'center' },
-      fecha: { cellWidth: 40, halign: 'left' },
-      almacenorigen: { cellWidth: 40, halign: 'left' },
-      almacendestino: { cellWidth: 40, halign: 'left' },
-      descripcion: { cellWidth: 30, halign: 'left' },
-      aut: { cellWidth: 40, halign: 'right' },
-    },
-    startY: 45,
-    margin: { horizontal: 5 },
-    theme: 'striped',
-    didDrawPage: () => {
-      if (doc.internal.getNumberOfPages() === 1) {
-        if (logoBase64) {
-          const pageWidth = doc.internal.pageSize.getWidth() // Ancho total página
-          const imgWidth = 20 // Ancho del logo en mm
-          const imgHeight = 20 // Alto del logo en mm
-          const xPos = pageWidth - imgWidth - 5 // 10mm de margen derecho
-          const yPos = 5 // margen superior
-          console.log(logoBase64)
-          doc.addImage(logoBase64, 'JPEG', xPos, yPos, imgWidth, imgHeight)
-        }
-        doc.setFontSize(7)
-        doc.setFont(undefined, 'bold')
-        doc.text(nombreEmpresa, 5, 10)
-
-        doc.setFontSize(6)
-        doc.setFont(undefined, 'normal')
-        doc.text(direccionEmpresa, 5, 13)
-        doc.text(`Tel: ${telefonoEmpresa}`, 5, 16)
-
-        doc.setFontSize(10)
-        doc.setFont(undefined, 'bold')
-        doc.text('REPORTE DE INDICE DE ROTACION GLOBAL', doc.internal.pageSize.getWidth() / 2, 15, {
-          align: 'center',
-        })
-        doc.setFontSize(6)
-        doc.setFont(undefined, 'normal')
-        doc.text(
-          'ENTRE ' + datosFormulario.fechaInicio + ' Y ' + datosFormulario.fechaFin,
-          doc.internal.pageSize.getWidth() / 2,
-          18,
-          {
-            align: 'center',
-          },
-        )
-
-        doc.setDrawColor(0) // Color negro
-        doc.setLineWidth(0.2) // Grosor de la línea
-        doc.line(5, 30, 205, 30) // De (x1=5, y1=25) a (x2=200, y2=25)nventas
-
-        doc.setFontSize(7)
-        doc.setFont(undefined, 'bold')
-        doc.text('DATOS DEL REPORTE', 5, 35)
-        doc.setFontSize(6)
-        doc.setFont(undefined, 'normal')
-        doc.text('Almacen: ' + datosFormulario.almacen, 5, 38)
-
-        doc.setFontSize(6)
-        doc.setFont(undefined, 'normal')
-        doc.text('Fecha de Impresion: ' + cambiarFormatoFecha(obtenerFechaActualDato()), 5, 41)
-
-        doc.setFontSize(7)
-        doc.setFont(undefined, 'bold')
-        doc.text('DATOS DEL ENCARGADO:', 205, 35, { align: 'right' })
-
-        doc.setFontSize(6)
-        doc.setFont(undefined, 'normal')
-        doc.text(datosFormulario.usuario.nombre, 205, 38, { align: 'right' })
-
-        doc.setFontSize(6)
-        doc.setFont(undefined, 'normal')
-        doc.text(datosFormulario.usuario.cargo, 205, 41, { align: 'right' })
-      }
-    },
-  })
+    datos,
+    'REPORTE MOVIMIENTOS',
+    columnStyles,
+    headerColumnStyles,
+    Izquierda,
+    derecho,
+    false,
+    fechas,
+  )
 
   return doc
 }
@@ -3945,98 +2743,58 @@ export function PDF_REPORTE_PEDIDOS(reporte, datosFormulario) {
     estado: item.estado,
   }))
 
-  autoTable(doc, {
+  const columnStyles = {
+    n: { cellWidth: 10, halign: 'center' },
+    fecha: { cellWidth: 20, halign: 'left' },
+    codigo: { cellWidth: 25, halign: 'left' },
+    nropedido: { cellWidth: 15, halign: 'center' },
+    tipopedido: { cellWidth: 20, halign: 'left' },
+    almacenorigen: { cellWidth: 20, halign: 'left' },
+    almacen: { cellWidth: 20, halign: 'left' },
+    observacion: { cellWidth: 50, halign: 'left' },
+    estado: { cellWidth: 20, halign: 'left' },
+  }
+  const headerColumnStyles = {
+    n: { cellWidth: 10, halign: 'center' },
+    fecha: { cellWidth: 15, halign: 'left' },
+    codigo: { cellWidth: 25, halign: 'left' },
+    nropedido: { cellWidth: 15, halign: 'center' },
+    tipopedido: { cellWidth: 20, halign: 'left' },
+    almacenorigen: { cellWidth: 20, halign: 'left' },
+    almacen: { cellWidth: 20, halign: 'left' },
+    observacion: { cellWidth: 50, halign: 'left' },
+    estado: { cellWidth: 20, halign: 'left' },
+  }
+
+  const Izquierda = {
+    titulo: 'DATOS DEL REPORTE',
+    campos: [{ label: 'Almacen', valor: datosFormulario.almacen || '' }],
+  }
+  const fechas = {
+    inicio: datosFormulario.fechaInicio,
+
+    final: datosFormulario.fechaFin,
+  }
+  const derecho = {
+    titulo: 'DATOS DEL ENCARGADO',
+    campos: [
+      { label: '', valor: datosFormulario.usuario.nombre },
+      { label: '', valor: datosFormulario.usuario.cargo },
+    ],
+  }
+
+  dibujarCuerpoTabla(
+    doc,
     columns,
-    body: datos,
-    styles: {
-      overflow: 'linebreak',
-      fontSize: 5,
-      cellPadding: 2,
-    },
-    headStyles: {
-      fillColor: ColoEncabezadoTabla,
-      textColor: 255,
-      halign: 'center',
-    },
-    columnStyles: {
-      n: { cellWidth: 10, halign: 'center' },
-      fecha: { cellWidth: 15, halign: 'left' },
-      codigo: { cellWidth: 20, halign: 'left' },
-      nropedido: { cellWidth: 20, halign: 'center' },
-      tipopedido: { cellWidth: 20, halign: 'left' },
-      almacenorigen: { cellWidth: 20, halign: 'right' },
-      almacen: { cellWidth: 20, halign: 'right' },
-      observacion: { cellWidth: 55, halign: 'right' },
-      estado: { cellWidth: 20, halign: 'right' },
-    },
-    startY: 45,
-    margin: { horizontal: 5 },
-    theme: 'striped',
-    didDrawPage: () => {
-      if (doc.internal.getNumberOfPages() === 1) {
-        if (logoBase64) {
-          const pageWidth = doc.internal.pageSize.getWidth() // Ancho total página
-          const imgWidth = 20 // Ancho del logo en mm
-          const imgHeight = 20 // Alto del logo en mm
-          const xPos = pageWidth - imgWidth - 5 // 10mm de margen derecho
-          const yPos = 5 // margen superior
-          console.log(logoBase64)
-          doc.addImage(logoBase64, 'JPEG', xPos, yPos, imgWidth, imgHeight)
-        }
-        doc.setFontSize(7)
-        doc.setFont(undefined, 'bold')
-        doc.text(nombreEmpresa, 5, 10)
-
-        doc.setFontSize(6)
-        doc.setFont(undefined, 'normal')
-        doc.text(direccionEmpresa, 5, 13)
-        doc.text(`Tel: ${telefonoEmpresa}`, 5, 16)
-
-        doc.setFontSize(10)
-        doc.setFont(undefined, 'bold')
-        doc.text('REPORTE PEDIDOS', doc.internal.pageSize.getWidth() / 2, 15, {
-          align: 'center',
-        })
-        doc.setFontSize(6)
-        doc.setFont(undefined, 'normal')
-        doc.text(
-          'ENTRE ' + datosFormulario.fechaInicio + ' Y ' + datosFormulario.fechaFin,
-          doc.internal.pageSize.getWidth() / 2,
-          18,
-          {
-            align: 'center',
-          },
-        )
-
-        doc.setDrawColor(0) // Color negro
-        doc.setLineWidth(0.2) // Grosor de la línea
-        doc.line(5, 30, 205, 30) // De (x1=5, y1=25) a (x2=200, y2=25)nventas
-
-        doc.setFontSize(7)
-        doc.setFont(undefined, 'bold')
-        doc.text('DATOS DEL REPORTE', 5, 35)
-        doc.setFontSize(6)
-        doc.setFont(undefined, 'normal')
-        doc.text('Almacen: ' + datosFormulario.almacen, 5, 38)
-
-        doc.setFontSize(6)
-        doc.setFont(undefined, 'normal')
-        doc.text('Fecha de Impresion: ' + cambiarFormatoFecha(obtenerFechaActualDato()), 5, 41)
-
-        doc.setFontSize(7)
-        doc.setFont(undefined, 'bold')
-        doc.text('DATOS DEL ENCARGADO:', 205, 35, { align: 'right' })
-
-        doc.setFontSize(6)
-        doc.setFont(undefined, 'normal')
-        doc.text(datosFormulario.usuario.nombre, 205, 38, { align: 'right' })
-
-        doc.setFontSize(6)
-        doc.setFont(undefined, 'normal')
-        doc.text(datosFormulario.usuario.cargo, 205, 41, { align: 'right' })
-      }
-    },
-  })
+    datos,
+    'REPORTE PEDIDOS',
+    columnStyles,
+    headerColumnStyles,
+    Izquierda,
+    derecho,
+    false,
+    fechas,
+  )
 
   return doc
 }
@@ -4069,91 +2827,56 @@ export function PDF_REPORTE_PRECIO_BASE(reporte, datosFormulario) {
     preciobase: item.preciobase,
   }))
 
-  autoTable(doc, {
+  const columnStyles = {
+    n: { cellWidth: 10, halign: 'center' },
+    fecha: { cellWidth: 15, halign: 'left' },
+    codigo: { cellWidth: 20, halign: 'left' },
+    producto: { cellWidth: 20, halign: 'center' },
+    categoria: { cellWidth: 20, halign: 'left' },
+    caracteristica: { cellWidth: 20, halign: 'right' },
+    medida: { cellWidth: 20, halign: 'right' },
+    descripcion: { cellWidth: 35, halign: 'right' },
+    unidad: { cellWidth: 20, halign: 'right' },
+    preciobase: { cellWidth: 20, halign: 'right' },
+  }
+  const headerColumnStyles = {
+    n: { cellWidth: 10, halign: 'center' },
+    fecha: { cellWidth: 15, halign: 'left' },
+    codigo: { cellWidth: 20, halign: 'left' },
+    producto: { cellWidth: 20, halign: 'center' },
+    categoria: { cellWidth: 20, halign: 'left' },
+    caracteristica: { cellWidth: 20, halign: 'right' },
+    medida: { cellWidth: 20, halign: 'right' },
+    descripcion: { cellWidth: 35, halign: 'right' },
+    unidad: { cellWidth: 20, halign: 'right' },
+    preciobase: { cellWidth: 20, halign: 'right' },
+  }
+
+  const Izquierda = {
+    titulo: 'DATOS DEL REPORTE',
+    campos: [{ label: 'Almacen', valor: datosFormulario.almacen || '' }],
+  }
+
+  const derecho = {
+    titulo: 'DATOS DEL ENCARGADO',
+    campos: [
+      { label: '', valor: datosFormulario.usuario.nombre },
+      { label: '', valor: datosFormulario.usuario.cargo },
+    ],
+  }
+
+  dibujarCuerpoTabla(
+    doc,
     columns,
-    body: datos,
-    styles: {
-      overflow: 'linebreak',
-      fontSize: 5,
-      cellPadding: 2,
-    },
-    headStyles: {
-      fillColor: ColoEncabezadoTabla,
-      textColor: 255,
-      halign: 'center',
-    },
-    columnStyles: {
-      n: { cellWidth: 10, halign: 'center' },
-      fecha: { cellWidth: 15, halign: 'left' },
-      codigo: { cellWidth: 20, halign: 'left' },
-      producto: { cellWidth: 20, halign: 'center' },
-      categoria: { cellWidth: 20, halign: 'left' },
-      caracteristica: { cellWidth: 20, halign: 'right' },
-      medida: { cellWidth: 20, halign: 'right' },
-      descripcion: { cellWidth: 35, halign: 'right' },
-      unidad: { cellWidth: 20, halign: 'right' },
-      preciobase: { cellWidth: 20, halign: 'right' },
-    },
-    startY: 45,
-    margin: { horizontal: 5 },
-    theme: 'striped',
-    didDrawPage: () => {
-      if (doc.internal.getNumberOfPages() === 1) {
-        if (logoBase64) {
-          const pageWidth = doc.internal.pageSize.getWidth() // Ancho total página
-          const imgWidth = 20 // Ancho del logo en mm
-          const imgHeight = 20 // Alto del logo en mm
-          const xPos = pageWidth - imgWidth - 5 // 10mm de margen derecho
-          const yPos = 5 // margen superior
-          console.log(logoBase64)
-          doc.addImage(logoBase64, 'JPEG', xPos, yPos, imgWidth, imgHeight)
-        }
-        doc.setFontSize(7)
-        doc.setFont(undefined, 'bold')
-        doc.text(nombreEmpresa, 5, 10)
-
-        doc.setFontSize(6)
-        doc.setFont(undefined, 'normal')
-        doc.text(direccionEmpresa, 5, 13)
-        doc.text(`Tel: ${telefonoEmpresa}`, 5, 16)
-
-        doc.setFontSize(10)
-        doc.setFont(undefined, 'bold')
-        doc.text('REPORTE DE COSTO UNITARIO', doc.internal.pageSize.getWidth() / 2, 15, {
-          align: 'center',
-        })
-        doc.setFontSize(6)
-        doc.setFont(undefined, 'normal')
-
-        doc.setDrawColor(0) // Color negro
-        doc.setLineWidth(0.2) // Grosor de la línea
-        doc.line(5, 30, 205, 30) // De (x1=5, y1=25) a (x2=200, y2=25)nventas
-
-        doc.setFontSize(7)
-        doc.setFont(undefined, 'bold')
-        doc.text('DATOS DEL REPORTE', 5, 35)
-        doc.setFontSize(6)
-        doc.setFont(undefined, 'normal')
-        doc.text('Almacen: ' + datosFormulario.almacen, 5, 38)
-
-        doc.setFontSize(6)
-        doc.setFont(undefined, 'normal')
-        doc.text('Fecha de Impresion: ' + cambiarFormatoFecha(obtenerFechaActualDato()), 5, 41)
-
-        doc.setFontSize(7)
-        doc.setFont(undefined, 'bold')
-        doc.text('DATOS DEL ENCARGADO:', 205, 35, { align: 'right' })
-
-        doc.setFontSize(6)
-        doc.setFont(undefined, 'normal')
-        doc.text(datosFormulario.usuario.nombre, 205, 38, { align: 'right' })
-
-        doc.setFontSize(6)
-        doc.setFont(undefined, 'normal')
-        doc.text(datosFormulario.usuario.cargo, 205, 41, { align: 'right' })
-      }
-    },
-  })
+    datos,
+    'REPORTE DE COSTO UNITARIO',
+    columnStyles,
+    headerColumnStyles,
+    Izquierda,
+    derecho,
+    false,
+    null,
+  )
 
   return doc
 }
@@ -4175,87 +2898,46 @@ export function PDF_REPORTE_CATEGORIA_PRECIO(reporte, datosFormulario) {
     almacen: item.almacen,
     estado: item.estado,
   }))
+  const columnStyles = {
+    n: { cellWidth: 10, halign: 'center' },
+    nombre: { cellWidth: 60, halign: 'left' },
+    porcentaje: { cellWidth: 40, halign: 'right' },
+    almacen: { cellWidth: 60, halign: 'LEFT' },
+    estado: { cellWidth: 30, halign: 'center' },
+  }
+  const headerColumnStyles = {
+    n: { cellWidth: 10, halign: 'center' },
+    nombre: { cellWidth: 60, halign: 'left' },
+    porcentaje: { cellWidth: 40, halign: 'right' },
+    almacen: { cellWidth: 60, halign: 'LEFT' },
+    estado: { cellWidth: 30, halign: 'center' },
+  }
 
-  autoTable(doc, {
+  const Izquierda = {
+    titulo: 'DATOS DEL REPORTE',
+    campos: [{ label: 'Almacen', valor: datosFormulario.almacen || '' }],
+  }
+
+  const derecho = {
+    titulo: 'DATOS DEL ENCARGADO',
+    campos: [
+      { label: '', valor: datosFormulario.usuario.nombre },
+      { label: '', valor: datosFormulario.usuario.cargo },
+    ],
+  }
+
+  dibujarCuerpoTabla(
+    doc,
     columns,
-    body: datos,
-    styles: {
-      overflow: 'linebreak',
-      fontSize: 5,
-      cellPadding: 2,
-    },
-    headStyles: {
-      fillColor: ColoEncabezadoTabla,
-      textColor: 255,
-      halign: 'center',
-    },
-    columnStyles: {
-      n: { cellWidth: 10, halign: 'center' },
-      nombre: { cellWidth: 60, halign: 'left' },
-      porcentaje: { cellWidth: 40, halign: 'right' },
-      almacen: { cellWidth: 60, halign: 'LEFT' },
-      estado: { cellWidth: 30, halign: 'center' },
-    },
-    startY: 45,
-    margin: { horizontal: 5 },
-    theme: 'striped',
-    didDrawPage: () => {
-      if (doc.internal.getNumberOfPages() === 1) {
-        if (logoBase64) {
-          const pageWidth = doc.internal.pageSize.getWidth() // Ancho total página
-          const imgWidth = 20 // Ancho del logo en mm
-          const imgHeight = 20 // Alto del logo en mm
-          const xPos = pageWidth - imgWidth - 5 // 10mm de margen derecho
-          const yPos = 5 // margen superior
-          console.log(logoBase64)
-          doc.addImage(logoBase64, 'JPEG', xPos, yPos, imgWidth, imgHeight)
-        }
-        doc.setFontSize(7)
-        doc.setFont(undefined, 'bold')
-        doc.text(nombreEmpresa, 5, 10)
-
-        doc.setFontSize(6)
-        doc.setFont(undefined, 'normal')
-        doc.text(direccionEmpresa, 5, 13)
-        doc.text(`Tel: ${telefonoEmpresa}`, 5, 16)
-
-        doc.setFontSize(10)
-        doc.setFont(undefined, 'bold')
-        doc.text('REPORTE DE PRECIOS BASE', doc.internal.pageSize.getWidth() / 2, 15, {
-          align: 'center',
-        })
-        doc.setFontSize(6)
-        doc.setFont(undefined, 'normal')
-
-        doc.setDrawColor(0) // Color negro
-        doc.setLineWidth(0.2) // Grosor de la línea
-        doc.line(5, 30, 205, 30) // De (x1=5, y1=25) a (x2=200, y2=25)nventas
-
-        doc.setFontSize(7)
-        doc.setFont(undefined, 'bold')
-        doc.text('DATOS DEL REPORTE', 5, 35)
-        doc.setFontSize(6)
-        doc.setFont(undefined, 'normal')
-        doc.text('Almacen: ' + datosFormulario.almacen, 5, 38)
-
-        doc.setFontSize(6)
-        doc.setFont(undefined, 'normal')
-        doc.text('Fecha de Impresion: ' + cambiarFormatoFecha(obtenerFechaActualDato()), 5, 41)
-
-        doc.setFontSize(7)
-        doc.setFont(undefined, 'bold')
-        doc.text('DATOS DEL ENCARGADO:', 205, 35, { align: 'right' })
-
-        doc.setFontSize(6)
-        doc.setFont(undefined, 'normal')
-        doc.text(datosFormulario.usuario.nombre, 205, 38, { align: 'right' })
-
-        doc.setFontSize(6)
-        doc.setFont(undefined, 'normal')
-        doc.text(datosFormulario.usuario.cargo, 205, 41, { align: 'right' })
-      }
-    },
-  })
+    datos,
+    'REPORTE DE PRECIOS BASE',
+    columnStyles,
+    headerColumnStyles,
+    Izquierda,
+    derecho,
+    false,
+    null,
+  )
 
   return doc
 }
@@ -4277,93 +2959,50 @@ export function PDF_REPORTE_EXTRAVIO(reporte, datosFormulario) {
     descripcion: item.descripcion,
     autorizacion: item.autorizacion,
   }))
+  const columnStyles = {
+    index: { cellWidth: 10, halign: 'center' },
+    fecha: { cellWidth: 20, halign: 'left' },
+    almacen: { cellWidth: 50, halign: 'left' },
+    descripcion: { cellWidth: 90, halign: 'left' },
+    autorizacion: { cellWidth: 30, halign: 'left' },
+  }
+  const headerColumnStyles = {
+    index: { cellWidth: 10, halign: 'center' },
+    fecha: { cellWidth: 20, halign: 'left' },
+    almacen: { cellWidth: 50, halign: 'left' },
+    descripcion: { cellWidth: 90, halign: 'left' },
+    autorizacion: { cellWidth: 30, halign: 'left' },
+  }
 
-  autoTable(doc, {
+  const Izquierda = {
+    titulo: 'DATOS DEL REPORTE',
+    campos: [{ label: 'Almacen', valor: datosFormulario.almacen || '' }],
+  }
+  const fechas = {
+    inicio: datosFormulario.fechaInicio,
+
+    final: datosFormulario.fechaFin,
+  }
+  const derecho = {
+    titulo: 'DATOS DEL ENCARGADO',
+    campos: [
+      { label: '', valor: datosFormulario.usuario.nombre },
+      { label: '', valor: datosFormulario.usuario.cargo },
+    ],
+  }
+
+  dibujarCuerpoTabla(
+    doc,
     columns,
-    body: datos,
-    styles: {
-      overflow: 'linebreak',
-      fontSize: 5,
-      cellPadding: 2,
-    },
-    headStyles: {
-      fillColor: ColoEncabezadoTabla,
-      textColor: 255,
-      halign: 'center',
-    },
-    columnStyles: {
-      index: { cellWidth: 10, halign: 'center' },
-      fecha: { cellWidth: 20, halign: 'left' },
-      almacen: { cellWidth: 30, halign: 'left' },
-      descripcion: { cellWidth: 110, halign: 'left' },
-      autorizacion: { cellWidth: 30, halign: 'left' },
-    },
-    startY: 45,
-    margin: { horizontal: 5 },
-    theme: 'striped',
-    didDrawPage: () => {
-      if (doc.internal.getNumberOfPages() === 1) {
-        if (logoBase64) {
-          const pageWidth = doc.internal.pageSize.getWidth() // Ancho total página
-          const imgWidth = 20 // Ancho del logo en mm
-          const imgHeight = 20 // Alto del logo en mm
-          const xPos = pageWidth - imgWidth - 5 // 10mm de margen derecho
-          const yPos = 5 // margen superior
-          console.log(logoBase64)
-          doc.addImage(logoBase64, 'JPEG', xPos, yPos, imgWidth, imgHeight)
-        }
-        doc.setFontSize(7)
-        doc.setFont(undefined, 'bold')
-        doc.text(nombreEmpresa, 5, 10)
-
-        doc.setFontSize(6)
-        doc.setFont(undefined, 'normal')
-        doc.text(direccionEmpresa, 5, 13)
-        doc.text(`Tel: ${telefonoEmpresa}`, 5, 16)
-
-        doc.setFontSize(10)
-        doc.setFont(undefined, 'bold')
-        doc.text('REPORTE DE ROBOS', doc.internal.pageSize.getWidth() / 2, 15, { align: 'center' })
-        doc.setFontSize(6)
-        doc.setFont(undefined, 'normal')
-        doc.text(
-          'ENTRE ' + datosFormulario.fechaInicio + ' Y ' + datosFormulario.fechaFin,
-          doc.internal.pageSize.getWidth() / 2,
-          18,
-          {
-            align: 'center',
-          },
-        )
-
-        doc.setDrawColor(0) // Color negro
-        doc.setLineWidth(0.2) // Grosor de la línea
-        doc.line(5, 30, 205, 30) // De (x1=5, y1=25) a (x2=200, y2=25)
-
-        doc.setFontSize(7)
-        doc.setFont(undefined, 'bold')
-        doc.text('DATOS DEL REPORTE', 5, 35)
-        doc.setFontSize(6)
-        doc.setFont(undefined, 'normal')
-        doc.text('Almacén: ' + datosFormulario.almacen, 5, 38)
-
-        doc.setFontSize(6)
-        doc.setFont(undefined, 'normal')
-        doc.text('Fecha de Impresion: ' + cambiarFormatoFecha(obtenerFechaActualDato()), 5, 41)
-
-        doc.setFontSize(7)
-        doc.setFont(undefined, 'bold')
-        doc.text('DATOS DEL ENCARGADO:', 205, 35, { align: 'right' })
-
-        doc.setFontSize(6)
-        doc.setFont(undefined, 'normal')
-        doc.text(datosFormulario.usuario.nombre, 205, 38, { align: 'right' })
-
-        doc.setFontSize(6)
-        doc.setFont(undefined, 'normal')
-        doc.text(datosFormulario.usuario.cargo, 205, 41, { align: 'right' })
-      }
-    },
-  })
+    datos,
+    'REPORTE DE EXTRABIO',
+    columnStyles,
+    headerColumnStyles,
+    Izquierda,
+    derecho,
+    false,
+    fechas,
+  )
 
   return doc
 }
@@ -4386,96 +3025,56 @@ export function PDF_REPORTE_MERMA(reporte, datosFormulario) {
     autorizacion: item.autorizacion,
   }))
 
-  autoTable(doc, {
+  const columnStyles = {
+    index: { cellWidth: 10, halign: 'center' },
+    fecha: { cellWidth: 20, halign: 'left' },
+    almacen: { cellWidth: 30, halign: 'left' },
+    descripcion: { cellWidth: 110, halign: 'left' },
+    autorizacion: { cellWidth: 30, halign: 'left' },
+  }
+
+  const headerColumnStyles = {
+    index: { cellWidth: 10, halign: 'center' },
+    fecha: { cellWidth: 20, halign: 'left' },
+    almacen: { cellWidth: 30, halign: 'left' },
+    descripcion: { cellWidth: 110, halign: 'left' },
+    autorizacion: { cellWidth: 30, halign: 'left' },
+  }
+
+  const Izquierda = {
+    titulo: 'DATOS DEL REPORTE',
+    campos: [{ label: 'Almacen', valor: datosFormulario.almacen || '' }],
+  }
+  const fechas = {
+    inicio: datosFormulario.fechaInicio,
+
+    final: datosFormulario.fechaFin,
+  }
+  const derecho = {
+    titulo: 'DATOS DEL ENCARGADO',
+    campos: [
+      { label: '', valor: datosFormulario.usuario.nombre },
+      { label: '', valor: datosFormulario.usuario.cargo },
+    ],
+  }
+
+  dibujarCuerpoTabla(
+    doc,
     columns,
-    body: datos,
-    styles: {
-      overflow: 'linebreak',
-      fontSize: 5,
-      cellPadding: 2,
-    },
-    headStyles: {
-      fillColor: ColoEncabezadoTabla,
-      textColor: 255,
-      halign: 'center',
-    },
-    columnStyles: {
-      index: { cellWidth: 10, halign: 'center' },
-      fecha: { cellWidth: 20, halign: 'left' },
-      almacen: { cellWidth: 30, halign: 'left' },
-      descripcion: { cellWidth: 110, halign: 'left' },
-      autorizacion: { cellWidth: 30, halign: 'left' },
-    },
-    startY: 45,
-    margin: { horizontal: 5 },
-    theme: 'striped',
-    didDrawPage: () => {
-      if (doc.internal.getNumberOfPages() === 1) {
-        if (logoBase64) {
-          const pageWidth = doc.internal.pageSize.getWidth() // Ancho total página
-          const imgWidth = 20 // Ancho del logo en mm
-          const imgHeight = 20 // Alto del logo en mm
-          const xPos = pageWidth - imgWidth - 5 // 10mm de margen derecho
-          const yPos = 5 // margen superior
-          console.log(logoBase64)
-          doc.addImage(logoBase64, 'JPEG', xPos, yPos, imgWidth, imgHeight)
-        }
-        doc.setFontSize(7)
-        doc.setFont(undefined, 'bold')
-        doc.text(nombreEmpresa, 5, 10)
-
-        doc.setFontSize(6)
-        doc.setFont(undefined, 'normal')
-        doc.text(direccionEmpresa, 5, 13)
-        doc.text(`Tel: ${telefonoEmpresa}`, 5, 16)
-
-        doc.setFontSize(10)
-        doc.setFont(undefined, 'bold')
-        doc.text('REPORTE DE MERMAS', doc.internal.pageSize.getWidth() / 2, 15, { align: 'center' })
-        doc.setFontSize(6)
-        doc.setFont(undefined, 'normal')
-        doc.text(
-          'ENTRE ' + datosFormulario.fechaInicio + ' Y ' + datosFormulario.fechaFin,
-          doc.internal.pageSize.getWidth() / 2,
-          18,
-          {
-            align: 'center',
-          },
-        )
-
-        doc.setDrawColor(0) // Color negro
-        doc.setLineWidth(0.2) // Grosor de la línea
-        doc.line(5, 30, 205, 30) // De (x1=5, y1=25) a (x2=200, y2=25)
-
-        doc.setFontSize(7)
-        doc.setFont(undefined, 'bold')
-        doc.text('DATOS DEL REPORTE', 5, 35)
-        doc.setFontSize(6)
-        doc.setFont(undefined, 'normal')
-        doc.text('Almacén: ' + datosFormulario.almacen, 5, 38)
-
-        doc.setFontSize(6)
-        doc.setFont(undefined, 'normal')
-        doc.text('Fecha de Impresion: ' + cambiarFormatoFecha(obtenerFechaActualDato()), 5, 41)
-
-        doc.setFontSize(7)
-        doc.setFont(undefined, 'bold')
-        doc.text('DATOS DEL ENCARGADO:', 205, 35, { align: 'right' })
-
-        doc.setFontSize(6)
-        doc.setFont(undefined, 'normal')
-        doc.text(datosFormulario.usuario.nombre, 205, 38, { align: 'right' })
-
-        doc.setFontSize(6)
-        doc.setFont(undefined, 'normal')
-        doc.text(datosFormulario.usuario.cargo, 205, 41, { align: 'right' })
-      }
-    },
-  })
+    datos,
+    'REPORTE DE MERMAS',
+    columnStyles,
+    headerColumnStyles,
+    Izquierda,
+    derecho,
+    false,
+    fechas,
+  )
 
   return doc
 }
-export function DPF_REPORTE_PRODUCTO_ASIGNADOS(productoLista) {
+export function DPF_REPORTE_PRODUCTO_ASIGNADOS(productoLista, almacen) {
+  console.log(almacen)
   const doc = new jsPDF({ orientation: 'portrait' })
 
   const columns = [
@@ -4493,7 +3092,6 @@ export function DPF_REPORTE_PRODUCTO_ASIGNADOS(productoLista) {
     { header: 'Stock', dataKey: 'stock' },
     { header: 'Stock min', dataKey: 'stockminimo' },
     { header: 'Stock max', dataKey: 'stockmaximo' },
-    { header: 'Fecha creación', dataKey: 'fecha' },
   ]
 
   const datos = productoLista.value.map((item, indice) => ({
@@ -4511,73 +3109,59 @@ export function DPF_REPORTE_PRODUCTO_ASIGNADOS(productoLista) {
     stock: item.stock,
     stockminimo: item.stockminimo,
     stockmaximo: item.stockmaximo,
-    fecha: cambiarFormatoFecha(item.fecha),
   }))
 
-  autoTable(doc, {
+  const columnStyles = {
+    indice: { cellWidth: 8, halign: 'center' },
+    codigo: { cellWidth: 15, halign: 'left' },
+    codigobarra: { cellWidth: 15, halign: 'left' },
+    categoria: { cellWidth: 15, halign: 'left' },
+    subcategoria: { cellWidth: 15, halign: 'left' },
+    descripcion: { cellWidth: 20, halign: 'left' },
+    detalle: { cellWidth: 15, halign: 'left' },
+    unidad: { cellWidth: 10, halign: 'center' },
+    medida: { cellWidth: 18, halign: 'center' },
+    caracteristica: { cellWidth: 18, halign: 'left' },
+    estadoproducto: { cellWidth: 15, halign: 'left' },
+    stock: { cellWidth: 12, halign: 'right' },
+    stockminimo: { cellWidth: 12, halign: 'right' },
+    stockmaximo: { cellWidth: 12, halign: 'right' },
+  }
+
+  const headerColumnStyles = {
+    indice: { cellWidth: 8, halign: 'center' },
+    codigo: { cellWidth: 15, halign: 'left' },
+    codigobarra: { cellWidth: 15, halign: 'left' },
+    categoria: { cellWidth: 15, halign: 'left' },
+    subcategoria: { cellWidth: 15, halign: 'left' },
+    descripcion: { cellWidth: 20, halign: 'left' },
+    detalle: { cellWidth: 15, halign: 'left' },
+    unidad: { cellWidth: 10, halign: 'center' },
+    medida: { cellWidth: 18, halign: 'center' },
+    caracteristica: { cellWidth: 18, halign: 'left' },
+    estadoproducto: { cellWidth: 10, halign: 'left' },
+    stock: { cellWidth: 8, halign: 'right' },
+    stockminimo: { cellWidth: 8, halign: 'right' },
+    stockmaximo: { cellWidth: 8, halign: 'right' },
+  }
+
+  const Izquierda = {
+    titulo: 'DATOS ALMACEN',
+    campos: [{ label: '', valor: almacen.label || '' }],
+  }
+
+  dibujarCuerpoTabla(
+    doc,
     columns,
-    body: datos,
-    styles: {
-      overflow: 'linebreak',
-      fontSize: 5,
-      cellPadding: 2,
-    },
-    headStyles: {
-      fillColor: [22, 160, 133],
-      textColor: 255,
-      halign: 'center',
-    },
-    columnStyles: {
-      indice: { cellWidth: 8, halign: 'center' },
-      codigo: { cellWidth: 15, halign: 'left' },
-      codigobarra: { cellWidth: 15, halign: 'left' },
-      categoria: { cellWidth: 15, halign: 'left' },
-      subcategoria: { cellWidth: 15, halign: 'left' },
-      descripcion: { cellWidth: 20, halign: 'left' },
-      detalle: { cellWidth: 15, halign: 'left' },
-      unidad: { cellWidth: 10, halign: 'center' },
-      medida: { cellWidth: 18, halign: 'center' },
-      caracteristica: { cellWidth: 18, halign: 'left' },
-      estadoproducto: { cellWidth: 10, halign: 'left' },
-      stock: { cellWidth: 8, halign: 'right' },
-      stockminimo: { cellWidth: 8, halign: 'right' },
-      stockmaximo: { cellWidth: 8, halign: 'right' },
-      fecha: { cellWidth: 15, halign: 'center' },
-    },
-    //20 + 15 + 20 + 25 + 30 + 20 + 20 + 25 + 20 + 15 + 20 + 15 + 20 = 265 mm
-
-    startY: 30,
-    margin: { horizontal: 5 },
-    theme: 'striped',
-    didDrawPage: () => {
-      if (doc.internal.getNumberOfPages() === 1) {
-        if (logoBase64) {
-          const pageWidth = doc.internal.pageSize.getWidth() // Ancho total página
-          const imgWidth = 20 // Ancho del logo en mm
-          const imgHeight = 20 // Alto del logo en mm
-          const xPos = pageWidth - imgWidth - 5 // 10mm de margen derecho
-          const yPos = 5 // margen superior
-          console.log(logoBase64)
-          doc.addImage(logoBase64, 'JPEG', xPos, yPos, imgWidth, imgHeight)
-        }
-
-        // Nombre y datos de empresa
-        doc.setFontSize(7)
-        doc.setFont(undefined, 'bold')
-        doc.text(nombreEmpresa, 5, 10)
-
-        doc.setFontSize(6)
-        doc.setFont(undefined, 'normal')
-        doc.text(direccionEmpresa, 5, 13)
-        doc.text(`Tel: ${telefonoEmpresa}`, 5, 16)
-
-        // Título centrado
-        doc.setFontSize(10)
-        doc.setFont(undefined, 'bold')
-        doc.text('Productos', doc.internal.pageSize.getWidth() / 2, 15, { align: 'center' })
-      }
-    },
-  })
+    datos,
+    'PRODUCTOS ASIGNADOS',
+    columnStyles,
+    headerColumnStyles,
+    Izquierda,
+    null,
+    true,
+    null,
+  )
 
   // doc.save('proveedores.pdf') ← comenta o elimina esta línea
   //doc.output('dataurlnewwindow') // ← muestra el PDF en una nueva ventana del navegador
@@ -4602,88 +3186,45 @@ export function PDF_REPORTE_GESTIPO_PEDIDOS_DETALLE(detallePedido) {
     cantidad: decimas(item.cantidad),
   }))
 
-  autoTable(doc, {
+  const columnStyles = {
+    indice: { cellWidth: 15, halign: 'center' },
+    descripcion: { cellWidth: 100, halign: 'left' },
+    cantidad: { cellWidth: 80, halign: 'right' },
+  }
+  const headerColumnStyles = {
+    indice: { halign: 'center' },
+    descripcion: { halign: 'left' },
+    cantidad: { halign: 'right' },
+  }
+  const cliente = `${detallePlano[0].almacen}`
+  const Izquierda = {
+    titulo: 'DATOS ORDEN',
+    campos: [
+      { label: 'Cliente', valor: cliente || '' },
+      { label: 'Fecha de Orden', valor: detallePlano[0].fecha || '' },
+    ],
+  }
+  const derecho = {
+    titulo: 'DATOS DEL USUARIO',
+    campos: [
+      { label: '', valor: detallePlano[0].usuarios[0].usuario || '' },
+      { label: '', valor: detallePlano[0].usuarios[0].cargo || '' },
+      { label: 'Tipo', valor: tipo[detallePlano[0].tipopedido] || '' },
+    ],
+  }
+
+  dibujarCuerpoTabla(
+    doc,
     columns,
-    body: datos,
-    styles: {
-      overflow: 'linebreak',
-      fontSize: 5,
-      cellPadding: 2,
-    },
-    headStyles: {
-      fillColor: ColoEncabezadoTabla,
-      textColor: 255,
-      halign: 'center',
-    },
-    columnStyles: {
-      indice: { cellWidth: 15, halign: 'center' },
-      descripcion: { cellWidth: 100, halign: 'left' },
-      cantidad: { cellWidth: 80, halign: 'right' },
-    },
-    didParseCell: function (data) {
-      if (data.row.index >= datos.length - 3) {
-        data.cell.styles.halign = 'left'
-      }
-    },
-    startY: 50,
-    margin: { horizontal: 5 },
-    theme: 'striped',
-    didDrawPage: () => {
-      if (doc.internal.getNumberOfPages() === 1) {
-        if (logoBase64) {
-          const pageWidth = doc.internal.pageSize.getWidth() // Ancho total página
-          const imgWidth = 20 // Ancho del logo en mm
-          const imgHeight = 20 // Alto del logo en mm
-          const xPos = pageWidth - imgWidth - 5 // 10mm de margen derecho
-          const yPos = 5 // margen superior
-          console.log(logoBase64)
-          doc.addImage(logoBase64, 'JPEG', xPos, yPos, imgWidth, imgHeight)
-        }
-
-        doc.setFontSize(7)
-        doc.setFont(undefined, 'bold')
-        doc.text(nombreEmpresa, 5, 10)
-
-        doc.setFontSize(6)
-        doc.setFont(undefined, 'normal')
-        doc.text(direccionEmpresa, 5, 13)
-        doc.text(`Tel: ${telefonoEmpresa}`, 5, 16)
-
-        doc.setFontSize(10)
-        doc.setFont(undefined, 'bold')
-        doc.text('ORDEN PEDIDO', doc.internal.pageSize.getWidth() / 2, 15, {
-          align: 'center',
-        })
-
-        doc.setDrawColor(0)
-        doc.setLineWidth(0.2)
-        doc.line(5, 30, 200, 30)
-
-        doc.setFontSize(7)
-        doc.setFont(undefined, 'bold')
-        doc.text('DATOS ORDEN:', 5, 35)
-
-        doc.setFontSize(6)
-        doc.setFont(undefined, 'normal')
-        const cliente = `${detallePlano[0].almacen}`
-        doc.text(cliente, 5, 38)
-
-        doc.text(detallePlano[0].empresa.direccion, 5, 41)
-        doc.text(detallePlano[0].empresa.email, 5, 44)
-        doc.text('Fecha de Orden: ' + cambiarFormatoFecha(detallePlano[0].fecha), 5, 47)
-
-        doc.setFontSize(7)
-        doc.setFont(undefined, 'bold')
-        doc.text('DATOS DEL USUARIO:', 200, 35, { align: 'right' })
-
-        doc.setFontSize(6)
-        doc.setFont(undefined, 'normal')
-        doc.text(detallePlano[0].usuarios[0].usuario, 200, 38, { align: 'right' })
-        doc.text(detallePlano[0].usuarios[0].cargo, 200, 41, { align: 'right' })
-        doc.text('Tipo ' + tipo[detallePlano[0].tipopedido], 200, 44, { align: 'right' })
-      }
-    },
-  })
+    datos,
+    'ORDEN PEDIDO',
+    columnStyles,
+    headerColumnStyles,
+    Izquierda,
+    derecho,
+    false,
+    null,
+  )
 
   return doc
 }
@@ -4694,12 +3235,12 @@ export const PDF_REPORTE_GESTION_PEDIDOS = (filterPedido, tipoestados, fechai, f
     { header: 'N', dataKey: 'indice' },
     { header: 'Fecha', dataKey: 'fecha' },
     { header: 'Código', dataKey: 'codigo' },
-    { header: 'Nro.Pedido', dataKey: 'nropedido' },
+    { header: 'Nro. Pedido', dataKey: 'nropedido' },
     { header: 'Tipo', dataKey: 'tipopedido' },
     { header: 'Almacén Origen', dataKey: 'almacenorigen' },
     { header: 'Almacén Destino', dataKey: 'almacen' },
     { header: 'Observación', dataKey: 'observacion' },
-    { header: 'Esatado', dataKey: 'estado' },
+    { header: 'Estado', dataKey: 'estado' },
   ]
   // filterPedido.value.reduce((sum, row) => sum + Number(row.total), 0)
   const datos = filterPedido.value.map((item, indice) => ({
@@ -4714,109 +3255,63 @@ export const PDF_REPORTE_GESTION_PEDIDOS = (filterPedido, tipoestados, fechai, f
     estado: tipoestados[Number(item.estado)],
   }))
 
-  autoTable(doc, {
+  const columnStyles = {
+    indice: { cellWidth: 10, halign: 'center' },
+    fecha: { cellWidth: 20, halign: 'left' },
+    codigo: { cellWidth: 25, halign: 'left' },
+    nropedido: { cellWidth: 15, halign: 'right' },
+    tipopedido: { cellWidth: 25, halign: 'left' },
+    almacenorigen: { cellWidth: 25, halign: 'left' },
+    almacen: { cellWidth: 25, halign: 'left' },
+    observacion: { cellWidth: 35, halign: 'left' },
+    estado: { cellWidth: 20, halign: 'left' },
+  }
+  const headerColumnStyles = {
+    indice: { halign: 'center' },
+    fecha: { halign: 'left' },
+    codigo: { halign: 'left' },
+    nropedido: { halign: 'right' },
+    tipopedido: { halign: 'left' },
+    almacenorigen: { halign: 'left' },
+    almacen: { halign: 'left' },
+    observacion: { halign: 'left' },
+    estado: { halign: 'left' },
+  }
+
+  const nombreAlmacen = almacen.value
+  const Izquierda = {
+    titulo: 'DATOS DEL REPORTE',
+    campos: [{ label: 'Nombre del Almacen', valor: nombreAlmacen.label || 'Todos' }],
+  }
+  //
+  const fechas = {
+    inicio: fechai.value,
+
+    final: fechaf.value,
+  }
+
+  dibujarCuerpoTabla(
+    doc,
     columns,
-    body: datos,
-    styles: {
-      overflow: 'linebreak',
-      fontSize: 5,
-      cellPadding: 2,
-    },
-    headStyles: {
-      fillColor: ColoEncabezadoTabla,
-      textColor: 255,
-      halign: 'center',
-    },
-    columnStyles: {
-      indice: { cellWidth: 10, halign: 'center' },
-      fecha: { cellWidth: 15, halign: 'left' },
-      codigo: { cellWidth: 25, halign: 'left' },
-      nropedido: { cellWidth: 15, halign: 'center' },
-      tipopedido: { cellWidth: 25, halign: 'left' },
-      almacenorigen: { cellWidth: 25, halign: 'left' },
-      almacen: { cellWidth: 25, halign: 'left' },
-      observacion: { cellWidth: 40, halign: 'left' },
-      estado: { cellWidth: 15, halign: 'left' },
-    },
-    //20 + 15 + 20 + 25 + 30 + 20 + 20 + 25 + 20 + 15 + 20 + 15 + 20 = 265 mm
-
-    startY: 45,
-    margin: { horizontal: 5 },
-    theme: 'striped',
-    didDrawPage: () => {
-      if (doc.internal.getNumberOfPages() === 1) {
-        // Logo (requiere base64 o ruta absoluta en servidor si usas Node)
-        if (logoBase64) {
-          const pageWidth = doc.internal.pageSize.getWidth() // Ancho total página
-          const imgWidth = 20 // Ancho del logo en mm
-          const imgHeight = 20 // Alto del logo en mm
-          const xPos = pageWidth - imgWidth - 5 // 10mm de margen derecho
-          const yPos = 5 // margen superior
-          console.log(logoBase64)
-          doc.addImage(logoBase64, 'JPEG', xPos, yPos, imgWidth, imgHeight)
-        }
-        // Nombre y datos de empresa
-        doc.setFontSize(7)
-        doc.setFont(undefined, 'bold')
-        doc.text(nombreEmpresa, 5, 10)
-
-        doc.setFontSize(6)
-        doc.setFont(undefined, 'normal')
-        doc.text(direccionEmpresa, 5, 13)
-        doc.text(`Tel: ${telefonoEmpresa}`, 5, 16)
-
-        // Título centrado
-        doc.setFontSize(10)
-        doc.setFont(undefined, 'bold')
-        doc.text('REPORTE DE PEDIDOS', doc.internal.pageSize.getWidth() / 2, 15, {
-          align: 'center',
-        })
-        doc.setFontSize(6)
-        doc.setFont(undefined, 'normal')
-        doc.text(
-          'Entre ' + cambiarFormatoFecha(fechai.value) + ' Y ' + cambiarFormatoFecha(fechaf.value),
-          doc.internal.pageSize.getWidth() / 2,
-          19,
-          {
-            align: 'center',
-          },
-        )
-        doc.setDrawColor(0) // Color negro
-        doc.setLineWidth(0.2) // Grosor de la línea
-        doc.line(5, 30, 200, 30) // De (x1=5, y1=25) a (x2=200, y2=25)
-
-        doc.setFontSize(7)
-        doc.setFont(undefined, 'bold')
-        doc.text('DATOS DEL REPORTE', 5, 35)
-
-        doc.setFontSize(6)
-        doc.setFont(undefined, 'normal')
-        doc.text('Nombre del Almacen: ' + (almacen.value?.label || 'Todo los Almacenes'), 5, 38)
-
-        doc.setFontSize(6)
-        doc.setFont(undefined, 'normal')
-        doc.text('Fecha de Impresion: ' + cambiarFormatoFecha(obtenerFechaActualDato()), 5, 41)
-
-        doc.setFontSize(7)
-        doc.setFont(undefined, 'bold')
-        doc.text('DATOS DEL ENCARGADO:', 200, 35, { align: 'right' })
-
-        doc.setFontSize(6)
-        doc.setFont(undefined, 'normal')
-        doc.text(nombre, 200, 38, { align: 'right' })
-
-        doc.setFontSize(6)
-        doc.setFont(undefined, 'normal')
-        doc.text(cargo, 200, 41, { align: 'right' })
-      }
-    },
-  })
-
+    datos,
+    'REPORTE DE PEDIDOS',
+    columnStyles,
+    headerColumnStyles,
+    Izquierda,
+    null,
+    true,
+    fechas,
+  )
   // doc.save('proveedores.pdf') ← comenta o elimina esta línea
   //doc.output('dataurlnewwindow') // ← muestra el PDF en una nueva ventana del navegador
   return doc
 }
+
+// FUNCIÓN PRINCIPAL DEL REPORTE (PUNTO DE ENTRADA ESPECÍFICO)
+
 export function PDF_REPORTE_COMPRAS(filteredCompra, filtroAlmacen) {
+  console.log(filteredCompra)
+
   const doc = new jsPDF({ orientation: 'portrait' })
 
   const columns = [
@@ -4830,110 +3325,437 @@ export function PDF_REPORTE_COMPRAS(filteredCompra, filtroAlmacen) {
     { header: 'Total Compra', dataKey: 'total' },
     { header: 'Estado', dataKey: 'autorizacion' },
   ]
+  const columnStyles = {
+    indice: { cellWidth: 10, halign: 'center' },
+    fecha: { cellWidth: 15, halign: 'center' },
+    proveedor: { cellWidth: 35, halign: 'left' },
+    lote: { cellWidth: 30, halign: 'left' },
+    codigo: { cellWidth: 30, halign: 'left' },
+    nfactura: { cellWidth: 15, halign: 'right' },
+    tipocompra: { cellWidth: 15, halign: 'left' },
+    total: { cellWidth: 25, halign: 'right' },
+    autorizacion: { cellWidth: 25, halign: 'left' },
+  }
+  // const headerColumnStyles = {
+  //   indice: { fillColor: [255, 0, 0], textColor: 255, fontStyle: 'bold', halign: 'center' },
+  //   fecha: { fillColor: [0, 120, 255], textColor: 255, halign: 'center' },
+  //   proveedor: { fillColor: [0, 180, 90], textColor: 0, halign: 'left' },
+  //   lote: { fillColor: [255, 200, 0], textColor: 0, halign: 'left' },
+  //   codigo: { fillColor: [200, 0, 255], textColor: 255, halign: 'left' },
+  //   nfactura: { fillColor: [240, 240, 240], textColor: 0, halign: 'right' },
+  //   tipocompra: { fillColor: [90, 90, 90], textColor: 255, halign: 'center' },
+  //   total: { fillColor: [0, 150, 0], textColor: 255, fontStyle: 'bold', halign: 'right' },
+  //   autorizacion: { fillColor: [180, 0, 0], textColor: 255, halign: 'center' },
+  // }
+  const headerColumnStyles = {
+    indice: { halign: 'center' },
+    fecha: { halign: 'center' },
+    proveedor: { halign: 'left' },
+    lote: { halign: 'left' },
+    codigo: { halign: 'left' },
+    nfactura: { halign: 'right' },
+    tipocompra: { halign: 'left' },
+    total: { halign: 'right' },
+    autorizacion: { halign: 'left' },
+  }
+  // 3. Mapeo y Preparación de Datos Específicos del Reporte de Compras
+  const datos =
+    filteredCompra?.value?.map((item, indice) => ({
+      indice: indice + 1,
+      fecha: cambiarFormatoFecha(item.fecha),
+      proveedor: item.proveedor,
+      lote: item.lote,
+      codigo: item.codigo,
+      nfactura: item.nfactura,
+      tipocompra: item.tipocompra == 2 ? 'Contado' : 'Credito',
+      total: item.total == null ? 'Lista Vacia' : decimas(redondear(parseFloat(item.total))),
+      autorizacion: item.autorizacion == 2 ? 'No Autorizado' : 'Autorizado',
+    })) || []
+  const almacen = filtroAlmacen.value
 
-  const datos = filteredCompra.value.map((item, indice) => ({
-    indice: indice + 1,
-    fecha: cambiarFormatoFecha(item.fecha),
-    proveedor: item.proveedor,
-    lote: item.lote,
-    codigo: item.codigo,
-    nfactura: item.nfactura,
-    tipocompra: item.tipocompra == 2 ? 'Contado' : 'Credito',
-    total: item.total == null ? 'Lista Vacia' : decimas(redondear(parseFloat(item.total))),
-    autorizacion: item.autorizacion == 2 ? 'No Autorizado' : 'Autorizado',
-  }))
+  const Izquierda = {
+    titulo: 'DATOS DEL REPORTE',
+    campos: [{ label: 'Nombre del almacén', valor: almacen.label || 'Todos' }],
+  }
+
+  // 4. Delegar el dibujo del cuerpo, encabezado y pie de página
+  dibujarCuerpoTabla(
+    doc,
+    columns,
+    datos,
+    'REPORTE DE COMPRAS',
+    columnStyles,
+    headerColumnStyles,
+    Izquierda,
+    null,
+    true,
+    null,
+  )
+
+  // doc.save('reporte_compras.pdf');
+  return doc
+}
+
+// 2. CUERPO (BODY) - COMPONENTE ESCALABLE
+function dibujarCuerpoTabla(
+  doc,
+  columns,
+  datos,
+  tituloReporte,
+  columnStyles,
+  headerColumnStyles,
+  datosIzquierda = null,
+  datosDerecho = null,
+  conImpresionEncargado = null,
+  fechas = null,
+  extras = null,
+) {
+  // Definición de estilos de columna específicos para este reporte (pueden generalizarse)
 
   autoTable(doc, {
     columns,
     body: datos,
     styles: {
       overflow: 'linebreak',
-      fontSize: 7,
-      cellPadding: 1,
+      fontSize: fontSize,
+      cellPadding: cellPadding,
+      textColor: [0, 0, 0],
     },
     headStyles: {
       fillColor: ColoEncabezadoTabla,
-      textColor: 300,
+      textColor: [0, 0, 0], // Blanco
       halign: 'center',
+      fontSize: fontSize,
     },
-    columnStyles: {
-      indice: { cellWidth: 10, halign: 'center' },
-      fecha: { cellWidth: 15, halign: 'center' },
-      proveedor: { cellWidth: 30, halign: 'left' },
-      lote: { cellWidth: 30, halign: 'left' },
-      codigo: { cellWidth: 30, halign: 'left' },
-      nfactura: { cellWidth: 15, halign: 'right' },
-      tipocompra: { cellWidth: 15, halign: 'center' },
-      total: { cellWidth: 25, halign: 'right' },
-      autorizacion: { cellWidth: 25, halign: 'center' },
-    },
-    //20 + 15 + 20 + 25 + 30 + 20 + 20 + 25 + 20 + 15 + 20 + 15 + 20 = 265 mm
-
+    // columnStyles: columnStyles,
+    // Posición inicial de la tabla, justo debajo del encabezado
     startY: 45,
-    margin: { horizontal: 5 },
+    margin: { horizontal: 5, bottom: 20 }, // Margen inferior reservado para el pie de página
     theme: 'striped',
-    didDrawPage: () => {
-      if (doc.internal.getNumberOfPages() === 1) {
-        // Logo (requiere base64 o ruta absoluta en servidor si usas Node)
-        if (logoBase64) {
-          const pageWidth = doc.internal.pageSize.getWidth() // Ancho total página
-          const imgWidth = 20 // Ancho del logo en mm
-          const imgHeight = 20 // Alto del logo en mm
-          const xPos = pageWidth - imgWidth - 5 // 10mm de margen derecho
-          const yPos = 5 // margen superior
-          console.log(logoBase64)
-          doc.addImage(logoBase64, 'JPEG', xPos, yPos, imgWidth, imgHeight)
+    didParseCell: function (data) {
+      const key = data.column.dataKey
+      // for (const styleName in data.cell.styles) {
+      //   // Aseguramos que la propiedad es propia del objeto y no heredada
+      //   if (Object.prototype.hasOwnProperty.call(data.cell.styles, styleName)) {
+      //     // styleName es el nombre de la propiedad (ej: 'color', 'fontSize')
+      //     const styleValue = data.cell.styles[styleName]
+
+      //     console.log(`Nombre del Estilo: ${styleName}`)
+      //     console.log(`Valor del Estilo: ${styleValue}`)
+      //     // console.log(styleName, ':', styleValue);
+      //   }
+      // }
+
+      if (data.section === 'head') {
+        // aplicar estilos específicos de la columna
+
+        if (headerColumnStyles[key]) {
+          Object.assign(data.cell.styles, headerColumnStyles[key])
         }
 
-        // Nombre y datos de empresa
-        doc.setFontSize(7)
-        doc.setFont(undefined, 'bold')
-        doc.text(nombreEmpresa, 5, 10)
+        if (extras && extras.cabezeraVertical) {
+          data.cell.text = ['']
+        }
+      }
 
-        doc.setFontSize(6)
-        doc.setFont(undefined, 'normal')
-        doc.text(direccionEmpresa, 5, 13)
-        doc.text(`Tel: ${telefonoEmpresa}`, 5, 16)
-
-        // Título centrado
-        doc.setFontSize(10)
-        doc.setFont(undefined, 'bold')
-        doc.text('REPORTE DE COMPRAS', doc.internal.pageSize.getWidth() / 2, 15, {
-          align: 'center',
-        })
-
-        doc.setDrawColor(0) // Color negro
-        doc.setLineWidth(0.2) // Grosor de la línea
-        doc.line(5, 30, 200, 30) // De (x1=5, y1=25) a (x2=200, y2=25)
-
-        doc.setFontSize(7)
-        doc.setFont(undefined, 'bold')
-        doc.text('DATOS DEL REPORTE', 5, 35)
-
-        doc.setFontSize(6)
-        doc.setFont(undefined, 'normal')
-        doc.text('Nombre del Almacen: ' + filtroAlmacen.value.label, 5, 38)
-
-        doc.setFontSize(6)
-        doc.setFont(undefined, 'normal')
-        doc.text('Fecha de Impresion: ' + cambiarFormatoFecha(obtenerFechaActualDato()), 5, 41)
-
-        doc.setFontSize(7)
-        doc.setFont(undefined, 'bold')
-        doc.text('DATOS DEL ENCARGADO:', 200, 35, { align: 'right' })
-
-        doc.setFontSize(6)
-        doc.setFont(undefined, 'normal')
-        doc.text(nombre, 200, 38, { align: 'right' })
-
-        doc.setFontSize(6)
-        doc.setFont(undefined, 'normal')
-        doc.text(cargo, 200, 41, { align: 'right' })
+      if (data.section === 'body') {
+        // aplica los estilos personalizados del body por columna
+        if (columnStyles[key]) {
+          Object.assign(data.cell.styles, columnStyles[key])
+        }
       }
     },
-  })
+    didDrawCell: function (data) {
+      console.log(data)
+      // if (extras) {
+      //   if (data.column.dataKey === extras.descripcion && data.cell.section === 'body') {
+      //     const item = datos[data.row.index]
+      //     if (extras && extras.descripcionAdicional && extras.descripcionAdicional != '') {
+      //       if (item[extras.descripcionAdicional]) {
+      //         const text = convertirAMayusculas(
+      //           doc.splitTextToSize('(' + item[extras.descripcionAdicional] + ')', 45),
+      //         )
+      //         doc.setFontSize(6)
+      //         doc.setTextColor(0)
+      //         doc.text(
+      //           text,
+      //           data.cell.x + 40,
+      //           data.cell.y + data.cell.height - 1, // justo debajo del texto principal
+      //         )
+      //         doc.setTextColor(0)
+      //       }
+      //     }
+      //   }
+      // }
+      // if (extras && extras.cabezeraVertical) {
+      //   if (data.section === 'head') {
+      //     const cell = data.cell
+      //     const text = data.column.raw.header || '' // El texto del encabezado
+      //     console.log(data.cell)
+      //     console.log(data.column.raw.header)
 
-  // doc.save('proveedores.pdf') ← comenta o elimina esta línea
-  //doc.output('dataurlnewwindow') // ← muestra el PDF en una nueva ventana del navegador
-  return doc
+      //     if (!text) return // Evitar errores si el texto es nulo
+
+      //     // 1. Opciones de Rotación y Posición:
+      //     // Posición X: Desplazamos un poco a la izquierda (restamos 2-3mm)
+      //     // para que el texto rotado a 45° no se salga por el borde derecho.
+      //     //const offsetX = 3
+      //     const textX = cell.x + cell.width // Cerca del borde derecho, desplazado
+
+      //     // Posición Y: Cerca de la parte inferior de la celda
+      //     const textY = cell.y + cell.height // -2mm desde el final
+
+      //     // 2. Configurar el estilo
+      //     doc.setFont(doc.getFont().fontName, 'bold')
+      //     doc.setFontSize(8)
+      //     doc.setTextColor(0, 0, 0)
+
+      //     // 3. Aplicar la rotación y dibujar el texto
+      //     doc.text(text, textX, textY, {
+      //       // *** CAMBIO CLAVE: 45 grados ***
+      //       angle: 45,
+      //       align: 'right', // Alineación a la derecha para que el punto de anclaje sea el borde
+      //       baseline: 'bottom',
+      //     })
+      //     data.row.height = 15
+      //   }
+      // }
+      if (data.column.dataKey === 'imagen' && data.cell.section === 'body') {
+        console.log(data.column.dataKey)
+        const imageData = data.cell.text[0] // La celda contiene el string Base64
+        console.log(data.cell.raw)
+
+        // Verifica que el string no esté vacío (no es la fila de Total)
+        if (imageData && imageData.startsWith('data:image/')) {
+          const cell = data.cell
+
+          // Definir el tamaño y posición de la imagen dentro de la celda
+          const imageWidth = 12 // Ancho deseado de la imagen en mm
+          const imageHeight = 12 // Altura deseada de la imagen en mm
+
+          // Calcular la posición central para centrar la imagen
+          const x = cell.x + cell.width / 2 - imageWidth / 2
+          const y = cell.y + cell.height / 2 - imageHeight / 2
+
+          // El formato Base64 debe ser 'data:image/jpeg;base64,...' o similar.
+          // La función addImage lo maneja automáticamente si el prefijo es correcto.
+          console.log(imageData)
+          doc.addImage(imageData, 'auto', x, y, imageWidth, imageHeight)
+        }
+
+        // Borra el texto de la celda después de dibujar la imagen
+        data.cell.text = []
+      }
+    },
+    // ENCABEZADO Y PIE DE PÁGINA: Se dibuja en cada página.
+    didDrawPage: (data) => {
+      if (doc.internal.getNumberOfPages() === 1) {
+        agregarEncabezado(doc)
+        agregarEncabezadoInfo(
+          doc,
+          tituloReporte,
+          fechas,
+          datosIzquierda,
+          datosDerecho,
+          conImpresionEncargado,
+          extras,
+        )
+      }
+      // Dibuja el encabezado en cada página
+
+      // Dibuja el pie de página en cada página
+      agregarPieDePagina(doc, data)
+    },
+  })
+}
+
+// 1. ENCABEZADO (HEADER) - REUTILIZABLE
+function agregarEncabezado(doc) {
+  const pageWidth = doc.internal.pageSize.getWidth()
+  const startY = 5
+
+  //LOGO
+  if (logoBase64) {
+    const imgWidth = 20
+    const imgHeight = 20
+
+    const pageWidth = doc.internal.pageSize.getWidth()
+
+    const xPos = (pageWidth - imgWidth) / 2 // ← CENTRAR
+    const yPos = startY // tu altura elegida
+
+    doc.addImage(logoBase64, 'JPEG', xPos, yPos, imgWidth, imgHeight)
+  }
+  //Datos Izquierda
+  doc.setFontSize(7)
+  doc.setFont(undefined, 'bold')
+  doc.text(nombreEmpresa, 5, 10)
+
+  doc.setFontSize(6)
+  doc.setFont(undefined, 'normal')
+  doc.text(direccionEmpresa, 5, 13)
+  doc.text(estado, 5, 16)
+  doc.text(ciudad, 5, 19)
+  doc.text(pais, 5, 22)
+  //Datos Derecho
+  doc.setFontSize(7)
+  doc.setFont(undefined, 'bold')
+  doc.text('NIT:' + nit, pageWidth - 5, 10, { align: 'right' })
+
+  doc.setFontSize(6)
+  doc.setFont(undefined, 'normal')
+  doc.text('Telf.: ' + telefono, pageWidth - 5, 13, { align: 'right' })
+  doc.text('Cel.: ' + celular, pageWidth - 5, 16, { align: 'right' })
+  doc.text(email, pageWidth - 5, 19, { align: 'right' })
+  doc.text(web, pageWidth - 5, 22, { align: 'right' })
+
+  doc.setDrawColor(0)
+  doc.setLineWidth(0.2)
+  doc.line(5, 25, pageWidth - 5, 25)
+}
+
+function agregarEncabezadoInfo(
+  doc,
+  titulo,
+  fechas,
+  datosIzquierda,
+  datosDerecho = null,
+  conImpresionEncargado = null,
+  extras = null,
+) {
+  const pageWidth = doc.internal.pageSize.getWidth()
+
+  // -------------------------
+  // TÍTULO CENTRADO
+  // -------------------------
+  doc.setFontSize(10)
+  doc.setFont(undefined, 'bold')
+  doc.text(titulo, pageWidth / 2, 30, { align: 'center' })
+  console.log(datosIzquierda)
+
+  if (fechas) {
+    doc.setFontSize(6)
+    doc.setFont(undefined, 'normal')
+    doc.text(
+      'Entre ' + cambiarFormatoFecha(fechas.inicio) + ' Y ' + cambiarFormatoFecha(fechas.final),
+      pageWidth / 2,
+      33,
+      {
+        align: 'center',
+      },
+    )
+  }
+  if (extras) {
+    if (extras.numFactura) {
+      doc.setFontSize(6)
+      doc.setFont(undefined, 'normal')
+      doc.text('Nro. ' + extras.numFactura, pageWidth / 2, 33, {
+        align: 'center',
+      })
+    }
+    if (extras.expresadoDivisa) {
+      doc.setFontSize(6)
+      doc.setFont(undefined, 'normal')
+      doc.text('(Expresados en ' + extras.expresadoDivisa + ')', pageWidth / 2, 36, {
+        align: 'center',
+      })
+    }
+  }
+
+  // -------------------------
+  // DATOS DEL REPORTE (Izquierda)
+  // -------------------------
+  if (datosIzquierda) {
+    // Título
+    doc.setFontSize(7)
+    doc.setFont(undefined, 'bold')
+    doc.text(datosIzquierda.titulo + ':', 5, 33)
+
+    // Valores dinámicos
+    let y = 35 // posición inicial
+
+    doc.setFontSize(6)
+    doc.setFont(undefined, 'normal')
+
+    datosIzquierda.campos.forEach((campo) => {
+      let texto = campo.valor
+      if (campo.label && campo.label.trim() !== '') {
+        texto = `${campo.label}: ${campo.valor}`
+      }
+      doc.text(texto, 5, y)
+      y += 3 // separación entre líneas
+    })
+  }
+
+  // -------------------------
+  // DATOS DEL ENCARGADO (Derecha)
+  // -------------------------
+  if (datosDerecho) {
+    // Título
+    doc.setFontSize(7)
+    doc.setFont(undefined, 'bold')
+    doc.text(datosDerecho.titulo, pageWidth - 5, 33, { align: 'right' })
+
+    // Imprimir campos dinámicos
+    let y = 35 // posición inicial
+
+    doc.setFontSize(6)
+    doc.setFont(undefined, 'normal')
+
+    datosDerecho.campos.forEach((campo) => {
+      let texto = campo.valor
+      if (campo.label && campo.label.trim() !== '') {
+        texto = `${campo.label}: ${campo.valor}`
+      }
+      doc.text(texto, pageWidth - 5, y, { align: 'right' })
+      y += 3 // separación vertical
+    })
+  } else if (conImpresionEncargado) {
+    doc.setFontSize(7)
+    doc.setFont(undefined, 'bold')
+    doc.text('DATOS DEL ENCARGADO:', pageWidth - 5, 33, { align: 'right' })
+
+    doc.setFontSize(6)
+    doc.setFont(undefined, 'normal')
+    doc.text(encargadoNombre, pageWidth - 5, 35, { align: 'right' })
+
+    doc.setFontSize(6)
+    doc.setFont(undefined, 'normal')
+    doc.text(cargo, pageWidth - 5, 38, { align: 'right' })
+  }
+}
+
+// 3. PIE DE PÁGINA (FOOTER) - REUTILIZABLE
+function agregarPieDePagina(doc, data) {
+  const pageCount = doc.internal.getNumberOfPages()
+  const pageWidth = doc.internal.pageSize.getWidth()
+  const pageHeight = doc.internal.pageSize.getHeight()
+  const footerY = pageHeight - 10 // 10mm desde el borde inferior
+
+  doc.setFontSize(6)
+  doc.setFont(undefined, 'normal')
+
+  // -------------------------
+  // Numeración de página (Centrado)
+  // -------------------------
+  // El número total de páginas puede no ser exacto en la primera llamada de didDrawPage
+  // pero se actualizará correctamente en las siguientes.
+  const pageText = `Pag. N° ${data.pageNumber} de ${pageCount}`
+  const fechaGeneracion = cambiarFormatoFecha(obtenerFechaActualDato())
+
+  doc.text(
+    `Fecha hora reporte: ${fechaGeneracion} ${obtenerHora()}, ${pageText}`,
+    pageWidth - 5,
+    footerY,
+    {
+      align: 'right',
+    },
+  )
+
+  // -------------------------
+  // Línea de separación
+  // -------------------------
+  doc.setDrawColor(0)
+  doc.setLineWidth(0.1)
+  doc.line(5, pageHeight - 15, pageWidth - 5, pageHeight - 15)
 }

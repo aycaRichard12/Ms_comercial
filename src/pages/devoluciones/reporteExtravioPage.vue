@@ -284,7 +284,6 @@ const generarReporte = async () => {
 
     const data = resp.data
     console.log(data)
-    datosOriginales.value = data
     datosFiltrados.value = data.map((item, index) => ({
       index: index + 1,
       fecha: cambiarFormatoFecha(item.fecha),
@@ -294,6 +293,7 @@ const generarReporte = async () => {
       idalmacen: item.idalmacen,
       id: item.idrobo,
     }))
+    datosOriginales.value = JSON.parse(JSON.stringify(datosFiltrados.value))
 
     // Guardar información del usuario y empresa para el PDF
     usuario.value = contenidousuario[0]
@@ -320,8 +320,8 @@ const mostrarVistaPrevia = () => {
     return
   }
   const doc = PDF_REPORTE_EXTRAVIO(datosFiltrados.value, {
-    fechaInicio: cambiarFormatoFecha(fechaInicio.value),
-    fechaFin: cambiarFormatoFecha(fechaFin.value),
+    fechaInicio: fechaInicio.value,
+    fechaFin: fechaFin.value,
     almacen: nombreAlmacenSeleccionado.value,
     empresa: empresa.value,
     usuario: usuario.value,

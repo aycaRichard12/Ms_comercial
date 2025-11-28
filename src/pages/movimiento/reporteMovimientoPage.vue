@@ -1,6 +1,22 @@
 <template>
   <q-page padding>
-    <div class="titulo">Reporte Movimientos</div>
+    <div class="col-12 q-mb-md">
+      <div class="row items-center">
+        <!-- Botón Volver -->
+        <q-btn
+          color="secondary"
+          class="btn-res"
+          id="costounitario"
+          to="/movimientos"
+          icon="arrow_back"
+          label="Volver"
+          no-caps
+        />
+
+        <div class="titulo">Reporte Movimientos</div>
+      </div>
+    </div>
+
     <q-form @submit.prevent="handleGenerarReporte">
       <div class="row justify-center q-col-gutter-x-md">
         <div class="col-12 col-md-4">

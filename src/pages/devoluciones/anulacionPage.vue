@@ -1566,7 +1566,7 @@ const eliminarDevolucion = (id) => {
 const confirmarAutorizarDevolucion = (id) => {
   $q.dialog({
     title: '¿Está seguro?',
-    message: 'Esta acción modificará los stock de los productos en la tabla',
+    message: 'Al aceptar el stock de productos se actualizará',
     cancel: true,
     persistent: true,
   }).onOk(() => {

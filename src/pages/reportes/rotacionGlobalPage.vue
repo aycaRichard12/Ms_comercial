@@ -313,8 +313,8 @@ function mostrarVistaPrevia() {
     return
   }
   const doc = PDF_REPORTE_DE_ROTACION_POR_GLOBAL(datosFiltrados.value, {
-    fechaInicio: cambiarFormatoFecha(fechaInicio.value),
-    fechaFin: cambiarFormatoFecha(fechaFin.value),
+    fechaInicio: fechaInicio.value,
+    fechaFin: fechaFin.value,
     almacen: 'GLOBAL',
 
     usuario: usuarioValido[0],
