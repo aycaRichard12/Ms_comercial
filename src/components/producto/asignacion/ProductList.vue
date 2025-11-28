@@ -204,7 +204,8 @@ const columns = [
 ]
 
 async function onPrintReport() {
-  const doc = await DPF_REPORTE_PRODUCTO_ASIGNADOS(productoLista)
+  const almacen = props.opciones.find((obj) => (obj.value = filtro.value))
+  const doc = await DPF_REPORTE_PRODUCTO_ASIGNADOS(productoLista, almacen)
   pdfData.value = doc.output('dataurlstring') // muestra el pdf en un modal
   mostrarModal.value = true
 }

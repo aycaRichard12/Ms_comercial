@@ -134,7 +134,6 @@ import { validarUsuario } from 'src/composables/FuncionesGenerales'
 import { useQuasar } from 'quasar'
 import { decimas, redondear } from 'src/composables/FuncionesG'
 import jsPDF from 'jspdf'
-import { URL_APIE } from 'src/composables/services'
 import { imagen } from 'src/boot/url'
 import { PDFreporteStockProductosIndividual } from 'src/utils/pdfReportGenerator'
 import { PDFreporteStockProductosIndividual_img } from 'src/utils/pdfReportGenerator'
@@ -290,7 +289,10 @@ const prepararImagenes = async () => {
     processedRows.value.map(async (item) => {
       try {
         console.log(`${imagen}${item.imagen}`)
-        const base64 = await convertirImagenARutaBase64(`${imagen}${item.imagen}`)
+        const base64 = await convertirImagenARutaBase64(
+          `https://vivasoft.link/app/cmv1/api/imagen/almacen.png`,
+        )
+        console.log(base64)
         return { ...item, imagenBase64: base64 }
       } catch (e) {
         console.warn('No se pudo cargar imagen para', item.codigo + e)
@@ -298,6 +300,7 @@ const prepararImagenes = async () => {
       }
     }),
   )
+  console.log(productosConImagenes)
   return productosConImagenes
 }
 
@@ -309,12 +312,12 @@ const vistaCatalogo = async () => {
   const nombreEmpresa = idempresa.empresa.nombre
   const direccionEmpresa = idempresa.empresa.direccion
   const telefonoEmpresa = idempresa.empresa.telefono
-  const logoEmpresa = idempresa.empresa.logo // Ruta relativa o base64
+  //const logoEmpresa = idempresa.empresa.logo // Ruta relativa o base64
 
-  if (logoEmpresa) {
-    console.log(`${URL_APIE}${logoEmpresa}`)
-    doc.addImage(`${URL_APIE}${logoEmpresa}`, 'PNG', 180, 8, 20, 20)
-  }
+  // if (logoEmpresa) {
+  //   console.log(`${URL_APIE}${logoEmpresa}`)
+  //   doc.addImage(`${URL_APIE}${logoEmpresa}`, 'PNG', 180, 8, 20, 20)
+  // }
   doc.setFontSize(7)
   doc.setFont(undefined, 'bold')
   doc.text(nombreEmpresa, 10, 10)
@@ -350,12 +353,15 @@ const vistaCatalogo = async () => {
     doc.text(`Stock: ${item.stock}`, margenIzq, startY + 30)
     doc.text(`Costo Unitario: ${item.costounitario}`, margenIzq, startY + 35)
     doc.text(`Estado: ${item.estado == 1 ? 'Activo' : 'No activo'}`, margenIzq, startY + 40)
-
-    if (item.imagenBase64) {
-      doc.addImage(`${imagen}${item.imagen}`, 'JPEG', margenDer, startY, 60, 40)
-    } else {
-      doc.text('Sin imagen', margenDer, startY + 10)
-    }
+    console.log(item.imagen)
+    doc.addImage(
+      `${'https://vivasoft.link/app/cmv1/api/imagen/almacen.png'}`,
+      'JPEG',
+      margenDer,
+      startY,
+      60,
+      40,
+    )
 
     startY += 55
     if (startY + 50 > doc.internal.pageSize.getHeight()) {

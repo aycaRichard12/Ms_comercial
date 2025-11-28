@@ -131,7 +131,6 @@ import { api } from 'src/boot/axios'
 import { date } from 'quasar'
 import { validarUsuario } from 'src/composables/FuncionesGenerales'
 import { PDF_REPORTE_DE_ROTACION_POR_CLIENTE } from 'src/utils/pdfReportGenerator'
-import { cambiarFormatoFecha } from 'src/composables/FuncionesG'
 const $q = useQuasar()
 const { formatDate } = date
 
@@ -369,8 +368,8 @@ const mostrarVistaPrevia = () => {
     return
   }
   const doc = PDF_REPORTE_DE_ROTACION_POR_CLIENTE(datosFiltrados.value, {
-    fechaInicio: cambiarFormatoFecha(fechaInicio.value),
-    fechaFin: cambiarFormatoFecha(fechaFin.value),
+    fechaInicio: fechaInicio.value,
+    fechaFin: fechaFin.value,
     cliente: clienteSeleccionado.value.label,
     sucursal: sucursalSeleccionada.value.label,
     empresa: empresa.value,

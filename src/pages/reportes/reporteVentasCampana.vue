@@ -1,6 +1,6 @@
 <template>
   <q-page padding>
-    <div class="titulo">Reporte Campañas</div>
+    <div class="titulo">Reporte Campañas Ventas</div>
     <q-form @submit.prevent="handleGenerarReporte">
       <div class="row justify-center q-col-gutter-x-md">
         <div class="col-12 col-md-4">
