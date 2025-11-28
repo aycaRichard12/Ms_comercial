@@ -79,7 +79,7 @@
                 </div>
 
                 <div class="col-12 flex justify-start q-mt-md">
-                  <q-btn type="submit" label="Cargar" color="primary" />
+                  <q-btn type="submit" label="Registrar" color="primary" />
                   <q-btn flat label="Cancelar" color="negative" @click="cancelarRegistro" />
                 </div>
               </q-form>
@@ -177,7 +177,7 @@
     <q-dialog v-model="modaldetalleProductos">
       <q-card class="responsive-dialog">
         <q-card-section class="bg-primary text-h6 text-white flex justify-between">
-          <div>Detalle Robo</div>
+          <div>Productos Extraviados</div>
           <q-btn icon="close" @click="volverALista" dense flat round />
         </q-card-section>
         <q-card-section>
@@ -467,6 +467,8 @@ const cargarAlmacenes = async () => {
         label: a.almacen,
         value: a.idalmacen,
       }))
+    almacenesOptions.value.unshift({ label: 'Todos Los Almacenes', value: 0 })
+    idAlmacenFiltro.value = almacenesOptions.value[0].value
   } catch (error) {
     console.error('Error al cargar almacenes:', error)
     $q.notify({
@@ -477,14 +479,14 @@ const cargarAlmacenes = async () => {
 }
 
 const cargarRobos = async () => {
-  if (!idAlmacenFiltro.value) return
-
   try {
     const response = await api.get(`listarobo/${idempresa}`)
     console.log(response)
     console.log(idAlmacenFiltro.value)
     datosTabla.value = response.data.filter((r) => {
-      return Number(r.idalmacen) == Number(idAlmacenFiltro.value)
+      return Number(idAlmacenFiltro.value) === 0
+        ? true
+        : Number(r.idalmacen) == Number(idAlmacenFiltro.value)
     })
   } catch (error) {
     console.error('Error al listar robos:', error)
@@ -521,6 +523,7 @@ const registrarRobo = async () => {
     })
 
     resetearFormulario()
+
     mostrarFormulario.value = false
     cargarRobos()
   } catch (error) {

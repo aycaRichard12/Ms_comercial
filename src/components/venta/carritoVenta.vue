@@ -8,7 +8,7 @@
         <div class="col flex justify-start">
           <div class="text-weight-bold btn-res" style="font-size: 15px">
             <q-icon name="shopping_cart" size="15px" class="q-mr-sm icono" />
-            <span class="texto">Venta de Productos</span>
+            <span class="texto">Procesar Venta</span>
           </div>
         </div>
         <div class="col-auto">
@@ -258,7 +258,7 @@
       :columns="columnasCarrito"
       row-key="id"
       flat
-      title="Productos seleccionados"
+      title="Lista de items cargados"
       no-data-label="Aún no se han añadido productos"
     >
       <template v-slot:body-cell-acciones="props">

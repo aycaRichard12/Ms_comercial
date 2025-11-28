@@ -3,7 +3,7 @@
     <q-form @submit="onSubmit" ref="formRef">
       <div class="row q-col-gutter-x-md">
         <div class="col-12 col-md-8" v-if="esModoEdicion">
-          <label for="producto">Producto*</label>
+          <label for="producto">Producto o Servicio*</label>
           <q-input
             v-model="detalleForm.descripcion"
             use-input
@@ -42,7 +42,7 @@
         <div class="col-12 col-md-4">
           <label for="stockactual">Stock actual</label>
           <q-input
-            label="stockactual"
+            id="stockactual"
             v-model="detalleForm.stockActual"
             readonly
             dense
@@ -105,7 +105,7 @@
 
       <template v-slot:body-cell-subtotal="props">
         <q-td :props="props">
-          {{ (props.row.precio * props.row.cantidad).toFixed(2) }} {{ divisaActiva.simbolo }}
+          {{ (props.row.precio * props.row.cantidad).toFixed(2) }}
         </q-td>
       </template>
 
@@ -129,12 +129,20 @@
           />
         </q-td>
       </template>
+      <template v-slot:bottom-row>
+        <q-tr>
+          <q-td colspan="4" class="text-right text-weight-bold text-grey-8"> Total: </q-td>
+          <q-td class="text-center text-weight-bold text-h6"
+            >{{ divisaActiva.simbolo }} {{ total.toFixed(2) }}</q-td
+          >
+        </q-tr>
+      </template>
     </q-table>
   </q-card-section>
 </template>
 
 <script setup>
-import { ref, onMounted, watch } from 'vue'
+import { ref, onMounted, watch, computed } from 'vue'
 import { useQuasar } from 'quasar'
 import { api } from 'src/boot/axios'
 import { decimas } from 'src/composables/FuncionesG'
@@ -183,6 +191,12 @@ const columnas = [
   { name: 'opciones', label: 'Opciones', align: 'center' },
 ]
 
+const total = computed(() => {
+  return detalleItems.value.reduce(
+    (sum, item) => sum + Number(item.precio) * Number(item.cantidad),
+    0,
+  )
+})
 // --- WATCHERS ---
 // Recargar datos si el objeto `compra` cambia
 watch(

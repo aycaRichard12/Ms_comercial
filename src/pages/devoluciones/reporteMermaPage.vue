@@ -201,7 +201,7 @@ watch(almacenSeleccionado, (newVal) => {
   filtrarYOrdenarDatos(newVal)
 })
 function filtrarYOrdenarDatos(dato) {
-  if (dato === '0') {
+  if (Number(dato) === 0) {
     datosFiltrados.value = [...datosOriginales.value]
   } else {
     datosFiltrados.value = datosOriginales.value.filter((u) => String(u.idalmacen) === String(dato))
