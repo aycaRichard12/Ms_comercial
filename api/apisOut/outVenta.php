@@ -46,6 +46,7 @@ class outVenta
         
     }
     public function getidAlmacen($codigo,$idempresa){
+        $id_almacen = null;
         $sql = "SELECT id_almacen FROM almacen WHERE codigo = ? AND idempresa = ?";
         $stmt = $this->cm->prepare($sql);
         $stmt->bind_param("si", $codigo,$idempresa);
@@ -84,6 +85,12 @@ class outVenta
                 return 0; // o puedes lanzar una excepción si prefieres
             }
         }
+        $id_cliente = 0;
+        $codigo = '';
+        $tipodocumento = '';
+        $nit = '';
+        $nombrecomercial = '';
+        $id_sucursal = 0;
         $sql = "SELECT id_cliente, codigo, tipodocumento, nit, nombrecomercial FROM cliente  WHERE nit = ? AND idempresa = ?;";
         $stmt = $this->cm->prepare($sql);
         $stmt->bind_param("si", $datosCliente['nit'],$idempresa);
@@ -165,7 +172,8 @@ class outVenta
     }
     
     public function usuario($idempresa,$idusuario){
-        
+        $nombre = null;
+        $cargo = null;
         try {
             $sql = "SELECT u.idusuario, u.nombre, c.cargo FROM usuario u 
             LEFT JOIN trabajador t ON u.trabajador_idtrabajador=t.idtrabajador
@@ -228,6 +236,9 @@ class outVenta
     public function getDivisa(){
         $datostoken = $this->token->autenticarPeticion();
         $idempresa = $datostoken->data->id_empresa;
+        $codigoDivisa = null;
+        $codigoDivisaSin = null;
+        $divisa = null;
          try {
             $sql = "SELECT id_divisas AS codigoDivisa, monedasin AS codigoDivisaSin, nombre AS divisa FROM divisas WHERE idempresa = ? AND estado = 1;";
             $stmt = $this->cm->prepare($sql);
@@ -248,7 +259,7 @@ class outVenta
         }
     }
     public function sin_divisa($iddivisa){
-        
+        $monedasin = null;
          try {
             $sql = "SELECT  monedasin FROM divisas WHERE id_divisas = ?";
             $stmt = $this->cm->prepare($sql);
@@ -397,6 +408,7 @@ class outVenta
         return $datos;
     }
     public function sin_metodo_pago($id_metodo){
+        $codigosin = 0;
          try {
             $sql = "SELECT codigosin FROM metodopago WHERE idmetodopago = ?;";
             $stmt = $this->cm->prepare($sql);

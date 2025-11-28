@@ -18,7 +18,7 @@
           />
         </div>
         <div class="col-12 col-md-8" v-if="!esModoEdicion">
-          <label for="producto">Producto*</label>
+          <label for="producto">Producto o Servicio*</label>
           <q-select
             use-input
             hide-dropdown-icon

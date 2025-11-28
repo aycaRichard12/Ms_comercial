@@ -35,10 +35,10 @@ let celular = null
 let email = null
 let web = null
 
-let fontSize = 10
-let fontSizeCabezal = 10
+let fontSize = 8
+let fontSizeCabezal = 9
 let cellPadding = 1
-let ColoEncabezadoTabla = [128, 128, 128] // Negro
+//let ColoEncabezadoTabla = [128, 128, 128] // Negro
 
 console.log(fontSizeCabezal)
 const tipo = { 1: 'Pedido Compra', 2: 'Pedido Movimiento' }
@@ -80,6 +80,114 @@ function getEstadoText(estado) {
   return estados[Number(estado)] || ''
 }
 
+export function PDF_REPORTE_COSTO_UNITARIO_X_ALMACEN(filtrados, filtroAlmacen) {
+  console.log(filtroAlmacen)
+  const doc = new jsPDF({ orientation: 'portrait' })
+  const columns = [
+    { header: 'N°', dataKey: 'indice' },
+    { header: 'Código', dataKey: 'codigo' },
+    { header: 'Descripción', dataKey: 'descripcion' },
+    { header: 'Precio', dataKey: 'precio' },
+  ]
+
+  const datos = filtrados.map((item, indice) => ({
+    indice: indice + 1,
+    codigo: item.codigo,
+    descripcion: item.descripcion,
+    precio: decimas(item.precio),
+  }))
+
+  const columnStyles = {
+    indice: { cellWidth: 15, halign: 'center' },
+    descripcion: { cellWidth: 50, halign: 'left' },
+    cantidad: { cellWidth: 40, halign: 'right' },
+    precio: { cellWidth: 40, halign: 'right' },
+    total: { cellWidth: 50, halign: 'right' },
+  }
+  const headerColumnStyles = {
+    indice: { cellWidth: 15, halign: 'center' },
+    descripcion: { cellWidth: 50, halign: 'left' },
+    cantidad: { cellWidth: 40, halign: 'right' },
+    precio: { cellWidth: 40, halign: 'right' },
+    total: { cellWidth: 50, halign: 'right' },
+  }
+  const Izquierda = {
+    titulo: 'DATOS DEL REPORTE',
+    campos: [
+      {
+        label: 'Nombre del Almacén',
+        valor: filtroAlmacen || 'Todos los Almacenes',
+      },
+    ],
+  }
+
+  dibujarCuerpoTabla(
+    doc,
+    columns,
+    datos,
+    'COSTOS UNITARIOS',
+    columnStyles,
+    headerColumnStyles,
+    Izquierda,
+    null,
+    true,
+    null,
+    null,
+  )
+  return doc
+}
+
+export const PDF_REPORTE_CATEGORIA_PRECIO_X_ALMACEN = (filtradas, filtroAlmacen) => {
+  const doc = new jsPDF({ orientation: 'portrait' })
+  const columns = [
+    { header: 'N°', dataKey: 'indice' },
+    { header: 'Nombre', dataKey: 'nombre' },
+    { header: 'Porcentaje', dataKey: 'porcentaje' },
+  ]
+  const datos = filtradas.map((item, indice) => ({
+    indice: indice + 1,
+    nombre: item.nombre,
+    porcentaje: item.porcentaje,
+  }))
+
+  const columnStyles = {
+    indice: { cellWidth: 15, halign: 'center' },
+    nombre: { cellWidth: 90, halign: 'left' },
+    porcentaje: { cellWidth: 95, halign: 'right' },
+  }
+  const headerColumnStyles = {
+    indice: { cellWidth: 15, halign: 'center' },
+    nombre: { cellWidth: 90, halign: 'left' },
+    porcentaje: { cellWidth: 95, halign: 'right' },
+  }
+  const Izquierda = {
+    titulo: 'DATOS DEL REPORTE',
+    campos: [
+      {
+        label: 'Nombre del Almacén',
+        valor: filtroAlmacen || 'Todos los Almacenes',
+      },
+    ],
+  }
+
+  dibujarCuerpoTabla(
+    doc,
+    columns,
+    datos,
+    'COSTOS UNITARIOS',
+    columnStyles,
+    headerColumnStyles,
+    Izquierda,
+    null,
+    true,
+    null,
+    null,
+  )
+
+  // doc.save('proveedores.pdf') ← comenta o elimina esta línea
+  //doc.output('dataurlnewwindow') // ← muestra el PDF en una nueva ventana del navegador
+  return doc
+}
 export default function imprimirReporte(detallePedido) {
   const doc = new jsPDF({ orientation: 'portrait' })
 
@@ -2717,7 +2825,11 @@ export function PDF_REPORTE_MOVIMIENTOS(reporte, datosFormulario) {
   return doc
 }
 export function PDF_REPORTE_PEDIDOS(reporte, datosFormulario) {
-  const doc = new jsPDF({ orientation: 'portrait' })
+  const doc = new jsPDF({
+    orientation: 'portrait',
+    unit: 'mm',
+    format: 'letter',
+  })
 
   const columns = [
     { header: 'N°', dataKey: 'n' },
@@ -2799,24 +2911,24 @@ export function PDF_REPORTE_PEDIDOS(reporte, datosFormulario) {
   return doc
 }
 export function PDF_REPORTE_PRECIO_BASE(reporte, datosFormulario) {
-  const doc = new jsPDF({ orientation: 'portrait' })
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'letter' })
 
   const columns = [
     { header: 'N°', dataKey: 'n' },
     { header: 'Fecha', dataKey: 'fecha' },
-    { header: 'Codigo', dataKey: 'codigo' },
+    { header: 'Código', dataKey: 'codigo' },
     { header: 'producto', dataKey: 'producto' },
     { header: 'categoria', dataKey: 'categoria' },
     { header: 'Caracteristica', dataKey: 'caracteristica' },
     { header: 'Medida', dataKey: 'medida' },
-    { header: 'Descripcion', dataKey: 'descripcion' },
+    { header: 'Descripción', dataKey: 'descripcion' },
     { header: 'Unidad', dataKey: 'unidad' },
     { header: 'Precio Base', dataKey: 'preciobase' },
   ]
 
   const datos = reporte.map((item) => ({
     n: item.n,
-    fecha: item.fecha,
+    fecha: cambiarFormatoFecha(item.fecha),
     codigo: item.codigo,
     producto: item.producto,
     categoria: item.categoria,
@@ -2828,28 +2940,28 @@ export function PDF_REPORTE_PRECIO_BASE(reporte, datosFormulario) {
   }))
 
   const columnStyles = {
-    n: { cellWidth: 10, halign: 'center' },
-    fecha: { cellWidth: 15, halign: 'left' },
+    n: { cellWidth: 10, halign: 'left' },
+    fecha: { cellWidth: 20, halign: 'left' },
     codigo: { cellWidth: 20, halign: 'left' },
-    producto: { cellWidth: 20, halign: 'center' },
+    producto: { cellWidth: 20, halign: 'left' },
     categoria: { cellWidth: 20, halign: 'left' },
-    caracteristica: { cellWidth: 20, halign: 'right' },
-    medida: { cellWidth: 20, halign: 'right' },
-    descripcion: { cellWidth: 35, halign: 'right' },
-    unidad: { cellWidth: 20, halign: 'right' },
-    preciobase: { cellWidth: 20, halign: 'right' },
+    caracteristica: { cellWidth: 20, halign: 'left' },
+    medida: { cellWidth: 20, halign: 'left' },
+    descripcion: { cellWidth: 35, halign: 'left' },
+    unidad: { cellWidth: 15, halign: 'left' },
+    preciobase: { cellWidth: 15, halign: 'right' },
   }
   const headerColumnStyles = {
-    n: { cellWidth: 10, halign: 'center' },
-    fecha: { cellWidth: 15, halign: 'left' },
+    n: { cellWidth: 10, halign: 'left' },
+    fecha: { cellWidth: 20, halign: 'left' },
     codigo: { cellWidth: 20, halign: 'left' },
-    producto: { cellWidth: 20, halign: 'center' },
+    producto: { cellWidth: 20, halign: 'left' },
     categoria: { cellWidth: 20, halign: 'left' },
-    caracteristica: { cellWidth: 20, halign: 'right' },
-    medida: { cellWidth: 20, halign: 'right' },
-    descripcion: { cellWidth: 35, halign: 'right' },
-    unidad: { cellWidth: 20, halign: 'right' },
-    preciobase: { cellWidth: 20, halign: 'right' },
+    caracteristica: { cellWidth: 20, halign: 'left' },
+    medida: { cellWidth: 20, halign: 'left' },
+    descripcion: { cellWidth: 35, halign: 'left' },
+    unidad: { cellWidth: 15, halign: 'left' },
+    preciobase: { cellWidth: 15, halign: 'right' },
   }
 
   const Izquierda = {
@@ -2860,8 +2972,8 @@ export function PDF_REPORTE_PRECIO_BASE(reporte, datosFormulario) {
   const derecho = {
     titulo: 'DATOS DEL ENCARGADO',
     campos: [
-      { label: '', valor: datosFormulario.usuario.nombre },
-      { label: '', valor: datosFormulario.usuario.cargo },
+      { label: null, valor: datosFormulario.usuario.nombre },
+      { label: null, valor: datosFormulario.usuario.cargo },
     ],
   }
 
@@ -3422,15 +3534,26 @@ function dibujarCuerpoTabla(
       textColor: [0, 0, 0],
     },
     headStyles: {
-      fillColor: ColoEncabezadoTabla,
-      textColor: [0, 0, 0], // Blanco
-      halign: 'center',
+      fillColor: false,
+      textColor: [0, 0, 0],
       fontSize: fontSize,
+      halign: 'center',
     },
+    // headStyles: {
+    //   fillColor: false, // ❌ Sin color de fondo
+    //   textColor: [0, 0, 0],
+    //   halign: 'center',
+    //   fontSize: fontSize,
+    //   lineWidth: 0.3, // ✔ Grosor del borde
+    //   lineColor: [0, 0, 0], // ✔ Color del borde
+    // },
+
     // columnStyles: columnStyles,
     // Posición inicial de la tabla, justo debajo del encabezado
-    startY: 45,
-    margin: { horizontal: 5, bottom: 20 }, // Margen inferior reservado para el pie de página
+    startY: 50,
+    //margin: { horizontal: 10, bottom: 20 },
+    tableWidth: 'wrap',
+    margin: { left: 12, right: 12 }, // Margen inferior reservado para el pie de página
     theme: 'striped',
     didParseCell: function (data) {
       const key = data.column.dataKey
@@ -3587,31 +3710,31 @@ function agregarEncabezado(doc) {
     doc.addImage(logoBase64, 'JPEG', xPos, yPos, imgWidth, imgHeight)
   }
   //Datos Izquierda
-  doc.setFontSize(7)
+  doc.setFontSize(9)
   doc.setFont(undefined, 'bold')
-  doc.text(nombreEmpresa, 5, 10)
+  doc.text(nombreEmpresa, 10, 10)
 
-  doc.setFontSize(6)
+  doc.setFontSize(8)
   doc.setFont(undefined, 'normal')
-  doc.text(direccionEmpresa, 5, 13)
-  doc.text(estado, 5, 16)
-  doc.text(ciudad, 5, 19)
-  doc.text(pais, 5, 22)
+  doc.text(direccionEmpresa, 10, 13)
+  doc.text(estado, 10, 16)
+  doc.text(ciudad, 10, 19)
+  doc.text(pais, 10, 22)
   //Datos Derecho
-  doc.setFontSize(7)
+  doc.setFontSize(9)
   doc.setFont(undefined, 'bold')
-  doc.text('NIT:' + nit, pageWidth - 5, 10, { align: 'right' })
+  doc.text('NIT:' + nit, pageWidth - 10, 10, { align: 'right' })
 
-  doc.setFontSize(6)
+  doc.setFontSize(8)
   doc.setFont(undefined, 'normal')
-  doc.text('Telf.: ' + telefono, pageWidth - 5, 13, { align: 'right' })
-  doc.text('Cel.: ' + celular, pageWidth - 5, 16, { align: 'right' })
-  doc.text(email, pageWidth - 5, 19, { align: 'right' })
-  doc.text(web, pageWidth - 5, 22, { align: 'right' })
+  doc.text('Telf.: ' + telefono, pageWidth - 10, 13, { align: 'right' })
+  doc.text('Cel.: ' + celular, pageWidth - 10, 16, { align: 'right' })
+  doc.text(email, pageWidth - 10, 19, { align: 'right' })
+  doc.text(web, pageWidth - 10, 22, { align: 'right' })
 
   doc.setDrawColor(0)
   doc.setLineWidth(0.2)
-  doc.line(5, 25, pageWidth - 5, 25)
+  doc.line(10, 25, pageWidth - 10, 25)
 }
 
 function agregarEncabezadoInfo(
@@ -3628,13 +3751,13 @@ function agregarEncabezadoInfo(
   // -------------------------
   // TÍTULO CENTRADO
   // -------------------------
-  doc.setFontSize(10)
+  doc.setFontSize(11)
   doc.setFont(undefined, 'bold')
   doc.text(titulo, pageWidth / 2, 30, { align: 'center' })
   console.log(datosIzquierda)
 
   if (fechas) {
-    doc.setFontSize(6)
+    doc.setFontSize(8)
     doc.setFont(undefined, 'normal')
     doc.text(
       'Entre ' + cambiarFormatoFecha(fechas.inicio) + ' Y ' + cambiarFormatoFecha(fechas.final),
@@ -3647,14 +3770,14 @@ function agregarEncabezadoInfo(
   }
   if (extras) {
     if (extras.numFactura) {
-      doc.setFontSize(6)
+      doc.setFontSize(8)
       doc.setFont(undefined, 'normal')
       doc.text('Nro. ' + extras.numFactura, pageWidth / 2, 33, {
         align: 'center',
       })
     }
     if (extras.expresadoDivisa) {
-      doc.setFontSize(6)
+      doc.setFontSize(8)
       doc.setFont(undefined, 'normal')
       doc.text('(Expresados en ' + extras.expresadoDivisa + ')', pageWidth / 2, 36, {
         align: 'center',
@@ -3667,14 +3790,14 @@ function agregarEncabezadoInfo(
   // -------------------------
   if (datosIzquierda) {
     // Título
-    doc.setFontSize(7)
+    doc.setFontSize(9)
     doc.setFont(undefined, 'bold')
-    doc.text(datosIzquierda.titulo + ':', 5, 33)
+    doc.text(datosIzquierda.titulo + ':', 10, 33)
 
     // Valores dinámicos
-    let y = 35 // posición inicial
+    let y = 36 // posición inicial
 
-    doc.setFontSize(6)
+    doc.setFontSize(8)
     doc.setFont(undefined, 'normal')
 
     datosIzquierda.campos.forEach((campo) => {
@@ -3682,7 +3805,7 @@ function agregarEncabezadoInfo(
       if (campo.label && campo.label.trim() !== '') {
         texto = `${campo.label}: ${campo.valor}`
       }
-      doc.text(texto, 5, y)
+      doc.text(texto, 10, y)
       y += 3 // separación entre líneas
     })
   }
@@ -3692,14 +3815,14 @@ function agregarEncabezadoInfo(
   // -------------------------
   if (datosDerecho) {
     // Título
-    doc.setFontSize(7)
+    doc.setFontSize(9)
     doc.setFont(undefined, 'bold')
-    doc.text(datosDerecho.titulo, pageWidth - 5, 33, { align: 'right' })
+    doc.text(datosDerecho.titulo, pageWidth - 10, 33, { align: 'right' })
 
     // Imprimir campos dinámicos
-    let y = 35 // posición inicial
+    let y = 36 // posición inicial
 
-    doc.setFontSize(6)
+    doc.setFontSize(8)
     doc.setFont(undefined, 'normal')
 
     datosDerecho.campos.forEach((campo) => {
@@ -3707,21 +3830,21 @@ function agregarEncabezadoInfo(
       if (campo.label && campo.label.trim() !== '') {
         texto = `${campo.label}: ${campo.valor}`
       }
-      doc.text(texto, pageWidth - 5, y, { align: 'right' })
+      doc.text(texto, pageWidth - 10, y, { align: 'right' })
       y += 3 // separación vertical
     })
   } else if (conImpresionEncargado) {
-    doc.setFontSize(7)
+    doc.setFontSize(9)
     doc.setFont(undefined, 'bold')
-    doc.text('DATOS DEL ENCARGADO:', pageWidth - 5, 33, { align: 'right' })
+    doc.text('DATOS DEL ENCARGADO:', pageWidth - 10, 33, { align: 'right' })
 
-    doc.setFontSize(6)
+    doc.setFontSize(8)
     doc.setFont(undefined, 'normal')
-    doc.text(encargadoNombre, pageWidth - 5, 35, { align: 'right' })
+    doc.text(encargadoNombre, pageWidth - 10, 36, { align: 'right' })
 
-    doc.setFontSize(6)
+    doc.setFontSize(8)
     doc.setFont(undefined, 'normal')
-    doc.text(cargo, pageWidth - 5, 38, { align: 'right' })
+    doc.text(cargo, pageWidth - 10, 39, { align: 'right' })
   }
 }
 
@@ -3743,19 +3866,10 @@ function agregarPieDePagina(doc, data) {
   const pageText = `Pag. N° ${data.pageNumber} de ${pageCount}`
   const fechaGeneracion = cambiarFormatoFecha(obtenerFechaActualDato())
 
-  doc.text(
-    `Fecha hora reporte: ${fechaGeneracion} ${obtenerHora()}, ${pageText}`,
-    pageWidth - 5,
-    footerY,
-    {
-      align: 'right',
-    },
-  )
-
-  // -------------------------
-  // Línea de separación
-  // -------------------------
-  doc.setDrawColor(0)
-  doc.setLineWidth(0.1)
-  doc.line(5, pageHeight - 15, pageWidth - 5, pageHeight - 15)
+  doc.text(`Fecha hora reporte: ${fechaGeneracion} ${obtenerHora()}`, 10, footerY, {
+    align: 'left',
+  })
+  doc.text(`${pageText}`, pageWidth - 10, footerY, {
+    align: 'right',
+  })
 }

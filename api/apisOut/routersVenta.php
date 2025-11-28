@@ -16,6 +16,11 @@
         }
         return;
     }
+    if($method == "GET"){
+        require_once "venta/routersGet.php";
+        return;     
+    }
+
 
     
     echo json_encode($response, http_response_code($response["status"]));

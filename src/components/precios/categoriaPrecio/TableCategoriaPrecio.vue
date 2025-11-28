@@ -128,12 +128,9 @@
 
 <script setup>
 import { ref, computed, watch } from 'vue'
-import { validarUsuario } from 'src/composables/FuncionesGenerales'
-import jsPDF from 'jspdf'
-import autoTable from 'jspdf-autotable'
-import { URL_APIE } from 'src/composables/services'
-import { obtenerFechaActualDato } from 'src/composables/FuncionesG'
+
 import { useCurrencyStore } from 'src/stores/currencyStore'
+import { PDF_REPORTE_CATEGORIA_PRECIO_X_ALMACEN } from 'src/utils/pdfReportGenerator'
 const currencyStore = useCurrencyStore()
 console.log(currencyStore)
 const filtroAlmacen = ref(null)
@@ -194,125 +191,7 @@ watch(
 )
 
 const imprimir = () => {
-  const contenidousuario = validarUsuario()
-  const doc = new jsPDF({ orientation: 'portrait' })
-
-  const idempresa = contenidousuario[0]
-  const nombreEmpresa = idempresa.empresa.nombre
-  const direccionEmpresa = idempresa.empresa.direccion
-  const telefonoEmpresa = idempresa.empresa.telefono
-  const logoEmpresa = idempresa.empresa.logo // Ruta relativa o base64
-
-  const columns = [
-    { header: 'N°', dataKey: 'indice' },
-    { header: 'Nombre', dataKey: 'nombre' },
-    { header: 'Porcentaje', dataKey: 'porcentaje' },
-  ]
-
-  const datos = filtradas.value.map((item, indice) => ({
-    indice: indice + 1,
-    nombre: item.nombre,
-    porcentaje: item.porcentaje,
-  }))
-
-  autoTable(doc, {
-    columns,
-    body: datos,
-    styles: {
-      overflow: 'linebreak',
-      fontSize: 5,
-      cellPadding: 2,
-    },
-    headStyles: {
-      fillColor: [22, 160, 133],
-      textColor: 255,
-      halign: 'center',
-    },
-
-    columnStyles: {
-      indice: { cellWidth: 15, halign: 'center' },
-      nombre: { cellWidth: 90, halign: 'left' },
-      porcentaje: { cellWidth: 90, halign: 'right' },
-    },
-    didParseCell: function (data) {
-      // Ejemplo: destacar la última fila (que contiene el Monto Total)
-      if (data.row.index === datos.length - 1) {
-        data.cell.styles.halign = 'left'
-      }
-      if (data.row.index === datos.length - 2) {
-        data.cell.styles.halign = 'left'
-      }
-      if (data.row.index === datos.length - 3) {
-        data.cell.styles.halign = 'left'
-      }
-      // También puedes aplicar estilo a una fila específica, por ejemplo la de índice 2:
-      // if (data.row.index === 2) {
-      //   data.cell.styles.fontStyle = 'italic'
-      //   data.cell.styles.fillColor = [255, 240, 200]
-      // }
-    },
-    //20 + 15 + 20 + 25 + 30 + 20 + 20 + 25 + 20 + 15 + 20 + 15 + 20 = 265 mm
-
-    startY: 50,
-    margin: { horizontal: 5 },
-    theme: 'striped',
-    didDrawPage: () => {
-      if (doc.internal.getNumberOfPages() === 1) {
-        // Logo (requiere base64 o ruta absoluta en servidor si usas Node)
-        if (logoEmpresa) {
-          doc.addImage(`${URL_APIE}${logoEmpresa}`, 'PNG', 180, 8, 20, 20)
-        }
-
-        // Nombre y datos de empresa
-        doc.setFontSize(7)
-        doc.setFont(undefined, 'bold')
-        doc.text(nombreEmpresa, 5, 10)
-
-        doc.setFontSize(6)
-        doc.setFont(undefined, 'normal')
-        doc.text(direccionEmpresa, 5, 13)
-        doc.text(`Tel: ${telefonoEmpresa}`, 5, 16)
-
-        // Título centrado
-        doc.setFontSize(10)
-        doc.setFont(undefined, 'bold')
-        doc.text('COSTOS UNITARIOS', doc.internal.pageSize.getWidth() / 2, 15, {
-          align: 'center',
-        })
-
-        doc.setDrawColor(0) // Color negro
-        doc.setLineWidth(0.2) // Grosor de la línea
-        doc.line(5, 30, 200, 30) // De (x1=5, y1=25) a (x2=200, y2=25)
-
-        doc.setFontSize(7)
-        doc.setFont(undefined, 'bold')
-        doc.text('DATOS DEL REPORTE:', 5, 35)
-
-        doc.setFontSize(6)
-        doc.setFont(undefined, 'normal')
-        doc.text(
-          'Nombre del Almacén ' + (filtroAlmacen.value?.label || 'Todos los Almacenes'),
-          5,
-          38,
-        )
-        doc.setFontSize(6)
-        doc.setFont(undefined, 'normal')
-        doc.text('Fecha se Impresión' + obtenerFechaActualDato(), 5, 41)
-
-        doc.setFontSize(7)
-        doc.setFont(undefined, 'bold')
-        doc.text('DATOS DEL ENCARGADO:', 200, 35, { align: 'right' })
-
-        doc.setFontSize(6)
-        doc.setFont(undefined, 'normal')
-        doc.text(idempresa.nombre, 200, 38, { align: 'right' })
-
-        doc.setFontSize(6)
-        doc.setFont(undefined, 'normal')
-        doc.text(idempresa.cargo, 200, 41, { align: 'right' })
-      }
-    },
-  })
+  const doc = PDF_REPORTE_CATEGORIA_PRECIO_X_ALMACEN(filtradas.value, filtroAlmacen.value)
 
   // doc.save('proveedores.pdf') ← comenta o elimina esta línea
   //doc.output('dataurlnewwindow') // ← muestra el PDF en una nueva ventana del navegador
