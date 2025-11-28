@@ -34,10 +34,6 @@
               <q-icon name="picture_as_pdf" class="icono" />
               <span class="texto">Vista Previa PDF</span>
             </q-btn>
-            <q-btn color="primary" class="btn-res q-mt-lg q-ml-md" @click="showReportForm">
-              <q-icon name="assignment" class="icono" />
-              <span class="texto">Reporte</span>
-            </q-btn>
           </div>
           <div class="col-6 col-md-5 flex justify-end">
             <div>
@@ -1021,7 +1017,9 @@ const generatePDF = () => {
   console.log(filteredTableData.value)
   // const doc = PDFreporteMermas(filteredTableData)
   // console.log(doc)
-  const doc = PDFreporteMermas(filteredTableData)
+
+  const almacen = almacenOptions.value.find((obj) => obj.value == selectedWarehouse.value)
+  const doc = PDFreporteMermas(filteredTableData, almacen)
   pdfData.value = doc.output('dataurlstring')
   mostrarModal.value = true
 }
@@ -1043,11 +1041,6 @@ const showComprobante = async (item) => {
       message: 'Error al cargar comprobante',
     })
   }
-}
-
-const showReportForm = () => {
-  // Implementar lógica para mostrar formulario de reporte
-  // Similar a la función boton_reporte() en el código original
 }
 
 const togglestatus = (row) => {

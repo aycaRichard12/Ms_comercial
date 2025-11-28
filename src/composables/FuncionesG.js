@@ -4,6 +4,15 @@ import { useMenuStore } from 'src/stores/permitidos'
 import { idusuario_md5 } from 'src/composables/FuncionesGenerales'
 import { api } from 'src/boot/axios'
 
+export function obtenerHora() {
+  const ahora = new Date()
+  const horas = String(ahora.getHours()).padStart(2, '0')
+  const minutos = String(ahora.getMinutes()).padStart(2, '0')
+  const segundos = String(ahora.getSeconds()).padStart(2, '0')
+
+  return `${horas}:${minutos}:${segundos}`
+}
+
 export function obtenerFechaHoraNumerica() {
   const ahora = new Date()
 
@@ -89,6 +98,23 @@ export async function cargarLogoBase64(logoPath) {
   const [carpeta, imagen] = logoPath.split('/')
   try {
     const point = `getLogoBase64/${carpeta}/${imagen}`
+    console.log(point)
+    const response = await api.get(point)
+    const data = response.data
+    console.log(data)
+    if (data.base64) {
+      return data.base64
+    }
+    return null
+  } catch (err) {
+    console.error('Error cargando logo:', err)
+    return null
+  }
+}
+export async function getComercialImagenProducto(logoPath) {
+  const [carpeta, imagen] = logoPath.split('/')
+  try {
+    const point = `getComercialImagenProducto/${carpeta}/${imagen}`
     console.log(point)
     const response = await api.get(point)
     const data = response.data

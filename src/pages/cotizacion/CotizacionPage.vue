@@ -136,7 +136,7 @@
 
     <div class="row q-col-gutter-x-md">
       <div class="col-12 col-md-5">
-        <label for="producto">Producto *</label>
+        <label for="producto">Producto o Servicio*</label>
         <q-select
           v-model="selectedProduct"
           use-input

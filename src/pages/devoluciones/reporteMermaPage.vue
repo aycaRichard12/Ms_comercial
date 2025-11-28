@@ -201,7 +201,7 @@ watch(almacenSeleccionado, (newVal) => {
   filtrarYOrdenarDatos(newVal)
 })
 function filtrarYOrdenarDatos(dato) {
-  if (dato === '0') {
+  if (Number(dato) === 0) {
     datosFiltrados.value = [...datosOriginales.value]
   } else {
     datosFiltrados.value = datosOriginales.value.filter((u) => String(u.idalmacen) === String(dato))
@@ -275,7 +275,6 @@ const generarReporte = async () => {
 
     const data = resp.data
     console.log(data)
-    datosOriginales.value = data
     datosFiltrados.value = data.map((item, index) => ({
       index: index + 1,
       fecha: cambiarFormatoFecha(item.fecha),
@@ -285,6 +284,7 @@ const generarReporte = async () => {
       idalmacen: item.idalmacen,
       id: item.idmerma,
     }))
+    datosOriginales.value = JSON.parse(JSON.stringify(datosFiltrados.value))
 
     // Guardar información del usuario y empresa para el PDF
     usuario.value = contenidousuario[0]
@@ -311,8 +311,8 @@ const mostrarVistaPrevia = () => {
     return
   }
   const doc = PDF_REPORTE_MERMA(datosFiltrados.value, {
-    fechaInicio: cambiarFormatoFecha(fechaInicio.value),
-    fechaFin: cambiarFormatoFecha(fechaFin.value),
+    fechaInicio: fechaInicio.value,
+    fechaFin: fechaFin.value,
     almacen: nombreAlmacenSeleccionado.value,
     empresa: empresa.value,
     usuario: usuario.value,

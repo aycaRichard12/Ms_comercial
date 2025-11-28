@@ -647,7 +647,10 @@ const cargarPDF = () => {
     return
   }
   console.log(datosFiltrados.value)
-  const doc = DPFReporteCotizacion(datosFiltrados)
+  console.log(almacenesOptions.value)
+  const almacen = almacenesOptions.value.find((obj) => obj.idalmacen == almacenSeleccionado.value)
+  console.log(almacen)
+  const doc = DPFReporteCotizacion(datosFiltrados, almacen)
   pdfData.value = doc.output('dataurlstring')
 
   showPdfModal.value = true

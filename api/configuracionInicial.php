@@ -182,11 +182,7 @@ class ConfiguracionInicial
         $success = true;
         $estado = 1;
         foreach($caracteristicas_productos as $caracteristica){
-            if(!isset($caracteristica->nombre_medida,$caracteristica->descripcion)){
-                error_log("Estructura de caracteristicas_productos json inválida");
-                $success = false;
-                break;
-            }
+           
             $query = "INSERT INTO medida (nombre_medida, descripcion, estado, id_empresa) VALUES (?, ?, ?, ?)";
             $stmt = $this->conexion->cm->prepare($query);
             if(!$stmt){
@@ -194,7 +190,7 @@ class ConfiguracionInicial
                 $success = false;
                 break;
             }
-            $stmt->bind_param("ssii",$caracteristica['nombre_medida'],$caracteristica['descripcion'],$estado,$id_empresa);
+            $stmt->bind_param("ssii",$caracteristica['nombre'],$caracteristica['descripcion'],$estado,$id_empresa);
 
             if(!$stmt->execute()){
                 error_log("Error insertando estado: ". $stmt->error);
@@ -714,6 +710,7 @@ class ConfiguracionInicial
     }
     public function obtenerPrimerCanalVentaId(int $idempresa): ?int
     {
+        $idCanal = 0;
         $query = "SELECT idcanalventa
                 FROM canalventa
                 WHERE idempresa = ?
@@ -745,6 +742,7 @@ class ConfiguracionInicial
     }
     public function obtenerPrimerTipoClienteId(int $idempresa): ?int
     {
+        $idTipoCliente = 0;
         $query = "SELECT idtipocliente
                 FROM tipocliente
                 WHERE idempresa = ?
@@ -881,17 +879,56 @@ class ConfiguracionInicial
 
         return $this->registrarProveedorFicticio($data);
     }
-    public function prepararPorcentage(int $idalmacen): int
+    public function prepararPorcentage(int $idalmacen, int $idrubro): int
     {
-        $data = [
-            'tipo' => 'Menor',
-            'porcentaje' => '0',
-            'autorizado' => 1,
-            'almacen_id_almacen' => $idalmacen
-        ];
+        $point = "getlistapreciobase";
+        $insertados = 0;
 
-        return $this->insertarPorcentaje($data);
+        try {
+            // 1. Obtener datos de la API
+            $porcentaje = $this->get_administrador($point, $idrubro);
+
+        } catch (\Exception $e) {
+            // Error de conexión o cURL
+            return 0;
+        }
+
+        // 2. Validar respuesta de API
+        if (!is_array($porcentaje) || empty($porcentaje)) {
+            return 0;
+        }
+
+        // Manejo de error enviado por API
+        if (isset($porcentaje['error']) && $porcentaje['error'] === true) {
+            return 0;
+        }
+
+        // 3. Procesar array de ítems
+        foreach ($porcentaje as $item) {
+
+            // Validar que tenga la clave necesaria
+            if (!isset($item['precio'])) {
+                continue; // Saltar ítems inválidos
+            }
+
+            $data = [
+                'tipo' => $item['precio'],
+                'porcentaje' => 0,
+                'autorizado' => 1,
+                'almacen_id_almacen' => $idalmacen
+            ];
+
+            // Insertar y verificar si fue exitoso
+            $id_porcentaje = $this->insertarPorcentaje($data);
+
+            if ($id_porcentaje) {
+                $insertados++;
+            }
+        }
+
+        return $insertados;
     }
+
     /**
      * Fetches data from the 'administrador' API endpoint using cURL.
      *
@@ -1345,7 +1382,7 @@ class ConfiguracionInicial
             $id_Cliente = $this->prepararCliente($idempresa);
 
             $id_proveedor = $this->prepararProveedor($idempresa);
-            $id_almacen = $this->registrarAlmacen('ALMACEN_1', 'BOLIVIA', '00000000', 'almacen@alm.bo', $id_tipo_almacen, 0, $fecha, 10, 100, 1, $idempresa, $idsucursal);
+            $id_almacen = $this->registrarAlmacen('TIENDA 1', 'BOLIVIA', '00000000', 'almacen@alm.bo', $id_tipo_almacen, 0, $fecha, 10, 100, 1, $idempresa, $idsucursal);
             if (!$id_almacen) {
                 $this->logger->registrar("Configuracion", "Error", "Fallo al registrar almacén", compact('idempresa', 'idsucursal'), $idusuario, $idempresa);
                 return -5;
@@ -1353,7 +1390,7 @@ class ConfiguracionInicial
             //Jcanales
 
             $id_punto_venta = $this->sincronizarPuntoVenta((int)$idrubro,(int) $id_almacen);
-            $id_porcentaje = $this->prepararPorcentage($id_almacen);
+            $id_porcentaje = $this->prepararPorcentage($id_almacen, (int)$idrubro);
             if (!$id_punto_venta) {
                 $this->logger->registrar("Configuracion", "Error", "Fallo al registrar punto de venta", compact('id_almacen'), $idusuario, $idempresa);
                 return -6;
@@ -1473,6 +1510,7 @@ class ConfiguracionInicial
 
     public function empresaRegistrada($idempresa): bool
     {
+        $existe = 0;
         $query = "SELECT COUNT(*) AS existe FROM configuracion_inicial WHERE idempresa = ?";
         $stmt = $this->conexion->cm->prepare($query);
         $stmt->bind_param("i", $idempresa);

@@ -24,7 +24,7 @@
             dense
             icon="exit_to_app"
             text-color="white"
-            label="Cerrar"
+            label="Salir"
             @click="irdashboard"
           />
         </q-toolbar-title>

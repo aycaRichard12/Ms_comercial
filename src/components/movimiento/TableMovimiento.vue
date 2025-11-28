@@ -1,19 +1,24 @@
 <template>
   <div class="q-gutter-md">
     <div class="row items-center justify-between q-mt-lg">
-      <q-btn color="primary" @click="$emit('addRecord')" class="btn-res">
-        <q-icon name="add" class="icono" />
-        <span class="texto">Agregar</span>
-      </q-btn>
-      <q-btn
-        color="primary"
-        class="btn-res"
-        @click="$emit('generateReport')"
-        title="Generar Reporte"
-      >
-        <q-icon name="description" class="icono" />
-        <span class="texto">Reporte</span>
-      </q-btn>
+      <div class="col-auto flex flex-col gap-3">
+        <div class="col-12 col-md-4 q-mt-lg">
+          <q-btn color="primary" @click="$emit('addRecord')" class="btn-res">
+            <q-icon name="add" class="icono" />
+            <span class="texto">Agregar</span>
+          </q-btn>
+        </div>
+
+        <q-btn
+          color="secondary"
+          class="btn-res q-mt-lg"
+          id="reportedepreciosbase"
+          to="/reportedemovimientos"
+          icon="assessment"
+          label="Reporte de Movimientos"
+          no-caps
+        />
+      </div>
 
       <div class="col-8 col-md-3">
         <label for="almacen">Seleccione un Almacén</label>

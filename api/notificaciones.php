@@ -234,5 +234,50 @@ class Notificaciones
 
         return 'data:image/' . strtolower($tipo) . ';base64,' . base64_encode($datos);
     }
+   function getComercialImagenProducto($carpeta, $logoPath) {
+    
+    $rutaBaseImagenes = realpath(__DIR__); 
+
+    
+
+    if ($rutaBaseImagenes === false) {
+        // La ruta base no existe. Error de configuración.
+        return null; 
+    }
+
+    // Usa DIRECTORY_SEPARATOR para compatibilidad con sistemas operativos.
+    $rutaFinal = $rutaBaseImagenes . DIRECTORY_SEPARATOR . trim($carpeta, '/\\') . DIRECTORY_SEPARATOR . $logoPath;
+    
+   
+    // Esta normalización es crucial para eliminar '..'
+    $rutaImagen = realpath($rutaFinal); 
+
+   
+    if ($rutaImagen === false) {
+        return null;
+    }
+
+    if (strpos($rutaImagen, $rutaBaseImagenes) !== 0) {
+         // El archivo está fuera de la carpeta base de imágenes definida.
+        return null; 
+    }
+
+   
+    if (!file_exists($rutaImagen)) {
+        return null;
+    }
+
+    
+    
+    $tipo = pathinfo($rutaImagen, PATHINFO_EXTENSION);
+    $datos = file_get_contents($rutaImagen);
+
+   
+    if ($datos === false) {
+        return null;
+    }
+
+    return 'data:image/' . strtolower($tipo) . ';base64,' . base64_encode($datos);
+}
 
 }

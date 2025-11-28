@@ -443,7 +443,7 @@ const processDataWithTotals = (data) => {
     fechalimite: '',
     ncuotas: '',
     cuotasprocesadas: 'TOTAL:',
-    valorcuotas: numberedData.reduce((sum, u) => sum + Number(u.valorcuotas || 0), 0),
+    valorcuotas: numberedData.reduce((sum, u) => sum + Number(u.valorcuotas || 0), 0).toFixed(2),
     totalventa: numberedData.reduce((sum, u) => sum + Number(u.montoventa || 0), 0),
     totalcobrado: decimas(
       redondear(

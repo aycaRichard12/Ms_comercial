@@ -10,11 +10,6 @@
               :label="mostrarFormulario ? 'Cancelar Registro' : 'Nuevo Registro'"
               @click="toggleFormulario"
             />
-            <q-btn color="primary" class="btn-res q-ml-md" @click="crearReporte">
-              <q-icon name="picture_as_pdf" class="icono" />
-
-              <span class="texto">Reporte</span>
-            </q-btn>
           </div>
         </div>
 
@@ -50,7 +45,7 @@
         <q-dialog v-model="mostrarFormulario" persistent>
           <q-card class="responsive-dialog">
             <q-card-section class="bg-primary text-white text-h6 flex justify-between">
-              <div>Registrar Robo</div>
+              <div>Registrar Extravio</div>
               <q-btn icon="close" @click="cancelarRegistro" dense flat round />
             </q-card-section>
 
@@ -84,7 +79,7 @@
                 </div>
 
                 <div class="col-12 flex justify-start q-mt-md">
-                  <q-btn type="submit" label="Cargar" color="primary" />
+                  <q-btn type="submit" label="Registrar" color="primary" />
                   <q-btn flat label="Cancelar" color="negative" @click="cancelarRegistro" />
                 </div>
               </q-form>
@@ -182,7 +177,7 @@
     <q-dialog v-model="modaldetalleProductos">
       <q-card class="responsive-dialog">
         <q-card-section class="bg-primary text-h6 text-white flex justify-between">
-          <div>Detalle Robo</div>
+          <div>Productos Extraviados</div>
           <q-btn icon="close" @click="volverALista" dense flat round />
         </q-card-section>
         <q-card-section>
@@ -472,6 +467,8 @@ const cargarAlmacenes = async () => {
         label: a.almacen,
         value: a.idalmacen,
       }))
+    almacenesOptions.value.unshift({ label: 'Todos Los Almacenes', value: 0 })
+    idAlmacenFiltro.value = almacenesOptions.value[0].value
   } catch (error) {
     console.error('Error al cargar almacenes:', error)
     $q.notify({
@@ -482,14 +479,14 @@ const cargarAlmacenes = async () => {
 }
 
 const cargarRobos = async () => {
-  if (!idAlmacenFiltro.value) return
-
   try {
     const response = await api.get(`listarobo/${idempresa}`)
     console.log(response)
     console.log(idAlmacenFiltro.value)
     datosTabla.value = response.data.filter((r) => {
-      return Number(r.idalmacen) == Number(idAlmacenFiltro.value)
+      return Number(idAlmacenFiltro.value) === 0
+        ? true
+        : Number(r.idalmacen) == Number(idAlmacenFiltro.value)
     })
   } catch (error) {
     console.error('Error al listar robos:', error)
@@ -526,6 +523,7 @@ const registrarRobo = async () => {
     })
 
     resetearFormulario()
+
     mostrarFormulario.value = false
     cargarRobos()
   } catch (error) {
@@ -892,8 +890,8 @@ const generarPDF = () => {
     })
     return
   }
-
-  const doc = PDFextrabiosRobos(datosTabla)
+  const almacen = almacenesOptions.value.find((obj) => obj.value == idAlmacenFiltro.value)
+  const doc = PDFextrabiosRobos(datosTabla, almacen)
   pdfData.value = doc.output('dataurlstring')
   mostrarModal.value = true
 }
@@ -906,14 +904,6 @@ const generarComprobante = async (robo) => {
   const doc = PDFComprovanteExtravio(response.data, robo)
   pdfData.value = doc.output('dataurlstring')
   mostrarModal.value = true
-}
-
-const crearReporte = () => {
-  // Implementar navegación a componente de reportes si es necesario
-  $q.notify({
-    type: 'info',
-    message: 'Función de reportes en desarrollo',
-  })
 }
 
 // Watchers
