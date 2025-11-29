@@ -82,7 +82,7 @@ function getEstadoText(estado) {
 
 export function PDF_REPORTE_COSTO_UNITARIO_X_ALMACEN(filtrados, filtroAlmacen) {
   console.log(filtroAlmacen)
-  const doc = new jsPDF({ orientation: 'portrait' })
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'letter' })
   const columns = [
     { header: 'N°', dataKey: 'indice' },
     { header: 'Código', dataKey: 'codigo' },
@@ -138,7 +138,7 @@ export function PDF_REPORTE_COSTO_UNITARIO_X_ALMACEN(filtrados, filtroAlmacen) {
 }
 
 export const PDF_REPORTE_CATEGORIA_PRECIO_X_ALMACEN = (filtradas, filtroAlmacen) => {
-  const doc = new jsPDF({ orientation: 'portrait' })
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'letter' })
   const columns = [
     { header: 'N°', dataKey: 'indice' },
     { header: 'Nombre', dataKey: 'nombre' },
@@ -153,12 +153,12 @@ export const PDF_REPORTE_CATEGORIA_PRECIO_X_ALMACEN = (filtradas, filtroAlmacen)
   const columnStyles = {
     indice: { cellWidth: 15, halign: 'center' },
     nombre: { cellWidth: 90, halign: 'left' },
-    porcentaje: { cellWidth: 95, halign: 'right' },
+    porcentaje: { cellWidth: 85, halign: 'right' },
   }
   const headerColumnStyles = {
     indice: { cellWidth: 15, halign: 'center' },
     nombre: { cellWidth: 90, halign: 'left' },
-    porcentaje: { cellWidth: 95, halign: 'right' },
+    porcentaje: { cellWidth: 85, halign: 'right' },
   }
   const Izquierda = {
     titulo: 'DATOS DEL REPORTE',
@@ -189,7 +189,7 @@ export const PDF_REPORTE_CATEGORIA_PRECIO_X_ALMACEN = (filtradas, filtroAlmacen)
   return doc
 }
 export default function imprimirReporte(detallePedido) {
-  const doc = new jsPDF({ orientation: 'portrait' })
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'letter' })
 
   const columns = [
     { header: 'N°', dataKey: 'indice' },
@@ -207,14 +207,14 @@ export default function imprimirReporte(detallePedido) {
 
   const columnStyles = {
     indice: { cellWidth: 15, halign: 'center' },
-    descripcion: { cellWidth: 100, halign: 'left' },
+    descripcion: { cellWidth: 90, halign: 'left' },
     cantidad: { cellWidth: 85, halign: 'right' },
   }
 
   //   ,angle: 90, valign: 'middle'
   const headerColumnStyles = {
     indice: { cellWidth: 15, halign: 'center' },
-    descripcion: { cellWidth: 100, halign: 'left' },
+    descripcion: { cellWidth: 90, halign: 'left' },
     cantidad: { cellWidth: 85, halign: 'right' },
   }
   const Izquierda = {
@@ -268,7 +268,7 @@ export default function imprimirReporte(detallePedido) {
   return doc
 }
 export function PDFreporteCuentasXCobrarPeriodo(reportData, startDate, endDate) {
-  const doc = new jsPDF({ orientation: 'portrait' })
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'letter' })
 
   // Columns for jsPDF-autoTable
   const columns = [
@@ -321,7 +321,7 @@ export function PDFreporteCuentasXCobrarPeriodo(reportData, startDate, endDate) 
     indice: { cellWidth: 15, halign: 'center' }, // Adjusted width
     fecha_actual: { cellWidth: 20, halign: 'center' },
     nombre_cliente: { cellWidth: 40, halign: 'left' },
-    nombre_comercial: { cellWidth: 40, halign: 'left' },
+    nombre_comercial: { cellWidth: 30, halign: 'left' },
     monto_total_venta: { cellWidth: 20, halign: 'right' },
     descuento_venta: { cellWidth: 20, halign: 'right' },
     saldo_estado_cobro: { cellWidth: 20, halign: 'right' },
@@ -333,7 +333,7 @@ export function PDFreporteCuentasXCobrarPeriodo(reportData, startDate, endDate) 
     indice: { cellWidth: 15, halign: 'center' }, // Adjusted width
     fecha_actual: { cellWidth: 20, halign: 'center' },
     nombre_cliente: { cellWidth: 40, halign: 'left' },
-    nombre_comercial: { cellWidth: 40, halign: 'left' },
+    nombre_comercial: { cellWidth: 30, halign: 'left' },
     monto_total_venta: { cellWidth: 20, halign: 'right' },
     descuento_venta: { cellWidth: 20, halign: 'right' },
     saldo_estado_cobro: { cellWidth: 20, halign: 'right' },
@@ -423,7 +423,7 @@ export function PDFreporteCreditos(
 
   const columnStyles = {
     numero: { cellWidth: 10, halign: 'center' },
-    fechaventa: { cellWidth: 30, halign: 'left', angle: 45 },
+    fechaventa: { cellWidth: 20, halign: 'left', angle: 45 },
     razonsocial: { cellWidth: 25, halign: 'left' },
     sucursal: { cellWidth: 25, halign: 'left' },
     fechalimite: { cellWidth: 20, halign: 'left' },
@@ -443,7 +443,7 @@ export function PDFreporteCreditos(
   //   ,angle: 90, valign: 'middle'
   const headerColumnStyles = {
     numero: { cellWidth: 10, halign: 'center', angle: 45, valign: 'middle' },
-    fechaventa: { cellWidth: 30, halign: 'left', angle: 90, valign: 'middle' },
+    fechaventa: { cellWidth: 20, halign: 'left', angle: 90, valign: 'middle' },
     razonsocial: { cellWidth: 25, halign: 'left', angle: 90, valign: 'middle' },
     sucursal: { cellWidth: 25, halign: 'left', angle: 90, valign: 'middle' },
     fechalimite: { cellWidth: 20, halign: 'left', angle: 90, valign: 'middle' },
@@ -499,7 +499,7 @@ export function PDFreporteCreditos(
 }
 
 export function PDFreporteStockProductosIndividual(processedRows) {
-  const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' })
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' })
 
   const columns = [
     { header: 'N°', dataKey: 'indice' },
@@ -511,11 +511,8 @@ export function PDFreporteStockProductosIndividual(processedRows) {
     { header: 'Sub Categoría', dataKey: 'subcategoria' },
     { header: 'Descripción', dataKey: 'descripcion' },
     { header: 'Unidad', dataKey: 'unidad' },
-    { header: 'País', dataKey: 'pais' },
-    { header: 'Stock mínimo', dataKey: 'stockminimo' },
     { header: 'Stock', dataKey: 'stock' },
     { header: 'Costo total', dataKey: 'costo' },
-    { header: 'Estado', dataKey: 'estado' },
   ]
 
   const datos = processedRows.value.map((item, indice) => ({
@@ -528,11 +525,8 @@ export function PDFreporteStockProductosIndividual(processedRows) {
     subcategoria: item.subcategoria,
     descripcion: item.descripcion,
     unidad: item.unidad,
-    pais: item.pais,
-    stockminimo: item.stockminimo,
     stock: item.stock,
     costo: decimas(redondear(parseFloat(item.costounitario) * parseFloat(item.stock))),
-    estado: item.estado == 1 ? 'Activo' : 'No activo',
   }))
   const totalstock = processedRows.value.reduce(
     (sum, dato) => sum + redondear(parseFloat(dato.stock)),
@@ -544,46 +538,40 @@ export function PDFreporteStockProductosIndividual(processedRows) {
     0,
   )
 
-  datos.push({ stockminimo: 'Total:', stock: totalstock, costo: decimas(costoTotal) })
+  datos.push({ unidad: 'Total:', stock: totalstock, costo: decimas(costoTotal) })
 
   const columnStyles = {
     indice: { cellWidth: 10, halign: 'center' },
-    fecha: { cellWidth: 15, halign: 'center' },
-    almacen: { cellWidth: 25, halign: 'left' },
-    codigo: { cellWidth: 20, halign: 'left' },
-    producto: { cellWidth: 30, halign: 'left' },
-    categoria: { cellWidth: 30, halign: 'left' },
-    subcategoria: { cellWidth: 25, halign: 'left' },
-    descripcion: { cellWidth: 40, halign: 'left' },
-    unidad: { cellWidth: 13, halign: 'center' },
-    pais: { cellWidth: 20, halign: 'center' },
-    stockminimo: { cellWidth: 15, halign: 'right' },
+    fecha: { cellWidth: 20, halign: 'center' },
+    almacen: { cellWidth: 15, halign: 'left' },
+    codigo: { cellWidth: 15, halign: 'left' },
+    producto: { cellWidth: 25, halign: 'left' },
+    categoria: { cellWidth: 15, halign: 'left' },
+    subcategoria: { cellWidth: 15, halign: 'left' },
+    descripcion: { cellWidth: 30, halign: 'left' },
+    unidad: { cellWidth: 15, halign: 'center' },
     stock: { cellWidth: 15, halign: 'right' },
     costo: { cellWidth: 15, halign: 'right' },
-    estado: { cellWidth: 15, halign: 'center' },
   }
   const headerColumnStyles = {
     indice: { cellWidth: 10, halign: 'center' },
-    fecha: { cellWidth: 15, halign: 'center' },
-    almacen: { cellWidth: 25, halign: 'left' },
-    codigo: { cellWidth: 20, halign: 'left' },
-    producto: { cellWidth: 30, halign: 'left' },
-    categoria: { cellWidth: 30, halign: 'left' },
-    subcategoria: { cellWidth: 25, halign: 'left' },
-    descripcion: { cellWidth: 40, halign: 'left' },
-    unidad: { cellWidth: 13, halign: 'center' },
-    pais: { cellWidth: 20, halign: 'center' },
-    stockminimo: { cellWidth: 15, halign: 'right' },
+    fecha: { cellWidth: 20, halign: 'center' },
+    almacen: { cellWidth: 15, halign: 'left' },
+    codigo: { cellWidth: 15, halign: 'left' },
+    producto: { cellWidth: 25, halign: 'left' },
+    categoria: { cellWidth: 15, halign: 'left' },
+    subcategoria: { cellWidth: 15, halign: 'left' },
+    descripcion: { cellWidth: 30, halign: 'left' },
+    unidad: { cellWidth: 15, halign: 'center' },
     stock: { cellWidth: 15, halign: 'right' },
     costo: { cellWidth: 15, halign: 'right' },
-    estado: { cellWidth: 15, halign: 'center' },
   }
 
   dibujarCuerpoTabla(
     doc,
     columns,
     datos,
-    'REPORTE PRODUCTOS',
+    'REPORTE PRODUCTOS STOCK INDIVIDUAL',
     columnStyles,
     headerColumnStyles,
     null,
@@ -592,89 +580,6 @@ export function PDFreporteStockProductosIndividual(processedRows) {
     null,
     null,
   )
-  // autoTable(doc, {
-  //   columns,
-  //   body: datos,
-  //   styles: {
-  //     overflow: 'linebreak',
-  //     fontSize: fontSize,
-  //     cellPadding: cellPadding,
-  //   },
-  //   headStyles: {
-  //     fillColor: ColoEncabezadoTabla,
-  //     textColor: 255,
-  //     halign: 'center',
-  //   },
-  //   columnStyles: {
-  //     indice: { cellWidth: 10, halign: 'center' },
-  //     fecha: { cellWidth: 15, halign: 'center' },
-  //     almacen: { cellWidth: 25, halign: 'left' },
-  //     codigo: { cellWidth: 20, halign: 'left' },
-  //     producto: { cellWidth: 30, halign: 'left' },
-  //     categoria: { cellWidth: 30, halign: 'left' },
-  //     subcategoria: { cellWidth: 25, halign: 'left' },
-  //     descripcion: { cellWidth: 40, halign: 'left' },
-  //     unidad: { cellWidth: 10, halign: 'center' },
-  //     pais: { cellWidth: 20, halign: 'center' },
-  //     stockminimo: { cellWidth: 15, halign: 'right' },
-  //     stock: { cellWidth: 15, halign: 'right' },
-  //     costo: { cellWidth: 15, halign: 'right' },
-  //     estado: { cellWidth: 15, halign: 'center' },
-  //   },
-  //   // didParseCell: function (data) {
-  //   //   // Ejemplo: destacar la última fila (que contiene el Monto Total)
-  //   //   // if (data.row.index === datos.length - 1) {
-  //   //   //   data.cell.styles.halign = 'left'
-  //   //   // }
-  //   //   // if (data.row.index === datos.length - 2) {
-  //   //   //   data.cell.styles.halign = 'left'
-  //   //   // }
-  //   //   // if (data.row.index === datos.length - 3) {
-  //   //   //   data.cell.styles.halign = 'left'
-  //   //   // }
-  //   //   // También puedes aplicar estilo a una fila específica, por ejemplo la de índice 2:
-  //   //   // if (data.row.index === 2) {
-  //   //   //   data.cell.styles.fontStyle = 'italic'
-  //   //   //   data.cell.styles.fillColor = [255, 240, 200]
-  //   //   // }
-  //   // },
-  //   //20 + 15 + 20 + 25 + 30 + 20 + 20 + 25 + 20 + 15 + 20 + 15 + 20 = 265 mm
-
-  //   startY: 30,
-  //   margin: { horizontal: 5 },
-  //   theme: 'striped',
-  //   didDrawPage: () => {
-  //     if (doc.internal.getNumberOfPages() === 1) {
-  //       // Logo (requiere base64 o ruta absoluta en servidor si usas Node)
-  //       if (logoBase64) {
-  //         const pageWidth = doc.internal.pageSize.getWidth() // Ancho total página
-  //         const imgWidth = 20 // Ancho del logo en mm
-  //         const imgHeight = 20 // Alto del logo en mm
-  //         const xPos = pageWidth - imgWidth - 5 // 10mm de margen derecho
-  //         const yPos = 5 // margen superior
-  //         console.log(logoBase64)
-  //         doc.addImage(logoBase64, 'JPEG', xPos, yPos, imgWidth, imgHeight)
-  //       }
-
-  //       // Nombre y datos de empresa
-  //       doc.setFontSize(7)
-  //       doc.setFont(undefined, 'bold')
-  //       doc.text(nombreEmpresa, 5, 10)
-
-  //       doc.setFontSize(6)
-  //       doc.setFont(undefined, 'normal')
-  //       doc.text(direccionEmpresa, 5, 13)
-  //       doc.text(`Tel: ${telefonoEmpresa}`, 5, 16)
-
-  //       // Título centrado
-  //       doc.setFontSize(10)
-  //       doc.setFont(undefined, 'bold')
-  //       doc.text('REPORTE PRODUCTOS', doc.internal.pageSize.getWidth() / 2, 15, {
-  //         align: 'center',
-  //       })
-  //     }
-  //   },
-  // })
 
   // doc.save('proveedores.pdf') ← comenta o elimina esta línea
   //doc.output('dataurlnewwindow') // ← muestra el PDF en una nueva ventana del navegador
@@ -733,10 +638,10 @@ export function PDFreporteStockProductosIndividual_img(processedRows) {
   })
 
   const columnStyles = {
-    indice: { cellWidth: 10, halign: 'center' },
+    indice: { cellWidth: 12, halign: 'center' },
     codigo: { cellWidth: 30, halign: 'left' },
-    producto: { cellWidth: 40, halign: 'left' },
-    categoria: { cellWidth: 40, halign: 'left' },
+    producto: { cellWidth: 30, halign: 'left' },
+    categoria: { cellWidth: 35, halign: 'left' },
     subcategoria: { cellWidth: 30, halign: 'left' },
     descripcion: { cellWidth: 50, halign: 'left' },
     unidad: { cellWidth: 20, halign: 'center' },
@@ -745,10 +650,10 @@ export function PDFreporteStockProductosIndividual_img(processedRows) {
     imagen: { cellWidth: 40, halign: 'center' },
   }
   const headerColumnStyles = {
-    indice: { cellWidth: 10, halign: 'center' },
+    indice: { cellWidth: 12, halign: 'center' },
     codigo: { cellWidth: 30, halign: 'left' },
-    producto: { cellWidth: 40, halign: 'left' },
-    categoria: { cellWidth: 40, halign: 'left' },
+    producto: { cellWidth: 30, halign: 'left' },
+    categoria: { cellWidth: 35, halign: 'left' },
     subcategoria: { cellWidth: 30, halign: 'left' },
     descripcion: { cellWidth: 50, halign: 'left' },
     unidad: { cellWidth: 20, halign: 'center' },
@@ -819,7 +724,7 @@ export function generarPdfCotizacion(data) {
   comprobanteData.montoTotal = redondear(currentSubtotal - cotizacionInfo.descuento)
   const detallePlano = comprobanteData
 
-  const doc = new jsPDF({ orientation: 'portrait' })
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'letter' })
 
   const columns = [
     { header: 'N°', dataKey: 'indice' },
@@ -853,14 +758,14 @@ export function generarPdfCotizacion(data) {
 
   const columnStyles = {
     indice: { cellWidth: 15, halign: 'center' },
-    descripcion: { cellWidth: 55, halign: 'left' },
+    descripcion: { cellWidth: 50, halign: 'left' },
     cantidad: { cellWidth: 40, halign: 'right' },
     precio: { cellWidth: 40, halign: 'right' },
     total: { cellWidth: 50, halign: 'right' },
   }
   const headerColumnStyles = {
     indice: { cellWidth: 15, halign: 'center' },
-    descripcion: { cellWidth: 55, halign: 'left' },
+    descripcion: { cellWidth: 50, halign: 'left' },
     cantidad: { cellWidth: 40, halign: 'right' },
     precio: { cellWidth: 40, halign: 'right' },
     total: { cellWidth: 50, halign: 'right' },
@@ -950,7 +855,7 @@ export function generarPdfCotizacion(data) {
 }
 
 export function PDFfacturaCorreo(detalleVenta) {
-  const doc = new jsPDF({ orientation: 'portrait' })
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'letter' })
   const columns = [
     { header: 'N°', dataKey: 'indice' },
     { header: 'Descripción', dataKey: 'descripcion' },
@@ -986,14 +891,14 @@ export function PDFfacturaCorreo(detalleVenta) {
   )
   const columnStyles = {
     indice: { cellWidth: 15, halign: 'center' },
-    descripcion: { cellWidth: 55, halign: 'left' },
+    descripcion: { cellWidth: 50, halign: 'left' },
     cantidad: { cellWidth: 40, halign: 'right' },
     precio: { cellWidth: 40, halign: 'right' },
     total: { cellWidth: 50, halign: 'right' },
   }
   const headerColumnStyles = {
     indice: { cellWidth: 15, halign: 'center' },
-    descripcion: { cellWidth: 55, halign: 'left' },
+    descripcion: { cellWidth: 50, halign: 'left' },
     cantidad: { cellWidth: 40, halign: 'right' },
     precio: { cellWidth: 40, halign: 'right' },
     total: { cellWidth: 50, halign: 'right' },
@@ -1067,7 +972,7 @@ export function PDFfacturaCorreo(detalleVenta) {
 }
 
 export function PDFComprovanteVenta(detalleVenta) {
-  const doc = new jsPDF({ orientation: 'portrait' })
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'letter' })
 
   const columns = [
     { header: 'N°', dataKey: 'indice' },
@@ -1111,14 +1016,14 @@ export function PDFComprovanteVenta(detalleVenta) {
 
   const columnStyles = {
     indice: { cellWidth: 15, halign: 'center' },
-    descripcion: { cellWidth: 55, halign: 'left' },
+    descripcion: { cellWidth: 50, halign: 'left' },
     cantidad: { cellWidth: 40, halign: 'right' },
     precio: { cellWidth: 40, halign: 'right' },
     total: { cellWidth: 50, halign: 'right' },
   }
   const headerColumnStyles = {
     indice: { cellWidth: 15, halign: 'center' },
-    descripcion: { cellWidth: 55, halign: 'left' },
+    descripcion: { cellWidth: 50, halign: 'left' },
     cantidad: { cellWidth: 40, halign: 'right' },
     precio: { cellWidth: 40, halign: 'right' },
     total: { cellWidth: 50, halign: 'right' },
@@ -1193,7 +1098,7 @@ export function PDFComprovanteVenta(detalleVenta) {
 }
 
 export function PDFreporteVentasPeriodo(filteredCompra, almacen) {
-  const doc = new jsPDF({ orientation: 'portrait' })
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'letter' })
 
   const columns = [
     { header: 'N', dataKey: 'indice' },
@@ -1243,7 +1148,7 @@ export function PDFreporteVentasPeriodo(filteredCompra, almacen) {
   const columnStyles = {
     indice: { cellWidth: 10, halign: 'center' },
     fecha: { cellWidth: 20, halign: 'left' },
-    cliente: { cellWidth: 25, halign: 'left' },
+    cliente: { cellWidth: 20, halign: 'left' },
     sucursal: { cellWidth: 25, halign: 'left' },
     tipoventa: { cellWidth: 25, halign: 'center' },
     tipopago: { cellWidth: 15, halign: 'center' },
@@ -1256,7 +1161,7 @@ export function PDFreporteVentasPeriodo(filteredCompra, almacen) {
   const headerColumnStyles = {
     indice: { cellWidth: 10, halign: 'center' },
     fecha: { cellWidth: 20, halign: 'left' },
-    cliente: { cellWidth: 25, halign: 'left' },
+    cliente: { cellWidth: 20, halign: 'left' },
     sucursal: { cellWidth: 25, halign: 'left' },
     tipoventa: { cellWidth: 25, halign: 'center' },
     tipopago: { cellWidth: 15, halign: 'center' },
@@ -1434,7 +1339,7 @@ export async function PDFenviarComprobanteCorreo(idcliente, data, $q) {
 
 export async function PDFdetalleVentaInicio(detalleVenta) {
   console.log(detalleVenta)
-  const doc = new jsPDF({ orientation: 'portrait' })
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'letter' })
 
   const columns = [
     { header: 'N°', dataKey: 'indice' },
@@ -1474,14 +1379,14 @@ export async function PDFdetalleVentaInicio(detalleVenta) {
 
   const columnStyles = {
     indice: { cellWidth: 15, halign: 'center' },
-    descripcion: { cellWidth: 55, halign: 'left' },
+    descripcion: { cellWidth: 50, halign: 'left' },
     cantidad: { cellWidth: 40, halign: 'right' },
     precio: { cellWidth: 40, halign: 'right' },
     total: { cellWidth: 50, halign: 'right' },
   }
   const headerColumnStyles = {
     indice: { cellWidth: 15, halign: 'center' },
-    descripcion: { cellWidth: 55, halign: 'left' },
+    descripcion: { cellWidth: 50, halign: 'left' },
     cantidad: { cellWidth: 40, halign: 'right' },
     precio: { cellWidth: 40, halign: 'right' },
     total: { cellWidth: 50, halign: 'right' },
@@ -1609,7 +1514,7 @@ export async function PDFenviarFacturaCorreoAlInicio(idcliente, detalleVenta, $q
 
 export function DPFReporteCotizacion(cotizaciones, almacen) {
   console.log(cotizaciones.value)
-  const doc = new jsPDF({ orientation: 'portrait' })
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'letter' })
 
   // Columns for jsPDF-autoTable
   const columns = [
@@ -1657,7 +1562,7 @@ export function DPFReporteCotizacion(cotizaciones, almacen) {
 
   const columnStyles = {
     nro: { cellWidth: 15, halign: 'center' }, // Adjusted width
-    fecha: { cellWidth: 25, halign: 'left' },
+    fecha: { cellWidth: 20, halign: 'left' },
     cliente: { cellWidth: 50, halign: 'left' },
     sucursal: { cellWidth: 50, halign: 'left' },
     cotizaciontotal: { cellWidth: 20, halign: 'right' },
@@ -1667,7 +1572,7 @@ export function DPFReporteCotizacion(cotizaciones, almacen) {
   }
   const headerColumnStyles = {
     nro: { cellWidth: 15, halign: 'center' }, // Adjusted width
-    fecha: { cellWidth: 25, halign: 'left' },
+    fecha: { cellWidth: 20, halign: 'left' },
     cliente: { cellWidth: 50, halign: 'left' },
     sucursal: { cellWidth: 50, halign: 'left' },
     cotizaciontotal: { cellWidth: 20, halign: 'right' },
@@ -1703,12 +1608,12 @@ export function DPFReporteCotizacion(cotizaciones, almacen) {
 
 export function PDFConprovanteCotizacion(cotizacion) {
   console.log(cotizacion[0].detalle)
-  const doc = new jsPDF({ orientation: 'portrait' })
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'letter' })
   return doc
 }
 
 export function PDFextrabiosRobos(extravios, almacen) {
-  const doc = new jsPDF({ orientation: 'portrait' })
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'letter' })
 
   // Columns for jsPDF-autoTable
   const columns = [
@@ -1732,14 +1637,14 @@ export function PDFextrabiosRobos(extravios, almacen) {
     nro: { cellWidth: 15, halign: 'center' }, // Adjusted width
     fecha: { cellWidth: 30, halign: 'center' },
     almacen: { cellWidth: 50, halign: 'left' },
-    descripcion: { cellWidth: 80, halign: 'left' },
+    descripcion: { cellWidth: 75, halign: 'left' },
     autorizacion: { cellWidth: 25, halign: 'left' },
   }
   const headerColumnStyles = {
     nro: { cellWidth: 15, halign: 'center' }, // Adjusted width
     fecha: { cellWidth: 30, halign: 'center' },
     almacen: { cellWidth: 50, halign: 'left' },
-    descripcion: { cellWidth: 80, halign: 'left' },
+    descripcion: { cellWidth: 75, halign: 'left' },
     autorizacion: { cellWidth: 25, halign: 'left' },
   }
 
@@ -1771,7 +1676,7 @@ export function PDFextrabiosRobos(extravios, almacen) {
 }
 
 export function PDFComprovanteExtravio(detalleExtravio, robo) {
-  const doc = new jsPDF({ orientation: 'portrait' })
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'letter' })
   const columns = [
     { header: 'N°', dataKey: 'indice' },
     { header: 'Codigo', dataKey: 'codigo' },
@@ -1787,13 +1692,13 @@ export function PDFComprovanteExtravio(detalleExtravio, robo) {
     indice: { cellWidth: 15, halign: 'center' },
     codigo: { cellWidth: 50, halign: 'left' },
     descripcion: { cellWidth: 70, halign: 'left' },
-    cantidad: { cellWidth: 65, halign: 'right' },
+    cantidad: { cellWidth: 60, halign: 'right' },
   }
   const headerColumnStyles = {
     indice: { cellWidth: 15, halign: 'center' },
     codigo: { cellWidth: 50, halign: 'left' },
     descripcion: { cellWidth: 70, halign: 'left' },
-    cantidad: { cellWidth: 65, halign: 'right' },
+    cantidad: { cellWidth: 60, halign: 'right' },
   }
 
   const Izquierda = {
@@ -1831,7 +1736,7 @@ export function PDFComprovanteExtravio(detalleExtravio, robo) {
 }
 
 export function PDFreporteMermas(mermas, almacen) {
-  const doc = new jsPDF({ orientation: 'portrait' })
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'letter' })
   // Columns for jsPDF-autoTable
   const columns = [
     { header: 'N', dataKey: 'nro' },
@@ -1854,14 +1759,14 @@ export function PDFreporteMermas(mermas, almacen) {
     nro: { cellWidth: 15, halign: 'center' }, // Adjusted width
     fecha: { cellWidth: 30, halign: 'center' },
     almacen: { cellWidth: 50, halign: 'left' },
-    descripcion: { cellWidth: 80, halign: 'left' },
+    descripcion: { cellWidth: 75, halign: 'left' },
     autorizacion: { cellWidth: 25, halign: 'left' },
   }
   const headerColumnStyles = {
     nro: { cellWidth: 15, halign: 'center' }, // Adjusted width
     fecha: { cellWidth: 30, halign: 'center' },
     almacen: { cellWidth: 50, halign: 'left' },
-    descripcion: { cellWidth: 80, halign: 'left' },
+    descripcion: { cellWidth: 75, halign: 'left' },
     autorizacion: { cellWidth: 25, halign: 'left' },
   }
 
@@ -1893,7 +1798,7 @@ export function PDFreporteMermas(mermas, almacen) {
 }
 
 export function PDFComprovanteMerma(detallemerma, merma) {
-  const doc = new jsPDF({ orientation: 'portrait' })
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'letter' })
   const columns = [
     { header: 'N°', dataKey: 'indice' },
     { header: 'Codigo', dataKey: 'codigo' },
@@ -1910,13 +1815,13 @@ export function PDFComprovanteMerma(detallemerma, merma) {
     indice: { cellWidth: 15, halign: 'center' },
     codigo: { cellWidth: 50, halign: 'left' },
     descripcion: { cellWidth: 70, halign: 'left' },
-    cantidad: { cellWidth: 65, halign: 'right' },
+    cantidad: { cellWidth: 60, halign: 'right' },
   }
   const headerColumnStyles = {
     indice: { cellWidth: 15, halign: 'center' },
     codigo: { cellWidth: 50, halign: 'left' },
     descripcion: { cellWidth: 70, halign: 'left' },
-    cantidad: { cellWidth: 65, halign: 'right' },
+    cantidad: { cellWidth: 60, halign: 'right' },
   }
 
   const Izquierda = {
@@ -1954,7 +1859,7 @@ export function PDFComprovanteMerma(detallemerma, merma) {
 }
 
 export function PDFKardex(kardex, almacenLabel, productoLabel, fechaiR, fechafR) {
-  const doc = new jsPDF({ orientation: 'portrait' })
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'letter' })
 
   const columns = [
     { header: 'N', dataKey: 'c' },
@@ -1992,7 +1897,7 @@ export function PDFKardex(kardex, almacenLabel, productoLabel, fechaiR, fechafR)
     costouniario: { cellWidth: 20, halign: 'right' },
     Debe: { cellWidth: 20, halign: 'right' },
     Haber: { cellWidth: 25, halign: 'right' },
-    Saldo: { cellWidth: 30, halign: 'right' },
+    Saldo: { cellWidth: 25, halign: 'right' },
   }
   const headerColumnStyles = {
     c: { cellWidth: 10, halign: 'center' },
@@ -2004,7 +1909,7 @@ export function PDFKardex(kardex, almacenLabel, productoLabel, fechaiR, fechafR)
     costouniario: { cellWidth: 20, halign: 'right' },
     Debe: { cellWidth: 20, halign: 'right' },
     Haber: { cellWidth: 25, halign: 'right' },
-    Saldo: { cellWidth: 30, halign: 'right' },
+    Saldo: { cellWidth: 25, halign: 'right' },
   }
 
   const Izquierda = {
@@ -2043,7 +1948,7 @@ export function PDFKardex(kardex, almacenLabel, productoLabel, fechaiR, fechafR)
 }
 
 export function PDFCierreCaja(datosCierreCaja) {
-  const doc = new jsPDF({ orientation: 'portrait' })
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'letter' })
 
   // === Información del Encabezado ===
   if (logoBase64) {
@@ -2208,7 +2113,7 @@ export function PDFCierreCaja(datosCierreCaja) {
 }
 
 export function PDFpedidos(ordenados, tipoestados, filtroAlmacen) {
-  const doc = new jsPDF({ orientation: 'portrait' })
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'letter' })
 
   const columns = [
     { header: 'N', dataKey: 'indice' },
@@ -2290,7 +2195,7 @@ export function PDFpedidos(ordenados, tipoestados, filtroAlmacen) {
 }
 
 export function PDFalmacenes(props) {
-  const doc = new jsPDF({ orientation: 'portrait' })
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'letter' })
 
   const columns = [
     { header: 'N°', dataKey: 'indice' },
@@ -2355,7 +2260,7 @@ export function PDFalmacenes(props) {
   return doc
 }
 export function PDF_REPORTE_DE_ROTACION_POR_ALMACEN(reporte, datosFormulario) {
-  const doc = new jsPDF({ orientation: 'portrait' })
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'letter' })
 
   const columns = [
     { header: 'N°', dataKey: 'index' },
@@ -2443,7 +2348,7 @@ export function PDF_REPORTE_DE_ROTACION_POR_ALMACEN(reporte, datosFormulario) {
 }
 
 export function PDF_REPORTE_DE_ROTACION_POR_CLIENTE(reporte, datosFormulario) {
-  const doc = new jsPDF({ orientation: 'portrait' })
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'letter' })
   const columns = [
     { header: 'N°', dataKey: 'index' },
     { header: 'Codigo', dataKey: 'codigo' },
@@ -2531,7 +2436,7 @@ export function PDF_REPORTE_DE_ROTACION_POR_CLIENTE(reporte, datosFormulario) {
 }
 
 export function PDF_REPORTE_DE_ROTACION_POR_GLOBAL(reporte, datosFormulario) {
-  const doc = new jsPDF({ orientation: 'portrait' })
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'letter' })
 
   const columns = [
     { header: 'N°', dataKey: 'index' },
@@ -2613,7 +2518,7 @@ export function PDF_REPORTE_DE_ROTACION_POR_GLOBAL(reporte, datosFormulario) {
   return doc
 }
 export function PDF_REPORTE_CAMPANAS(reporte, datosFormulario) {
-  const doc = new jsPDF({ orientation: 'portrait' })
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'letter' })
   const columns = [
     { header: 'N°', dataKey: 'n' },
     { header: 'Almacén', dataKey: 'almacen' },
@@ -2686,7 +2591,7 @@ export function PDF_REPORTE_CAMPANAS(reporte, datosFormulario) {
   return doc
 }
 export function PDF_REPORTE_CAMPANAS_VENTAS(reporte, datosFormulario) {
-  const doc = new jsPDF({ orientation: 'portrait' })
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'letter' })
 
   const columns = [
     { header: 'N°', dataKey: 'n' },
@@ -2756,7 +2661,7 @@ export function PDF_REPORTE_CAMPANAS_VENTAS(reporte, datosFormulario) {
   return doc
 }
 export function PDF_REPORTE_MOVIMIENTOS(reporte, datosFormulario) {
-  const doc = new jsPDF({ orientation: 'portrait' })
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'letter' })
   const columns = [
     { header: 'N°', dataKey: 'n' },
     { header: 'Fecha', dataKey: 'fecha' },
@@ -2993,7 +2898,7 @@ export function PDF_REPORTE_PRECIO_BASE(reporte, datosFormulario) {
   return doc
 }
 export function PDF_REPORTE_CATEGORIA_PRECIO(reporte, datosFormulario) {
-  const doc = new jsPDF({ orientation: 'portrait' })
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'letter' })
 
   const columns = [
     { header: 'N°', dataKey: 'n' },
@@ -3054,7 +2959,7 @@ export function PDF_REPORTE_CATEGORIA_PRECIO(reporte, datosFormulario) {
   return doc
 }
 export function PDF_REPORTE_EXTRAVIO(reporte, datosFormulario) {
-  const doc = new jsPDF({ orientation: 'portrait' })
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'letter' })
 
   const columns = [
     { header: 'N°', dataKey: 'index' },
@@ -3119,7 +3024,7 @@ export function PDF_REPORTE_EXTRAVIO(reporte, datosFormulario) {
   return doc
 }
 export function PDF_REPORTE_MERMA(reporte, datosFormulario) {
-  const doc = new jsPDF({ orientation: 'portrait' })
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'letter' })
 
   const columns = [
     { header: 'N°', dataKey: 'index' },
@@ -3186,8 +3091,7 @@ export function PDF_REPORTE_MERMA(reporte, datosFormulario) {
   return doc
 }
 export function DPF_REPORTE_PRODUCTO_ASIGNADOS(productoLista, almacen) {
-  console.log(almacen)
-  const doc = new jsPDF({ orientation: 'portrait' })
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'letter' })
 
   const columns = [
     { header: 'N°', dataKey: 'indice' },
@@ -3281,8 +3185,7 @@ export function DPF_REPORTE_PRODUCTO_ASIGNADOS(productoLista, almacen) {
 }
 
 export function PDF_REPORTE_GESTIPO_PEDIDOS_DETALLE(detallePedido) {
-  console.log(detallePedido.value)
-  const doc = new jsPDF({ orientation: 'portrait' })
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'letter' })
 
   const columns = [
     { header: 'N°', dataKey: 'indice' },
@@ -3342,7 +3245,7 @@ export function PDF_REPORTE_GESTIPO_PEDIDOS_DETALLE(detallePedido) {
 }
 
 export const PDF_REPORTE_GESTION_PEDIDOS = (filterPedido, tipoestados, fechai, fechaf, almacen) => {
-  const doc = new jsPDF({ orientation: 'portrait' })
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'letter' })
   const columns = [
     { header: 'N', dataKey: 'indice' },
     { header: 'Fecha', dataKey: 'fecha' },
@@ -3424,7 +3327,7 @@ export const PDF_REPORTE_GESTION_PEDIDOS = (filterPedido, tipoestados, fechai, f
 export function PDF_REPORTE_COMPRAS(filteredCompra, filtroAlmacen) {
   console.log(filteredCompra)
 
-  const doc = new jsPDF({ orientation: 'portrait' })
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'letter' })
 
   const columns = [
     { header: 'N°', dataKey: 'indice' },
@@ -3523,6 +3426,7 @@ function dibujarCuerpoTabla(
   extras = null,
 ) {
   // Definición de estilos de columna específicos para este reporte (pueden generalizarse)
+  let ultimaPaginaTabla = 0
 
   autoTable(doc, {
     columns,
@@ -3550,11 +3454,10 @@ function dibujarCuerpoTabla(
 
     // columnStyles: columnStyles,
     // Posición inicial de la tabla, justo debajo del encabezado
-    startY: 50,
-    //margin: { horizontal: 10, bottom: 20 },
-    tableWidth: 'wrap',
-    margin: { left: 12, right: 12 }, // Margen inferior reservado para el pie de página
-    theme: 'striped',
+    startY: 55,
+    margin: { horizontal: 10, bottom: 20 },
+    tableWidth: 'auto',
+    theme: 'plain',
     didParseCell: function (data) {
       const key = data.column.dataKey
       // for (const styleName in data.cell.styles) {
@@ -3669,6 +3572,20 @@ function dibujarCuerpoTabla(
         // Borra el texto de la celda después de dibujar la imagen
         data.cell.text = []
       }
+      if (data.section === 'head') {
+        const cell = data.cell
+
+        // Configura color y grosor de línea
+        doc.setDrawColor(0, 0, 0) // Negro
+        doc.setLineWidth(0.2) // Grosor
+
+        // ---- LÍNEA SUPERIOR ----
+        doc.line(cell.x, cell.y, cell.x + cell.width, cell.y)
+
+        // ---- LÍNEA INFERIOR ----
+        doc.line(cell.x, cell.y + cell.height, cell.x + cell.width, cell.y + cell.height)
+      }
+      ultimaPaginaTabla = data.table.pageNumber
     },
     // ENCABEZADO Y PIE DE PÁGINA: Se dibuja en cada página.
     didDrawPage: (data) => {
@@ -3689,6 +3606,19 @@ function dibujarCuerpoTabla(
       // Dibuja el pie de página en cada página
       agregarPieDePagina(doc, data)
     },
+  })
+
+  // Solo insertar contenido en la página donde la tabla termina
+  doc.setPage(ultimaPaginaTabla)
+
+  // Coordenada exacta debajo de la tabla
+  const y = doc.lastAutoTable.finalY + 5
+
+  doc.setFontSize(8)
+  const fechaGeneracion = cambiarFormatoFecha(obtenerFechaActualDato())
+  //doc.text('FUSTO: Información debajo de la tabla', 14, y)
+  doc.text(`Fecha hora reporte: ${fechaGeneracion} ${obtenerHora()}`, 14, y, {
+    align: 'left',
   })
 }
 
@@ -3852,24 +3782,18 @@ function agregarEncabezadoInfo(
 function agregarPieDePagina(doc, data) {
   const pageCount = doc.internal.getNumberOfPages()
   const pageWidth = doc.internal.pageSize.getWidth()
-  const pageHeight = doc.internal.pageSize.getHeight()
-  const footerY = pageHeight - 10 // 10mm desde el borde inferior
 
-  doc.setFontSize(6)
-  doc.setFont(undefined, 'normal')
+  doc.setFontSize(8)
+  doc.setFont(undefined, 'bold')
 
   // -------------------------
   // Numeración de página (Centrado)
   // -------------------------
   // El número total de páginas puede no ser exacto en la primera llamada de didDrawPage
   // pero se actualizará correctamente en las siguientes.
-  const pageText = `Pag. N° ${data.pageNumber} de ${pageCount}`
-  const fechaGeneracion = cambiarFormatoFecha(obtenerFechaActualDato())
+  const pageText = `Pagina N° ${data.pageNumber} de ${pageCount}`
 
-  doc.text(`Fecha hora reporte: ${fechaGeneracion} ${obtenerHora()}`, 10, footerY, {
-    align: 'left',
-  })
-  doc.text(`${pageText}`, pageWidth - 10, footerY, {
+  doc.text(`${pageText}`, pageWidth - 10, 53, {
     align: 'right',
   })
 }
