@@ -625,6 +625,26 @@ class outVenta
             ], JSON_UNESCAPED_UNICODE);
         }
     }
+    
+    public function detalleFactura($cuf){
+        $datostoken = $this->token->autenticarPeticion();
+        $id_empresa = $datostoken->data->id_empresa;
+        $factura = $datostoken->data->tipo;
+        $idmd5 = $datostoken->data->md5;
+        $tokenEmizor = "";
+        if($factura == 1 || $factura == 2){
+            $tokenEmizor = $this->token->obtenerTokenEmizor($idmd5);
+          
+        }
+        echo json_encode(["cuf"=>$cuf, "datosToken"=> $datostoken]);
+    }
+    public function estadoFactura($cuf){
+        echo json_encode(["cuf"=>$cuf]);
 
+    }
+    public function anularFactura($cuf, $data){
+        echo json_encode(["cuf"=>$cuf,"data"=> $data]);
+
+    }
     
 }
