@@ -88,10 +88,7 @@
 <script setup>
 import { ref, computed } from 'vue'
 import * as XLSX from 'xlsx-js-style'
-import jsPDF from 'jspdf'
-import autoTable from 'jspdf-autotable'
-import { validarUsuario } from 'src/composables/FuncionesGenerales'
-import { URL_APIE } from 'src/composables/services'
+import { PDF_REPORTE_PROVEEDORES } from 'src/utils/pdfReportGenerator'
 const mostrarModal = ref(false)
 const pdfData = ref(null)
 const emit = defineEmits(['add', 'importFromExcel', 'exportToExcel', 'edit', 'delete', 'addToList'])
@@ -219,106 +216,7 @@ function exportarClientesFiltrados() {
 }
 
 function exportarProveedoresPDF() {
-  const contenidousuario = validarUsuario()
-  const doc = new jsPDF({ orientation: 'landscape' })
-
-  const idempresa = contenidousuario[0]
-  const nombreEmpresa = idempresa.empresa.nombre
-  const direccionEmpresa = idempresa.empresa.direccion
-  const telefonoEmpresa = idempresa.empresa.telefono
-  const logoEmpresa = idempresa.empresa.logo // Ruta relativa o base64
-  const columns = [
-    { header: 'Nombre', dataKey: 'nombre' },
-    { header: 'Código', dataKey: 'codigo' },
-    { header: 'NIT', dataKey: 'nit' },
-    { header: 'Detalle', dataKey: 'detalle' },
-    { header: 'Dirección', dataKey: 'direccion' },
-    { header: 'Teléfono', dataKey: 'telefono' },
-    { header: 'Móvil', dataKey: 'mobil' },
-    { header: 'Email', dataKey: 'email' },
-    { header: 'Web', dataKey: 'web' },
-    { header: 'País', dataKey: 'pais' },
-    { header: 'Ciudad', dataKey: 'ciudad' },
-    { header: 'Zona', dataKey: 'zona' },
-    { header: 'Contacto', dataKey: 'contacto' },
-  ]
-
-  const datos = filtrarProveedores.value.map((item) => ({
-    nombre: item.nombre,
-    codigo: item.codigo,
-    nit: item.nit,
-    detalle: item.detalle,
-    direccion: item.direccion,
-    telefono: item.telefono,
-    mobil: item.mobil,
-    email: item.email,
-    web: item.web,
-    pais: item.pais,
-    ciudad: item.ciudad,
-    zona: item.zona,
-    contacto: item.contacto,
-  }))
-
-  autoTable(doc, {
-    columns,
-    body: datos,
-    styles: {
-      overflow: 'linebreak',
-      fontSize: 5,
-      cellPadding: 2,
-    },
-    headStyles: {
-      fillColor: [22, 160, 133],
-      textColor: 255,
-      halign: 'center',
-    },
-    columnStyles: {
-      nombre: { cellWidth: 20, halign: 'left' },
-      codigo: { cellWidth: 15, halign: 'left' },
-      nit: { cellWidth: 20, halign: 'right' },
-      detalle: { cellWidth: 30, halign: 'left' },
-      direccion: { cellWidth: 30, halign: 'left' },
-      telefono: { cellWidth: 15, halign: 'center' },
-      mobil: { cellWidth: 15, halign: 'center' },
-      email: { cellWidth: 25, halign: 'left' },
-      web: { cellWidth: 25, halign: 'left' },
-      pais: { cellWidth: 20, halign: 'center' },
-      ciudad: { cellWidth: 25, halign: 'center' },
-      zona: { cellWidth: 20, halign: 'center' },
-      contacto: { cellWidth: 25, halign: 'left' },
-    },
-    //20 + 15 + 20 + 25 + 30 + 20 + 20 + 25 + 20 + 15 + 20 + 15 + 20 = 265 mm
-
-    startY: 32,
-    margin: { horizontal: 5 },
-    theme: 'striped',
-    didDrawPage: () => {
-      if (doc.internal.getNumberOfPages() === 1) {
-        // Logo (requiere base64 o ruta absoluta en servidor si usas Node)
-        if (logoEmpresa) {
-          doc.addImage(`${URL_APIE}${logoEmpresa}`, 'PNG', 270, 10, 20, 20)
-        }
-
-        // Nombre y datos de empresa
-        doc.setFontSize(7)
-        doc.setFont(undefined, 'bold')
-        doc.text(nombreEmpresa, 5, 10)
-
-        doc.setFontSize(6)
-        doc.setFont(undefined, 'normal')
-        doc.text(direccionEmpresa, 5, 15)
-        doc.text(`Tel: ${telefonoEmpresa}`, 5, 20)
-
-        // Título centrado
-        doc.setFontSize(10)
-        doc.setFont(undefined, 'bold')
-        doc.text('PROVEEDORES', doc.internal.pageSize.getWidth() / 2, 15, { align: 'center' })
-      }
-    },
-  })
-
-  // doc.save('proveedores.pdf') ← comenta o elimina esta línea
-  //doc.output('dataurlnewwindow') // ← muestra el PDF en una nueva ventana del navegador
+  const doc = PDF_REPORTE_PROVEEDORES(filtrarProveedores.value)
   pdfData.value = doc.output('dataurlstring') // muestra el pdf en un modal
   mostrarModal.value = true
 }
