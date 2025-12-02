@@ -27,6 +27,12 @@
         $controlador->detalleFactura($cuf);
         exit;
     }
+    if ($method === "GET" && preg_match('#/api/out/venta/motivo-anulacion$#', $request)) {
+        $controlador = new outVenta();
+        $result = $controlador->getmotivoAnulacion();
+        exit;
+
+    }
 
     // 2. GET /api/venta/{cuf}/estado
     if ($method === "GET" && preg_match('#/api/out/venta/([A-Za-z0-9]+)/estado$#', $request, $m)) {

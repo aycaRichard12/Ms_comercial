@@ -627,6 +627,18 @@ class outVenta
     }
     
     public function detalleFactura($cuf){
+       $datostoken = $this->token->autenticarPeticion();
+        $id_empresa = $datostoken->data->id_empresa;
+        $factura = $datostoken->data->tipo;
+        $idmd5 = $datostoken->data->md5;
+        $tokenEmizor = "";
+        if($factura == 1 || $factura == 2){
+            $tokenEmizor = $this->token->obtenerTokenEmizor($idmd5);
+          
+        }
+        echo json_encode(["cuf"=>$cuf, "datosToken"=> $datostoken, "token" => $tokenEmizor]);
+    }
+    public function estadoFactura($cuf){
         $datostoken = $this->token->autenticarPeticion();
         $id_empresa = $datostoken->data->id_empresa;
         $factura = $datostoken->data->tipo;
@@ -636,14 +648,47 @@ class outVenta
             $tokenEmizor = $this->token->obtenerTokenEmizor($idmd5);
           
         }
-        echo json_encode(["cuf"=>$cuf, "datosToken"=> $datostoken]);
-    }
-    public function estadoFactura($cuf){
-        echo json_encode(["cuf"=>$cuf]);
+        $controler = $this->factura->estadofactura($cuf,$tokenEmizor,$factura, null);
+        if($controler){
+            echo json_encode($controler);
+
+        }
 
     }
     public function anularFactura($cuf, $data){
-        echo json_encode(["cuf"=>$cuf,"data"=> $data]);
+        $datostoken = $this->token->autenticarPeticion();
+        $id_empresa = $datostoken->data->id_empresa;
+        $factura = $datostoken->data->tipo;
+        $idmd5 = $datostoken->data->md5;
+        $tokenEmizor = "";
+        if($factura == 1 || $factura == 2){
+            $tokenEmizor = $this->token->obtenerTokenEmizor($idmd5);
+          
+        }
+        $motivo = $data['codigoMotivoAnulacion'];
+        //echo json_encode(["cuf" => $cuf, "motivo"=>$motivo, "token"=>$tokenEmizor, "tipo" => $factura]);
+        $controler = $this->factura->anularFactura($cuf,$motivo,$tokenEmizor,$factura);
+        if($controler){
+            echo json_encode($controler);
+
+        }
+
+    }
+    public function getmotivoAnulacion(){
+        $datostoken = $this->token->autenticarPeticion();
+        $id_empresa = $datostoken->data->id_empresa;
+        $factura = $datostoken->data->tipo;
+        $idmd5 = $datostoken->data->md5;
+        $tokenEmizor = "";
+        if($factura == 1 || $factura == 2){
+            $tokenEmizor = $this->token->obtenerTokenEmizor($idmd5);
+          
+        }
+        $controler = $this->factura->listadoConfigParametricas('motivoanulacion',$tokenEmizor,$factura,null);
+        if($controler){
+            echo json_encode($controler);
+
+        }
 
     }
     
