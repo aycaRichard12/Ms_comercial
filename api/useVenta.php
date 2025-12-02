@@ -226,21 +226,31 @@ class UseVEnta
                 // echo json_encode(["listaFactura"=>$jsonDetalles['listaFactura'], "tipoventa"=> $tipoventa, "token" =>$jsonDetalles['token'], "tipo" => $jsonDetalles['tipo'], "sucursal" => $jsonDetalles['codigosinsucursal'], "respuesta emizor" => $respuestaEmizor ]);
                 if ($respuestaEmizor->status === "success") {
                     $estadoFactura = null;
-                    for ($i = 0; $i < self::MAX_INTENTOS_CONSULTA_FACTURA; $i++) {
-                        $estadoFactura = $this->factura->estadofactura($respuestaEmizor->data->cuf, $jsonDetalles['token'], $jsonDetalles['tipo'], 2);
-                        if ($estadoFactura->data->codigoEstado == self::ESTADO_FACTURA_VALIDADA && $estadoFactura->data->errores == null) {
-                            break; // Factura validada, salir del bucle
-                        }
-                        sleep(1); // Esperar 1 segundo antes de reintentar
-                    }
+                    // for ($i = 0; $i < self::MAX_INTENTOS_CONSULTA_FACTURA; $i++) {
+                    //     $estadoFactura = $this->factura->estadofactura($respuestaEmizor->data->cuf, $jsonDetalles['token'], $jsonDetalles['tipo'], 2);
+                    //     if ($estadoFactura->data->codigoEstado == self::ESTADO_FACTURA_VALIDADA && $estadoFactura->data->errores == null) {
+                    //         break; // Factura validada, salir del bucle
+                    //     }
+                    //     sleep(1); // Esperar 1 segundo antes de reintentar
+                    // }
 
-                    if ($estadoFactura->data->codigoEstado == self::ESTADO_FACTURA_VALIDADA) {
+                    // if ($estadoFactura->data->codigoEstado == self::ESTADO_FACTURA_VALIDADA) {
                         $resultadoDB = $this->_registrarVentaDetallesEnDB($datosVenta, $jsonDetalles['listaProductos']);
                         if ($resultadoDB['estado'] == 'exito') {
-                            $this->factura->registrarFacturas($respuestaEmizor->data->ack_ticket, $estadoFactura->data->codigoEstado, $respuestaEmizor->data->cuf, $respuestaEmizor->data->emission_type_code, $respuestaEmizor->data->fechaEmision, $respuestaEmizor->data->numeroFactura, $respuestaEmizor->data->shortLink, $respuestaEmizor->data->urlSin, $respuestaEmizor->data->xml_url, $resultadoDB['idventa']);
+                            $this->factura->registrarFacturas(
+                                $respuestaEmizor->data->ack_ticket,
+                                null, 
+                                $respuestaEmizor->data->cuf, 
+                                $respuestaEmizor->data->emission_type_code, 
+                                $respuestaEmizor->data->fechaEmision, 
+                                $respuestaEmizor->data->numeroFactura, 
+                                $respuestaEmizor->data->shortLink, 
+                                $respuestaEmizor->data->urlSin, 
+                                $respuestaEmizor->data->xml_url, 
+                                $resultadoDB['idventa']);
                             $respuestaFinal = array_merge($resultadoDB, [
                                 "tipoventa" => "Facturado",
-                                "estadoFactura" => $estadoFactura->data,
+                               // "estadoFactura" => $estadoFactura->data,
                                 "datosFactura" => [
                                     "urlEmizor" => $respuestaEmizor->data->shortLink ?? null,
                                     "urlsin" => $respuestaEmizor->data->urlSin ?? $respuestaEmizor->data->urlsin ?? null
@@ -249,9 +259,9 @@ class UseVEnta
                         } else {
                            $respuestaFinal = $resultadoDB; // Propagar error de la BD
                         }
-                    } else {
-                        $respuestaFinal = ["estado" => "error", "mensaje" => "La factura no pudo ser validada por el SIN.", "detalles" => $respuestaEmizor];
-                    }
+                    // } else {
+                    //     $respuestaFinal = ["estado" => "error", "mensaje" => "La factura no pudo ser validada por el SIN.", "detalles" => $respuestaEmizor];
+                    // }
                 } else {
                     $respuestaFinal = ["estado" => "error", "mensaje" => "Error al emitir la factura.", "detalles" => $respuestaEmizor->errors ?? $respuestaEmizor, "jsonFactura" => $jsonDetalles['listaFactura']];
                 }
