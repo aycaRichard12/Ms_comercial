@@ -1787,7 +1787,7 @@ export function PDFextrabiosRobos(extravios, almacen) {
   }
 
   const Izquierda = {
-    titulo: 'DATOS MERMA',
+    titulo: 'DATOS REPORTE',
     campos: [
       {
         label: 'Almacén',

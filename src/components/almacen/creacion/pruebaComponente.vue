@@ -2,7 +2,6 @@
   <div class="q-pa-md q-gutter-sm">
     <q-dialog
       v-model="localDialog"
-      persistent
       :maximized="maximizedToggle"
       transition-show="slide-up"
       transition-hide="slide-down"

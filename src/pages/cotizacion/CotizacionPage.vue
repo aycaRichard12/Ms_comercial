@@ -486,7 +486,7 @@
     <!-- Diálogo: Comprobante de cotización enviarDatos -->
 
     <!-- Diálogo: Vista previa PDF -->
-    <q-dialog v-model="mostrarModal" persistent full-width full-height>
+    <q-dialog v-model="mostrarModal" full-width full-height>
       <q-card class="q-pa-none" style="height: 100%; max-width: 100%">
         <q-card-section class="row items-center q-pb-none bg-primary text-white">
           <div class="text-h6">Vista previa de PDF</div>

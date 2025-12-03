@@ -770,15 +770,45 @@ class compras
     public function listaProductoCompra($idpedido, $idalmacen) {
         $lista = [];
         
-        $consulta = $this->cm->query("SELECT pa.id_productos_almacen,p.codigo,p.cod_barras,p.nombre,p.descripcion,pa.pais,p.caracteristicas,pa.stock_minimo,s.cantidad,pa.fecha_registro,al.id_almacen,pa.estado,pa.stock_maximo
+        $consulta = $this->cm->query("SELECT 
+        pa.id_productos_almacen,
+        p.codigo,
+        p.cod_barras,
+        p.nombre,
+        p.descripcion,
+        pa.pais,
+        p.caracteristicas,
+        pa.stock_minimo,
+        s.cantidad,
+        pa.fecha_registro,
+        al.id_almacen,
+        pa.estado,
+        pa.stock_maximo,
+        u.nombre
         FROM productos_almacen AS pa
         LEFT JOIN almacen AS al ON pa.almacen_id_almacen=al.id_almacen
         LEFT JOIN productos AS p ON pa.productos_id_productos=p.id_productos
         LEFT JOIN stock AS s  ON pa.id_productos_almacen=s.productos_almacen_id_productos_almacen and s.estado='1'
+        LEFT JOIN unidad AS u ON u.id_unidad = p.unidad_id_unidad
         where pa.almacen_id_almacen='$idalmacen' and pa.id_productos_almacen not in (select dp.productos_almacen_id_productos_almacen from detalle_ingreso dp where dp.ingreso_id_ingreso='$idpedido')
         order by pa.id_productos_almacen desc");
         while ($qwe = $this->cm->fetch($consulta)) {
-            $res = array("idproductoalmacen" => $qwe[0], "codigo" => $qwe[1], "codbarras" => $qwe[2], "nombre" => $qwe[3], "descripcion" => $qwe[4], "pais" => $qwe[5], "caracteristica" => $qwe[6], "stockMin" => $qwe[7], "stock" => $qwe[8], "fecha" => $qwe[9], "idalmacen" => $qwe[10], "estado" => $qwe[11], "stockMax" => $qwe[12]);
+            $res = [
+                "idproductoalmacen" => $qwe[0], 
+                "codigo" => $qwe[1], 
+                "codbarras" => $qwe[2], 
+                "nombre" => $qwe[3], 
+                "descripcion" => $qwe[4], 
+                "pais" => $qwe[5], 
+                "caracteristica" => $qwe[6], 
+                "stockMin" => $qwe[7], 
+                "stock" => $qwe[8], 
+                "fecha" => $qwe[9], 
+                "idalmacen" => $qwe[10], 
+                "estado" => $qwe[11], 
+                "stockMax" => $qwe[12],
+                "unidad" => $qwe[13],
+            ];
             array_push($lista, $res);
         }
         echo json_encode($lista);
@@ -787,6 +817,8 @@ class compras
     public function registroCompra($nombre,$codigo,$proveedor,$pedido,$factura,$tipocompra,$idalmacen,$idmd5,$TIPORESPUESTA = NULL){
         date_default_timezone_set('America/La_Paz');
         $res="";
+        $idempresa = 0;
+        $count = 0;
         $idusuario = $this->verificar->verificarIDUSERMD5($idmd5);
         $sql = "SELECT idempresa FROM usuario WHERE idusuario = ?";
         $stmt = $this->rh->prepare($sql);

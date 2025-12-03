@@ -31,10 +31,16 @@ if ($ver[0] == "datosusuario") {
 } elseif ($ver[0] == "listaResponsable") {
     $controlador = new configuracion();
     $controlador->listaResponsable($ver[1]);
-} elseif ($ver[0] == "listaResponsableAlmacen") {
+} 
+elseif ($ver[0] == "listaResponsableAlmacen") {
     $controlador = new configuracion();
     $controlador->listaAlmacenesResponsable($ver[1]);
-} elseif ($ver[0] == "eliminarResponsableAlmacen") {
+}
+elseif ($ver[0] == "listaResponsableAlmacenReportes") {
+    $controlador = new configuracion();
+    $controlador->listaAlmacenesResponsableReportes($ver[1]);
+}
+ elseif ($ver[0] == "eliminarResponsableAlmacen") {
     $controlador = new configuracion();
     $controlador->eliminarResponsableAlmacen($ver[1]);
 } elseif ($ver[0] == "listaAlmacenAsignado") {
@@ -884,7 +890,10 @@ elseif ($ver[0] == "revertirAnulacionVenta") {
     $controlador = new UseVEnta();
     $controlador->revertirAnulacionVenta($ver[1],$ver[2]);
 }
-
+elseif ($ver[0] == "validarFacturas") {
+    $controlador = new UseVEnta();
+    $controlador->validarFacturas($ver[1], $ver[2], $ver[3]);
+}
 if ($controlador === null) {
     // Acción por defecto si no se encuentra una ruta valida reportecotizacion cambiarestadodevolucion
     echo json_encode(array("error" => "La ruta ".$_GET['ver']." no existe"));

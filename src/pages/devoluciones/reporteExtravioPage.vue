@@ -86,7 +86,7 @@
     </q-card>
 
     <q-card-section>
-      <q-dialog v-model="mostrarModal" persistent full-width full-height>
+      <q-dialog v-model="mostrarModal" full-width full-height>
         <q-card class="q-pa-md" style="height: 100%; max-width: 100%">
           <q-card-section class="row items-center q-pb-none">
             <div class="text-h6">Vista previa de PDF</div>
@@ -237,7 +237,7 @@ const cargarAlmacenes = async () => {
       throw new Error('Empresa no válida')
     }
 
-    const endpoint = `listaResponsableAlmacen/${idempresa}`
+    const endpoint = `listaResponsableAlmacenReportes/${idempresa}`
     const response = await api.get(endpoint)
     console.log(response.data)
     const resultado = response.data

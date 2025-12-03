@@ -220,7 +220,7 @@
     <q-inner-loading :showing="loading">
       <q-spinner-hourglass color="primary" size="50px" />
     </q-inner-loading>
-    <q-dialog v-model="mostrarModal" persistent full-width full-height>
+    <q-dialog v-model="mostrarModal" full-width full-height>
       <q-card class="q-pa-md" style="height: 100%; max-width: 100%">
         <q-card-section class="row items-center q-pb-none">
           <div class="text-h6">Vista previa de PDF</div>
