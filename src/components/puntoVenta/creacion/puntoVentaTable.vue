@@ -38,14 +38,18 @@
     </div>
   </div>
 
-  <q-table
+  <BaseFilterableTable
     title="Puntos Ventas"
     :rows="ordenados"
     :columns="columns"
+    :arrayHeaders="ArrayHeaders"
     row-key="id"
     :filter="search"
     flat
     bordered
+    @edit-item="$emit('edit-item', $event)"
+    @delete-item="$emit('delete-item', $event)"
+    @toggle-status="$emit('toggle-status', $event)"
   >
     <template v-slot:top-right> </template>
     <template v-slot:body-cell-opciones="props">
@@ -69,7 +73,7 @@
         <q-btn icon="delete" color="negative" dense @click="$emit('delete-item', props.row)" flat />
       </q-td>
     </template>
-  </q-table>
+  </BaseFilterableTable>
   <modalPuntoVentaFacturacion
     v-model:showModal="mostrarModal"
     :dato="datoSeleccionado"
@@ -84,6 +88,7 @@ import { getTipoFactura } from 'src/composables/FuncionesG'
 import modalPuntoVentaFacturacion from './modalPuntoVentaFacturacion.vue'
 import { api } from 'src/boot/axios'
 import { idempresa_md5, idusuario_md5 } from 'src/composables/FuncionesGenerales'
+import BaseFilterableTable from 'src/components/componentesGenerales/filtradoTabla/BaseFilterableTable.vue'
 const idusuario = idusuario_md5()
 const idempresa = idempresa_md5()
 console.log(getTipoFactura(true))
@@ -123,6 +128,7 @@ async function verificarSucursalFactura(id) {
     return null
   }
 }
+
 const filtroTipoAlmacen = ref(null)
 
 const props = defineProps({
@@ -137,7 +143,14 @@ const props = defineProps({
     default: () => [],
   },
 })
-const emit = defineEmits(['add', 'edit-item', 'delete-item', 'toggle-status', 'onSeleccionarTipo'])
+const emit = defineEmits([
+  'add',
+  'edit-item',
+  'delete-item',
+  'toggle-status',
+  'onSeleccionarTipo',
+  'column-filter-changed',
+])
 
 const columns = [
   { name: 'numero', label: 'N°', field: 'numero', align: 'center' },
@@ -146,6 +159,8 @@ const columns = [
   { name: 'tipo', label: 'Tipo', field: 'tipo', align: 'center' },
   { name: 'opciones', label: 'Opciones', field: 'opciones', align: 'center' },
 ]
+
+const ArrayHeaders = ['numero', 'nombre', 'descripcion', 'tipo']
 const ordenados = computed(() =>
   props.rows.map((row, index) => ({
     ...row,

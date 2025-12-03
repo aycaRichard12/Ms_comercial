@@ -21,7 +21,7 @@
     </q-dialog>
 
     <TablaAlmacen
-      :rows="CaracteristicaProd"
+      :rows="almacenes"
       @add="toggleForm"
       @edit-item="editUnit"
       @delete-item="confirmDelete"
@@ -42,7 +42,7 @@ const idempresa = idempresa_md5()
 const $q = useQuasar()
 const showForm = ref(false)
 const isEditing = ref(false)
-const CaracteristicaProd = ref([])
+const almacenes = ref([])
 
 const formData = ref({
   ver: 'registrarAlmacen',
@@ -56,7 +56,7 @@ async function loadRows() {
   try {
     const response = await api.get(`listaAlmacen/${idempresa}`) // Cambia a tu ruta real
     console.log(response.data)
-    CaracteristicaProd.value = response.data // Asume que la API devuelve un array
+    almacenes.value = response.data // Asume que la API devuelve un array
   } catch (error) {
     console.error('Error al cargar datos:', error)
     $q.notify({
