@@ -177,7 +177,7 @@ const obtenerFechaActual = () => {
 const cargarAlmacenes = async () => {
   try {
     const usuario = obtenerUsuario()
-    const response = await api.get(`listaResponsableAlmacen/${usuario.empresa.idempresa}`)
+    const response = await api.get(`listaResponsableAlmacenReportes/${usuario.empresa.idempresa}`)
     console.log(response)
     almacenesOptions.value = [
       { idalmacen: 0, almacen: 'Todos los almacenes' },

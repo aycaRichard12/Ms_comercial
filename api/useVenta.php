@@ -815,4 +815,22 @@ class UseVEnta
         echo json_encode($res);
     }
 
+    public function validarFacturas($idmd5, $token, $tipo){
+        $idempresa = $this->verificar->verificarIDEMPRESAMD5($idmd5);
+        $sql = "SELECT vf.* FROM venta v
+                INNER JOIN ventas_facturadas vf ON vf.venta_id_venta = v.id_venta
+                INNER JOIN cliente c ON c.id_cliente = v.cliente_id_cliente1
+                WHERE c.idempresa = ? AND (vf.codigoEstado IS NULL OR vf.codigoEstado = '')";
+        $lista = [];
+        $stmt = $this->cm->prepare($sql);
+        $stmt->bind_param("i", $idempresa);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        while ($fila = $result->fetch_assoc()) {
+            $lista[] = $fila;
+            $estadoFactura = $this->factura->estadofactura($fila['cuf'], $token, $tipo, 2);
+        }
+
+        echo json_encode($lista);
+    }
 }

@@ -92,7 +92,7 @@
     />
     <q-card-section>
       <q-table
-        class="my-sticky-header-table"
+        class=""
         title="Metodos de Pagos"
         :rows="filteredMetodosPago"
         :columns="columns"

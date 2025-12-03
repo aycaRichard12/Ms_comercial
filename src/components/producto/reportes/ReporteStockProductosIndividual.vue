@@ -105,7 +105,7 @@
   </q-card-section>
 
   <q-card-section>
-    <q-dialog v-model="mostrarModal" persistent full-width full-height>
+    <q-dialog v-model="mostrarModal" full-width full-height>
       <q-card class="q-pa-md" style="height: 100%; max-width: 100%">
         <q-card-section class="row items-center q-pb-none">
           <div class="text-h6">Vista previa de PDF</div>
@@ -188,7 +188,7 @@ const columnas = [
 
 async function cargarAlmacenes() {
   try {
-    const response = await api.get(`listaResponsableAlmacen/${idempresa}`)
+    const response = await api.get(`listaResponsableAlmacenReportes/${idempresa}`)
     console.log(response)
     const filtrados = response.data.filter((obj) => obj.idusuario == idusuario)
     almacenes.value = filtrados.map((item) => ({

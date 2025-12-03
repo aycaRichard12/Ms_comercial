@@ -329,7 +329,7 @@
     </q-dialog>
     <!-- Modal PDF -->
 
-    <q-dialog v-model="mostrarModal" persistent full-width full-height>
+    <q-dialog v-model="mostrarModal" full-width full-height>
       <q-card class="q-pa-md" style="height: 100%; max-width: 100%">
         <q-card-section class="row items-center q-pb-none">
           <div class="text-h6">Vista previa de PDF</div>
@@ -866,7 +866,7 @@ const cancelarRegistro = () => {
 const resetearFormulario = () => {
   formulario.value = {
     id: null,
-    fecha: date.formatDate(Date.now(), 'DD-MM-YYYY'),
+    fecha: date.formatDate(Date.now(), 'YYYY-MM-DD'),
     idalmacen: null,
     descripcion: '',
   }
