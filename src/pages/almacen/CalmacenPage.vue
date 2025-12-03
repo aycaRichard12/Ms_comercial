@@ -1,6 +1,6 @@
 <template>
   <q-page>
-    <q-dialog v-model="showForm" persistent>
+    <q-dialog v-model="showForm">
       <q-card class="responsive-dialog">
         <q-card-section class="bg-primary text-white text-h6 flex justify-between">
           <div>Registrar Almacén</div>

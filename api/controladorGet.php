@@ -884,7 +884,10 @@ elseif ($ver[0] == "revertirAnulacionVenta") {
     $controlador = new UseVEnta();
     $controlador->revertirAnulacionVenta($ver[1],$ver[2]);
 }
-
+elseif ($ver[0] == "validarFacturas") {
+    $controlador = new UseVEnta();
+    $controlador->validarFacturas($ver[1], $ver[2], $ver[3]);
+}
 if ($controlador === null) {
     // Acción por defecto si no se encuentra una ruta valida reportecotizacion cambiarestadodevolucion
     echo json_encode(array("error" => "La ruta ".$_GET['ver']." no existe"));

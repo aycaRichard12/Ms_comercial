@@ -58,7 +58,7 @@
             />
           </template>
         </q-input>
-        <q-dialog v-model="dialogClientes" persistent>
+        <q-dialog v-model="dialogClientes">
           <q-card style="width: 80vw; max-width: 800px">
             <q-card-section class="row items-center">
               <q-input
@@ -116,7 +116,7 @@
             />
           </template>
         </q-input>
-        <q-dialog v-model="dialogSucursal" persistent>
+        <q-dialog v-model="dialogSucursal">
           <q-card style="width: 80vw; max-width: 800px">
             <q-card-section class="row items-center">
               <q-input
@@ -224,7 +224,7 @@
         </q-td>
       </template>
     </q-table>
-    <q-dialog v-model="mostrarModal" persistent full-width full-height>
+    <q-dialog v-model="mostrarModal" full-width full-height>
       <q-card class="q-pa-md" style="height: 100%; max-width: 100%">
         <q-card-section class="row items-center q-pb-none">
           <div class="text-h6">Vista previa de PDF</div>

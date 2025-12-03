@@ -201,7 +201,7 @@
         @venta-registrada="closeModalFactura"
       />
     </modal-r>
-    <q-dialog v-model="showPdfModal" persistent full-width full-height>
+    <q-dialog v-model="showPdfModal" full-width full-height>
       <q-card class="q-pa-none" style="height: 100%; max-width: 100%">
         <q-card-section class="row items-center q-pb-none bg-primary text-white">
           <div class="text-h6">Vista previa de PDF</div>

@@ -100,7 +100,7 @@
       no-data-label="Aún no se han añadido productos a esta compra."
     >
       <template v-slot:body-cell-precio="props">
-        <q-td :props="props"> {{ decimas(props.row.precio) }} Bs </q-td>
+        <q-td :props="props"> {{ decimas(props.row.precio) }} </q-td>
       </template>
 
       <template v-slot:body-cell-subtotal="props">
@@ -185,7 +185,13 @@ const columnas = [
     align: 'left',
     sortable: true,
   },
-  { name: 'precio', label: 'Precio Unit.', field: 'precio', align: 'right', sortable: true },
+  {
+    name: 'precio',
+    label: `Precio Unit. ${divisaActiva.simbolo}`,
+    field: 'precio',
+    align: 'right',
+    sortable: true,
+  },
   { name: 'cantidad', label: 'Cantidad', field: 'cantidad', align: 'right', sortable: true },
   { name: 'subtotal', label: 'Subtotal', align: 'right', sortable: true },
   { name: 'opciones', label: 'Opciones', align: 'center' },
