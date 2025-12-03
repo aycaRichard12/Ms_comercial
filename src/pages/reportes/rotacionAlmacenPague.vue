@@ -185,7 +185,7 @@ const cargarAlmacenes = async () => {
       throw new Error('Empresa no válida')
     }
 
-    const endpoint = `listaResponsableAlmacen/${idempresa}`
+    const endpoint = `listaResponsableAlmacenReportes/${idempresa}`
     const response = await api.get(endpoint)
     console.log(response.data)
     const resultado = response.data

@@ -93,6 +93,8 @@
         :columns="columns"
         row-key="id"
         no-data-label="No hay datos disponibles"
+        flat
+        dense
         :filter="searchText"
       >
         <template v-slot:top-right>

@@ -319,7 +319,7 @@ const forzarReinicioCarrito = () => {
 }
 async function cargarAlmacenes() {
   try {
-    const response = await api.get(`listaResponsableAlmacen/${idempresa}`)
+    const response = await api.get(`listaResponsableAlmacenReportes/${idempresa}`)
     const filtrados = response.data.filter((obj) => obj.idusuario == idusuario)
     almacenes.value = filtrados.map((item) => ({
       label: item.almacen,

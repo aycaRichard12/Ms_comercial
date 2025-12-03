@@ -309,7 +309,7 @@ const validarFechas = () => {
 async function listaAlmacenes() {
   try {
     const idempresa = usuario.empresa.idempresa
-    const endpoint = `listaResponsableAlmacen/${idempresa}`
+    const endpoint = `listaResponsableAlmacenReportes/${idempresa}`
 
     const response = await api.get(endpoint)
     const data = response.data

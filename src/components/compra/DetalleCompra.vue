@@ -80,6 +80,19 @@
             class="full-width"
           />
         </div>
+        <div class="col-12 col-md-2">
+          <label for="unidad">Unidad*</label>
+          <q-input
+            id="unidad"
+            v-model="detalleForm.unidad"
+            type="text"
+            dense
+            outlined
+            clearable
+            readonly
+            class="full-width"
+          />
+        </div>
 
         <div class="col-md-2 col-12 flex justify-end items-center q-gutter-sm">
           <q-btn :label="esModoEdicion ? 'Guardar' : 'Añadir'" color="primary" type="submit" />
@@ -131,10 +144,10 @@
       </template>
       <template v-slot:bottom-row>
         <q-tr>
-          <q-td colspan="4" class="text-right text-weight-bold text-grey-8"> Total: </q-td>
-          <q-td class="text-center text-weight-bold text-h6"
-            >{{ divisaActiva.simbolo }} {{ total.toFixed(2) }}</q-td
-          >
+          <q-td colspan="4" class="text-right text-weight-bold text-grey-8">
+            Total {{ divisaActiva.simbolo }}.:
+          </q-td>
+          <q-td class="text-center text-weight-bold text-h6"> {{ total.toFixed(2) }}</q-td>
         </q-tr>
       </template>
     </q-table>
@@ -254,7 +267,9 @@ async function listaProductosDisponibles() {
       label: `${item.codigo} - ${item.descripcion}`,
       value: item.idproductoalmacen,
       stock: item.stock,
+      unidad: item.unidad,
     }))
+    console.log(response.data)
     productosFiltrados.value = [...productosDisponibles.value]
   } catch (error) {
     console.error('Error al cargar productos disponibles:', error)
@@ -277,6 +292,7 @@ watch(
   (nuevoValor) => {
     const productoSeleccionado = productosDisponibles.value.find((p) => p.value === nuevoValor)
     detalleForm.value.stockActual = productoSeleccionado ? productoSeleccionado.stock : 0
+    detalleForm.value.unidad = productoSeleccionado ? productoSeleccionado.unidad : ''
   },
 )
 

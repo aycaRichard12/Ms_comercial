@@ -169,7 +169,7 @@ async function cargarListaAlmacenes() {
     Object.assign(datosUsuario, contenidousuario[0]) // Asigna los datos del usuario al objeto reactivo
     const idempresa = datosUsuario.empresa?.idempresa
     const idusuario = datosUsuario.idusuario
-    const endpoint = `listaResponsableAlmacen/${idempresa}`
+    const endpoint = `listaResponsableAlmacenReportes/${idempresa}`
 
     const response = await api.get(endpoint)
     console.log(response)

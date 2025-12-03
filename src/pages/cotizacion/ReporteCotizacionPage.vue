@@ -531,7 +531,7 @@ const listaAlmacenes = async () => {
       return
     }
 
-    const endpoint = `listaResponsableAlmacen/${idempresa}`
+    const endpoint = `listaResponsableAlmacenReportes/${idempresa}`
     const response = await api.get(endpoint)
     const resultado = response.data
     if (resultado[0] === 'error') {

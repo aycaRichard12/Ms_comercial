@@ -449,7 +449,7 @@ const listaAlmacenes = async () => {
       return
     }
 
-    const endpoint = `${URL_APICM}api/listaResponsableAlmacen/${idempresa}`
+    const endpoint = `${URL_APICM}api/listaResponsableAlmacenReportes/${idempresa}`
     const resultado = await peticionGET(endpoint)
 
     if (resultado[0] === 'error') {

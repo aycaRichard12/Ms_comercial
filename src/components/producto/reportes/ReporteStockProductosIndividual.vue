@@ -188,7 +188,7 @@ const columnas = [
 
 async function cargarAlmacenes() {
   try {
-    const response = await api.get(`listaResponsableAlmacen/${idempresa}`)
+    const response = await api.get(`listaResponsableAlmacenReportes/${idempresa}`)
     console.log(response)
     const filtrados = response.data.filter((obj) => obj.idusuario == idusuario)
     almacenes.value = filtrados.map((item) => ({

@@ -31,10 +31,16 @@ if ($ver[0] == "datosusuario") {
 } elseif ($ver[0] == "listaResponsable") {
     $controlador = new configuracion();
     $controlador->listaResponsable($ver[1]);
-} elseif ($ver[0] == "listaResponsableAlmacen") {
+} 
+elseif ($ver[0] == "listaResponsableAlmacen") {
     $controlador = new configuracion();
     $controlador->listaAlmacenesResponsable($ver[1]);
-} elseif ($ver[0] == "eliminarResponsableAlmacen") {
+}
+elseif ($ver[0] == "listaResponsableAlmacenReportes") {
+    $controlador = new configuracion();
+    $controlador->listaAlmacenesResponsableReportes($ver[1]);
+}
+ elseif ($ver[0] == "eliminarResponsableAlmacen") {
     $controlador = new configuracion();
     $controlador->eliminarResponsableAlmacen($ver[1]);
 } elseif ($ver[0] == "listaAlmacenAsignado") {
