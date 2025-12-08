@@ -1309,14 +1309,14 @@ export function PDFreporteVentasPeriodo(filteredCompra, almacen) {
     descuento: { cellWidth: 15, halign: 'right' },
     ventatotal: { cellWidth: 15, halign: 'right' },
   }
-  const alm = almacen.value || { label: 'Todos los Almacenes', value: 0 }
+  const alm = almacen.label
   console.log(alm)
   const Izquierda = {
     titulo: 'DATOS DEL REPORTE',
     campos: [
       {
         label: 'Nombre del Almacen',
-        valor: alm.label || '',
+        valor: alm || '',
       },
     ],
   }
@@ -1660,40 +1660,41 @@ export function DPFReporteCotizacion(cotizaciones, almacen) {
     { header: 'Fecha', dataKey: 'fecha' }, // Match actual field names from API
     { header: 'Cliente', dataKey: 'cliente' },
     { header: 'Comercial', dataKey: 'sucursal' },
-    { header: 'Monto', dataKey: 'cotizaciontotal' },
+    { header: 'Monto', dataKey: 'monto' },
     { header: 'Desc.', dataKey: 'descuento' },
-    { header: 'Total.', dataKey: 'total' },
+    { header: 'Total.', dataKey: 'total_sumatorias' },
 
     // { header: 'Foto', dataKey: 'foto_detalle_cobro' }, // Images in autoTable are more complex
   ]
   const datos = cotizaciones.value.map((key) => ({
     nro: key.nro,
-    fecha: cambiarFormatoFecha(key.fecha),
+    fecha: key.fecha,
     cliente: key.cliente,
     sucursal: key.sucursal,
-    descuento: decimas(key.descuento),
-    cotizaciontotal: decimas(key.cotizaciontotal),
-    total: decimas(redondear(parseFloat(key.cotizaciontotal) + parseFloat(key.descuento))),
+    monto: decimas(parseFloat(key.monto)),
+    descuento: decimas(parseFloat(key.descuento)),
+    total_sumatorias: decimas(parseFloat(key.total_sumatorias)),
   }))
   // Data for jsPDF-autoTable - map from `reportData.
   // value`
 
   const cotizaciontotal = datos.reduce((sum, u) => {
-    return decimas(parseFloat(sum) + parseFloat(u.cotizaciontotal))
+    return decimas(parseFloat(sum) + parseFloat(u.monto))
   }, 0)
   console.log(cotizaciontotal)
   const descuento = datos.reduce((sum, u) => {
     return decimas(parseFloat(sum) + parseFloat(u.descuento))
   }, 0)
   const total = datos.reduce((sum, u) => {
-    return decimas(parseFloat(sum) + parseFloat(u.total))
+    return decimas(parseFloat(sum) + parseFloat(u.total_sumatorias))
   }, 0)
 
+  console.log(total)
   const pieTable = {
     sucursal: 'Total:',
-    cotizaciontotal: parseFloat(cotizaciontotal).toFixed(2),
-    descuento: parseFloat(descuento).toFixed(2),
-    total: parseFloat(total).toFixed(2),
+    monto: cotizaciontotal,
+    descuento: descuento,
+    total_sumatorias: total,
   }
   datos.push(pieTable)
   console.log(datos)
@@ -1703,20 +1704,20 @@ export function DPFReporteCotizacion(cotizaciones, almacen) {
     fecha: { cellWidth: 20, halign: 'left' },
     cliente: { cellWidth: 50, halign: 'left' },
     sucursal: { cellWidth: 50, halign: 'left' },
-    cotizaciontotal: { cellWidth: 20, halign: 'right' },
+    monto: { cellWidth: 20, halign: 'right' },
 
     descuento: { cellWidth: 20, halign: 'right' },
-    total: { cellWidth: 20, halign: 'right' },
+    total_sumatorias: { cellWidth: 20, halign: 'right' },
   }
   const headerColumnStyles = {
     nro: { cellWidth: 15, halign: 'center' }, // Adjusted width
     fecha: { cellWidth: 20, halign: 'left' },
     cliente: { cellWidth: 50, halign: 'left' },
     sucursal: { cellWidth: 50, halign: 'left' },
-    cotizaciontotal: { cellWidth: 20, halign: 'right' },
+    monto: { cellWidth: 20, halign: 'right' },
     descuento: { cellWidth: 20, halign: 'right' },
 
-    total: { cellWidth: 20, halign: 'right' },
+    total_sumatorias: { cellWidth: 20, halign: 'right' },
   }
   const Izquierda = {
     titulo: 'DATOS REPORTE',

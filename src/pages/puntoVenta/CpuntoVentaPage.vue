@@ -31,7 +31,6 @@
 
 <script setup>
 import { ref, onMounted, onBeforeUnmount } from 'vue'
-
 import FormularioRegistroPDV from 'components/puntoVenta/creacion/puntoVentaForm.vue'
 import TablaPDV from 'components/puntoVenta/creacion/puntoVentaTable.vue'
 import { idempresa_md5, idusuario_md5 } from 'src/composables/FuncionesGenerales'
@@ -83,7 +82,12 @@ const cargarPuntosPorTipo = async (tipo) => {
     const response = await api.get(`listaPuntoVenta/${tipoSeleccionado.value}`) // Cambia a tu ruta real
     console.log(response)
 
-    puntosVenta.value = response.data // Asume que la API devuelve un array
+    puntosVenta.value = response.data.map((obj, index) => {
+      return {
+        ...obj,
+        numero: index + 1,
+      }
+    }) // Asume que la API devuelve un array
   } catch (error) {
     console.error('Error al cargar datos:', error)
     $q.notify({
