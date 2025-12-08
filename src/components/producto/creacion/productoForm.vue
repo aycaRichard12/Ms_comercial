@@ -172,6 +172,7 @@ import { ref, watch } from 'vue'
 import { TipoFactura } from 'src/composables/FuncionesGenerales'
 
 const tipoFactura = TipoFactura()
+console.log('Tipo de factura en productoForm.vue:', tipoFactura)
 const props = defineProps({
   isEditing: Boolean,
   modelValue: Object,

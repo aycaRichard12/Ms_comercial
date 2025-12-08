@@ -1315,7 +1315,7 @@ export function PDFreporteVentasPeriodo(filteredCompra, almacen) {
     titulo: 'DATOS DEL REPORTE',
     campos: [
       {
-        label: 'Nombre del Almacen',
+        label: 'Almacen',
         valor: alm || '',
       },
     ],

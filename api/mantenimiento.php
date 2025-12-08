@@ -102,7 +102,7 @@ class mantenimiento
         $fecha = date("Y-m-d");
         $res = "";
         $idempresa = $this->verificar->verificarIDEMPRESAMD5($idmd5);
-
+        $countNombre = 0;   
         // Verificar si ya existe el nombre
         $verificarNombre = "SELECT COUNT(*) FROM almacen a WHERE a.idempresa = ? AND a.nombre = ?";
         $stmt = $this->cm->prepare($verificarNombre);
@@ -127,6 +127,7 @@ class mantenimiento
 
 
         if (!empty($codigo)) {
+            $countCodigo = 0;
             $verificarCodigo = "SELECT COUNT(*) FROM almacen WHERE codigo = ?";
             $stmt = $this->cm->prepare($verificarCodigo);
             if ($stmt === false) {
@@ -441,7 +442,7 @@ class mantenimiento
     {
         try {
             $res = "";
-
+            $idempresa = 0;
             $sql = "SELECT idempresa FROM almacen WHERE id_almacen = ?";
             $stmt = $this->cm->prepare($sql);
             $stmt->bind_param("i", $idalmacen);
@@ -460,7 +461,7 @@ class mantenimiento
                     echo json_encode($res); 
                     return;
                 }
-            
+                $count = 0;
                 $stmt->bind_param("si", $nombre , $idempresa);
                 $stmt->execute();
                 $stmt->bind_result($count);
