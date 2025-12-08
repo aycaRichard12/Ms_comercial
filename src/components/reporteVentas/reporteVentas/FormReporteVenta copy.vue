@@ -1,6 +1,6 @@
 <template>
   <q-page>
-    <div class="titulo">Reporte Ventas</div>
+    <!-- Formulario principal -->
     <q-form @submit.prevent="onSubmit">
       <div class="row justify-center q-col-gutter-x-md q-ma-sm">
         <div class="col-12 col-md-3">
@@ -30,11 +30,11 @@
       />
     </div>
     <div class="row q-col-gutter-x-md q-ma-sm">
-      <!-- <div class="col-12 col-md-2">
+      <div class="col-12 col-md-2">
         <label for="almacen">Filtrar por Almacén</label>
         <q-select id="almacen" dense outlined v-model="almacen" :options="almacenes" clearable />
-      </div> -->
-      <!-- 
+      </div>
+
       <div class="col-12 col-md-3">
         <label for="cliente">Filtrar por razón social</label>
         <q-input
@@ -148,9 +148,9 @@
             </q-card-section>
           </q-card>
         </q-dialog>
-      </div> -->
+      </div>
 
-      <!-- <div class="col-12 col-md-2">
+      <div class="col-12 col-md-2">
         <label for="canal">Filtrar por canal de venta</label>
         <q-select id="canal" dense outlined="" v-model="canal" :options="canales" clearable />
       </div>
@@ -169,18 +169,62 @@
           ]"
           clearable
         />
-      </div> -->
+      </div>
     </div>
-    <TableReporteVentas
-      ref="refHijo"
-      :rows="rows"
-      @ver-detalle="verDetalle"
-      @crear-mensaje="crearMensaje"
-      @ir-a-factura="ir_a_factura"
-      @ir-a-impuestos="ir_a_impuestos"
-      @abrir-modal-nota="abrirModal"
-    />
-
+    <BaseFilterableTable
+      title="Reporte ventas"
+      :rows="filteredCompra"
+      :columns="columnas"
+      :arrayHeaders="ArrayHeaders"
+      row-key="id"
+      flat
+      bordered
+      class="q-ma-sm"
+    >
+      <template v-slot:body-cell-tipoventa="props">
+        <q-td :props="props">
+          {{ tipo[Number(props.row.tipoventa)] }}
+        </q-td>
+      </template>
+      <template #body-cell-acciones="props">
+        <q-td align="center">
+          <q-btn size="sm" icon="visibility" flat @click="verDetalle(props.row)" />
+          <q-btn
+            size="sm"
+            icon="email"
+            flat
+            color="primary"
+            @click="crearMensaje(props.row)"
+            class="q-ml-sm"
+          />
+          <q-btn
+            v-if="props.row.tipoventa == 1"
+            icon="receipt_long"
+            dense
+            rounded=""
+            flat=""
+            color="blue"
+            @click="ir_a_factura(props.row)"
+          />
+          <q-btn
+            v-if="props.row.tipoventa == 1"
+            icon="policy"
+            dense=""
+            rounded=""
+            flat=""
+            color="warning"
+            @click="ir_a_impuestos(props.row)"
+          />
+          <q-btn
+            v-if="props.row.tipoventa == 1"
+            icon="account_balance_wallet"
+            flat=""
+            color="orange"
+            @click="abrirModal(props.row)"
+          />
+        </q-td>
+      </template>
+    </BaseFilterableTable>
     <q-dialog v-model="mostrarModal" full-width full-height>
       <q-card class="q-pa-md" style="height: 100%; max-width: 100%">
         <q-card-section class="row items-center q-pb-none">
@@ -211,10 +255,11 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { api } from 'src/boot/axios'
 import { idempresa_md5, idusuario_md5 } from 'src/composables/FuncionesGenerales'
 import { useQuasar } from 'quasar'
+import { redondear } from 'src/composables/FuncionesG'
 import { PDFComprovanteVenta } from 'src/utils/pdfReportGenerator'
 import { PDFreporteVentasPeriodo } from 'src/utils/pdfReportGenerator'
 import { PDFenviarFacturaCorreo } from 'src/utils/pdfReportGenerator'
@@ -222,25 +267,12 @@ import { exportTOXLSX_Reporte_Ventas } from 'src/utils/XCLReportImport'
 //import { getUsuario } from 'src/composables/FuncionesGenerales'
 import RegistrarNotaCreditoDebito from 'src/pages/NotasCreditoDebito/RegistrarNotaCreditoDebito.vue'
 import { primerDiaDelMes } from 'src/composables/FuncionesG'
-import TableReporteVentas from './TableReporteVentas.vue'
+import BaseFilterableTable from 'src/components/componentesGenerales/filtradoTabla/BaseFilterableTable.vue'
 //import { decimas } from 'src/composables/FuncionesG'
 //const usuario = getUsuario()
-const resultadoFiltrado = ref([])
-
 const isVisibleNota = ref(false)
 const pdfData = ref(null)
 const mostrarModal = ref(false)
-// const tipo = {
-//   0: 'Comprobante Venta',
-//   1: 'Factura Compra-Venta',
-//   2: 'Factura Alquileres',
-//   3: 'Factura Comercial Exportación',
-//   24: 'Nota de Crédito-Débido',
-// }
-const $q = useQuasar()
-const today = new Date().toISOString().slice(0, 10)
-const idempresa = idempresa_md5()
-const idusuario = idusuario_md5()
 const tipo = {
   0: 'Comprobante Venta',
   1: 'Factura Compra-Venta',
@@ -248,6 +280,11 @@ const tipo = {
   3: 'Factura Comercial Exportación',
   24: 'Nota de Crédito-Débido',
 }
+const $q = useQuasar()
+const today = new Date().toISOString().slice(0, 10)
+const idempresa = idempresa_md5()
+const idusuario = idusuario_md5()
+
 console.log(primerDiaDelMes())
 // Fec
 const fechai = ref(primerDiaDelMes().toISOString().slice(0, 10))
@@ -260,117 +297,145 @@ const canal = ref(null)
 const tipopago = ref('')
 
 // Opciones select
-// const almacenes = ref([])
-// const canales = ref([])
+const almacenes = ref([])
+const canales = ref([])
 
 // Autocompletado
-// const dialogClientes = ref(false)
-// const clienteBusqueda = ref('')
-// const clienteFilter = ref('')
-//const clienteSeleccionadoId = ref(null)
-// const clientes = ref([])
+const dialogClientes = ref(false)
+const clienteBusqueda = ref('')
+const clienteFilter = ref('')
+const clienteSeleccionadoId = ref(null)
+const clientes = ref([])
 
-// const dialogSucursal = ref(false)
-// const sucursalBusqueda = ref('')
-// const sucursalFilter = ref('')
-//const SucursalSelecionadoId = ref(null)
-//const sucursales = ref([])
+const dialogSucursal = ref(false)
+const sucursalBusqueda = ref('')
+const sucursalFilter = ref('')
+const SucursalSelecionadoId = ref(null)
+const sucursales = ref([])
 
 const ventaSeleccionada = ref(null)
 const formularioNota = ref(0)
-const refHijo = ref(null)
-
 const forzarReinicioCarrito = () => {
   ventaSeleccionada.value = null
   isVisibleNota.value = false // ⚠️ Esto reinicia el componente `carritoVenta`
 }
-// async function cargarAlmacenes() {
-//   try {
-//     const response = await api.get(`listaResponsableAlmacenReportes/${idempresa}`)
-//     const filtrados = response.data.filter((obj) => obj.idusuario == idusuario)
-//     almacenes.value = filtrados.map((item) => ({
-//       label: item.almacen,
-//       value: item.idalmacen,
-//     }))
-//   } catch (error) {
-//     console.error('Error al cargar almacenes:', error)
-//     $q.notify({ type: 'negative', message: 'No se pudieron cargar los proveedores' })
-//   }
-// }
-// async function getSucursale() {
-//   console.log(clienteSeleccionadoId.value)
-//   try {
-//     const response = await api.get(`listaSucursal/${clienteSeleccionadoId.value}`)
-//     sucursales.value = response.data.map((cli) => ({
-//       value: cli.id,
-//       label: `${cli.nombre}`,
-//     }))
-//   } catch (error) {
-//     $q.notify({ type: 'negative', message: 'No se pudieron cargar los clientes' + error })
-//   }
-// }
-// async function getClientes() {
-//   try {
-//     const response = await api.get(`listaCliente/${idempresa}`)
-//     clientes.value = response.data.map((cli) => ({
-//       value: cli.id,
-//       label: `${cli.codigo} - ${cli.nombre} - ${cli.nombrecomercial} - ${cli.ciudad} - ${cli.nit}`,
-//     }))
-//   } catch (error) {
-//     $q.notify({ type: 'negative', message: 'No se pudieron cargar los clientes' + error })
-//   }
-// }
-// async function getCanalVenta() {
-//   try {
-//     const response = await api.get(`listaCanalVenta/${idempresa}`)
-//     canales.value = response.data.map((cli) => ({
-//       value: cli.id,
-//       label: `${cli.canal}`,
-//     }))
-//   } catch (error) {
-//     $q.notify({ type: 'negative', message: 'No se pudieron cargar los clientes' + error })
-//   }
-// }
-// const clientesFiltrados = computed(() => {
-//   if (!clienteFilter.value) return clientes.value
-//   const search = clienteFilter.value.toLowerCase()
-//   return clientes.value.filter((c) => c.label.toLowerCase().includes(search))
-// })
+async function cargarAlmacenes() {
+  try {
+    const response = await api.get(`listaResponsableAlmacenReportes/${idempresa}`)
+    const filtrados = response.data.filter((obj) => obj.idusuario == idusuario)
+    almacenes.value = filtrados.map((item) => ({
+      label: item.almacen,
+      value: item.idalmacen,
+    }))
+  } catch (error) {
+    console.error('Error al cargar almacenes:', error)
+    $q.notify({ type: 'negative', message: 'No se pudieron cargar los proveedores' })
+  }
+}
+async function getSucursale() {
+  console.log(clienteSeleccionadoId.value)
+  try {
+    const response = await api.get(`listaSucursal/${clienteSeleccionadoId.value}`)
+    sucursales.value = response.data.map((cli) => ({
+      value: cli.id,
+      label: `${cli.nombre}`,
+    }))
+  } catch (error) {
+    $q.notify({ type: 'negative', message: 'No se pudieron cargar los clientes' + error })
+  }
+}
+async function getClientes() {
+  try {
+    const response = await api.get(`listaCliente/${idempresa}`)
+    clientes.value = response.data.map((cli) => ({
+      value: cli.id,
+      label: `${cli.codigo} - ${cli.nombre} - ${cli.nombrecomercial} - ${cli.ciudad} - ${cli.nit}`,
+    }))
+  } catch (error) {
+    $q.notify({ type: 'negative', message: 'No se pudieron cargar los clientes' + error })
+  }
+}
+async function getCanalVenta() {
+  try {
+    const response = await api.get(`listaCanalVenta/${idempresa}`)
+    canales.value = response.data.map((cli) => ({
+      value: cli.id,
+      label: `${cli.canal}`,
+    }))
+  } catch (error) {
+    $q.notify({ type: 'negative', message: 'No se pudieron cargar los clientes' + error })
+  }
+}
+const clientesFiltrados = computed(() => {
+  if (!clienteFilter.value) return clientes.value
+  const search = clienteFilter.value.toLowerCase()
+  return clientes.value.filter((c) => c.label.toLowerCase().includes(search))
+})
 
-// const selectCliente = (cliente) => {
-//   clienteSeleccionadoId.value = cliente.value
-//   clienteBusqueda.value = cliente.label
-//   dialogClientes.value = false
-//   getSucursale()
-//   clearSucursal()
-// }
+const selectCliente = (cliente) => {
+  clienteSeleccionadoId.value = cliente.value
+  clienteBusqueda.value = cliente.label
+  dialogClientes.value = false
+  getSucursale()
+  clearSucursal()
+}
 
-// const clearCliente = () => {
-//   clienteSeleccionadoId.value = null
-//   clienteBusqueda.value = ''
-//   clearSucursal()
-// }
+const clearCliente = () => {
+  clienteSeleccionadoId.value = null
+  clienteBusqueda.value = ''
+  clearSucursal()
+}
 
-// const sucursalesFilter = computed(() => {
-//   if (!sucursalFilter.value) return sucursales.value
-//   const search = sucursalFilter.value.toLowerCase()
-//   return sucursales.value.filter((c) => c.label.toLowerCase().includes(search))
-// })
+const sucursalesFilter = computed(() => {
+  if (!sucursalFilter.value) return sucursales.value
+  const search = sucursalFilter.value.toLowerCase()
+  return sucursales.value.filter((c) => c.label.toLowerCase().includes(search))
+})
 
-// const selectSucursal = (sucursal) => {
-//   SucursalSelecionadoId.value = sucursal.value
-//   sucursalBusqueda.value = sucursal.label
-//   dialogSucursal.value = false
-// }
+const selectSucursal = (sucursal) => {
+  SucursalSelecionadoId.value = sucursal.value
+  sucursalBusqueda.value = sucursal.label
+  dialogSucursal.value = false
+}
 
-// const clearSucursal = () => {
-//   SucursalSelecionadoId.value = null
-//   sucursalBusqueda.value = ''
-// }
+const clearSucursal = () => {
+  SucursalSelecionadoId.value = null
+  sucursalBusqueda.value = ''
+}
 
 // Datos de la tabla
-// DEFINICIÓN DE COLUMNAS ACTUALIZADA CON DATATYPE
-
+const columnas = [
+  { name: 'nro', label: 'N°', field: 'nro', align: 'left' },
+  { name: 'fecha', label: 'Fecha', field: 'fecha' },
+  { name: 'cliente', label: 'Cliente', field: 'cliente' },
+  { name: 'tipoventa', label: 'Tipo-Venta', field: 'tipoventa' },
+  { name: 'tipopago', label: 'Tipo-Pago', field: 'tipopago' },
+  { name: 'nfactura', label: 'Nro.Factura', field: 'nfactura' },
+  { name: 'canal', label: 'Canal', field: 'canal' },
+  { name: 'total', label: 'Total', field: 'total' },
+  { name: 'descuento', label: 'Dscto.', field: 'descuento' },
+  { name: 'ventatotal', label: 'Monto', field: 'ventatotal' },
+  { name: 'acciones', label: 'Acciones', field: 'acciones', align: 'center' },
+]
+const ArrayHeaders = [
+  'fecha',
+  'cliente',
+  'tipoventa',
+  'tipopago',
+  'nfactura',
+  'canal',
+  'total',
+  'descuento',
+  'ventatotal',
+]
+defineEmits([
+  'add',
+  'edit-item',
+  'delete-item',
+  'toggle-status',
+  'onSeleccionarTipo',
+  'column-filter-changed',
+])
 const rows = ref([])
 const detalleVenta = ref([])
 
@@ -387,7 +452,6 @@ const verDetalle = async (row) => {
   console.log(row)
   await getDetalleVenta(row.idventa)
   if (detalleVenta.value) {
-    console.log(detalleVenta.value)
     imprimirReporte()
   } else {
     $q.notify({
@@ -396,7 +460,37 @@ const verDetalle = async (row) => {
     })
   }
 }
+// const crearMensaje = async (row) => {
+//   try {
+//     const response = await api.get(`obtenerEmailCliente/${row.idcliente}`) // Cambia a tu ruta real
+//     console.log(response.data) // res { email: 'ClienteVarios@one.com' }
+//     const clientEmail = response.data.email
+//     $q.dialog({
+//       title: 'Confirmar',
+//       message: `¿Enviar factura a correo  "${clientEmail}"?`,
+//       cancel: true,
+//       persistent: true,
+//     }).onOk(async () => {
+//       console.log(row.idcliente)
 
+//       await getDetalleVenta(row.idventa)
+//       if (detalleVenta.value) {
+//         enviarFacturaCorreo(row.idcliente)
+//       } else {
+//         $q.notify({
+//           type: 'negative',
+//           message: 'Venta sin items',
+//         })
+//       }
+//     })
+//   } catch (error) {
+//     console.error('Error al cargar datos:', error)
+//     $q.notify({
+//       type: 'negative',
+//       message: 'No se pudieron cargar los datos',
+//     })
+//   }
+// }
 const crearMensaje = async (row) => {
   console.log(row)
   try {
@@ -487,22 +581,14 @@ function imprimirReporte() {
   mostrarModal.value = true
 }
 const vistaPrevia = () => {
-  resultadoFiltrado.value = refHijo.value.obtenerDatos()
-  const filterReporte = refHijo.value.getActiveFiltersReport()
-  console.log('Filtros activos en el reporte:', filterReporte)
-  const almacen = {
-    label: filterReporte.almacen,
-    value: 0,
-  }
-  const doc = PDFreporteVentasPeriodo(resultadoFiltrado, almacen)
+  console.log(filteredCompra.value, almacen.value)
+  const doc = PDFreporteVentasPeriodo(filteredCompra, almacen)
 
   pdfData.value = doc.output('dataurlstring') // muestra el pdf en un modal
   mostrarModal.value = true
 }
 const exportXLSX = () => {
-  resultadoFiltrado.value = refHijo.value.obtenerDatos()
-
-  exportTOXLSX_Reporte_Ventas(resultadoFiltrado, almacen, fechai, fechaf)
+  exportTOXLSX_Reporte_Ventas(filteredCompra, almacen, fechai, fechaf)
 }
 const onSubmit = async () => {
   console.log('Generar reporte con filtros:', {
@@ -516,32 +602,14 @@ const onSubmit = async () => {
   try {
     const response = await api.get(`reporteventas/${idusuario}/${fechai.value}/${fechaf.value}`) // Cambia a tu ruta real
     const datos = response.data
-    console.log(datos)
     const filtrados = datos.filter((obj) => Number(obj.estado) == 1)
-    rows.value = filtrados.map((obj, index) => ({
-      cliente: obj.cliente,
-      tipoventa: tipo[Number(obj.tipoventa)],
-      tv: Number(obj.tipoventa),
-      tipopago: obj.tipopago,
-      nfactura: obj.nfactura,
-      canal: obj.canal,
-      total: Number(obj.descuento) + Number(obj.ventatotal),
-      descuento: Number(obj.descuento),
-      ventatotal: Number(obj.ventatotal),
-      idventa: Number(obj.idventa),
-      fecha: obj.fecha,
-      idalmacen: obj.idalmacen,
-      idcliente: obj.idcliente,
-      divisa: obj.divisa,
-      sucursal: obj.sucursal,
-      estado: obj.estado,
-      shortlink: obj.shortlink,
-      urlsin: obj.urlsin,
-      idcanal: obj.idcanal,
-      idsucursal: obj.idsucursal,
-      almacen: obj.almacen,
-      nro: index + 1,
-    }))
+    rows.value = filtrados.map((obj, index) => {
+      return {
+        ...obj,
+        nro: index + 1,
+      }
+    }) // Asume que la API devuelve un array
+    console.log(rows.value)
   } catch (error) {
     console.error('Error al cargar datos:', error)
     $q.notify({
@@ -550,37 +618,37 @@ const onSubmit = async () => {
     })
   }
 }
-// const processedRows = computed(() => {
-//   return rows.value.map((row, index) => ({
-//     ...row,
-//     nro: index + 1,
-//     total: redondear(parseFloat(row.ventatotal) + parseFloat(row.descuento)),
-//   }))
-// })
-// const filteredCompra = computed(() => {
-//   return processedRows.value.filter((compra) => {
-//     console.log(canal.value, tipopago.value)
-//     const porAlmacen = !almacen.value || compra.idalmacen == almacen.value.value
-//     const porCliente =
-//       !clienteSeleccionadoId.value || compra.idcliente == clienteSeleccionadoId.value
-//     const porSucursal =
-//       !SucursalSelecionadoId.value || compra.idsucursal == SucursalSelecionadoId.value
-//     const porCanal = !canal.value || compra.idcanal == canal.value?.value
-//     const porTipoPago = !tipopago.value || compra.tipopago == tipopago.value?.value
+const processedRows = computed(() => {
+  return rows.value.map((row, index) => ({
+    ...row,
+    nro: index + 1,
+    total: redondear(parseFloat(row.ventatotal) + parseFloat(row.descuento)),
+  }))
+})
+const filteredCompra = computed(() => {
+  return processedRows.value.filter((compra) => {
+    console.log(canal.value, tipopago.value)
+    const porAlmacen = !almacen.value || compra.idalmacen == almacen.value.value
+    const porCliente =
+      !clienteSeleccionadoId.value || compra.idcliente == clienteSeleccionadoId.value
+    const porSucursal =
+      !SucursalSelecionadoId.value || compra.idsucursal == SucursalSelecionadoId.value
+    const porCanal = !canal.value || compra.idcanal == canal.value?.value
+    const porTipoPago = !tipopago.value || compra.tipopago == tipopago.value?.value
 
-//     return porAlmacen && porCliente && porSucursal && porCanal && porTipoPago
-//   })
-// })
+    return porAlmacen && porCliente && porSucursal && porCanal && porTipoPago
+  })
+})
 function abrirModal(venta) {
   formularioNota.value++
-  ventaSeleccionada.value = null // Esto reinicia el componente `carritoVenta`
+  ventaSeleccionada.value = null // ⚠️ Esto reinicia el componente `carritoVenta`
   isVisibleNota.value = true
   ventaSeleccionada.value = venta
 }
 
 onMounted(() => {
-  //cargarAlmacenes()
-  //getClientes()
-  //getCanalVenta()
+  cargarAlmacenes()
+  getClientes()
+  getCanalVenta()
 })
 </script>

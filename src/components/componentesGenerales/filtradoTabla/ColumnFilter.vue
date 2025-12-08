@@ -99,7 +99,7 @@
               :label="getLabelForValue(dataType)"
               dense
               debounce="300"
-              :type="dataType === 'number' ? 'number' : 'text'"
+              :type="dataType === 'number' ? 'number' : dataType === 'date' ? 'date' : 'text'"
             />
             <div v-else>
               <q-input
@@ -108,14 +108,14 @@
                 dense
                 debounce="300"
                 class="q-mb-sm"
-                :type="dataType === 'number' ? 'number' : 'text'"
+                :type="dataType === 'number' ? 'number' : dataType === 'date' ? 'date' : 'text'"
               />
               <q-input
                 v-model="localCondition.value2"
                 label="Valor Final"
                 dense
                 debounce="300"
-                :type="dataType === 'number' ? 'number' : 'text'"
+                :type="dataType === 'number' ? 'number' : dataType === 'date' ? 'date' : 'text'"
               />
             </div>
             <q-checkbox
@@ -161,9 +161,6 @@ const allUniqueValues = computed(() => {
     // Usa el campo para obtener el valor
     const rowValue = row[props.column.field]
 
-    // CASO ESPECIAL: Si es una columna para una propiedad dentro de un array (como 'sucursal' con row.sucursales[0].nombre)
-    // El componente padre debe asegurarse de que la prop 'rows' pasada a ColumnFilter ya contenga
-    // el valor plano o se debe manejar la lógica aquí si es conocida (ej. para 'sucursal' en almacenTable)
     const val = String(rowValue || '-').trim()
     values[val] = (values[val] || 0) + 1
   })
@@ -182,7 +179,8 @@ const valueCounts = computed(() => {
 const localSelectedValues = ref([])
 const localCondition = ref({
   active: false,
-  operator: props.dataType === 'number' ? 'equals' : 'contains', // Operador inicial por defecto
+  operator:
+    props.dataType === 'number' ? 'equals' : props.dataType === 'date' ? 'equals' : 'contains', // Operador inicial por defecto
   value1: null,
   value2: null,
 })
@@ -219,11 +217,11 @@ watch(
 // Lógica para el checkbox "Seleccionar todo"
 const selectAll = computed({
   get: () =>
-    localSelectedValues.value.length === allUniqueValues.value.length &&
-    allUniqueValues.value.length > 0,
+    localSelectedValues.value.length === filteredUniqueValues.value.length &&
+    filteredUniqueValues.value.length > 0 &&
+    !quickSearch.value, // Solo si no hay búsqueda rápida
   set: (val) => {
-    // Asegurarse de que solo selecciona los valores visibles tras la búsqueda rápida
-    localSelectedValues.value = val ? filteredUniqueValues.value : []
+    localSelectedValues.value = val ? allUniqueValues.value : []
   },
 })
 
@@ -248,6 +246,7 @@ const filterCount = computed(() => {
 
 // --- FUNCIONES DE ORDENAMIENTO ---
 function applySort(direction) {
+  console.log('Applying sort:', direction)
   emit('column-sort-changed', {
     column: props.column,
     direction: direction,
@@ -263,7 +262,7 @@ function getConditionOptions(dataType) {
   if (dataType === 'number') {
     return ['equals', 'not equals', '>', '<', '>=', '<=', 'between']
   } else if (dataType === 'date') {
-    return ['before', 'after', 'between']
+    return ['equals', 'before', 'after', 'between']
   }
   // Default: 'text'
   return ['contains', 'equals', 'starts with', 'ends with']
@@ -279,7 +278,8 @@ function clearFilter() {
   localSelectedValues.value = []
   localCondition.value = {
     active: false,
-    operator: props.dataType === 'number' ? 'equals' : 'contains',
+    operator:
+      props.dataType === 'number' ? 'equals' : props.dataType === 'date' ? 'equals' : 'contains',
     value1: null,
     value2: null,
   }

@@ -1,6 +1,7 @@
 <template>
   <q-page class="q-pa-md">
     <q-form @submit="generarReporte">
+      <div class="titulo">Reporte Cotizaciones</div>
       <div class="row flex justify-center q-col-gutter-x-md">
         <div class="col-12 col-md-3">
           <label for="fechaini">Fecha Inicial * {{ tipoFactura }}</label>
@@ -47,7 +48,7 @@
 
     <q-separator class="q-my-lg" />
 
-    <q-form>
+    <!-- <q-form>
       <div class="row justify-center q-col-gutter-x-md">
         <div class="col-12 col-md-3">
           <label for="almacen">Almacén*</label>
@@ -106,93 +107,14 @@
           </q-card>
         </div>
       </div>
-    </q-form>
+    </q-form> -->
 
-    <q-table
+    <TableReporteCotizacion
+      ref="refHijo"
       :rows="datosFiltrados"
-      :columns="columns"
-      row-key="idcotizacion"
-      class="q-mt-lg"
-      flat
-      bordered
-      title="Reporte de Cotizaciones"
-      no-data-label="No hay datos para mostrar. Genere un reporte."
-    >
-      <template v-slot:body-cell-estado="props">
-        <!-- <q-badge color="green" v-if="Number(props.row.estado) === 1" label="Activo" outline />
-          <q-badge color="red" v-else label="Inactivo" outline /> -->
-        <q-td class="flex justify-center">
-          <q-badge color="red" v-if="Number(props.row.condicion) === 2" label="ANU" outline="">
-          </q-badge>
-          <q-badge
-            color="deep-purple"
-            v-if="Number(props.row.estado) === 1 && Number(props.row.condicion) === 1"
-            label="PREF"
-            outline=""
-          >
-          </q-badge>
-          <q-badge
-            color="blue"
-            v-if="Number(props.row.estado) === 0 && Number(props.row.condicion) === 1"
-            label="NOR"
-            outline=""
-          >
-          </q-badge>
-          <q-badge
-            color="green"
-            v-if="Number(props.row.estado) === 2 && Number(props.row.condicion) === 1"
-            label="FACT"
-            outline=""
-          >
-          </q-badge>
-          <q-badge
-            color="orange"
-            v-if="Number(props.row.estado) === 3 && Number(props.row.condicion) === 1"
-            label="DEV"
-            outline=""
-          >
-          </q-badge>
-        </q-td>
-      </template>
-      <template v-slot:body-cell-acciones="props">
-        <q-td :props="props">
-          <q-btn
-            icon="picture_as_pdf"
-            color="red"
-            dense
-            round
-            flat
-            @click="generarComprobantePDF(props.row.idcotizacion)"
-            title="VER COMPROBANTE"
-          />
-          <q-btn
-            v-if="
-              (Number(tipoFactura) === 2 || Number(tipoFactura) === 1) &&
-              Number(props.row.condicion) === 1 &&
-              Number(props.row.estado) !== 2 &&
-              Number(props.row.estado) !== 3
-            "
-            icon="payment"
-            color="blue"
-            dense
-            round
-            flat
-            @click="facturarVenta(props.row.idcotizacion)"
-            title="FACTURAR"
-          />
-        </q-td>
-      </template>
-
-      <template v-slot:bottom-row>
-        <q-tr>
-          <q-td colspan="5" class="text-right text-bold">Total Sumatorias</q-td>
-          <q-td class="text-right text-bold">{{ decimas(totalMonto) }}</q-td>
-          <q-td class="text-right text-bold">{{ decimas(totalDescuento) }}</q-td>
-          <q-td class="text-right text-bold">{{ decimas(totalSumatorias) }}</q-td>
-          <q-td></q-td>
-        </q-tr>
-      </template>
-    </q-table>
+      @generarComprobantePDF="generarComprobantePDF"
+      @facturarVenta="facturarVenta"
+    />
 
     <q-loading :showing="loading" />
     <modal-r v-model="mostrar" title="Facturar" @close="mostrar = false">
@@ -229,11 +151,8 @@ import { useQuasar } from 'quasar'
 import { peticionGET } from 'src/composables/peticionesFetch'
 import { URL_APICM } from 'src/composables/services'
 import {
-  decimas,
   validarUsuario,
   cambiarFormatoFecha,
-  redondear,
-  normalizeText,
   obtenerFechaActualDato,
 } from 'src/composables/FuncionesG'
 import { useCurrencyStore, useCurrencyLeyenda } from 'src/stores/currencyStore'
@@ -244,6 +163,7 @@ import { DPFReporteCotizacion } from 'src/utils/pdfReportGenerator'
 import { getTipoFactura } from 'src/composables/FuncionesG'
 import { generarPdfCotizacion } from 'src/utils/pdfReportGenerator'
 import { primerDiaDelMes } from 'src/composables/FuncionesG'
+import TableReporteCotizacion from 'src/components/cotizacion/TableReporteCotizacion.vue'
 const tipoFactura = getTipoFactura()
 console.log(tipoFactura)
 const pdfData = ref(null)
@@ -302,61 +222,16 @@ const showClienteDropdown = ref(false)
 const showPdfModal = ref(false)
 const comprobanteData = reactive({})
 const loading = ref(false)
-
+const refHijo = ref(null)
+const resultadoFiltrado = ref([])
 const usuarioInfo = computed(() => {
   const user = validarUsuario()
   return user && user.length > 0 ? user[0] : {}
 })
 
 // Table columns for q-table
-const columns = [
-  { name: 'nro', label: 'N°', align: 'right', field: 'nro' },
-  {
-    name: 'fecha',
-    label: 'Fecha',
-    align: 'right',
-    field: (row) => cambiarFormatoFecha(row.fecha),
-  },
-  { name: 'cliente', label: 'Cliente', align: 'left', field: 'cliente' },
-  { name: 'sucursal', label: 'Sucursal', align: 'left', field: 'sucursal' },
-  { name: 'estado', label: 'Tipo', align: 'center', field: 'estado' },
-  {
-    name: 'monto',
-    label: 'Monto',
-    align: 'right',
-    field: (row) => decimas(row.cotizaciontotal),
-  },
-  {
-    name: 'descuento',
-    label: 'Dscto.',
-    align: 'right',
-    field: (row) => decimas(row.descuento),
-  },
-
-  {
-    name: 'total_sumatorias',
-    label: 'Total',
-    align: 'right',
-    field: (row) => decimas(parseFloat(row.cotizaciontotal) + parseFloat(row.descuento)),
-  },
-  { name: 'acciones', label: 'Acciones', align: 'center', field: 'acciones' },
-]
 
 // Computed properties for totals in the main table
-const totalSumatorias = computed(() => {
-  return datosFiltrados.value.reduce(
-    (sum, dato) => sum + redondear(parseFloat(dato.cotizaciontotal) + parseFloat(dato.descuento)),
-    0,
-  )
-})
-
-const totalDescuento = computed(() => {
-  return datosFiltrados.value.reduce((sum, dato) => sum + redondear(parseFloat(dato.descuento)), 0)
-})
-
-const totalMonto = computed(() => {
-  return redondear(totalSumatorias.value - totalDescuento.value)
-})
 
 async function crearFormularioFacturaCompraVenta() {
   try {
@@ -408,16 +283,16 @@ async function crearFormularioFacturaCompraVenta() {
 }
 // Computed properties for PDF table (Reporte)
 
-const filteredClientes = computed(() => {
-  if (!clienteSearchTerm.value) {
-    return clientesOptions.value
-  }
-  const searchTermNormalized = normalizeText(clienteSearchTerm.value).toLowerCase()
-  return clientesOptions.value.filter((cliente) => {
-    const point = `${cliente.codigo} - ${cliente.nombre} - ${cliente.nombrecomercial} - ${cliente.ciudad} - ${cliente.nit}`
-    return normalizeText(point).toLowerCase().includes(searchTermNormalized)
-  })
-})
+// const filteredClientes = computed(() => {
+//   if (!clienteSearchTerm.value) {
+//     return clientesOptions.value
+//   }
+//   const searchTermNormalized = normalizeText(clienteSearchTerm.value).toLowerCase()
+//   return clientesOptions.value.filter((cliente) => {
+//     const point = `${cliente.codigo} - ${cliente.nombre} - ${cliente.nombrecomercial} - ${cliente.ciudad} - ${cliente.nit}`
+//     return normalizeText(point).toLowerCase().includes(searchTermNormalized)
+//   })
+// })
 
 // Watchers
 watch([almacenSeleccionado, clienteSeleccionadoId], () => {
@@ -491,7 +366,19 @@ const generarReporte = async () => {
     } else {
       datosOriginales.value = data
       datosFiltrados.value = data.map((p, index) => ({
-        ...p,
+        idcotizacion: p.idcotizacion,
+        fecha: cambiarFormatoFecha(p.fecha),
+        cliente: p.cliente,
+        monto: Number(p.cotizaciontotal),
+        descuento: Number(p.descuento),
+        idalmacen: p.idalmacen,
+        idcliente: p.idcliente,
+        divisa: p.divisa,
+        sucursal: p.sucursal,
+        estado: p.estado,
+        condicion: p.condicion,
+        total_sumatorias: Number(parseFloat(p.cotizaciontotal) + parseFloat(p.descuento)),
+        almacen: p.almacen,
         nro: index + 1,
       })) // Initialize with all data
       $q.notify({
@@ -603,11 +490,11 @@ const listaCLientes = async () => {
   }
 }
 
-const seleccionarCliente = (cliente) => {
-  clienteSearchTerm.value = `${cliente.codigo} - ${cliente.nombre} - ${cliente.nombrecomercial}`
-  clienteSeleccionadoId.value = cliente.id
-  showClienteDropdown.value = false
-}
+// const seleccionarCliente = (cliente) => {
+//   clienteSearchTerm.value = `${cliente.codigo} - ${cliente.nombre} - ${cliente.nombrecomercial}`
+//   clienteSeleccionadoId.value = cliente.id
+//   showClienteDropdown.value = false
+// }
 
 // Click outside handler for client dropdown
 const handleOutsideClick = (event) => {
@@ -646,11 +533,14 @@ const cargarPDF = () => {
     })
     return
   }
-  console.log(datosFiltrados.value)
-  console.log(almacenesOptions.value)
-  const almacen = almacenesOptions.value.find((obj) => obj.idalmacen == almacenSeleccionado.value)
-  console.log(almacen)
-  const doc = DPFReporteCotizacion(datosFiltrados, almacen)
+
+  resultadoFiltrado.value = refHijo.value.obtenerDatos()
+  const filterReporte = refHijo.value.getActiveFiltersReport()
+  const almacen = {
+    almacen: filterReporte.almacen || 'Todos los almacenes',
+  }
+
+  const doc = DPFReporteCotizacion(resultadoFiltrado, almacen)
   pdfData.value = doc.output('dataurlstring')
 
   showPdfModal.value = true

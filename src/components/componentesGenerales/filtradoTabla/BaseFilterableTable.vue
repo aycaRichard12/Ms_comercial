@@ -5,12 +5,13 @@
     :columns="columns"
     :row-key="rowKey"
     :filter="search"
-    :pagination="{ rowsPerPage: 10 }"
+    v-model:pagination="pagination"
+    :virtual-scroll="true"
+    wrap-cells
   >
     <template v-slot:header-cell="props">
       <q-th
         :props="props"
-        @click="props.col.sortable && props.sort(props.col)"
         class="cursor-pointer text-left no-sort-icon"
         style="white-space: normal; vertical-align: top"
       >
@@ -33,6 +34,17 @@
         </div>
       </q-th>
     </template>
+    <template v-slot:bottom-row>
+      <q-tr class="text-weight-bold bg-grey-3">
+        <q-td v-for="col in columns" :key="col.name" :class="[`text-right`]">
+          <span v-if="totales[col.name] !== undefined">
+            {{ totales[col.name] }}
+          </span>
+          <span v-else-if="col.name == nombreColumnaTotales"> Total General : </span>
+          <span v-else></span>
+        </q-td>
+      </q-tr>
+    </template>
 
     <template v-for="(_, slot) in $slots" #[slot]="slotProps">
       <slot :name="slot" v-bind="slotProps" />
@@ -46,59 +58,65 @@ import ColumnFilter from './ColumnFilter.vue' // Asegúrate de que la ruta sea c
 
 const props = defineProps({
   title: { type: String, default: 'Datos' },
+  nombreColumnaTotales: { type: String, default: 'nombreColumnaTotales' },
   rows: { type: Array, required: true },
   columns: { type: Array, required: true },
   arrayHeaders: { type: Array, default: () => [] }, // Columnas que permiten filtrado
+  sumColumns: { type: Array, default: () => [] }, // Columnas que permiten filtrado
   rowKey: { type: String, default: 'id' },
   search: { type: String, default: '' },
   filterMode: { type: String, default: 'client' }, // 'client' o 'server'
 })
 
+console.log(props.sumColumns)
+console.log(props.rows)
+
 const emit = defineEmits(['column-filter-changed'])
+defineExpose({ obtenerDatosFiltrados: () => filteredData.value, getActiveFiltersReport })
 
 const activeFilters = ref({})
 const pagination = ref({
-  sortBy: null, // Columna por la que se ordena
-  descending: false, // Dirección del orden
+  sortBy: null,
+  descending: false,
+  rowsPerPage: 5,
 })
+// Cálculo de totales para columnas especificadas
 
-// --- Lógica de Filtrado ---
+const totales = computed(() => {
+  const totals = {}
+  props.sumColumns.forEach((colName) => {
+    totals[colName] = filteredData.value.reduce((sum, row) => {
+      const value = parseFloat(row[colName])
+      return sum + (isNaN(value) ? 0 : value)
+    }, 0)
+  })
+  console.log(totals)
+  return totals
+})
+// Forzar cálculo inicial
+// --- Lógica de Filtrado y Ordenamiento ---
 
 /**
- * Función que evalúa la condición lógica para un valor dado.
+ * Función que evalúa la condición lógica para un valor dado, basándose en el tipo de dato.
+ * @param {any} rowValue - El valor de la fila a evaluar.
+ * @param {object} condition - Objeto de condición (operator, value1, value2, active).
+ * @param {string} dataType - Tipo de dato de la columna ('text', 'number', 'date').
  */
-function evaluateCondition(rowValue, condition) {
+function evaluateCondition(rowValue, condition, dataType) {
   if (!condition.active) return true
 
-  // Normalizar a string para comparación de texto
-  const value = String(rowValue || '').toLowerCase()
-  const v1 = String(condition.value1 || '').toLowerCase()
+  // Normalizar valores de condición a string para consistencia, pero convertir para la comparación
+  const v1Str = String(condition.value1 || '').toLowerCase()
+  //const v2Str = String(condition.value2 || '').toLowerCase()
+  const rowValueStr = String(rowValue || '').toLowerCase()
 
-  // Normalizar a número para comparación numérica
-  const numValue = Number(rowValue)
-  const numV1 = Number(condition.value1)
-  const numV2 = Number(condition.value2)
+  if (dataType === 'number') {
+    const numValue = Number(rowValue)
+    const numV1 = Number(condition.value1)
+    const numV2 = Number(condition.value2)
 
-  const isNumeric = !isNaN(numValue) && !isNaN(numV1)
+    if (isNaN(numValue) || isNaN(numV1)) return false // Si no son números válidos, no pasa
 
-  // Condición Textual
-  if (!isNumeric) {
-    switch (condition.operator) {
-      case 'contains':
-        return value.includes(v1)
-      case 'equals':
-        return value === v1
-      case 'starts with':
-        return value.startsWith(v1)
-      case 'ends with':
-        return value.endsWith(v1)
-      default:
-        return false
-    }
-  }
-
-  // Condición Numérica
-  if (isNumeric) {
     switch (condition.operator) {
       case 'equals':
         return numValue === numV1
@@ -118,92 +136,194 @@ function evaluateCondition(rowValue, condition) {
         return false
     }
   }
-  return false
+
+  if (dataType === 'date') {
+    // Asumimos formato YYYY-MM-DD para comparación estricta
+    const dateValue = new Date(rowValue)
+    const dateV1 = new Date(condition.value1)
+    const dateV2 = new Date(condition.value2)
+
+    // Comparamos el valor de tiempo (milisegundos)
+    const timeValue = dateValue.getTime()
+    const timeV1 = dateV1.getTime()
+    const timeV2 = dateV2.getTime()
+
+    // Validación básica de fechas válidas
+    if (isNaN(timeValue) || isNaN(timeV1)) return false
+
+    switch (condition.operator) {
+      case 'equals':
+        return rowValue === condition.value1 // Comparación estricta de string YYYY-MM-DD
+      case 'before': // <
+        return timeValue < timeV1
+      case 'after': // >
+        return timeValue > timeV1
+      case 'between':
+        if (isNaN(timeV2)) return false
+        return timeValue >= timeV1 && timeValue <= timeV2
+      default:
+        return false
+    }
+  }
+
+  // Condición Textual (Default)
+  switch (condition.operator) {
+    case 'contains':
+      return rowValueStr.includes(v1Str)
+    case 'equals':
+      return rowValueStr === v1Str
+    case 'starts with':
+      return rowValueStr.startsWith(v1Str)
+    case 'ends with':
+      return rowValueStr.endsWith(v1Str)
+    default:
+      return false
+  }
+}
+// ---------------------------
+// Helpers
+// ---------------------------
+function getByPath(obj, path) {
+  if (!obj || !path) return undefined
+  // soporta 'cliente.nombre' o ['cliente','nombre']
+  if (Array.isArray(path)) {
+    return path.reduce((o, k) => (o ? o[k] : undefined), obj)
+  }
+  return path.split('.').reduce((o, k) => (o ? o[k] : undefined), obj)
+}
+
+/**
+ * Normaliza y convierte el valor para una comparación robusta (smartCompare).
+ * SE HA CORREGIDO: Se eliminó la limpieza agresiva de caracteres para permitir
+ * el ordenamiento alfanumérico natural (natural sort).
+ */
+function normalizeValue(v) {
+  if (v == null) return null
+
+  let s = String(v).trim()
+
+  if (s === '') return null
+
+  // --- Lógica de Detección de Fechas (se mantiene) ---
+
+  // detectar fecha dd/mm/yyyy o dd-mm-yyyy
+  const dm = s.match(/^(\d{1,2})[-](\d{1,2})[-](\d{2,4})$/)
+  if (dm) {
+    const day = Number(dm[1])
+    const month = Number(dm[2]) - 1
+    const year = Number(dm[3].length === 2 ? '20' + dm[3] : dm[3])
+    return new Date(year, month, day)
+  }
+
+  // detectar formato yyyy-mm-dd ó yyyy/mm/dd
+  const ym = s.match(/^(\d{4})[-](\d{1,2})[-](\d{1,2})$/)
+  if (ym) {
+    const year = Number(ym[1])
+    const month = Number(ym[2]) - 1
+    const day = Number(ym[3])
+    return new Date(year, month, day)
+  }
+
+  // --- Lógica de Detección de Números (revisada) ---
+
+  // Intentar convertir a número solo si la cadena es puramente numérica (aceptando punto/coma como decimal)
+  const sForNum = s.replace(',', '.')
+  const num = Number(sForNum)
+
+  // Usamos una regex estricta para asegurar que es un número puro.
+  if (!isNaN(num) && sForNum.match(/^-?\d+(\.\d+)?$/)) {
+    return num
+  }
+
+  // --- Lógica de Texto ---
+
+  // texto normalizado (manteniendo el string original)
+  return s
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+}
+
+// ---------------------------
+// smartCompare robusto
+// ---------------------------
+function universalCompare(a, b) {
+  const A = normalizeValue(a)
+  const B = normalizeValue(b)
+
+  // nulls al final
+  if (A === null && B === null) return 0
+  if (A === null) return 1
+  if (B === null) return -1
+
+  // fechas
+  if (A instanceof Date && B instanceof Date) {
+    return A.getTime() - B.getTime()
+  }
+
+  // números
+  if (typeof A === 'number' && typeof B === 'number') {
+    return A - B
+  }
+
+  // texto (uso de localeCompare con numeric: true para ordenamiento natural/alfanumérico)
+  return String(A).localeCompare(String(B), undefined, {
+    numeric: true,
+    sensitivity: 'base',
+  })
 }
 
 /**
  * Aplica todos los filtros activos de columna (lógica AND) y la ordenación.
  */
 const filteredData = computed(() => {
-  if (props.filterMode === 'server') {
-    return props.rows // No filtrar en cliente
-  }
+  let data = Array.isArray(props.rows) ? props.rows.slice() : []
 
-  let data = props.rows
+  // Aplicar filtros de columna (no el filtro global 'search')
+  Object.keys(activeFilters.value).forEach((col) => {
+    const filterPayload = activeFilters.value[col]
+    const column = props.columns.find((c) => c.name === col)
 
-  // 1. Aplicar filtros de columna (Lógica AND entre columnas)
-  Object.keys(activeFilters.value).forEach((colName) => {
-    const filter = activeFilters.value[colName]
-    const column = props.columns.find((c) => c.name === colName)
-    if (!filter || !column) return
+    if (!filterPayload || !column) return
 
     data = data.filter((row) => {
-      // Usar el valor del campo definido en las columnas
-      const rowValue = row[column.field]
-      let passesFilter = false
+      const rowValue = getByPath(row, column.field) // Usar getByPath para campos anidados
 
-      if (filter.type === 'values' && filter.values.length > 0) {
-        // Lógica OR: pasa si el valor está en la lista de seleccionados
-        passesFilter = filter.values.includes(String(rowValue || '-').trim())
-      } else if (filter.type === 'condition' && filter.condition && filter.condition.active) {
-        // Lógica de Condiciones
-        passesFilter = evaluateCondition(rowValue, filter.condition)
-      } else {
-        // Si el filtro está activo, pero vacío (ej: se seleccionó un filtro y luego se deseleccionó todo),
-        // la fila NO pasa a menos que el filtro haya sido limpiado completamente,
-        // lo cual se maneja eliminando la entrada de activeFilters.
-        // Si el filtro existe en activeFilters, siempre debe pasar por uno de los IF de arriba
-        // para que el filtro funcione.
-        return true // Si la entrada existe pero no tiene valores/condición activa, debería haber sido eliminada
+      if (filterPayload.type === 'values' && filterPayload.values.length > 0) {
+        // Filtrado por valores múltiples
+        return filterPayload.values.includes(String(rowValue || '-').trim())
+      } else if (
+        filterPayload.type === 'condition' &&
+        filterPayload.condition &&
+        filterPayload.condition.active
+      ) {
+        // Filtrado por condición (>, <, between, contains, etc.)
+        return evaluateCondition(rowValue, filterPayload.condition, column.dataType || 'text')
       }
-
-      return passesFilter
+      return true
     })
   })
 
-  // 2. Aplicar ordenación
-  const { sortBy, descending } = pagination.value
-  if (sortBy) {
-    const sortField = props.columns.find((c) => c.name === sortBy)?.field || sortBy
+  // ORDENAMIENTO robusto y estable
+  if (pagination.value.sortBy) {
+    const sortKey = pagination.value.sortBy
+    const desc = pagination.value.descending
 
-    data.sort((a, b) => {
-      const valA = a[sortField]
-      const valB = b[sortField]
+    data = data.slice().sort((a, b) => {
+      // Usar getByPath en el ordenamiento para campos anidados
+      const valA = getByPath(a, sortKey)
+      const valB = getByPath(b, sortKey)
 
-      let comparison = 0
-      if (typeof valA === 'number' && typeof valB === 'number') {
-        comparison = valA - valB
-      } else {
-        // Asegura comparación de strings
-        comparison = String(valA || '').localeCompare(String(valB || ''))
-      }
-
-      return descending ? -comparison : comparison
+      const result = universalCompare(valA, valB)
+      return desc ? -result : result
     })
   }
-
-  // 3. Aplicar filtro de búsqueda global (delegado a q-table, pero lo aplicamos si no hay filtros activos para mejor rendimiento visual)
-  // Nota: q-table ya maneja el prop :filter, pero si usamos esta computed property para las filas,
-  // la búsqueda global solo operará sobre los datos ya filtrados por columnas.
-
-  // Opcional: Implementación manual de la búsqueda global (si se requiere)
-  /* const searchLower = props.search.toLowerCase()
-  if (searchLower) {
-      data = data.filter(row => 
-          Object.values(row).some(val => 
-              String(val).toLowerCase().includes(searchLower)
-          )
-      )
-  }
-  */
-
   return data
 })
 
 /**
- * Proporciona las filas a ColumnFilter.vue para que calcule los valores únicos.
- * Esto es vital para que la lista de valores de una columna A no incluya valores
- * que ya han sido filtrados por otra columna B.
+ * Proporciona las filas a ColumnFilter.vue para que calcule los valores únicos,
+ * respetando el filtrado de las OTRAS columnas.
  */
 function preFilteredRowsForColumn(currentColumn) {
   let data = props.rows
@@ -217,12 +337,14 @@ function preFilteredRowsForColumn(currentColumn) {
     if (!filter || !column) return
 
     data = data.filter((row) => {
-      const rowValue = row[column.field]
+      // Usar el field para acceder al valor en la fila
+      const rowValue = getByPath(row, column.field)
 
       if (filter.type === 'values' && filter.values.length > 0) {
         return filter.values.includes(String(rowValue || '-').trim())
       } else if (filter.type === 'condition' && filter.condition && filter.condition.active) {
-        return evaluateCondition(rowValue, filter.condition)
+        // PASAR EL TIPO DE DATO DE LA COLUMNA AL EVALUAR
+        return evaluateCondition(rowValue, filter.condition, column.dataType || 'text')
       }
       return true
     })
@@ -257,8 +379,70 @@ function handleFilterChange(payload) {
     emit('column-filter-changed', serverPayload)
   }
 }
+/**
+ * Obtiene un string formateado con los valores seleccionados para un filtro de columna.
+ * @param {string} colName - El nombre de la columna (campo en activeFilters).
+ * @returns {string} - El string de valores seleccionados ('Todos' o 'Dato1, Dato2, Dato3').
+ */
+function getSelectedFilterValues(colName) {
+  const filterPayload = activeFilters.value[colName]
+  const column = props.columns.find((c) => c.name === colName)
+
+  if (!filterPayload || !column) {
+    return 'Todos'
+  }
+
+  // 1. Filtrado por valores múltiples ('values')
+  if (filterPayload.type === 'values' && filterPayload.values.length > 0) {
+    // const preFilteredRows = preFilteredRowsForColumn(column)
+    // Contar valores únicos totales para la columna
+    // const allUniqueValues = [
+    //   ...new Set(preFilteredRows.map((row) => String(getByPath(row, column.field) || '-').trim())),
+    // ]
+
+    // Si la cantidad de valores seleccionados es igual al total de valores únicos, es 'Todos'
+    // if (filterPayload.values.length === allUniqueValues.length) {
+    //   return 'Todos'
+    // }
+
+    // Si son menos, listarlos
+    return filterPayload.values.join(', ')
+  }
+
+  // 2. Filtrado por condición ('condition')
+  if (
+    filterPayload.type === 'condition' &&
+    filterPayload.condition &&
+    filterPayload.condition.active
+  ) {
+    const { operator, value1, value2 } = filterPayload.condition
+    let conditionString = `${operator}: ${value1}`
+
+    if (operator === 'between' && value2) {
+      conditionString += ` y ${value2}`
+    }
+
+    return conditionString
+  }
+
+  return 'Todos' // Por defecto, si el filtro existe pero no está activo/completo
+}
+
+/**
+ * Obtiene un objeto con todos los filtros activos de columna formateados.
+ * @returns {object} - { columna1: 'valor1, valor2', columna2: 'Todos', ... }
+ */
+function getActiveFiltersReport() {
+  const filtersReport = {}
+  props.arrayHeaders.forEach((colName) => {
+    // Si la columna es filtrable, obtenemos su valor formateado
+    filtersReport[colName] = getSelectedFilterValues(colName)
+  })
+  return filtersReport
+}
 
 function handleSortChange(payload) {
+  console.log('Sort changed:', payload)
   const { column, direction } = payload
   pagination.value.sortBy = direction === null ? null : column.name
   pagination.value.descending = direction === 'desc'

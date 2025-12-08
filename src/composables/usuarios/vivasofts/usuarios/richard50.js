@@ -35,20 +35,20 @@ export const richard50 = [
       tipo: '2',
       idtiponegocio: 'c9f0f895fb98ab9159f51fd0297e236d',
     },
-    factura: {
-      token_type: 'Bearer',
-      expires_in: '31622400',
-      access_token:
-        'eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJhdWQiOiIzMDAzMzUiLCJqdGkiOiJlMzQwNWJmODQ5ZjE4ZWNhMTcxYTU2OTM1NGE1NWI3YmE1MDE0MGJjNTFhMGQ5NzM3OTVjNjVhZTI3ODA5MjY0ODJmNDlkMmM5Mzk1YzI3ZCIsImlhdCI6MTc2MTk0MzY0OSwibmJmIjoxNzYxOTQzNjQ5LCJleHAiOjE3OTM0Nzk2NDgsInN1YiI6IiIsInNjb3BlcyI6W119.H6G_zByl5TnDlQ8o47OIjg8xDmuYd3d6TZQv8N3GMizKZH_lP3H8TPjuMMsiuRo_aEl-Jl47Pt-BTv6qDiZUpzpsopQuLonKKsSEUYtReJxov0CZqVRlIGpjYLEml4zPYZLtN0OFQ42myJKiq96YnVi1fZ1lYe6X1LrrgW61SlXN4yd3-UoJaxxge9qXaK09Jtq1Fsvrc3kVwZY23eJSF6gtPhkRX9aM9fBgONNcvA3eT0PoTTCixFMr4bEa6LBCViFx4GMDOgZkFwXb_nALp38PGeJW-4GkqwIMkHLdaAkJGX04B3rMlxvOoj5j74OEJwLID9e52JunECUakWrk26mFhhgzkg1XHr7LvRiItRrFgp4UyRqOil91J6GLSbVroSMTbIq01PRUZdWRPM1LlSEroGcGUbHnkVb0vUjthsVDbQwBh0LnM7cjILprN3_l7OOgTUMPoSMOqLM1as1hAlUBUe7aq-8UP5LTqjD90aVAGPcMgu0rPZGsBVeUcgXt4rVv_BSJ5gfX4jAPIkHx_vHrWr7IVFxL-N3sRvcKO--7-SSHtBBWkPC3ydtwvVS1IR8hBxK93vcIDLsgrU1fz26Z6wmNy_5eFA-ln9zmzcuUOsTAFD8DRJ0Rdp4c2kgCgLTP4r0HLmbQ1XlxgWLazZ5f4Kp3wBmo0x7sdMDP0CI',
-      tipo: '1',
-      tipof: 'PRUEBA',
-    },
     // factura: {
-    //   token_type: 'undefined',
-    //   expires_in: 'undefined',
-    //   access_token: 'undefined',
-    //   tipo: '0',
-    //   tipof: 'NINGUNO',
+    //   token_type: 'Bearer',
+    //   expires_in: '31622400',
+    //   access_token:
+    //     'eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJhdWQiOiIzMDAzMzUiLCJqdGkiOiJlMzQwNWJmODQ5ZjE4ZWNhMTcxYTU2OTM1NGE1NWI3YmE1MDE0MGJjNTFhMGQ5NzM3OTVjNjVhZTI3ODA5MjY0ODJmNDlkMmM5Mzk1YzI3ZCIsImlhdCI6MTc2MTk0MzY0OSwibmJmIjoxNzYxOTQzNjQ5LCJleHAiOjE3OTM0Nzk2NDgsInN1YiI6IiIsInNjb3BlcyI6W119.H6G_zByl5TnDlQ8o47OIjg8xDmuYd3d6TZQv8N3GMizKZH_lP3H8TPjuMMsiuRo_aEl-Jl47Pt-BTv6qDiZUpzpsopQuLonKKsSEUYtReJxov0CZqVRlIGpjYLEml4zPYZLtN0OFQ42myJKiq96YnVi1fZ1lYe6X1LrrgW61SlXN4yd3-UoJaxxge9qXaK09Jtq1Fsvrc3kVwZY23eJSF6gtPhkRX9aM9fBgONNcvA3eT0PoTTCixFMr4bEa6LBCViFx4GMDOgZkFwXb_nALp38PGeJW-4GkqwIMkHLdaAkJGX04B3rMlxvOoj5j74OEJwLID9e52JunECUakWrk26mFhhgzkg1XHr7LvRiItRrFgp4UyRqOil91J6GLSbVroSMTbIq01PRUZdWRPM1LlSEroGcGUbHnkVb0vUjthsVDbQwBh0LnM7cjILprN3_l7OOgTUMPoSMOqLM1as1hAlUBUe7aq-8UP5LTqjD90aVAGPcMgu0rPZGsBVeUcgXt4rVv_BSJ5gfX4jAPIkHx_vHrWr7IVFxL-N3sRvcKO--7-SSHtBBWkPC3ydtwvVS1IR8hBxK93vcIDLsgrU1fz26Z6wmNy_5eFA-ln9zmzcuUOsTAFD8DRJ0Rdp4c2kgCgLTP4r0HLmbQ1XlxgWLazZ5f4Kp3wBmo0x7sdMDP0CI',
+    //   tipo: '1',
+    //   tipof: 'PRUEBA',
     // },
+    factura: {
+      token_type: 'undefined',
+      expires_in: 'undefined',
+      access_token: 'undefined',
+      tipo: '0',
+      tipof: 'NINGUNO',
+    },
   },
 ]

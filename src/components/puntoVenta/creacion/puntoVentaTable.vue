@@ -40,7 +40,7 @@
 
   <BaseFilterableTable
     title="Puntos Ventas"
-    :rows="ordenados"
+    :rows="props.rows"
     :columns="columns"
     :arrayHeaders="ArrayHeaders"
     row-key="id"
@@ -83,7 +83,7 @@
 </template>
 
 <script setup>
-import { ref, watch, computed } from 'vue'
+import { ref, watch } from 'vue'
 import { getTipoFactura } from 'src/composables/FuncionesG'
 import modalPuntoVentaFacturacion from './modalPuntoVentaFacturacion.vue'
 import { api } from 'src/boot/axios'
@@ -161,12 +161,7 @@ const columns = [
 ]
 
 const ArrayHeaders = ['numero', 'nombre', 'descripcion', 'tipo']
-const ordenados = computed(() =>
-  props.rows.map((row, index) => ({
-    ...row,
-    numero: index + 1,
-  })),
-)
+
 const search = ref('')
 watch(
   () => props.tiposAlmacen,

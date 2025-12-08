@@ -326,19 +326,40 @@ class reportes
     public function reporteventas($idmd5, $fechai, $fechaf)
     {   $arrayid = $this->arrayIDalmacen($idmd5);
         $lista = [];
-        $rep = $this->cm->query("select v.id_venta, v.fecha_venta, concat(c.nombre, ' - ' , c.nombrecomercial) as nombre, v.tipo_venta, v.tipo_pago, v.monto_total, v.nfactura, v.descuento, pa.almacen_id_almacen, v.cliente_id_cliente1, d.tipo_divisa, s.nombre, v.estado, vf.shortLink, vf.urlSin, v.idcanal, cv.canal, v.idsucursal from venta v 
-        left join cliente c on v.cliente_id_cliente1=c.id_cliente
-        left join detalle_venta dv on v.id_venta=dv.venta_id_venta
-        left join sucursal s on v.idsucursal=s.id_sucursal
-        left join productos_almacen pa on dv.productos_almacen_id_productos_almacen=pa.id_productos_almacen
-        left join divisas d on v.divisas_id_divisas=d.id_divisas
-        left join canalventa cv on v.idcanal=cv.idcanalventa
+        $rep = $this->cm->query("SELECT 
+        v.id_venta, 
+        v.fecha_venta, 
+        concat(c.nombre, ' - ' , c.nombrecomercial) AS nombre, 
+        v.tipo_venta, 
+        v.tipo_pago, 
+        v.monto_total, 
+        v.nfactura, 
+        v.descuento, 
+        pa.almacen_id_almacen, 
+        v.cliente_id_cliente1, 
+        d.tipo_divisa, 
+        s.nombre, 
+        v.estado, 
+        vf.shortLink, 
+        vf.urlSin, 
+        v.idcanal, 
+        cv.canal, 
+        v.idsucursal, 
+        alm.nombre as nombrealmacen
+        FROM venta v 
+        LEFT JOIN cliente c ON v.cliente_id_cliente1=c.id_cliente
+        LEFT JOIN detalle_venta dv ON v.id_venta=dv.venta_id_venta
+        LEFT JOIN sucursal s ON v.idsucursal=s.id_sucursal
+        LEFT JOIN productos_almacen pa ON dv.productos_almacen_id_productos_almacen=pa.id_productos_almacen
+        LEFT JOIN divisas d ON v.divisas_id_divisas=d.id_divisas
+        LEFT JOIN canalventa cv ON v.idcanal=cv.idcanalventa
         LEFT JOIN ventas_facturadas vf ON v.id_venta=vf.venta_id_venta
-        where pa.almacen_id_almacen in ($arrayid) and v.fecha_venta between '$fechai' and '$fechaf' 
-        group by v.id_venta
-        order by v.id_venta asc, v.fecha_venta ASC");
+        LEFT JOIN almacen alm ON alm.id_almacen = pa.almacen_id_almacen
+        WHERE pa.almacen_id_almacen IN ($arrayid) AND v.fecha_venta BETWEEN '$fechai' AND '$fechaf' 
+        GROUP BY v.id_venta
+        ORDER BY v.id_venta ASC, v.fecha_venta ASC");
         while ($qwe = $this->cm->fetch($rep)) {
-            $res = array("idventa" => $qwe[0], "fecha" => $qwe[1], "cliente" => $qwe[2], "tipoventa" => $qwe[3], "tipopago" => $qwe[4], "ventatotal" => $qwe[5], "nfactura" => $qwe[6], "descuento" => $qwe[7], "idalmacen" => $qwe[8], "idcliente" => $qwe[9], "divisa" => $qwe[10], "sucursal" => $qwe[11], "estado" => $qwe[12], "shortlink" => $qwe[13], "urlsin" => $qwe[14], "idcanal" => $qwe[15], "canal" => $qwe[16], "idsucursal" => $qwe[17]);
+            $res = array("idventa" => $qwe[0], "fecha" => $qwe[1], "cliente" => $qwe[2], "tipoventa" => $qwe[3], "tipopago" => $qwe[4], "ventatotal" => $qwe[5], "nfactura" => $qwe[6], "descuento" => $qwe[7], "idalmacen" => $qwe[8], "idcliente" => $qwe[9], "divisa" => $qwe[10], "sucursal" => $qwe[11], "estado" => $qwe[12], "shortlink" => $qwe[13], "urlsin" => $qwe[14], "idcanal" => $qwe[15], "canal" => $qwe[16], "idsucursal" => $qwe[17], "almacen" => $qwe[18]);
             array_push($lista, $res);
         }
         echo json_encode($lista);
@@ -347,15 +368,29 @@ class reportes
     public function reportecotizacion($idmd5, $fechai, $fechaf)
     {   $arrayid = $this->arrayIDalmacen($idmd5);
         $lista = [];
-        $clien = $this->cm->query("select co.id_cotizacion, co.fecha_cotizacion, concat(c.nombre, ' - ' , c.nombrecomercial) as nombre, co.monto_total, co.descuento, pa.almacen_id_almacen, co.cliente_id_cliente, d.tipo_divisa, s.nombre as sucursal, co.estado, co.condicion from cotizacion co 
-        left join cliente c on co.cliente_id_cliente=c.id_cliente
-        left join detalle_cotizacion dco on co.id_cotizacion=dco.cotizacion_id_cotizacion
-        left join sucursal s on co.idsucursal=s.id_sucursal
-        left join productos_almacen pa on dco.productos_almacen_id_productos_almacen=pa.id_productos_almacen
-        left join divisas d on co.divisas_id_divisas=d.id_divisas
-        where pa.almacen_id_almacen in ($arrayid) and co.fecha_cotizacion between '$fechai' and '$fechaf' 
-        group by co.id_cotizacion
-        order by co.id_cotizacion desc, co.fecha_cotizacion ASC");
+        $clien = $this->cm->query("SELECT 
+        co.id_cotizacion, 
+        co.fecha_cotizacion, 
+        concat(c.nombre, ' - ' , c.nombrecomercial) AS nombre, 
+        co.monto_total, 
+        co.descuento, 
+        pa.almacen_id_almacen, 
+        co.cliente_id_cliente, 
+        d.tipo_divisa, 
+        s.nombre AS sucursal, 
+        co.estado, 
+        co.condicion, 
+        alm.nombre as nombrealmacen
+        FROM cotizacion co 
+        LEFT JOIN cliente c ON co.cliente_id_cliente=c.id_cliente
+        LEFT JOIN detalle_cotizacion dco ON co.id_cotizacion=dco.cotizacion_id_cotizacion
+        LEFT JOIN sucursal s ON co.idsucursal=s.id_sucursal
+        LEFT JOIN productos_almacen pa ON dco.productos_almacen_id_productos_almacen=pa.id_productos_almacen
+        LEFT JOIN divisas d ON co.divisas_id_divisas=d.id_divisas
+        LEFT JOIN almacen alm ON alm.id_almacen = pa.almacen_id_almacen
+        WHERE pa.almacen_id_almacen IN ($arrayid) AND co.fecha_cotizacion BETWEEN  '$fechai' AND '$fechaf' 
+        GROUP BY co.id_cotizacion
+        ORDER BY co.id_cotizacion DESC, co.fecha_cotizacion ASC");
         while ($qwe = $this->cm->fetch($clien)) {
             $res = array(
                 "idcotizacion" => $qwe['id_cotizacion'],
@@ -368,7 +403,8 @@ class reportes
                 "divisa" => $qwe['tipo_divisa'],
                 "sucursal" => $qwe['sucursal'],
                 "estado" => $qwe['estado'],
-                "condicion" => $qwe['condicion']
+                "condicion" => $qwe['condicion'],
+                "almacen" => $qwe['nombrealmacen'],
             );
 
             array_push($lista, $res);
@@ -1514,6 +1550,7 @@ class reportes
     }
 
     public function calcularTotalIngreso($idingreso){
+        $monto = 0;
         $sql = 'SELECT SUM(di.cantidad * di.precio_unitario) AS monto FROM detalle_ingreso di WHERE di.ingreso_id_ingreso = ?';
 
         $stmt = $this->cm->prepare($sql);
