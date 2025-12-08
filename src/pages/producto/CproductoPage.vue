@@ -292,13 +292,10 @@ function resetForm() {
   }
 }
 const editUnit = async (row) => {
-  console.log(row)
-  const contenidousuario = validarUsuario()
-  const token = contenidousuario[0]?.factura?.access_token || ''
-  const tipo = contenidousuario[0]?.factura?.tipo || ''
-  console.log(token)
-  console.log(tipo)
-  const response = await api.get(`verificarExistenciaProducto/${row.id}/${token}/${tipo}`) // Cambia a tu ruta real
+  const tipo = getTipoFactura()
+  const endpoint = `verificarExistenciaProducto/${row.id}/${token}/${tipo}`
+  console.log(endpoint)
+  const response = await api.get(endpoint) // Cambia a tu ruta real
   console.log(response.data)
   const item = response.data.datos
   console.log(item)
@@ -318,9 +315,9 @@ const editUnit = async (row) => {
     caracteristica: item.caracteristica,
     vista: imagen + item.imagen,
     imagen: item.imagen,
-    codigosin: item.productosin[0].codigo,
-    unidadsin: item.unidadsin[0].codigo,
-    codigoNandina: item.codigonandina,
+    codigosin: tipoFactura ? item.productosin[0].codigo : '',
+    unidadsin: tipoFactura ? item.unidadsin[0].codigo : '',
+    codigoNandina: tipoFactura ? item.codigonandina : '',
   }
   loadsubcategorias(item.idcategoria)
   isEditing.value = true

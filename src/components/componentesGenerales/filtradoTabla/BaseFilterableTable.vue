@@ -380,52 +380,98 @@ function handleFilterChange(payload) {
   }
 }
 /**
+ * Aplica las reglas de conteo (<= 3 elementos: listar, > 3 elementos: 'Todos')
+ * a una lista de valores.
+ * @param {Array<string>} values - La lista de valores a formatear.
+ * @returns {string} - El string formateado.
+ */
+function getUnfilteredResult(values) {
+  const totalCount = values.length
+
+  if (totalCount === 0) {
+    return 'Sin Datos'
+  }
+
+  if (totalCount <= 3) {
+    // Si el total es 3 o menos: listarlos.
+    return values.join(', ')
+  } else {
+    // Si el total es más de 3: retornar "Todos".
+    return 'Todos'
+  }
+}
+
+/**
  * Obtiene un string formateado con los valores seleccionados para un filtro de columna.
  * @param {string} colName - El nombre de la columna (campo en activeFilters).
- * @returns {string} - El string de valores seleccionados ('Todos' o 'Dato1, Dato2, Dato3').
+ * @returns {string} - El string formateado según las reglas.
  */
 function getSelectedFilterValues(colName) {
   const filterPayload = activeFilters.value[colName]
   const column = props.columns.find((c) => c.name === colName)
 
-  if (!filterPayload || !column) {
-    return 'Todos'
+  if (!column) {
+    return 'N/A'
   }
 
-  // 1. Filtrado por valores múltiples ('values')
+  // Usamos props.rows para obtener la base de datos de la columna antes de cualquier filtro
+  // Nota: Si quieres que el 'Todos' o la lista de valores SÓLO refleje los datos visibles por otros filtros,
+  // usa 'preFilteredRowsForColumn(column)' aquí, como lo hiciste antes.
+  const allUniqueValues = [
+    ...new Set(props.rows.map((row) => String(getByPath(row, column.field) || '-').trim())),
+  ].sort()
+
+  // --- 1. Caso: SIN FILTRAR (el filtro no existe o no está activo/completo) ---
+  if (!filterPayload || (filterPayload.type === 'values' && filterPayload.values.length === 0)) {
+    // Usamos la función auxiliar para aplicar las reglas de conteo
+    return getUnfilteredResult(allUniqueValues)
+  }
+
+  // --- 2. Caso: FILTRO DE VALORES ('values') ACTIVO ---
   if (filterPayload.type === 'values' && filterPayload.values.length > 0) {
-    // const preFilteredRows = preFilteredRowsForColumn(column)
-    // Contar valores únicos totales para la columna
-    // const allUniqueValues = [
-    //   ...new Set(preFilteredRows.map((row) => String(getByPath(row, column.field) || '-').trim())),
-    // ]
+    const selectedValues = filterPayload.values
 
-    // Si la cantidad de valores seleccionados es igual al total de valores únicos, es 'Todos'
-    // if (filterPayload.values.length === allUniqueValues.length) {
-    //   return 'Todos'
-    // }
+    // Si la selección incluye todos los valores únicos (ej. el único elemento existente):
+    if (selectedValues.length === allUniqueValues.length) {
+      // Usamos la función auxiliar para aplicar las reglas de conteo, SIN RECURSIÓN
+      return getUnfilteredResult(allUniqueValues)
+    }
 
-    // Si son menos, listarlos
-    return filterPayload.values.join(', ')
+    // Si la selección es parcial: concatenar los seleccionados con salto de línea al tercer elemento.
+    return selectedValues
+      .map((val, index) => {
+        // Salto de línea después del tercer elemento (índice 2) si hay más elementos
+        if (index === 2 && selectedValues.length > 3) {
+          return val + ',\n' // Agregar coma y salto de línea
+        }
+        return val
+      })
+      .join(', ')
+      .replace(/,\n, /g, ',\n') // Limpiar comas extra si el salto de línea fue el último
   }
 
-  // 2. Filtrado por condición ('condition')
+  // --- 3. Caso: FILTRO DE CONDICIÓN ('condition') ACTIVO ---
   if (
     filterPayload.type === 'condition' &&
     filterPayload.condition &&
     filterPayload.condition.active
   ) {
     const { operator, value1, value2 } = filterPayload.condition
-    let conditionString = `${operator}: ${value1}`
+    let conditionString = `[${operator}`
+
+    if (value1) {
+      conditionString += ` ${value1}`
+    }
 
     if (operator === 'between' && value2) {
       conditionString += ` y ${value2}`
     }
+    conditionString += `]`
 
     return conditionString
   }
 
-  return 'Todos' // Por defecto, si el filtro existe pero no está activo/completo
+  return 'Todos'
 }
 
 /**

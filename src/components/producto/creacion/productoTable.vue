@@ -106,6 +106,9 @@
 <script setup>
 import { ref, computed } from 'vue'
 import { imagen } from 'src/boot/url'
+import { getTipoFactura } from 'src/composables/FuncionesG'
+const tipoFactura = getTipoFactura(true)
+
 const mostrarImagen = ref(false)
 const imagenSeleccionada = ref(null)
 
@@ -122,25 +125,47 @@ const props = defineProps({
 })
 defineEmits(['add', 'edit-item', 'delete-item', 'toggle-status', 'mostrarReporte'])
 
-const columns = [
-  { name: 'numero', label: 'N°', field: 'numero', align: 'right' },
-  { name: 'fecha', label: 'Fecha', field: 'fecha', align: 'left' },
-  { name: 'codigo', label: 'Cod.', field: 'codigo', align: 'left' },
-  { name: 'nombre', label: 'Nombre', field: 'nombre', align: 'left' },
-  { name: 'descripcion', label: 'Descripción', field: 'descripcion', align: 'left' },
-  { name: 'categoria', label: 'Categoría', field: 'categoria', align: 'left' },
-  { name: 'subcategoria', label: 'Sub Categorías', field: 'subcategoria', align: 'left' },
-  { name: 'codigobarras', label: 'Cod.Barra', field: 'codigobarras', align: 'right' },
-  { name: 'medida', label: 'Caract.', field: 'medida', align: 'left' },
-  { name: 'estadoproducto', label: 'Estado', field: 'estadoproducto', align: 'left' },
-  { name: 'unidad', label: 'Unidad', field: 'unidad', align: 'left' },
-  { name: 'caracteristica', label: 'Otras caract.', field: 'caracteristica', align: 'left' },
-  { name: 'productosin', label: 'Producto SIN', field: 'productosin', align: 'left' },
-  { name: 'codigonandina', label: 'CodigoNandina', field: 'codigonandina', align: 'left' },
+let columns = []
+if (tipoFactura) {
+  columns = [
+    { name: 'numero', label: 'N°', field: 'numero', align: 'right' },
+    { name: 'fecha', label: 'Fecha', field: 'fecha', align: 'left' },
+    { name: 'codigo', label: 'Cod.', field: 'codigo', align: 'left' },
+    { name: 'nombre', label: 'Nombre', field: 'nombre', align: 'left' },
+    { name: 'descripcion', label: 'Descripción', field: 'descripcion', align: 'left' },
+    { name: 'categoria', label: 'Categoría', field: 'categoria', align: 'left' },
+    { name: 'subcategoria', label: 'Sub Categorías', field: 'subcategoria', align: 'left' },
+    { name: 'codigobarras', label: 'Cod.Barra', field: 'codigobarras', align: 'right' },
+    { name: 'medida', label: 'Caract.', field: 'medida', align: 'left' },
+    { name: 'estadoproducto', label: 'Estado', field: 'estadoproducto', align: 'left' },
+    { name: 'unidad', label: 'Unidad', field: 'unidad', align: 'left' },
+    { name: 'caracteristica', label: 'Otras caract.', field: 'caracteristica', align: 'left' },
+    { name: 'productosin', label: 'Producto SIN', field: 'productosin', align: 'left' },
+    { name: 'codigonandina', label: 'CodigoNandina', field: 'codigonandina', align: 'left' },
 
-  { name: 'imagen', label: 'Imagen', field: 'imagen', align: 'center' },
-  { name: 'opciones', label: 'Opciones', field: 'opciones', sortable: false },
-]
+    { name: 'imagen', label: 'Imagen', field: 'imagen', align: 'center' },
+    { name: 'opciones', label: 'Opciones', field: 'opciones', sortable: false },
+  ]
+} else {
+  columns = [
+    { name: 'numero', label: 'N°', field: 'numero', align: 'right' },
+    { name: 'fecha', label: 'Fecha', field: 'fecha', align: 'left' },
+    { name: 'codigo', label: 'Cod.', field: 'codigo', align: 'left' },
+    { name: 'nombre', label: 'Nombre', field: 'nombre', align: 'left' },
+    { name: 'descripcion', label: 'Descripción', field: 'descripcion', align: 'left' },
+    { name: 'categoria', label: 'Categoría', field: 'categoria', align: 'left' },
+    { name: 'subcategoria', label: 'Sub Categorías', field: 'subcategoria', align: 'left' },
+    { name: 'codigobarras', label: 'Cod.Barra', field: 'codigobarras', align: 'right' },
+    { name: 'medida', label: 'Caract.', field: 'medida', align: 'left' },
+    { name: 'estadoproducto', label: 'Estado', field: 'estadoproducto', align: 'left' },
+    { name: 'unidad', label: 'Unidad', field: 'unidad', align: 'left' },
+    { name: 'caracteristica', label: 'Otras caract.', field: 'caracteristica', align: 'left' },
+
+    { name: 'imagen', label: 'Imagen', field: 'imagen', align: 'center' },
+    { name: 'opciones', label: 'Opciones', field: 'opciones', sortable: false },
+  ]
+}
+
 const ordenados = computed(() =>
   props.rows.map((row, index) => ({
     ...row,

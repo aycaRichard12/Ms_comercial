@@ -42,7 +42,7 @@ export function TipoFactura() {
     const tipo = contenidousuario[0].factura.tipo
 
     // Verificar si está vacío, null o undefined
-    if (tipo === null || tipo === '' || tipo === undefined) {
+    if (tipo === null || tipo === '' || tipo === undefined || tipo === '0' || tipo === 0) {
       return false // está vacío
     } else {
       return true // tiene valor

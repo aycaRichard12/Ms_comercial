@@ -84,6 +84,17 @@ export function getTipoFactura(situacion = null) {
   return esVacio ? '' : tipo
 }
 
+// export function getTokenFactura(situacion = null) {
+//   const contenidousuario = validarUsuario()
+
+//   const access_token = contenidousuario[0].factura.access_token
+
+//   const esVacio = validarDatoVacio(access_token)
+//   if (situacion) {
+//     return !esVacio
+//   }
+//   return esVacio ? '' : access_token
+// }
 export function getToken(situacion = null) {
   const contenidousuario = validarUsuario()
   const token = contenidousuario[0]?.factura?.access_token
