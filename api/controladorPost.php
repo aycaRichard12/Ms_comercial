@@ -94,10 +94,11 @@ if ($ver == "registrarResponsable") {
     $controlador->registroPrecioBase($_POST['precio'], $_POST['idproductoalmacen']);
 } elseif ($ver == "registrarCategoriaPrecio") {
     $controlador = new configuracion();
-    $controlador->registroCategoriaPrecio($_POST['tipo'], $_POST['porcentaje'], $_POST['idalmacen']);
+    $controlador->registroCategoriaPrecio($_POST['tipo'], $_POST['porcentaje'], $_POST['idalmacen'], $_POST['id_categoria_precios']);
 } elseif ($ver == "editarCategoriaPrecio") {
     $controlador = new configuracion();
-    $controlador->editarCategoriaPrecio($_POST['id'], $_POST['tipo'], $_POST['porcentaje'], $_POST['idalmacen']);
+    $controlador->editarCategoriaPrecio($_POST['id'], $_POST['tipo'], $_POST['porcentaje'], $_POST['idalmacen'], $_POST['id_categoria_precios']); 
+    // echo json_encode(["status" => "success" , "id" => $_POST['id'], "tipo" => $_POST['tipo'], "porcentaje" => $_POST['porcentaje'], "idalmacen" => $_POST['idalmacen'], "id_categoria_precios" => $_POST['id_categoria_precios']]);
 } elseif ($ver == "editarPrecioSugerido") {
     $afectarTodosAlmacenesString = $_POST['afectarTodosAlmacenes'];
 
@@ -641,6 +642,14 @@ elseif ($ver == "cambiarTipoKardex") {
 elseif ($ver == "facturarjson") {
     $controlador = new UseCotizacion();
     $controlador->facturarjson($data);
+}
+elseif ($ver == "crearCategoriaPrecio") {
+    $controlador = new UseCategoriaPrecio();
+    $controlador->crearCategoriaPrecio($data);
+}
+elseif ($ver == "editarCategoriaPrecioNuevo") {
+    $controlador = new UseCategoriaPrecio();
+    $controlador->editarCategoriaPrecio($data['id'],$data);
 }
 
 

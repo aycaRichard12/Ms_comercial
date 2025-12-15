@@ -148,7 +148,7 @@ const props = defineProps({
     default: () => [],
   },
 })
-
+console.log('Props almacenes en tabla:', props.rows)
 defineEmits(['add', 'edit-item', 'delete-item', 'toggle-status'])
 
 const columnas = [

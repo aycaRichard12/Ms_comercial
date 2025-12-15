@@ -627,6 +627,10 @@ import { PDFdetalleVentaInicio } from 'src/utils/pdfReportGenerator'
 import RegistrarNotaCreditoDebito from 'src/pages/NotasCreditoDebito/RegistrarNotaCreditoDebito.vue'
 import { generarPdfCotizacion } from 'src/utils/pdfReportGenerator'
 import { idempresa_md5, idusuario_md5 } from 'src/composables/FuncionesGenerales'
+import { getTipoFactura, getToken } from 'src/composables/FuncionesG'
+const tipoFactura = getTipoFactura()
+const token = getToken()
+
 const idempresa = idempresa_md5()
 const idusuario = idusuario_md5()
 const $q = useQuasar()
@@ -894,9 +898,6 @@ const cargarDatosIniciales = async () => {
 
   try {
     // Obtener datos del usuario
-    const usuarioResponse = validarUsuario()
-    const usuario = usuarioResponse[0]
-    const idempresa = usuario?.empresa?.idempresa
 
     if (!idempresa) {
       throw new Error('No se pudo obtener la empresa del usuario')
@@ -907,16 +908,16 @@ const cargarDatosIniciales = async () => {
     almacenesOptions.value = [
       { value: 0, label: 'Seleccione un Almacén' },
       ...almacenesResponse.data
-        .filter((u) => u.idusuario == usuario.idusuario)
+        .filter((u) => u.idusuario == idusuario)
         .map((key) => ({ value: key.idalmacen, label: key.almacen })),
     ]
 
     // Cargar tipos de venta
-    if (usuario?.factura?.access_token) {
-      const tiposResponse = await api.get(
-        `listaLeyendaSIN/tiposector/${usuario.factura.access_token}/${usuario.factura.tipo}`,
-      )
+    if (token) {
+      const enpoint = `listaLeyendaSIN/tiposector/${token}/${tipoFactura}`
+      const tiposResponse = await api.get(enpoint)
       const codigosPermitidos = [0, 1, 2, 3]
+      console.log(tiposResponse.data)
       const datosFiltrados = filtrarYEliminarDuplicados(
         [...tiposResponse.data.data],
         codigosPermitidos,

@@ -16,6 +16,19 @@
             dense
           />
         </div>
+        <div class="col-12 col-md-3">
+          <label for="fecha">Fecha:</label>
+          <q-input
+            v-model="fecha"
+            id="fecha"
+            type="date"
+            map-options
+            :rules="[(val) => !!val || 'Campo requerido']"
+            @update:model-value="cambioFecha"
+            outlined
+            dense
+          />
+        </div>
       </div>
       <div class="row q-col-gutter-x-md">
         <div class="col-12 col-md-5">
@@ -549,10 +562,16 @@ import { generarPdfCotizacion } from 'src/utils/pdfReportGenerator'
 import { redondear, normalizeText, decimas, validarUsuario } from 'src/composables/FuncionesG'
 import MyRegistrationForm from 'src/components/clientes/admin/modalClienteForm.vue'
 import { idempresa_md5 } from 'src/composables/FuncionesGenerales'
+import { obtenerFechaActualDato } from 'src/composables/FuncionesG'
 const showAddModal = ref(false)
-
 import { PDFenviarComprobanteCorreo } from 'src/utils/pdfReportGenerator'
 import { objectToFormData } from 'src/composables/FuncionesGenerales'
+import { getToken, getTipoFactura } from 'src/composables/FuncionesG'
+
+const token = getToken()
+const tipoFactura = getTipoFactura()
+const idempresa = idempresa_md5()
+const fecha = ref(obtenerFechaActualDato())
 const variablePago = ref('directo')
 const modalmetodopago = ref(false)
 const pdfData = ref(null)
@@ -623,6 +642,7 @@ const carritoCO = reactive({
   pagosDivididos: [],
   metodoPago: 0,
   variablePago: '',
+  fecha: fecha.value,
 })
 const emit = defineEmits(['reiniciar'])
 
@@ -705,6 +725,20 @@ const handleTipoOperacionChange = () => {
   resetFormulario()
   console.log(tipoOperacion.value)
 }
+const cambioFecha = () => {
+  const storedCarrito = localStorage.getItem('carritoCO')
+  if (storedCarrito) {
+    const carritoData = JSON.parse(storedCarrito)
+    carritoData.fecha = fecha.value
+    Object.assign(carritoCO, carritoData)
+    localStorage.setItem('carritoCO', JSON.stringify(carritoData))
+  }
+  cotizacionFormRef.value.resetValidation() // Resetear validación
+
+  resetFormulario()
+  console.log(tipoOperacion.value)
+}
+
 // Cargar carrito desde localStorage al inicio
 
 onMounted(() => {
@@ -829,21 +863,19 @@ const cargarMetodoPagoFactura = async () => {
   }
 }
 async function leyendaActiva() {
-  const contenidousuario = await getUserData()
-  const idempresa = contenidousuario?.empresa?.idempresa
-  const token = contenidousuario?.factura?.access_token
-  const tipo = contenidousuario?.factura?.tipo
-  const endpoint = `listaLeyendaFactura/${idempresa}/${token}/${tipo}`
+  const endpoint = `listaLeyendaFactura/${idempresa}/${token}/${tipoFactura}`
+  console.log(endpoint)
   try {
     const response = await api.get(endpoint)
     const resultado = response.data
+    console.log(resultado)
     if (resultado[0] === 'error') {
       console.error(resultado.error)
     } else {
       let use = resultado.filter((u) => u.estado === 1)
       if (use.length > 0) {
-        leyendaFacturaActiva.id = use[0].id
-        leyendaFacturaActiva.codigosin = use[0].leyendasin.codigo
+        leyendaFacturaActiva.id = use[0].id || 0
+        leyendaFacturaActiva.codigosin = use[0].leyendasin.codigo || 0
       }
     }
   } catch (error) {
@@ -852,11 +884,8 @@ async function leyendaActiva() {
 }
 
 async function divisaEmonedaActiva() {
-  const contenidousuario = await getUserData()
-  const idempresa = contenidousuario?.empresa?.idempresa
-  const token = contenidousuario?.factura?.access_token
-  const tipo = contenidousuario?.factura?.tipo
-  const endpoint = `listaDivisa/${idempresa}/${token}/${tipo}`
+  const endpoint = `listaDivisa/${idempresa}/${token}/${tipoFactura}`
+  console.log(endpoint)
   try {
     const response = await api.get(endpoint)
     const resultado = response.data
@@ -868,8 +897,8 @@ async function divisaEmonedaActiva() {
       if (use.length > 0) {
         divisaActiva.id = use[0].id
         divisaActiva.nombre = use[0].nombre
-        divisaActiva.tipo = use[0].tipo
-        divisaActiva.codigosin = use[0].monedasin.codigo
+        divisaActiva.tipo = use[0].tipo || 0
+        divisaActiva.codigosin = use[0]?.monedasin?.codigo ?? 0
       }
       console.log(divisaActiva)
     }

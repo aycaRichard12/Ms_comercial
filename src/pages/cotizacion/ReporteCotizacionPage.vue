@@ -561,6 +561,7 @@ const generarComprobantePDF = async (id) => {
 
   try {
     const endpoint = `detallesCotizacion/${id}/${idempresa}`
+    console.log(endpoint)
     const response = await api.get(endpoint)
     console.log(response)
     const data = response.data

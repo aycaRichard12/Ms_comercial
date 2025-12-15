@@ -201,7 +201,7 @@ elseif ($ver[0] == "listaResponsableAlmacenReportes") {
     $controlador->verificarIdPrecioSugerido($ver[1]);
 } elseif ($ver[0] == "listaLeyendaFactura") {
     $controlador = new configuracion();
-    $controlador->listaLeyendaFactura($ver[1], $ver[2], $ver[3]);
+    $controlador->listaLeyendaFactura($ver[1], $ver[2] ?? null, $ver[3] ?? null);
 } elseif ($ver[0] == "listaLeyendaSIN") {
     $controlador = new Facturacion();
     $controlador->listadoConfigParametricas($ver[1],$ver[2], $ver[3],1);
@@ -893,6 +893,27 @@ elseif ($ver[0] == "revertirAnulacionVenta") {
 elseif ($ver[0] == "validarFacturas") {
     $controlador = new UseVEnta();
     $controlador->validarFacturas($ver[1], $ver[2], $ver[3]);
+}
+elseif ($ver[0] == "eliminarCategoriaPrecioNuevo") {
+    $controlador = new UseCategoriaPrecio();
+    $respuesta = $controlador->eliminarCategoriaPrecio($ver[1]);
+    
+    header('Content-Type: application/json');
+    echo json_encode($respuesta);
+}
+elseif ($ver[0] == "listarCategoriasPrecio") {
+    $controlador = new UseCategoriaPrecio();
+    $respuesta = $controlador->listarCategoriasPrecio($ver[1]);
+    
+    header('Content-Type: application/json');
+    echo json_encode($respuesta);
+}
+elseif ($ver[0] == "cambiarEstadoCategoria") {
+    $controlador = new UseCategoriaPrecio();
+    $respuesta = $controlador->cambiarEstadoCategoria($ver[1], $ver[2]);
+    
+    header('Content-Type: application/json');
+    echo json_encode($respuesta);
 }
 if ($controlador === null) {
     // Acción por defecto si no se encuentra una ruta valida reportecotizacion cambiarestadodevolucion

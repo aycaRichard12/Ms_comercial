@@ -41,23 +41,29 @@
         require_once "pagosCompra.php";
         require_once "notaCreditoDebito.php";
         require_once "kardex.php";
+        require_once "useCategoriaPrecio.php";
+
         if (($rutas[0] ?? '') === "detectar_intencion") {
             require_once "detectar_intencion.php";
             exit; // Evita seguir ejecutando el resto del index
         }
-        elseif ($rutas[0] == "out") {
+        $primeraRuta = $rutas[0] ?? null;
+
+        if ($primeraRuta === "out") {
             require_once "apisOut/index.php";
             return;
-        }else{
-            if ($method == "GET") {
-                require_once "controladorGet.php"; 
-                return;
-            }
-            if ($method == "POST") {
-                require_once "controladorPost.php";
-                return;
-            }
         }
+
+        if ($method === "GET") {
+            require_once "controladorGet.php";
+            return;
+        }
+
+        if ($method === "POST") {
+            require_once "controladorPost.php";
+            return;
+        }
+
         $archivoControl = __DIR__ . '/ultima_limpieza.txt';
         $ahora = time();
         if (!file_exists($archivoControl) || ($ahora - filemtime($archivoControl)) > 86400) {
