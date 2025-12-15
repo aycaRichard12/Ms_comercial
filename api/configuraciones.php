@@ -2384,20 +2384,21 @@ class configuracion
             echo json_encode(array("error" => "El id de empresa no existe"));
             return;
         }
-        $consulta = $this->cm->query("select p.id_porcentajes,p.tipo,p.porcentaje,p.autorizado,p.almacen_id_almacen,a.nombre from porcentajes as p 
+        $consulta = $this->cm->query("select p.id_porcentajes,p.tipo,p.porcentaje,p.autorizado,p.almacen_id_almacen,a.nombre,
+        p.id_categoria_precios from porcentajes as p 
         inner join almacen as a on p.almacen_id_almacen=a.id_almacen 
         where a.idempresa='$idempresa' 
         order by id_porcentajes desc");
         while ($qwe = $this->cm->fetch($consulta)) {
-            $res = array("id" => $qwe[0], "nombre" => $qwe[1], "porcentaje" => $qwe[2], "estado" => $qwe[3], "idalmacen" => $qwe[4], "almacen" => $qwe[5]);
+            $res = array("id" => $qwe[0], "nombre" => $qwe[1], "porcentaje" => $qwe[2], "estado" => $qwe[3], "idalmacen" => $qwe[4], "almacen" => $qwe[5], "id_categoria_precios" => $qwe[6]);
             array_push($lista, $res);
         }
         echo json_encode($lista);
     }
 
-    public function registroCategoriaPrecio($tipo,$porcentaje,$idalmacen){
+    public function registroCategoriaPrecio($tipo,$porcentaje,$idalmacen,$id_categoria_precios){
         $res="";
-        $registro=$this->cm->query("insert into porcentajes(id_porcentajes, tipo, porcentaje, autorizado, almacen_id_almacen)value(NULL,'$tipo','$porcentaje','1','$idalmacen')");
+        $registro=$this->cm->query("insert into porcentajes(id_porcentajes, tipo, porcentaje, autorizado, almacen_id_almacen,id_categoria_precios )value(NULL,'$tipo','$porcentaje','1','$idalmacen','$id_categoria_precios')");
         if($registro !== null){
             $preciocalculado = $this->cm->query("SELECT pa.id_productos_almacen, (SELECT id_porcentajes FROM porcentajes WHERE tipo='$tipo' and porcentaje='$porcentaje' and almacen_id_almacen='$idalmacen' ORDER BY id_porcentajes DESC LIMIT 1) AS id_porcentaje, 
             ROUND(((pb.precio*((SELECT porcentaje FROM porcentajes WHERE tipo='$tipo' and porcentaje='$porcentaje' and almacen_id_almacen='$idalmacen' ORDER BY id_porcentajes DESC LIMIT 1)/100)) + pb.precio), 2)  AS total  FROM productos_almacen pa 
@@ -2451,10 +2452,18 @@ class configuracion
         }
     }
 
-    public function editarCategoriaPrecio($id, $tipo, $porcentaje, $idalmacen)
+    public function editarCategoriaPrecio($id, $tipo, $porcentaje, $idalmacen, $id_categoria_precios)
     {
         $res = "";
-        $registro = $this->cm->query("update porcentajes SET tipo='$tipo', porcentaje='$porcentaje' where id_porcentajes='$id'");
+        $sql = "UPDATE porcentajes SET tipo='$tipo', porcentaje='$porcentaje' ";
+        if ($id_categoria_precios === null) {
+            $sql .= ", id_categoria_precios = NULL ";
+        } else {
+            $sql .= ", id_categoria_precios='$id_categoria_precios' ";
+        }
+        // echo json_encode(["id" => $id, "tipo" => $tipo, "porcentaje" => $porcentaje, "idalmacen" => $idalmacen, "id_categoria_precios" => $id_categoria_precios]);
+        $sql .= "WHERE id_porcentajes='$id'";
+        $registro = $this->cm->query($sql);
         if ($registro !== null) {
             $preciocalculado = $this->cm->query("SELECT pa.id_productos_almacen, (SELECT id_porcentajes FROM porcentajes WHERE tipo='$tipo' and porcentaje='$porcentaje' and almacen_id_almacen='$idalmacen' ORDER BY id_porcentajes DESC LIMIT 1) AS id_porcentaje, 
             ROUND(((pb.precio*((SELECT porcentaje FROM porcentajes WHERE tipo='$tipo' and porcentaje='$porcentaje' and almacen_id_almacen='$idalmacen' ORDER BY id_porcentajes DESC LIMIT 1)/100)) + pb.precio), 2)  AS total  FROM productos_almacen pa 
@@ -2464,7 +2473,7 @@ class configuracion
                     while ($qwe = $this->cm->fetch($preciocalculado)) {
                         $actualizar = $this->cm->query("update precio_sugerido set precio='$qwe[2]' where productos_almacen_id_productos_almacen='$qwe[0]' and porcentajes_id_porcentajes='$qwe[1]'");
                     }
-                    $res = array("estado" => "exito", "mensaje" => "Actualización exitosa");
+                    $res = array("estado" => "exito", "mensaje" => "Actualización exitosa", "sql" => $sql);
                 } else {
                     $res = array("estado" => "exito", "mensaje" => "No se encontraron precios que modificar");
                 }
@@ -2473,7 +2482,7 @@ class configuracion
             }
             
         } else {
-            $res = array("estado" => "error", "mensaje" => "Error al intentar actualizar. Por favor, inténtalo de nuevo");
+            $res = array("estado" => "error", "mensaje" => "Error al intentar actualizar. Por favor, inténtalo de nuevo", "sql" => $sql);
         }
         echo json_encode($res);
     }
@@ -2617,25 +2626,61 @@ class configuracion
     {
         $res = "";
         $nuevoprecio = $this->verificar->redondear(floatval($precio));
-        $consulta = $this->cm->query("select id_precio_sugerido from precio_sugerido WHERE id_precio_sugerido = '$idpreciosugerido'");
+        $sql = "";
+        // --- CORRECCIÓN: Usar una sola consulta para obtener el ID del porcentaje ---
+        // Necesitamos obtener 'porcentajes_id_porcentajes' para la lógica de afectación.
+        $consulta = $this->cm->query("
+            SELECT porcentajes_id_porcentajes 
+            FROM precio_sugerido 
+            WHERE id_precio_sugerido = '$idpreciosugerido'
+        ");
+        
         if ($consulta->num_rows > 0) {
+            
+            $fila_ps = $this->cm->fetch($consulta);
+            $id_porcentajes_relacionado = $fila_ps['porcentajes_id_porcentajes']; // Usamos el ID de la tabla porcentajes
+            
             if ($afectarTodosAlmacenes) {
-                // Actualizar todos los registros relacionados con el mismo producto en todos los almacenes
-                $registro = $this->cm->query("UPDATE precio_sugerido AS ps
-                    INNER JOIN productos_almacen AS pa ON ps.productos_almacen_id_productos_almacen = pa.id_productos_almacen
-                    SET ps.precio = '$nuevoprecio'
-                    WHERE pa.productos_id_productos = '$idproducto'");
+                
+                // Paso 1: Obtener la ID de la categoría de precio relacionada con este porcentaje
+                $consulta_obtener_categoria = $this->cm->query("
+                    SELECT p.id_categoria_precios 
+                    FROM porcentajes p 
+                    WHERE p.id_porcentajes = '$id_porcentajes_relacionado'
+                ");
+
+                if ($consulta_obtener_categoria->num_rows > 0) {
+                    $cslCategoria = $this->cm->fetch($consulta_obtener_categoria); 
+                    $id_categoria_precios = $cslCategoria['id_categoria_precios']; 
+                    
+                    // Paso 2: Actualizar todos los registros de precio_sugerido
+                    // que pertenezcan al mismo producto Y a la misma categoría de precio.
+                    $sql = " UPDATE precio_sugerido AS ps
+                        INNER JOIN productos_almacen AS pa ON ps.productos_almacen_id_productos_almacen = pa.id_productos_almacen
+                        INNER JOIN porcentajes AS p ON ps.porcentajes_id_porcentajes = p.id_porcentajes
+                        SET ps.precio = '$nuevoprecio'
+                        WHERE pa.productos_id_productos = '$idproducto' 
+                        AND p.id_categoria_precios = '$id_categoria_precios'";
+                    $registro = $this->cm->query($sql);
+                } else {
+                    $registro = null; // No se encontró la categoría, no se actualiza
+                    $res = array("estado" => "error", "mensaje" => "No se encontró la categoría de precios relacionada.");
+                }
             } else {
                 // Actualizar solo el registro específico
                 $registro = $this->cm->query("update precio_sugerido SET precio='$nuevoprecio' where id_precio_sugerido='$idpreciosugerido'");
             }
-            if ($registro !== null) {
-                $res = array("estado" => "exito", "mensaje" => "Actualización exitosa");
-            } else {
+            
+            // Manejo de la respuesta
+            if (isset($registro) && $registro !== null) { // Verificamos si la variable $registro fue establecida
+                // Si la consulta fue exitosa (UPDATE devuelve true o la cantidad de filas afectadas)
+                $res = array("estado" => "exito", "mensaje" => "Actualización exitosa", "consulta" => $sql);
+            } elseif (!isset($res) || $res === "") { // Si no hubo error previo (como no encontrar categoría)
                 $res = array("estado" => "error", "mensaje" => "Error al intentar actualizar. Por favor, inténtalo de nuevo");
             }
+
         } else {
-            $res = array("estado" => "error", "mensaje" => "Error al encontrar el registro. Por favor, inténtelo de nuevo");
+            $res = array("estado" => "error", "mensaje" => "Error al encontrar el registro de precio sugerido.");
         }
         echo json_encode($res);
     }
@@ -2647,6 +2692,11 @@ class configuracion
         if ($idempresa === "false") {
             echo json_encode(array("error" => "El id de empresa no existe"));
             return;
+        }
+        if($token == null || $token == "" ){
+            echo json_encode([]);
+
+            return [];
         }
 
         $consulta = $this->cm->query("select * from leyendas where idempresa='$idempresa' order by idleyendas desc");

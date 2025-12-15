@@ -299,10 +299,11 @@ class UseCotizacion
 
             // 1. Insertar la cotización principal
             $sqlCotizacion = "INSERT INTO cotizacion (fecha_cotizacion, monto_total, descuento, cliente_id_cliente, divisas_id_divisas, id_usuario, idsucursal, estado, idpv, num, id_almacen) 
-                              VALUES (NOW(), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
             $stmtCotizacion = $this->cm->prepare($sqlCotizacion);
             $stmtCotizacion->bind_param(
-                "ddiiiiiiii",
+                "sddiiiiiiii",
+                $detalles['fecha'],
                 $detalles['ventatotal'],
                 $detalles['descuento'],
                 $idcliente,
@@ -470,10 +471,11 @@ class UseCotizacion
             $this->cm->begin_transaction();
 
             // 1. Insertar la cotización principal
-            $sqlCotizacion = "INSERT INTO cotizacion (fecha_cotizacion, monto_total, descuento, cliente_id_cliente, divisas_id_divisas, id_usuario, idsucursal, estado, idpv, num, id_almacen) VALUES (NOW(), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+            $sqlCotizacion = "INSERT INTO cotizacion (fecha_cotizacion, monto_total, descuento, cliente_id_cliente, divisas_id_divisas, id_usuario, idsucursal, estado, idpv, num, id_almacen) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
             $stmtCotizacion = $this->cm->prepare($sqlCotizacion);
             $stmtCotizacion->bind_param(
                 "ddiiiiiiii",
+                $detalles['fecha'],
                 $detalles['ventatotal'],
                 $detalles['descuento'],
                 $idcliente,

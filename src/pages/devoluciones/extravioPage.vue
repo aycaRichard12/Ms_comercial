@@ -285,7 +285,7 @@
             <div class="col-12 flex justify-end q-ma-md">
               <q-btn
                 type="submit"
-                icon="add"
+                label="Añadir"
                 color="primary"
                 :disable="!formularioDetalle.idproductoalmacen || !formularioDetalle.cantidad"
               />

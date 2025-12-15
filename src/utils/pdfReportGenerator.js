@@ -818,6 +818,7 @@ export function PDFreporteStockProductosIndividual_img(processedRows) {
 }
 
 export function generarPdfCotizacion(data) {
+  console.log(data)
   const comprobanteData = []
   const cotizacionDetalle = data[0]
 
@@ -1254,14 +1255,14 @@ export function PDFreporteVentasPeriodo(filteredCompra, almacen) {
   // filteredCompra.value.reduce((sum, row) => sum + Number(row.total), 0)
   const datos = filteredCompra.value.map((item, indice) => ({
     indice: indice + 1,
-    fecha: cambiarFormatoFecha(item.fecha),
+    fecha: item.fecha,
     cliente: item.cliente,
     sucursal: item.sucursal,
-    tipoventa: tipo[item.tipoventa],
+    tipoventa: item.tipoventa,
     tipopago: item.tipopago,
     nfactura: item.nfactura,
     canal: item.canal,
-    total: item.total,
+    total: decimas(item.total),
     descuento: decimas(item.descuento),
     ventatotal: decimas(item.ventatotal),
   }))
@@ -1338,7 +1339,13 @@ export function PDFreporteVentasPeriodo(filteredCompra, almacen) {
   return doc
 }
 
-export async function PDFenviarFacturaCorreo(idcliente, detalleVenta, $q, linkFactPdf = null) {
+export async function PDFenviarFacturaCorreo(
+  idcliente,
+  detalleVenta,
+  $q,
+  linkFactPdf = null,
+  correo = null,
+) {
   const detallePlano = JSON.parse(JSON.stringify(detalleVenta.value))
   let pdfBlob
 
@@ -1358,9 +1365,12 @@ export async function PDFenviarFacturaCorreo(idcliente, detalleVenta, $q, linkFa
 
   console.log(linkFactPdf)
   try {
-    const response = await api.get(`obtenerEmailCliente/${idcliente}`) // Cambia a tu ruta real
-    console.log(response.data) // res { email: 'ClienteVarios@one.com' }
-    const clientEmail = response.data.email
+    let clientEmail = correo
+
+    if (clientEmail == null) {
+      const response = await api.get(`obtenerEmailCliente/${idcliente}`) // Cambia a tu ruta real
+      clientEmail = response.data.email
+    }
 
     if (!clientEmail) {
       $q.notify({

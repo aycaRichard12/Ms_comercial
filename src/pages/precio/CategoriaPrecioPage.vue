@@ -11,6 +11,7 @@
             :isEditing="isEditing"
             :modal-value="formData"
             :almacenes="almacenes"
+            :categorias="categorias"
             @submit="handleSubmit"
             @cancel="toggleForm"
           />
@@ -49,6 +50,7 @@ const formData = ref({
   ver: 'registrarCategoriaPrecio',
   idempresa: idempresa,
 })
+const categorias = ref([])
 
 async function getAlmacenes() {
   try {
@@ -66,6 +68,7 @@ async function getAlmacenes() {
 async function loadRows() {
   try {
     const response = await api.get(`listaCategoriaPrecio/${idempresa}`) // Cambia a tu ruta real
+    console.log(response.data)
     lista.value = response.data // Asume que la API devuelve un array
   } catch (error) {
     console.error('Error al cargar datos:', error)
@@ -89,14 +92,43 @@ function resetForm() {
     idempresa: idempresa,
   }
 }
+const fetchCategories = async () => {
+  try {
+    // API: GET /listarCategoriasPrecio/{idempresa}
+    const response = await api.get(`/listarCategoriasPrecio/${idempresa}`)
+
+    const filtrados = response.data.filter((item) => item.estado === 1)
+    categorias.value = filtrados.map((item) => ({
+      value: item.id_categoria_precios,
+      label: item.nombre_categoria,
+      porcentaje: item.porcentaje,
+    }))
+  } catch (error) {
+    console.error('Error al cargar categorías:', error)
+    $q.notify({
+      type: 'negative',
+      message: 'Error al cargar las categorías. Intente de nuevo.',
+    })
+  }
+}
 const editUnit = (item) => {
   console.log(item)
+  const { id, nombre, porcentaje, idalmacen, id_categoria_precios, almacen } = item
+  const categoriaSeleccionada = id_categoria_precios
+    ? { value: id_categoria_precios, label: nombre, porcentaje }
+    : null
   formData.value = {
     ver: 'editarCategoriaPrecio',
-    tipo: item.nombre,
-    porcentaje: item.porcentaje,
-    id: item.id,
-    idalmacen: item.idalmacen,
+    tipo: nombre,
+    porcentaje: porcentaje,
+    id: id,
+    idalmacen: idalmacen,
+    id_categoria_precios: id_categoria_precios,
+    categoriaSeleccionada: categoriaSeleccionada,
+    almacen: {
+      value: idalmacen,
+      label: almacen,
+    },
   }
 
   isEditing.value = true
@@ -146,6 +178,7 @@ const toggleStatus = async (item) => {
 }
 
 const handleSubmit = async (data) => {
+  console.log('Datos recibidos del formulario:', data)
   const formData = objectToFormData(data)
   for (let [k, v] of formData.entries()) {
     console.log(`${k}: ${v}`)
@@ -188,5 +221,6 @@ onBeforeUnmount(() => {
 onMounted(() => {
   loadRows()
   getAlmacenes()
+  fetchCategories()
 })
 </script>

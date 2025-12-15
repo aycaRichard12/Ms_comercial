@@ -43,8 +43,13 @@ export const menurichard50 = [
             permiso: '1111',
           },
           {
-            titulo: 'Adm - Precios - Categorías de Prec',
+            titulo: 'Adm - Precios - Categorías de Precio',
             codigo: 'categoriasdeprecio-03afdbd66e7929b125f8597834fa83a4',
+            permiso: '1111',
+          },
+          {
+            titulo: 'Adm - Precios - Registrar Categoría',
+            codigo: 'registrarcategoriaprecio-03afdbd66e7929b125f8597834fa83a4',
             permiso: '1111',
           },
           {

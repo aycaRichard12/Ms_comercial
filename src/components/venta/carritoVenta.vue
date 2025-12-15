@@ -553,7 +553,7 @@ const subTotal = computed(() => {
 const total = computed(() => {
   console.log('SubTotal:', subTotal.value)
   console.log('Descuento:', descuento.value)
-  const datos = JSON.parse(localStorage.getItem('carrito'))
+  const datos = JSON.parse(localStorage.getItem('carrito')) || {}
   datos.subTotal = subTotal.value.toFixed(2)
   datos.descuento = descuento.value.toFixed(2)
   datos.ventatotal = (parseFloat(datos.subtotal) - parseFloat(datos.descuento)).toFixed(2)

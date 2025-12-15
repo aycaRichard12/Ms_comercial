@@ -648,6 +648,7 @@ class outVenta
             $tokenEmizor = $this->token->obtenerTokenEmizor($idmd5);
           
         }
+
         $controler = $this->factura->estadofactura($cuf,$tokenEmizor,$factura, null);
         if($controler){
             echo json_encode($controler);
@@ -665,9 +666,28 @@ class outVenta
             $tokenEmizor = $this->token->obtenerTokenEmizor($idmd5);
           
         }
+
+        $sql = "SELECT venta_id_venta FROM ventas_facturadas WHERE cuf = ?";
+        $stmt = $this->cm->prepare($sql);
+
+       
+        $stmt->bind_param("s", $cuf);
+        $stmt->execute();
+
+        // 6. **Obtener el Resultado**
+        $result = $stmt->get_result();
+        $id_venta = 0;
+        if ($result->num_rows > 0) {
+            // 7. **Recorrer los resultados (solo debería haber uno si el CUF es único)**
+            $row = $result->fetch_assoc();
+            $id_venta = $row["venta_id_venta"];
+        } 
         $motivo = $data['codigoMotivoAnulacion'];
+        $idusuario = $data['idusuario'];
+
+        $controler = $this->funcionesVenta->cambiarestadoventa($id_venta,2,$motivo,$idusuario,$tokenEmizor,$factura);
         //echo json_encode(["cuf" => $cuf, "motivo"=>$motivo, "token"=>$tokenEmizor, "tipo" => $factura]);
-        $controler = $this->factura->anularFactura($cuf,$motivo,$tokenEmizor,$factura);
+        // $controler = $this->factura->anularFactura($cuf,$motivo,$tokenEmizor,$factura);
         if($controler){
             echo json_encode($controler);
 

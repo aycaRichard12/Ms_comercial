@@ -2,19 +2,19 @@
   <div>
     <!-- Cabecera con filtros y botones -->
     <div class="row q-col-gutter-x-md q-mb-md">
-      <div class="col-4 col-md-4">
+      <div>
         <q-btn color="primary" @click="$emit('add')" class="btn-res q-mt-lg">
           <q-icon name="add" class="icono" />
           <span class="texto">Agregar</span>
         </q-btn>
       </div>
-      <div class="col-4 col-md-4 flex justify-center">
-        <q-btn color="info" @click="$emit('importFromExcel')" class="btn-res q-mt-lg" outline>
+      <div>
+        <q-btn color="green" @click="$emit('importFromExcel')" class="btn-res q-mt-lg" outline>
           <q-icon name="import_export" class="icono" />
           <span class="texto">Importar de Excel</span>
         </q-btn>
       </div>
-      <div class="col-4 col-md-4 flex justify-end">
+      <div>
         <q-btn color="info" @click="exportarClientesFiltrados" class="btn-res q-mt-lg" outline="">
           <q-icon name="file_upload" class="icono" />
           <span class="texto">Exportar a Excel</span>

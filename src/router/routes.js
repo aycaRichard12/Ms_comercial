@@ -163,6 +163,10 @@ const routes = [
         component: () => import('pages/precio/CategoriaPrecioPage.vue'),
       },
       {
+        path: '/registrarcategoriaprecio',
+        component: () => import('pages/precio/CategoriasPrecioPageNuevo.vue'),
+      },
+      {
         path: '/preciossugeridos',
         component: () => import('pages/precio/PrecioSugeridoPage.vue'),
       },

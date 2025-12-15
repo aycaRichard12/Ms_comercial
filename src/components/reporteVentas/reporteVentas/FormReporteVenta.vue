@@ -207,6 +207,14 @@
       :key="formularioNota"
       @reiniciar="forzarReinicioCarrito"
     />
+    {{ emailCliente }}
+    <EnviarCorreoDialog
+      v-model="dialogCorreo"
+      :emailInicial="emailCliente"
+      :opciones="opcionesEnvio"
+      @ok="procesarEnvioCorreo"
+      @cancel="() => {}"
+    />
   </q-page>
 </template>
 
@@ -221,9 +229,15 @@ import { PDFenviarFacturaCorreo } from 'src/utils/pdfReportGenerator'
 import { exportTOXLSX_Reporte_Ventas } from 'src/utils/XCLReportImport'
 //import { getUsuario } from 'src/composables/FuncionesGenerales'
 import RegistrarNotaCreditoDebito from 'src/pages/NotasCreditoDebito/RegistrarNotaCreditoDebito.vue'
-import { primerDiaDelMes } from 'src/composables/FuncionesG'
+import { primerDiaDelMes, cambiarFormatoFecha } from 'src/composables/FuncionesG'
 import TableReporteVentas from './TableReporteVentas.vue'
-//import { decimas } from 'src/composables/FuncionesG'
+import EnviarCorreoDialog from './EnviarCorreoDialog.vue'
+import { getTipoFactura } from 'src/composables/FuncionesG'
+const dialogCorreo = ref(false)
+
+const emailCliente = ref('')
+const opcionesEnvio = ref([])
+let rowSeleccionado = null
 //const usuario = getUsuario()
 const resultadoFiltrado = ref([])
 
@@ -397,73 +411,191 @@ const verDetalle = async (row) => {
   }
 }
 
+// const crearMensaje = async (row) => {
+//   console.log(row)
+//   try {
+//     const response = await api.get(`obtenerEmailCliente/${row.idcliente}`) // Cambia a tu ruta real
+//     const clientEmail = response.data.email
+//     let opciones = [{ label: 'Comprobante', value: 'comprobante' }]
+
+//     if (Number(row.tipoventa) !== 0) {
+//       opciones.push({ label: 'Factura', value: 'factura' })
+//     }
+//     $q.dialog({
+//       title: 'Seleccione una opción',
+//       message: `¿Qué desea enviar al correo "${clientEmail}"?`,
+//       options: {
+//         type: 'radio',
+//         model: null,
+//         items: opciones,
+//       },
+//       cancel: true,
+//       persistent: true,
+//     })
+//       .onOk(async (opcion) => {
+//         if (opcion === 'cancelar' || opcion === null) {
+//           $q.notify({ type: 'info', message: 'Operación cancelada' })
+//           return
+//         }
+
+//         console.log(`Elegiste: ${opcion}`)
+
+//         await getDetalleVenta(row.idventa)
+
+//         if (!detalleVenta.value) {
+//           $q.notify({
+//             type: 'negative',
+//             message: 'Venta sin items',
+//           })
+//           return
+//         }
+
+//         if (opcion === 'comprobante') {
+//           enviarComprobanteCorreo(row.idcliente)
+//         }
+
+//         if (opcion === 'factura') {
+//           enviarFacturaCorreo(row.idcliente, row.shortlink)
+//         }
+//       })
+//       .onCancel(() => {
+//         $q.notify({ type: 'info', message: 'Operación cancelada' })
+//       })
+//   } catch (error) {
+//     console.error('Error al cargar datos:', error)
+//     $q.notify({
+//       type: 'negative',
+//       message: 'No se pudieron cargar los datos',
+//     })
+//   }
+// }
+// const crearMensaje = async (row) => {
+//   try {
+//     const response = await api.get(`obtenerEmailCliente/${row.idcliente}`)
+//     let clientEmail = response.data.email ?? ''
+
+//     let opciones = [{ label: 'Comprobante', value: 'comprobante' }]
+
+//     if (Number(row.tipoventa) !== 0) {
+//       opciones.push({ label: 'Factura', value: 'factura' })
+//     }
+
+//     $q.dialog({
+//       title: 'Enviar documento',
+//       message: `
+//         <q-input v-model="email" filled type="email"
+//           label="Correo del cliente"
+//           placeholder="Ingrese el correo"
+//           :rules="[val => !!val || 'El correo es obligatorio']"
+//         />
+//       `,
+//       html: true,
+//       options: {
+//         type: 'radio',
+//         model: null,
+//         items: opciones,
+//       },
+//       cancel: true,
+//       persistent: true,
+//       component: {
+//         data() {
+//           return { email: clientEmail }
+//         },
+//       },
+//     }).onOk(async (opcion, dialogRef) => {
+//       const correoIngresado = dialogRef.scope.email
+
+//       if (!correoIngresado || correoIngresado.trim() === '') {
+//         return $q.notify({
+//           type: 'warning',
+//           message: 'Debe ingresar un correo válido',
+//         })
+//       }
+
+//       await getDetalleVenta(row.idVenta)
+
+//       if (!detalleVenta.value) {
+//         return $q.notify({
+//           type: 'negative',
+//           message: 'Venta sin items',
+//         })
+//       }
+
+//       if (opcion === 'comprobante') {
+//         enviarComprobanteCorreo(row.idcliente, correoIngresado)
+//       }
+
+//       if (opcion === 'factura') {
+//         enviarFacturaCorreo(row.idcliente, row.shortlink, correoIngresado)
+//       }
+//     })
+//   } catch (error) {
+//     console.error(error)
+//     $q.notify({ type: 'negative', message: 'No se pudo cargar datos' })
+//   }
+// }
 const crearMensaje = async (row) => {
-  console.log(row)
   try {
-    const response = await api.get(`obtenerEmailCliente/${row.idcliente}`) // Cambia a tu ruta real
-    const clientEmail = response.data.email
-    let opciones = [{ label: 'Comprobante', value: 'comprobante' }]
+    // 1. Limpia el valor antes de la llamada a la API (opcional, pero buena práctica)
+    emailCliente.value = ''
 
+    // 2. Guardar la fila seleccionada
+    rowSeleccionado = row
+
+    // 3. Obtener correo del cliente
+    const response = await api.get(`obtenerEmailCliente/${row.idcliente}`)
+    // Aquí actualizas el valor que será pasado como prop al diálogo
+    emailCliente.value = response.data.email ?? ''
+    console.log('Correo del cliente:', emailCliente.value)
+
+    // 4. Configurar opciones
+    opcionesEnvio.value = [{ label: 'Comprobante', value: 'comprobante' }]
+    const tipoFactura = getTipoFactura(true) // Esta línea no afecta la funcionalidad de envío
+    console.log('Tipo de factura:', tipoFactura)
     if (Number(row.tipoventa) !== 0) {
-      opciones.push({ label: 'Factura', value: 'factura' })
+      opcionesEnvio.value.push({ label: 'Factura', value: 'factura' })
     }
-    $q.dialog({
-      title: 'Seleccione una opción',
-      message: `¿Qué desea enviar al correo "${clientEmail}"?`,
-      options: {
-        type: 'radio',
-        model: null,
-        items: opciones,
-      },
-      cancel: true,
-      persistent: true,
-    })
-      .onOk(async (opcion) => {
-        if (opcion === 'cancelar' || opcion === null) {
-          $q.notify({ type: 'info', message: 'Operación cancelada' })
-          return
-        }
+    console.log('Opciones de envío:', opcionesEnvio.value)
 
-        console.log(`Elegiste: ${opcion}`)
-
-        await getDetalleVenta(row.idventa)
-
-        if (!detalleVenta.value) {
-          $q.notify({
-            type: 'negative',
-            message: 'Venta sin items',
-          })
-          return
-        }
-
-        if (opcion === 'comprobante') {
-          enviarComprobanteCorreo(row.idcliente)
-        }
-
-        if (opcion === 'factura') {
-          enviarFacturaCorreo(row.idcliente, row.shortlink)
-        }
-      })
-      .onCancel(() => {
-        $q.notify({ type: 'info', message: 'Operación cancelada' })
-      })
+    // 5. Abrir el modal
+    dialogCorreo.value = true
   } catch (error) {
-    console.error('Error al cargar datos:', error)
     $q.notify({
       type: 'negative',
-      message: 'No se pudieron cargar los datos',
+      message: 'No se pudo obtener los datos del cliente.' + error,
     })
   }
 }
-async function enviarComprobanteCorreo(idcliente) {
-  console.log(detalleVenta.value)
-  PDFenviarFacturaCorreo(idcliente, detalleVenta, $q)
+const procesarEnvioCorreo = async ({ correo, opcion }) => {
+  const row = rowSeleccionado
+
+  await getDetalleVenta(row.idventa)
+
+  if (!detalleVenta.value) {
+    return $q.notify({
+      type: 'negative',
+      message: 'Venta sin items',
+    })
+  }
+
+  if (opcion === 'comprobante') {
+    enviarComprobanteCorreo(row.idcliente, correo)
+  }
+
+  if (opcion === 'factura') {
+    enviarFacturaCorreo(row.idcliente, correo, row.shortlink)
+  }
 }
 
-async function enviarFacturaCorreo(idcliente, shortlink) {
+async function enviarComprobanteCorreo(idcliente, correo) {
+  console.log(detalleVenta.value)
+  PDFenviarFacturaCorreo(idcliente, detalleVenta, $q, null, correo)
+}
+
+async function enviarFacturaCorreo(idcliente, shortlink, correo) {
   console.log(detalleVenta.value)
 
-  PDFenviarFacturaCorreo(idcliente, detalleVenta, $q, shortlink)
+  PDFenviarFacturaCorreo(idcliente, detalleVenta, $q, shortlink, correo)
 }
 const getDetalleVenta = async (id) => {
   try {
@@ -529,7 +661,7 @@ const onSubmit = async () => {
       descuento: Number(obj.descuento),
       ventatotal: Number(obj.ventatotal),
       idventa: Number(obj.idventa),
-      fecha: obj.fecha,
+      fecha: cambiarFormatoFecha(obj.fecha),
       idalmacen: obj.idalmacen,
       idcliente: obj.idcliente,
       divisa: obj.divisa,
