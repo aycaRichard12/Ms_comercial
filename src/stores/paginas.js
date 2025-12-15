@@ -17,6 +17,7 @@ export const PAGINAS = Object.freeze({
     'registraralmacen',
     'registrarpuntodeventa',
     'registrarproductos',
+    'registrarcategoriaprecio',
   ]),
   administracionasignacion: Object.freeze([
     'asignaralmacen',
@@ -24,11 +25,7 @@ export const PAGINAS = Object.freeze({
     'asignarproductos',
     'categoriasdeprecio',
   ]),
-  administracionprecios: Object.freeze([
-    'costounitario',
-    'registrarcategoriaprecio',
-    'preciossugeridos',
-  ]),
+  administracionprecios: Object.freeze(['costounitario', 'preciossugeridos']),
   registrarventa: Object.freeze([
     'registrarventaoculto',
     'registrarcotizacionoculto',
