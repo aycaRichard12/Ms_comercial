@@ -2180,7 +2180,8 @@ class ventas
                 v.estado AS estado_documento,
                 su.nombre, 
                 (SELECT SUM(dc.monto) FROM detalle_cobro dc WHERE dc.estado_cobro_id_estado_cobro = ec.id_estado_cobro) AS totalcobro,
-                ec.tipo_cobro
+                ec.tipo_cobro,
+                a.nombre
             FROM 
                 estado_cobro ec
             LEFT JOIN venta v ON ec.venta_id_venta = v.id_venta
@@ -2188,6 +2189,7 @@ class ventas
             LEFT JOIN sucursal su ON v.idsucursal = su.id_sucursal
             LEFT JOIN detalle_venta dv ON v.id_venta = dv.venta_id_venta
             LEFT JOIN productos_almacen pa ON dv.productos_almacen_id_productos_almacen = pa.id_productos_almacen
+            LEFT JOIN almacen a ON a.id_almacen = pa.almacen_id_almacen
             WHERE 
                 c.idempresa = '$idempresa' AND ec.tipo_cobro = 'VE'
             GROUP BY 
@@ -2211,7 +2213,8 @@ class ventas
                 ct.estado AS estado_documento,
                 su.nombre, 
                 (SELECT SUM(dc.monto) FROM detalle_cobro dc WHERE dc.estado_cobro_id_estado_cobro = ec.id_estado_cobro) AS totalcobro,
-                ec.tipo_cobro
+                ec.tipo_cobro,
+                a.nombre
             FROM 
                 estado_cobro ec
             LEFT JOIN cotizacion ct ON ec.venta_id_venta = ct.id_cotizacion -- Nota: Se asume que 'venta_id_venta' se usa para cotizacion
@@ -2219,6 +2222,8 @@ class ventas
             LEFT JOIN sucursal su ON ct.idsucursal = su.id_sucursal
             LEFT JOIN detalle_cotizacion dctz ON ct.id_cotizacion = dctz.cotizacion_id_cotizacion
             LEFT JOIN productos_almacen pa ON dctz.productos_almacen_id_productos_almacen = pa.id_productos_almacen
+            LEFT JOIN almacen a ON a.id_almacen = pa.almacen_id_almacen
+
             WHERE 
                 c.idempresa = '$idempresa' AND ec.tipo_cobro = 'COT'
             GROUP BY 
@@ -2246,7 +2251,9 @@ class ventas
                 "nfactura" => $qwe[11], // Número de Venta o Cotización
                 "estadoventa" => $qwe[12], // Estado de Venta o Cotización
                 "sucursal" => $qwe[13], 
-                "totalcobrado" => $qwe[14]
+                "totalcobrado" => $qwe[14],
+                "tipo_cobro" => $qwe[15],
+                "almacen" => $qwe[16]
             );
             array_push($lista, $res);
         }

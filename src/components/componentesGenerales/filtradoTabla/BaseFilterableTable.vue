@@ -87,8 +87,10 @@ const totales = computed(() => {
   props.sumColumns.forEach((colName) => {
     totals[colName] = filteredData.value.reduce((sum, row) => {
       const value = parseFloat(row[colName])
+
       return sum + (isNaN(value) ? 0 : value)
     }, 0)
+    totals[colName] = Number(totals[colName].toFixed(2))
   })
   console.log(totals)
   return totals
