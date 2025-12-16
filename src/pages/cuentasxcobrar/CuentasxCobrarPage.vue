@@ -106,6 +106,16 @@
           </q-td>
         </template>
       </q-table>
+
+      <tablaCuentasxCobrar
+        ref="refHijo"
+        :rows="rows"
+        @ver-detalle="verDetalle"
+        @crear-mensaje="crearMensaje"
+        @ir-a-factura="ir_a_factura"
+        @ir-a-impuestos="ir_a_impuestos"
+        @abrir-modal-nota="abrirModal"
+      />
     </div>
 
     <!-- Formulario de registro -->
@@ -350,6 +360,7 @@ import { obtenerFechaActual } from 'src/composables/FuncionesG'
 import { convertirImagenUtil } from 'src/composables/FuncionesG'
 import { api } from 'src/boot/axios'
 import emitter from 'src/event-bus'
+import tablaCuentasxCobrar from './tablaCuentasxCobrar.vue'
 
 const $q = useQuasar()
 const privilegios = ['1', '1', '1', '1']
@@ -359,7 +370,7 @@ const cargando = ref(false)
 const mostrarDialogoImagen = ref(false)
 const imagenSeleccionada = ref('')
 const divisa = ref('$') // Se actualizará con cargarDivisas
-
+const rows = ref([])
 // Filtros
 const filtroAlmacen = ref({ value: 0, label: 'Todos los almacenes' })
 const filtroEstado = ref({ value: 0, label: 'Todos' })
@@ -636,20 +647,18 @@ const cargarDatos = async () => {
   try {
     const contenidousuario = validarUsuario()
     const idempresa = contenidousuario[0]?.empresa?.idempresa
-
     // const response = await api.get(`listacuentasxcobrar/${idempresa}`)
     // console.log(response)
     // const res = response.data
     // console.log(res)
     // const data = await response.json()
-
     // const response = await fetch(`${URL_APICM}api/listacuentasxcobrar/${idempresa}`)
     // if (!response.ok) throw new Error('Error al cargar datos')
-
     //const data = await response.json()
     const response = await api.get(`listacuentasxcobrar/${idempresa}`)
     console.log(response)
     const data = response.data
+    rows.value = response.data
     console.log(data)
     if (data.estado === 'error') throw new Error(data.error)
 

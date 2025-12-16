@@ -491,6 +491,121 @@
             </div>
           </div>
         </q-card-section>
+
+        <q-card-section>
+          <h5 class="q-my-sm text-primary" style="font-size: 15px">
+            <q-icon name="schedule" color="purple" class="q-mr-sm" />
+            Condiciones de Crédito
+          </h5>
+          <div class="col-12 q-mb-md">
+            <q-toggle
+              v-model="carritoCO.credito"
+              label="¿A crédito?"
+              left-label
+              @update:model-value="toggleCredit"
+            >
+              <template v-slot:prepend>
+                <q-icon name="credit_score" color="purple" />
+              </template>
+            </q-toggle>
+          </div>
+
+          <div v-if="carritoCO.credito" class="row q-col-gutter-md q-pt-md">
+            <div class="col-12 col-md-4">
+              <label for="cantidadpagos">Cantidad de pagos*</label>
+              <q-input
+                v-model="carritoCO.cantidadPagos"
+                id="cantidadpagos"
+                type="number"
+                min="0"
+                required
+                dense
+                outlined
+                @update:model-value="calculatePayments"
+                :rules="[(val) => !!val || 'Campo Obligatorio']"
+              >
+                <template v-slot:prepend>
+                  <q-icon name="format_list_numbered" color="purple" />
+                </template>
+              </q-input>
+            </div>
+
+            <div class="col-12 col-md-4">
+              <label for="montopago">Monto de pagos*</label>
+              <q-input
+                v-model="carritoCO.montoPagos"
+                id="montopago"
+                dense
+                outlined
+                :disable="!carritoCO.credito"
+              >
+                <template v-slot:prepend>
+                  <q-icon name="paid" color="purple" />
+                </template>
+                <template v-slot:append>
+                  <q-btn flat :label="divisaActiva.simbolo" />
+                </template>
+              </q-input>
+            </div>
+
+            <div class="col-12 col-md-4">
+              <label for="periodo">Período establecido*</label>
+              <q-select
+                v-model="carritoCO.periodo"
+                id="periodo"
+                dense
+                outlined
+                :options="periodOptions"
+                option-label="label"
+                option-value="value"
+                emit-value
+                map-options
+                required
+                @update:model-value="calculateDueDate"
+              >
+                <template v-slot:prepend>
+                  <q-icon name="calendar_today" color="purple" />
+                </template>
+              </q-select>
+            </div>
+
+            <div v-if="carritoCO.periodo === 0" class="col-12 col-md-4">
+              <label for="plazopersonalizada">Plazo total (días)*</label>
+              <q-input
+                v-model="carritoCO.plazoPersonalizado"
+                id="plazopersonalizada"
+                type="number"
+                min="0"
+                dense
+                outlined
+                required
+                @update:model-value="calculateDueDate"
+                :rules="[(val) => !!val || 'Campo Obligatorio']"
+              >
+                <template v-slot:prepend>
+                  <q-icon name="edit_calendar" color="purple" />
+                </template>
+              </q-input>
+            </div>
+
+            <div class="col-12 col-md-4">
+              <label for="fechalimite">Fecha límite*</label>
+              <q-input
+                v-model="carritoCO.fechaLimite"
+                id="fechalimite"
+                dense
+                outlined
+                type="date"
+                :disable="true"
+              >
+                <template v-slot:prepend>
+                  <q-icon name="event_available" color="purple" />
+                </template>
+              </q-input>
+            </div>
+          </div>
+        </q-card-section>
+
         <q-card-actions align="right">
           <q-btn flat label="OK" color="primary" @click="enviarDatos" />
         </q-card-actions>
@@ -597,6 +712,14 @@ const optionOperacion = ref([
   { value: 2, label: 'Cotización Normal' },
   { value: 1, label: 'Cotización Preferencial' },
 ])
+
+const periodOptions = [
+  { label: 'Personalizado', value: 0 },
+  { label: '15 días', value: 15 },
+  { label: '30 días', value: 30 },
+  { label: '60 días', value: 60 },
+  { label: '90 días', value: 90 },
+]
 // Datos del formulario
 const filtroAlmacenCO = ref(null)
 const almacenesOptions = ref([])
@@ -643,7 +766,51 @@ const carritoCO = reactive({
   metodoPago: 0,
   variablePago: '',
   fecha: fecha.value,
+  credito: false,
+  periodo: null,
 })
+
+const toggleCredit = (value) => {
+  if (!value) {
+    carritoCO.cantidadPagos = 0
+    carritoCO.montoPagos = 0
+    carritoCO.periodo = null
+    carritoCO.plazoPersonalizado = 0 // Corregido
+    carritoCO.fechaLimite = '' // Corregido
+  }
+}
+const calculatePayments = () => {
+  if (carritoCO.credito && carritoCO.cantidadPagos > 0 && totalSaleAmount.value > 0) {
+    carritoCO.montoPagos = (totalSaleAmount.value / carritoCO.cantidadPagos).toFixed(2)
+  } else {
+    carritoCO.montoPagos = 0
+  }
+}
+const calculateDueDate = () => {
+  if (!carritoCO.credito || !carritoCO.fecha) return // Corregido
+
+  const fecha = new Date(carritoCO.fecha) // Corregido
+  let daysToAdd = 0
+
+  const selectedPeriod = Number(carritoCO.periodo) // Corregido
+
+  if (selectedPeriod === 0) {
+    daysToAdd = Number(carritoCO.plazoPersonalizado) || 0 // Corregido (usando carritoCO)
+  } else if (selectedPeriod > 0) {
+    daysToAdd = selectedPeriod * carritoCO.cantidadPagos // Corregido
+  }
+
+  if (daysToAdd > 0) {
+    fecha.setDate(fecha.getDate() + daysToAdd)
+    carritoCO.fechaLimite = fecha.toISOString().slice(0, 10) // Corregido
+  } else {
+    carritoCO.fechaLimite = '' // Corregido
+  }
+}
+const CONSTANTES = {
+  tipopago: 'contado',
+}
+console.log(CONSTANTES.tipopago)
 const emit = defineEmits(['reiniciar'])
 
 // premitir stock
@@ -1405,6 +1572,7 @@ async function enviarDatos() {
   const pv = puntoVenta.value
   carritoCO.ipv = Number(pv.value)
   carritoCO.idalmacen = filtroAlmacenCO.value
+  carritoCO.tipopago = carritoCO.credito ? 'credito' : CONSTANTES.tipopago
   // ref([{ metodoPago: null, monto: 0, porcentaje: 0 }])
   const datosFormulario = new FormData()
   datosFormulario.append('ver', 'registrarCotizacion')
