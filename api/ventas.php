@@ -2096,22 +2096,165 @@ class ventas
         return $res;
     }
 //cotizacion puntoventa
+    // function listaCuentasporCbrar($idmd5)
+    // {
+    //     $idempresa = $this->verificar->verificarIDEMPRESAMD5($idmd5);
+    //     $lista = [];
+
+
+    //     $alma = $this->cm->query("SELECT 
+    //     ec.id_estado_cobro, 
+    //     v.fecha_venta, 
+    //     concat(c.nombre , ' | ' ,  c.nombrecomercial, ' | ', c.ciudad) as cliente, 
+    //     ec.Ncuotas,
+    //     ec.valorcuotas, 
+    //     ec.saldo, 
+    //     (v.monto_total+descuento), 
+    //     ec.fecha_limite, 
+    //     pa.almacen_id_almacen, 
+    //     (select sum(dc.ncuotas) as ncuotas,
+    //     ec.tipo_cobro
+    //     from detalle_cobro dc where dc.estado_cobro_id_estado_cobro=ec.id_estado_cobro) as cuotaspagadas, ec.estado, v.nfactura, v.estado, su.nombre, (select sum(dc.monto) as cobro from detalle_cobro dc where dc.estado_cobro_id_estado_cobro=ec.id_estado_cobro) as totalcobro from estado_cobro ec
+    //             LEFT join venta v on ec.venta_id_venta=v.id_venta
+    //             LEFT join cliente c on v.cliente_id_cliente1=c.id_cliente
+    //             LEFT JOIN sucursal su ON v.idsucursal=su.id_sucursal
+    //             LEFT join detalle_venta dv on v.id_venta=dv.venta_id_venta
+    //             LEFT join productos_almacen pa on dv.productos_almacen_id_productos_almacen=pa.id_productos_almacen
+    //             where c.idempresa='$idempresa' and ec.tipo_cobro = 'VE'
+    //             group by ec.id_estado_cobro
+    //             order by ec.id_estado_cobro DESC");
+    //     //          
+    //     $cotizacion = $this->cm->query("SELECT 
+    //             ec.id_estado_cobro, 
+    //             ct.fecha_cotizacion, 
+    //             concat(c.nombre , ' | ' ,  c.nombrecomercial, ' | ', c.ciudad) as cliente, 
+    //             ec.Ncuotas, 
+    //             ec.valorcuotas, 
+    //             ec.saldo, 
+    //             (ct.monto_total+descuento), 
+    //             ec.fecha_limite, 
+    //             pa.almacen_id_almacen,
+
+    //             (select sum(dc.ncuotas) as ncuotas from detalle_cobro dc where dc.estado_cobro_id_estado_cobro=ec.id_estado_cobro) as cuotaspagadas, 
+
+    //             ec.estado, 
+    //             ct.num, 
+    //             ct.estado, 
+    //             su.nombre, 
+    //             (select sum(dc.monto) as cobro from detalle_cobro dc where dc.estado_cobro_id_estado_cobro=ec.id_estado_cobro) as totalcobro,
+    //             ec.tipo_cobro
+    //             from estado_cobro ec
+    //             LEFT join cotizacion ct on ec.venta_id_venta=ct.id_cotizacion
+    //             LEFT join cliente c on ct.cliente_id_cliente=c.id_cliente
+    //             LEFT JOIN sucursal su ON ct.idsucursal=su.id_sucursal
+    //             LEFT join detalle_cotizacion dctz on ct.id_cotizacion=dctz.cotizacion_id_cotizacion
+    //             LEFT join productos_almacen pa on dctz.productos_almacen_id_productos_almacen=pa.id_productos_almacen
+    //             where c.idempresa= '$idempresa' and ec.tipo_cobro = 'COT'
+    //             group by ec.id_estado_cobro
+    //             order by ec.id_estado_cobro DESC");
+    //     while ($qwe = $this->cm->fetch($alma)) {
+    //         $res = array("id" => $qwe[0], "fechaventa" => $qwe[1], "cliente" => $qwe[2], "ncuotas" => $qwe[3], "valorcuota" => $qwe[4], "saldo" => $qwe[5], "ventatotal" => $qwe[6], "fechalimite" => $qwe[7], "idalmacen" => $qwe[8], "cuotaspagas" => $qwe[9], "estado" => $qwe[10], "nfactura" => $qwe[11], "estadoventa" => $qwe[12], "sucursal" => $qwe[13], "totalcobrado" => $qwe[14]);
+    //         array_push($lista, $res);
+    //     }
+    //     echo json_encode($lista);
+    // }
     function listaCuentasporCbrar($idmd5)
     {
         $idempresa = $this->verificar->verificarIDEMPRESAMD5($idmd5);
         $lista = [];
-        $alma = $this->cm->query("select ec.id_estado_cobro, v.fecha_venta, concat(c.nombre , ' | ' ,  c.nombrecomercial, ' | ', c.ciudad) as cliente, ec.Ncuotas, ec.valorcuotas, ec.saldo, (v.monto_total+descuento), ec.fecha_limite, pa.almacen_id_almacen, 
-        (select sum(dc.ncuotas) as ncuotas from detalle_cobro dc where dc.estado_cobro_id_estado_cobro=ec.id_estado_cobro) as cuotaspagadas, ec.estado, v.nfactura, v.estado, su.nombre, (select sum(dc.monto) as cobro from detalle_cobro dc where dc.estado_cobro_id_estado_cobro=ec.id_estado_cobro) as totalcobro from estado_cobro ec
-                LEFT join venta v on ec.venta_id_venta=v.id_venta
-                LEFT join cliente c on v.cliente_id_cliente1=c.id_cliente
-                LEFT JOIN sucursal su ON v.idsucursal=su.id_sucursal
-                LEFT join detalle_venta dv on v.id_venta=dv.venta_id_venta
-                LEFT join productos_almacen pa on dv.productos_almacen_id_productos_almacen=pa.id_productos_almacen
-                where c.idempresa='$idempresa'
-                group by ec.id_estado_cobro
-                order by ec.id_estado_cobro DESC");
-        while ($qwe = $this->cm->fetch($alma)) {
-            $res = array("id" => $qwe[0], "fechaventa" => $qwe[1], "cliente" => $qwe[2], "ncuotas" => $qwe[3], "valorcuota" => $qwe[4], "saldo" => $qwe[5], "ventatotal" => $qwe[6], "fechalimite" => $qwe[7], "idalmacen" => $qwe[8], "cuotaspagas" => $qwe[9], "estado" => $qwe[10], "nfactura" => $qwe[11], "estadoventa" => $qwe[12], "sucursal" => $qwe[13], "totalcobrado" => $qwe[14]);
+
+        // La siguiente consulta combina los resultados de Venta ('VE') y Cotización ('COT')
+        $sql_combined = "(SELECT 
+                ec.id_estado_cobro, 
+                v.fecha_venta, 
+                CONCAT(c.nombre , ' | ' , c.nombrecomercial, ' | ', c.ciudad) AS cliente, 
+                ec.Ncuotas,
+                ec.valorcuotas, 
+                ec.saldo, 
+                (v.monto_total + v.descuento) AS monto_total_doc, 
+                ec.fecha_limite, 
+                pa.almacen_id_almacen, 
+                (SELECT SUM(dc.ncuotas) FROM detalle_cobro dc WHERE dc.estado_cobro_id_estado_cobro = ec.id_estado_cobro) AS cuotaspagadas, 
+                ec.estado, 
+                v.nfactura AS num_documento,
+                v.estado AS estado_documento,
+                su.nombre, 
+                (SELECT SUM(dc.monto) FROM detalle_cobro dc WHERE dc.estado_cobro_id_estado_cobro = ec.id_estado_cobro) AS totalcobro,
+                ec.tipo_cobro,
+                a.nombre
+            FROM 
+                estado_cobro ec
+            LEFT JOIN venta v ON ec.venta_id_venta = v.id_venta
+            LEFT JOIN cliente c ON v.cliente_id_cliente1 = c.id_cliente
+            LEFT JOIN sucursal su ON v.idsucursal = su.id_sucursal
+            LEFT JOIN detalle_venta dv ON v.id_venta = dv.venta_id_venta
+            LEFT JOIN productos_almacen pa ON dv.productos_almacen_id_productos_almacen = pa.id_productos_almacen
+            LEFT JOIN almacen a ON a.id_almacen = pa.almacen_id_almacen
+            WHERE 
+                c.idempresa = '$idempresa' AND ec.tipo_cobro = 'VE'
+            GROUP BY 
+                ec.id_estado_cobro)
+            
+            UNION ALL
+            
+            (SELECT 
+                ec.id_estado_cobro, 
+                ct.fecha_cotizacion AS fecha_venta, -- Alineado con la primera columna de fecha
+                CONCAT(c.nombre , ' | ' , c.nombrecomercial, ' | ', c.ciudad) AS cliente, 
+                ec.Ncuotas, 
+                ec.valorcuotas, 
+                ec.saldo, 
+                (ct.monto_total + ct.descuento) AS monto_total_doc, -- Alineado con la columna de monto total
+                ec.fecha_limite, 
+                pa.almacen_id_almacen,
+                (SELECT SUM(dc.ncuotas) FROM detalle_cobro dc WHERE dc.estado_cobro_id_estado_cobro = ec.id_estado_cobro) AS cuotaspagadas, 
+                ec.estado AS estado_cobro, 
+                ct.num AS num_documento,
+                ct.estado AS estado_documento,
+                su.nombre, 
+                (SELECT SUM(dc.monto) FROM detalle_cobro dc WHERE dc.estado_cobro_id_estado_cobro = ec.id_estado_cobro) AS totalcobro,
+                ec.tipo_cobro,
+                a.nombre
+            FROM 
+                estado_cobro ec
+            LEFT JOIN cotizacion ct ON ec.venta_id_venta = ct.id_cotizacion -- Nota: Se asume que 'venta_id_venta' se usa para cotizacion
+            LEFT JOIN cliente c ON ct.cliente_id_cliente = c.id_cliente
+            LEFT JOIN sucursal su ON ct.idsucursal = su.id_sucursal
+            LEFT JOIN detalle_cotizacion dctz ON ct.id_cotizacion = dctz.cotizacion_id_cotizacion
+            LEFT JOIN productos_almacen pa ON dctz.productos_almacen_id_productos_almacen = pa.id_productos_almacen
+            LEFT JOIN almacen a ON a.id_almacen = pa.almacen_id_almacen
+
+            WHERE 
+                c.idempresa = '$idempresa' AND ec.tipo_cobro = 'COT'
+            GROUP BY 
+                ec.id_estado_cobro)
+                
+            ORDER BY id_estado_cobro DESC
+        ";
+
+        $registros = $this->cm->query($sql_combined);
+
+        while ($qwe = $this->cm->fetch($registros)) {
+            // El array de mapeo es el mismo que tenías, ya que la estructura y el orden de las columnas se mantuvo:
+            $res = array(
+                "id" => $qwe[0], 
+                "fechaventa" => $qwe[1], 
+                "cliente" => $qwe[2], 
+                "ncuotas" => $qwe[3], 
+                "valorcuota" => $qwe[4], 
+                "saldo" => $qwe[5], 
+                "ventatotal" => $qwe[6], 
+                "fechalimite" => $qwe[7], 
+                "idalmacen" => $qwe[8], 
+                "cuotaspagas" => $qwe[9], 
+                "estado" => $qwe[10], // Estado del Cobro
+                "nfactura" => $qwe[11], // Número de Venta o Cotización
+                "estadoventa" => $qwe[12], // Estado de Venta o Cotización
+                "sucursal" => $qwe[13], 
+                "totalcobrado" => $qwe[14],
+                "tipo_cobro" => $qwe[15],
+                "almacen" => $qwe[16]
+            );
             array_push($lista, $res);
         }
         echo json_encode($lista);

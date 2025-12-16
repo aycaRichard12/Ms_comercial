@@ -20,7 +20,7 @@
           />
         </div>
         <div class="col-12 col-md-3">
-          <label for="estado">Estado</label>
+          <label for="estado">Tipo</label>
           <q-select
             v-model="filtroEstado"
             :options="opcionesEstados"
@@ -32,80 +32,16 @@
             clearable
           />
         </div>
-
-        <div class="col-12 col-md-6">
-          <div class="row q-col-gutter-x-md">
-            <div class="col-6">
-              <label for="filtrarpor">Filtrar por...</label>
-              <q-select
-                v-model="columnaFiltro"
-                :options="opcionesColumnas"
-                id="filtrarpor"
-                dense
-                outlined
-                map-options
-                clearable
-              />
-            </div>
-            <div class="col-6">
-              <label for="buscar">Buscar...</label>
-              <q-input
-                v-model="textoBusqueda"
-                id="buscar"
-                dense
-                outlined
-                clearable
-                @update:model-value="filtrarTabla"
-              >
-                <template v-slot:append>
-                  <q-icon name="search" />
-                </template>
-              </q-input>
-            </div>
-          </div>
-        </div>
       </div>
 
       <!-- Tabla principal -->
-      <q-table
-        title="Cuentas por Cobrar"
+
+      <tablaCuentasxCobrar
+        ref="refHijo"
         :rows="datosFiltrados"
-        :columns="columnas"
-        row-key="id"
-        flat
-        bordered
-        dense
-        :pagination="{ rowsPerPage: 5 }"
-        :loading="cargando"
-      >
-        <template v-slot:body-cell-opciones="props">
-          <q-td :props="props">
-            <div class="q-gutter-sm">
-              <q-btn
-                v-if="Number(privilegios[1]) !== 0 && [1, 3].includes(Number(props.row.estado))"
-                icon="add_circle"
-                color="primary"
-                round
-                :id="'btn-' + props.row.id"
-                @click="cargarFormulario(props.row)"
-                title="Registrar cobro"
-              />
-              <!-- <span class="text-caption q-ml-sm">
-                Condition:
-                {{ privilegios[1] !== 0 && [1, 3].includes(props.row.estado) }} (Privilege[1]:
-                {{ privilegios[1] }}, Estado: {{ props.row.estado }})
-              </span> -->
-              <q-btn
-                icon="list_alt"
-                color="info"
-                round
-                @click="mostrarDetalles(props.row)"
-                title="Ver listado de cobros"
-              />
-            </div>
-          </q-td>
-        </template>
-      </q-table>
+        @cargar-formulario="cargarFormulario"
+        @mostrar-detalles="mostrarDetalles"
+      />
     </div>
 
     <!-- Formulario de registro -->
@@ -350,21 +286,21 @@ import { obtenerFechaActual } from 'src/composables/FuncionesG'
 import { convertirImagenUtil } from 'src/composables/FuncionesG'
 import { api } from 'src/boot/axios'
 import emitter from 'src/event-bus'
-
+import tablaCuentasxCobrar from './tablaCuentasxCobrar.vue'
+import { obtenerPermisosPagina } from 'src/composables/FuncionesG'
+const permisos = obtenerPermisosPagina()
+console.log(permisos)
 const $q = useQuasar()
-const privilegios = ['1', '1', '1', '1']
 const vistaActiva = ref('principal')
 const mostrarForm = ref(false)
 const cargando = ref(false)
 const mostrarDialogoImagen = ref(false)
 const imagenSeleccionada = ref('')
 const divisa = ref('$') // Se actualizará con cargarDivisas
-
+const rows = ref([])
 // Filtros
 const filtroAlmacen = ref({ value: 0, label: 'Todos los almacenes' })
-const filtroEstado = ref({ value: 0, label: 'Todos' })
-const columnaFiltro = ref({ value: 0, label: 'Todo' })
-const textoBusqueda = ref('')
+const filtroEstado = ref({ value: '', label: 'Todos' })
 
 // Datos
 const datosOriginales = ref([])
@@ -393,57 +329,6 @@ const formulario = ref({
   imagenConvertida: null,
 })
 
-// Columnas de la tabla principal
-const columnas = [
-  { name: 'numero', label: 'N°', field: 'numero', align: 'center' },
-  { name: 'cliente', label: 'Razon Social', field: 'cliente', align: 'left' },
-  { name: 'factura', label: 'N° Factura', field: 'nfactura', align: 'center' },
-  {
-    name: 'fecha',
-    label: 'Fecha Crédito',
-    field: 'fechaventa',
-    align: 'center',
-    format: (val) => (val ? cambiarFormatoFecha(val) : ''),
-  },
-  {
-    name: 'vencimiento',
-    label: 'Vencimiento',
-    field: 'fechalimite',
-    align: 'center',
-    format: (val) => (val ? cambiarFormatoFecha(val) : ''),
-  },
-  { name: 'cuotas', label: 'N° Cuotas', field: 'ncuotas', align: 'center' },
-  {
-    name: 'cuotasProcesadas',
-    label: 'Cuotas Procesadas',
-    field: (row) => row.cuotaspagas || 0,
-    align: 'center',
-  },
-  {
-    name: 'totalVenta',
-    label: 'Total Venta',
-    field: 'ventatotal',
-    align: 'right',
-    format: (val) => decimas(redondear(parseFloat(val))),
-  },
-  {
-    name: 'totalCobrado',
-    label: 'Total Cobrado',
-    field: (row) => row.totalcobrado || 0,
-    align: 'right',
-    format: (val) => decimas(redondear(parseFloat(val))),
-  },
-  {
-    name: 'saldo',
-    label: 'Saldo',
-    field: 'saldo',
-    align: 'right',
-    format: (val) => decimas(redondear(parseFloat(val))),
-  },
-  { name: 'estado', label: 'Estado', field: (row) => estados[row.estado], align: 'center' },
-  { name: 'opciones', label: 'Opciones', field: '', align: 'center' },
-]
-
 // Columnas de la tabla de detalles
 const columnasDetalles = [
   { name: 'numero', label: 'N°', field: 'numero', align: 'center' },
@@ -467,25 +352,9 @@ const columnasDetalles = [
 
 // Opciones para filtros
 const opcionesEstados = [
-  { value: 0, label: 'Todos' },
-  { value: 1, label: 'Activos' },
-  { value: 2, label: 'Finalizados' },
-  { value: 3, label: 'Atrasados' },
-  { value: 4, label: 'Anulados' },
-]
-
-const opcionesColumnas = [
-  { value: 0, label: 'Todo' },
-  { value: 1, label: 'Cliente' },
-  { value: 2, label: 'N° factura' },
-  { value: 3, label: 'Fecha crédito' },
-  { value: 4, label: 'Vencimiento' },
-  { value: 5, label: 'N° cuotas' },
-  { value: 6, label: 'N° cuotas Procesadas' },
-  { value: 7, label: 'Total venta' },
-  { value: 8, label: 'Total cobrado' },
-  { value: 9, label: 'Saldo' },
-  { value: 10, label: 'Estado' },
+  { value: '', label: 'Todos' },
+  { value: 'VE', label: 'Ventas-Facturadas' },
+  { value: 'COT', label: 'Cotizaciones' },
 ]
 
 const estados = {
@@ -498,132 +367,20 @@ const estados = {
 const onRowClick = (evt, row, index) => {
   alert('Click en fila', index, row.id, row)
 }
-console.log(onRowClick)
-// Computed
-// const datosFiltrados = computed(() => {
-//   let datos = [...datosOriginales.value]
-//   console.datos
-//   console.log(filtroAlmacen.value?.value)
-
-//   // Aplicar filtros
-//   if (Number(filtroAlmacen.value?.value) !== 0) {
-//     datos = datos.filter(
-//       (item) => Number(item.idalmacen) === Number(filtroAlmacen.value?.value),
-//     )
-//   }
-
-//   console.log(filtroEstado.value?.value)
-//   if (Number(filtroEstado.value?.value) !== 0) {
-//     datos = datos.filter((item) => Number(item.estado) === Number(filtroEstado.value?.value))
-//   }
-
-//   // Aplicar búsqueda
-//   console.log(textoBusqueda.value)
-//   // ... (previous code)
-
-//   if (textoBusqueda.value && textoBusqueda.value.trim() !== '') {
-//     const texto = textoBusqueda.value.toLowerCase()
-//     const columna = columnaFiltro.value
-//     console.log('Texto de búsqueda:', texto)
-//     console.log('Columna seleccionada:', columna)
-//     console.log('Array de columnas:', columnas) // Add this line to inspect 'columnas'
-
-//     datos = datos.filter((item) => {
-//       if (columna === 0) {
-//         // Buscar en todas las columnas
-//         return Object.values(item).some((val) => String(val).toLowerCase().includes(texto))
-//       } else {
-//         // Crucial check: Ensure columnas exists and the index is valid
-//         if (!columnas || !columnas[columna]) {
-//           console.error(
-//             `Error: La columna con índice ${columna} no existe en el array de columnas.`,
-//           )
-//           // You might want to return false here or handle this gracefully
-//           return false // Or handle this case based on your application's logic
-//         }
-
-//         // Buscar en la columna específica
-//         const campo = columnas[columna].field
-//         const value = typeof campo === 'function' ? campo(item) : item[campo]
-//         return String(value).toLowerCase().includes(texto)
-//       }
-//     })
-//   }
-
-//   // ... (rest of the code)
-//   // Agregar número de fila
-//   return datos.map((item, index) => ({
-//     ...item,
-//     numero: index + 1,
-//   }))
-// })
 
 const datosFiltrados = computed(() => {
-  let datos = [...datosOriginales.value]
-  // console.datos // This line seems like a typo, should probably be console.log(datos)
-  console.log(filtroAlmacen.value?.value)
-
-  // Aplicar filtros
+  let datos = [...rows.value]
   if (Number(filtroAlmacen.value?.value) !== 0) {
     datos = datos.filter((item) => Number(item.idalmacen) === Number(filtroAlmacen.value?.value))
   }
-
-  console.log(filtroEstado.value?.value)
-  if (Number(filtroEstado.value?.value) !== 0) {
-    datos = datos.filter((item) => Number(item.estado) === Number(filtroEstado.value?.value))
+  if (filtroEstado.value?.value !== '') {
+    const tipo = filtroEstado.value
+    datos = datos.filter((item) => item.tipo_cobro == tipo.value)
   }
 
-  // Aplicar búsqueda
-  console.log(textoBusqueda.value)
-  if (textoBusqueda.value && textoBusqueda.value.trim() !== '') {
-    const texto = textoBusqueda.value.toLowerCase()
-    // FIX IS HERE: Access the 'value' property
-    const columna = columnaFiltro.value?.value
-    console.log('Texto de búsqueda:', texto)
-    console.log('Columna seleccionada (index):', columna) // Log the actual index now
-    console.log('Array de columnas:', columnas) // Keep this for debugging 'columnas' array itself
-
-    datos = datos.filter((item) => {
-      if (columna === 0) {
-        // Buscar en todas las columnas
-        return Object.values(item).some((val) => String(val).toLowerCase().includes(texto))
-      } else {
-        // Add safety checks for `columnas` and `columna` just in case, though the primary issue is resolved
-        if (!columnas || !columnas[columna]) {
-          console.error(
-            `Error: La columna con índice ${columna} no existe en el array de columnas.`,
-          )
-          return false // Prevent further errors and exclude this item
-        }
-
-        // Buscar en la columna específica
-        const campo = columnas[columna].field
-        const value = typeof campo === 'function' ? campo(item) : item[campo]
-        return String(value).toLowerCase().includes(texto)
-      }
-    })
-  }
-  return processDataWithTotals(datos)
-
-  // Agregar número de fila
+  return datos
 })
 
-const processDataWithTotals = (data) => {
-  if (data.length === 0) return []
-
-  const numberedData = data.map((row, index) => ({
-    ...row,
-    numero: index + 1,
-  }))
-
-  const totales = {
-    cuotasProcesadas: numberedData.reduce((sum, u) => sum + Number(u.cuotasProcesadas || 0), 0),
-    totalVenta: numberedData.reduce((sum, u) => sum + Number(u.totalVenta || 0), 0),
-    totalCobrado: numberedData.reduce((sum, u) => sum + Number(u.totalCobrado || 0), 0),
-  }
-
-  return [...numberedData, totales]
-}
 const totalCobrado = computed(() => {
   return detallesCobros.value.reduce((total, item) => {
     return total + parseFloat(item.monto || 0)
@@ -637,20 +394,30 @@ const cargarDatos = async () => {
     const contenidousuario = validarUsuario()
     const idempresa = contenidousuario[0]?.empresa?.idempresa
 
-    // const response = await api.get(`listacuentasxcobrar/${idempresa}`)
-    // console.log(response)
-    // const res = response.data
-    // console.log(res)
-    // const data = await response.json()
-
-    // const response = await fetch(`${URL_APICM}api/listacuentasxcobrar/${idempresa}`)
-    // if (!response.ok) throw new Error('Error al cargar datos')
-
-    //const data = await response.json()
     const response = await api.get(`listacuentasxcobrar/${idempresa}`)
-    console.log(response)
     const data = response.data
-    console.log(data)
+
+    rows.value = response.data.map((obj, index) => ({
+      id: obj.id,
+      fechaventa: cambiarFormatoFecha(obj.fechaventa),
+      cliente: obj.cliente,
+      ncuotas: Number(obj.ncuotas),
+      valorcuota: obj.valorcuota,
+      saldo: Number(decimas(redondear(parseFloat(obj.saldo)))),
+      ventatotal: Number(decimas(redondear(parseFloat(obj.ventatotal)))),
+      fechalimite: cambiarFormatoFecha(obj.fechalimite),
+      idalmacen: obj.idalmacen,
+      cuotaspagas: obj.cuotaspagas || 0,
+      estado: obj.estado,
+      estadoLabel: estados[obj.estado],
+      nfactura: Number(obj.nfactura),
+      estadoventa: obj.estadoventa,
+      sucursal: obj.sucursal,
+      totalcobrado: Number(decimas(redondear(parseFloat(obj.totalcobrado ?? 0.0)))),
+      tipo_cobro: obj.tipo_cobro,
+      almacen: obj.almacen,
+      numero: index + 1,
+    }))
     if (data.estado === 'error') throw new Error(data.error)
 
     await actualizarEstados(data)
@@ -915,16 +682,6 @@ const mostrarDetalles = async (dato) => {
 const mostrarImagen = (imagen) => {
   imagenSeleccionada.value = imagen
   mostrarDialogoImagen.value = true
-}
-
-const filtrarDatos = () => {
-  console.log(filtroAlmacen.value)
-  console.log(filtroEstado.value)
-  console.log(columnaFiltro.value)
-}
-
-const filtrarTabla = () => {
-  // Los computed properties ya manejan la búsqueda
 }
 
 const formatoMoneda = (valor) => {

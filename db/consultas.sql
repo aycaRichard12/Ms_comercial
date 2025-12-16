@@ -122,3 +122,33 @@ select
 from ventas v
 left join ventas_facturadas vf on v.id_venta=vf.venta_id_venta
 where v.cliente_id_cliente1=1234    
+
+
+
+select 
+  ec.id_estado_cobro, 
+  v.fecha_venta, 
+  concat(c.nombre , ' | ' ,  c.nombrecomercial, ' | ', c.ciudad) as cliente, 
+  ec.Ncuotas, 
+  ec.valorcuotas, 
+  ec.saldo, 
+  (v.monto_total+descuento), 
+  ec.fecha_limite, 
+  pa.almacen_id_almacen,
+
+  (select sum(dc.ncuotas) as ncuotas from detalle_cobro dc where dc.estado_cobro_id_estado_cobro=ec.id_estado_cobro) as cuotaspagadas, 
+
+  ec.estado, 
+  v.nfactura, 
+  v.estado, 
+  su.nombre, 
+  (select sum(dc.monto) as cobro from detalle_cobro dc where dc.estado_cobro_id_estado_cobro=ec.id_estado_cobro) as totalcobro 
+from estado_cobro ec
+LEFT join cotizacion v on ec.venta_id_venta=v.id_venta
+LEFT join cliente c on v.cliente_id_cliente1=c.id_cliente
+LEFT JOIN sucursal su ON v.idsucursal=su.id_sucursal
+LEFT join detalle_venta dv on v.id_venta=dv.venta_id_venta
+LEFT join productos_almacen pa on dv.productos_almacen_id_productos_almacen=pa.id_productos_almacen
+where c.idempresa='$idempresa'
+group by ec.id_estado_cobro
+order by ec.id_estado_cobro DESC

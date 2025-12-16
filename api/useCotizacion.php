@@ -386,10 +386,14 @@ class UseCotizacion
                     $respuestaPagos = $this->registrarPagosVentaCotizacion($detalles['pagosDivididos'], $ultimoIdInsertado);
                     $respuestaFinal['pagosDivididos'] = $respuestaPagos;
                 }
+                if ($detalles['tipopago'] == self::TIPO_PAGO_CREDITO) {
+                    $respuestaCredito = $this->registroCuentaXcobrar($detalles['cantidadPagos'], $detalles['montoPagos'], $detalles['periodo'], $ultimoIdInsertado, $detalles['fechaLimite'], $detalles['ventatotal'], 'COT');
+                    $respuestaFinal['credito'] = $respuestaCredito;
+                }
                 
 
                 $this->cm->commit();
-                echo json_encode(["estado" => "exito", "mensaje" => "Cotización registrada exitosamente.", "id" => $ultimoIdInsertado, $respuestaFinal]);
+                echo json_encode(["estado" => "exito", "mensaje" => "Cotización registrada exitosamente.", "id" => $ultimoIdInsertado, "respuesta final "=> $respuestaFinal, "detalles" => $detalles, "tipopago" => $detalles['tipopago'],"cantidadPagos" => $detalles['cantidadPagos'], "montoPagos" => $detalles['montoPagos'], "fechaLimite" => $detalles['fechaLimite'], "periodo" => $detalles['periodo'],"ventatotal" => $detalles['ventatotal']]);
             
             } else {
                 throw new Exception("Error al registrar la cotización principal.");
@@ -474,7 +478,7 @@ class UseCotizacion
             $sqlCotizacion = "INSERT INTO cotizacion (fecha_cotizacion, monto_total, descuento, cliente_id_cliente, divisas_id_divisas, id_usuario, idsucursal, estado, idpv, num, id_almacen) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
             $stmtCotizacion = $this->cm->prepare($sqlCotizacion);
             $stmtCotizacion->bind_param(
-                "ddiiiiiiii",
+                "sddiiiiiiii",
                 $detalles['fecha'],
                 $detalles['ventatotal'],
                 $detalles['descuento'],
@@ -572,7 +576,7 @@ class UseCotizacion
      * @param string $idmd5 Hash MD5 del ID de la empresa.
      * @return void Imprime una respuesta JSON con los detalles completos.
      */
-    public function detallecotizacion($id, $idmd5)
+    public function detallecotizacion($id, $idmd5, $tipoConsulta = null)
     {
         $idempresa = $this->verificar->verificarIDEMPRESAMD5($idmd5);
         $lista = [];
@@ -1236,10 +1240,16 @@ class UseCotizacion
 
     
 
-    function registroCuentaXcobrar($npagos, $valorpago, $tipocredito, $idventa, $fechalimite, $saldo)
+    function registroCuentaXcobrar($npagos, $valorpago, $tipocredito, $idventa, $fechalimite, $saldo, $tipo = null)
     {
         $res = "";
-        $registro = $this->cm->query("insert into estado_cobro(id_estado_cobro,Ncuotas,valorcuotas,tipo_credito,estado,venta_id_venta,fecha_limite,saldo) VALUES(null,'$npagos','$valorpago','$tipocredito',1,'$idventa','$fechalimite','$saldo')");
+        $registro = null;
+        if($tipo != null){
+            $registro = $this->cm->query("insert into estado_cobro(id_estado_cobro,Ncuotas,valorcuotas,tipo_credito,estado,venta_id_venta,fecha_limite,saldo, tipo_cobro) VALUES(null,'$npagos','$valorpago','$tipocredito',1,'$idventa','$fechalimite','$saldo', '$tipo')");
+        }else{
+            $registro = $this->cm->query("insert into estado_cobro(id_estado_cobro,Ncuotas,valorcuotas,tipo_credito,estado,venta_id_venta,fecha_limite,saldo) VALUES(null,'$npagos','$valorpago','$tipocredito',1,'$idventa','$fechalimite','$saldo')");
+        }
+        
         if ($registro !== null) {
             $res = array("estado" => "exito", "mensaje" => "La cuenta por cobrar de venta se registro con exito");
         } else {
