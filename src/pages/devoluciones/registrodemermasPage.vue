@@ -390,6 +390,7 @@ console.log(lectura, escritura, editar, eliminar)
 const pdfData = ref(null)
 const mostrarModal = ref(false)
 const warehouses = useAlmacenStore()
+console.log(warehouses)
 const productosDisponibles = ref([])
 const idempresa = idempresa_md5()
 const idusuario = idusuario_md5()
@@ -547,7 +548,9 @@ const loadUserData = async () => {
 // }
 const almacenOptions = computed(() => {
   const options = [{ label: 'Todos los almacenes', value: 0 }]
-  warehouses.almacenes.forEach((almacen) => {
+  console.log(warehouses.almacenesResponsable)
+  console.log(warehouses.almacenes)
+  warehouses.almacenesResponsable.forEach((almacen) => {
     options.push({ label: almacen.almacen, value: Number(almacen.idalmacen) })
   })
   return options
