@@ -2305,16 +2305,24 @@ class configuracion
             echo json_encode(array("error" => "El id de empresa no existe"));
             return;
         }
-        $consulta = $this->cm->query("SELECT pb.id_precio_base, p.codigo, p.descripcion, pb.precio, pb.productos_almacen_id_productos_almacen, pa.almacen_id_almacen 
+        $consulta = $this->cm->query("SELECT pb.id_precio_base, p.codigo, p.descripcion, pb.precio, pb.productos_almacen_id_productos_almacen, pa.almacen_id_almacen, un.nombre
         FROM precio_base pb 
         INNER JOIN productos_almacen pa ON pb.productos_almacen_id_productos_almacen=pa.id_productos_almacen
         INNER JOIN productos p ON pa.productos_id_productos=p.id_productos
         INNER JOIN almacen a ON pa.almacen_id_almacen=a.id_almacen
+        LEFT JOIN unidad un ON un.id_unidad = p.unidad_id_unidad
         WHERE pb.estado=1 AND a.idempresa='$idempresa'
         GROUP BY pb.productos_almacen_id_productos_almacen
         ORDER BY MAX(pb.id_precio_base) DESC");
         while ($qwe = $this->cm->fetch($consulta)) {
-            $res = array("id" => $qwe[0], "codigo" => $qwe[1], "descripcion" => $qwe[2], "precio" => $qwe[3], "idproductoalmacen" => $qwe[4], "idalmacen" => $qwe[5]);
+            $res = array(
+                "id" => $qwe[0], 
+                "codigo" => $qwe[1], 
+                "descripcion" => $qwe[2], 
+                "precio" => $qwe[3], 
+                "idproductoalmacen" => $qwe[4], 
+                "idalmacen" => $qwe[5],
+                "unidad" => $qwe[6]);
             array_push($lista, $res);
         }
         echo json_encode($lista);
@@ -2390,7 +2398,14 @@ class configuracion
         where a.idempresa='$idempresa' 
         order by id_porcentajes desc");
         while ($qwe = $this->cm->fetch($consulta)) {
-            $res = array("id" => $qwe[0], "nombre" => $qwe[1], "porcentaje" => $qwe[2], "estado" => $qwe[3], "idalmacen" => $qwe[4], "almacen" => $qwe[5], "id_categoria_precios" => $qwe[6]);
+            $res = array(
+                "id" => $qwe[0], 
+                "nombre" => $qwe[1], 
+                "porcentaje" => $qwe[2], 
+                "estado" => $qwe[3], 
+                "idalmacen" => $qwe[4], 
+                "almacen" => $qwe[5], 
+                "id_categoria_precios" => $qwe[6]);
             array_push($lista, $res);
         }
         echo json_encode($lista);
@@ -2518,7 +2533,8 @@ class configuracion
                     pa.almacen_id_almacen, 
                     po.id_porcentajes, 
                     po.autorizado,
-                    p.id_productos
+                    p.id_productos,
+                    un.nombre
                 FROM 
                     precio_sugerido AS ps 
                 INNER JOIN 
@@ -2529,6 +2545,8 @@ class configuracion
                     productos AS p ON pa.productos_id_productos = p.id_productos
                 INNER JOIN 
                     almacen AS a ON pa.almacen_id_almacen = a.id_almacen
+                LEFT JOIN unidad un ON un.id_unidad = p.unidad_id_unidad
+
                 WHERE 
                     a.idempresa = ?  -- El marcador '?' es para la seguridad
                 ORDER BY 
@@ -2570,7 +2588,8 @@ class configuracion
                     "idalmacen" => $qwe[6], 
                     "idporcentaje" => $qwe[7], 
                     "estado" => $qwe[8],
-                    "idproducto" => $qwe[9]
+                    "idproducto" => $qwe[9],
+                    "unidad" => $qwe[10]
                 );
                 array_push($lista, $res);
             }
