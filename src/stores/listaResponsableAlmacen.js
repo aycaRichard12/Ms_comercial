@@ -45,8 +45,6 @@ export const useAlmacenStore = defineStore('almacen', () => {
       } else {
         console.error('Error en Respuesta 2:', resultado2)
       }
-      console.log(almacenes.value)
-      console.log(almacenesResponsable.value)
     } catch (error) {
       console.error('Error en carga de almacenes consolidada:', error)
       $q.notify({
