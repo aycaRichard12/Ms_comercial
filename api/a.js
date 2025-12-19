@@ -124,3 +124,8 @@ let a = {
   },
 }
 console.log(a)
+
+app_id = '2092889'
+key = '0bc643ef8d66124dac64'
+secret = '97c2543c35b16e66b006'
+cluster = 'sa1'

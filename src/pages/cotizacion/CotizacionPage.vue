@@ -4,7 +4,7 @@
     <q-form ref="formClientes">
       <div class="row q-col-gutter-x-md">
         <div class="col-12 col-md-3">
-          <label for="tipooperacion">Tipo de Operación*</label>
+          <label for="tipooperacion">Tipo de operación*</label>
           <q-select
             v-model="tipoOperacion"
             :options="optionOperacion"
@@ -128,7 +128,7 @@
           />
         </div>
         <div class="col-12 col-md-3">
-          <label for="categoria">Punto Venta*</label>
+          <label for="categoria">Punto venta*</label>
           <q-select
             v-model="puntoVenta"
             :options="puntosVenta"
@@ -180,7 +180,7 @@
       </div>
 
       <div class="col-12 col-md-2">
-        <label for="cantidad">Canidad *</label>
+        <label for="cantidad">Cantidad *</label>
         <q-input
           v-model.number="cantidadCO"
           id="cantidad"
