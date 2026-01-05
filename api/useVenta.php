@@ -224,6 +224,7 @@ class UseVEnta
 
                 $respuestaEmizor = $this->factura->crearfactura($jsonDetalles['listaFactura'], $tipoventa, $jsonDetalles['token'], $jsonDetalles['tipo'], $jsonDetalles['codigosinsucursal']);
                 // echo json_encode(["listaFactura"=>$jsonDetalles['listaFactura'], "tipoventa"=> $tipoventa, "token" =>$jsonDetalles['token'], "tipo" => $jsonDetalles['tipo'], "sucursal" => $jsonDetalles['codigosinsucursal'], "respuesta emizor" => $respuestaEmizor ]);
+                $respuestaFinal['emizor'] = $respuestaEmizor;
                 if ($respuestaEmizor->status === "success") {
                     $estadoFactura = null;
                     // for ($i = 0; $i < self::MAX_INTENTOS_CONSULTA_FACTURA; $i++) {
@@ -270,6 +271,7 @@ class UseVEnta
             // Si la venta se registró correctamente, procesar pagos adicionales
             if(isset($respuestaFinal['estado']) && $respuestaFinal['estado'] == 'exito') {
                 $ultimoIDventa = $respuestaFinal['idventa'];
+                
 
                 // --- 4. REGISTRO DE CUENTAS POR COBRAR (CRÉDITO) ---
                 if ($tipopago == self::TIPO_PAGO_CREDITO) {
@@ -283,6 +285,7 @@ class UseVEnta
                     $respuestaFinal['pagosDivididos'] = $respuestaPagos;
                 }
             }
+            $respuestaFinal['JSONfACTURA'] = $jsonDetalles['listaFactura'];
 
             echo json_encode($respuestaFinal);
 

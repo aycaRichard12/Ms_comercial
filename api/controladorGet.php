@@ -915,6 +915,7 @@ elseif ($ver[0] == "cambiarEstadoCategoria") {
     header('Content-Type: application/json');
     echo json_encode($respuesta);
 }
+
 if ($controlador === null) {
     // Acción por defecto si no se encuentra una ruta valida reportecotizacion cambiarestadodevolucion
     echo json_encode(array("error" => "La ruta ".$_GET['ver']." no existe"));

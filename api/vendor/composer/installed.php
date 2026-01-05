@@ -3,7 +3,7 @@
         'name' => 'cm/api',
         'pretty_version' => 'dev-develop',
         'version' => 'dev-develop',
-        'reference' => '6a0b405d5ddd6bbda7fc17c430408af44b819936',
+        'reference' => '24c46db52179765d2566116df65e2dc5b5a22e3a',
         'type' => 'project',
         'install_path' => __DIR__ . '/../../',
         'aliases' => array(),
@@ -22,7 +22,7 @@
         'cm/api' => array(
             'pretty_version' => 'dev-develop',
             'version' => 'dev-develop',
-            'reference' => '6a0b405d5ddd6bbda7fc17c430408af44b819936',
+            'reference' => '24c46db52179765d2566116df65e2dc5b5a22e3a',
             'type' => 'project',
             'install_path' => __DIR__ . '/../../',
             'aliases' => array(),
