@@ -651,6 +651,14 @@ elseif ($ver == "editarCategoriaPrecioNuevo") {
     $controlador = new UseCategoriaPrecio();
     $controlador->editarCategoriaPrecio($data['id'],$data);
 }
+elseif ($ver == "crearOperaciones") {
+    $controlador = new configuracion();
+    $controlador->crearOperaciones($data);
+}
+elseif ($ver == "actualizarOperacion") {
+    $controlador = new configuracion();
+    $controlador->actualizarOperacion($data);
+}
 // ARCHIVO: endpoint.php
 elseif ($ver == "authPusher") {
     ob_clean(); // Elimina cualquier espacio en blanco accidental
