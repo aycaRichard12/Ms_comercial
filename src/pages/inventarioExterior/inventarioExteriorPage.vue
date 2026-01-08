@@ -767,6 +767,7 @@ async function listarDatos() {
   const endpoint = `listainventarioexterno/${idempresa}`
   try {
     const response = await api.get(endpoint)
+    console.log(response.data)
     const resultado = response.data
     if (resultado[0] === 'error') {
       console.error(resultado.error)
