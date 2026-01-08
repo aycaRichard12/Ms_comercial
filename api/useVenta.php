@@ -224,6 +224,7 @@ class UseVEnta
 
                 $respuestaEmizor = $this->factura->crearfactura($jsonDetalles['listaFactura'], $tipoventa, $jsonDetalles['token'], $jsonDetalles['tipo'], $jsonDetalles['codigosinsucursal']);
                 // echo json_encode(["listaFactura"=>$jsonDetalles['listaFactura'], "tipoventa"=> $tipoventa, "token" =>$jsonDetalles['token'], "tipo" => $jsonDetalles['tipo'], "sucursal" => $jsonDetalles['codigosinsucursal'], "respuesta emizor" => $respuestaEmizor ]);
+                $respuestaFinal['emizor'] = $respuestaEmizor;
                 if ($respuestaEmizor->status === "success") {
                     $estadoFactura = null;
                     // for ($i = 0; $i < self::MAX_INTENTOS_CONSULTA_FACTURA; $i++) {
@@ -263,13 +264,14 @@ class UseVEnta
                     //     $respuestaFinal = ["estado" => "error", "mensaje" => "La factura no pudo ser validada por el SIN.", "detalles" => $respuestaEmizor];
                     // }
                 } else {
-                    $respuestaFinal = ["estado" => "error", "mensaje" => "Error al emitir la factura.", "detalles" => $respuestaEmizor->errors ?? $respuestaEmizor, "jsonFactura" => $jsonDetalles['listaFactura']];
+                    $respuestaFinal = ["estado" => "error", "mensaje" => "Error al emitir la factura.", "Respuesa Emizor" => $respuestaEmizor->errors ?? $respuestaEmizor, "jsonFactura" => $jsonDetalles['listaFactura']];
                 }
             }
             
             // Si la venta se registró correctamente, procesar pagos adicionales
             if(isset($respuestaFinal['estado']) && $respuestaFinal['estado'] == 'exito') {
                 $ultimoIDventa = $respuestaFinal['idventa'];
+                
 
                 // --- 4. REGISTRO DE CUENTAS POR COBRAR (CRÉDITO) ---
                 if ($tipopago == self::TIPO_PAGO_CREDITO) {
@@ -283,6 +285,7 @@ class UseVEnta
                     $respuestaFinal['pagosDivididos'] = $respuestaPagos;
                 }
             }
+            $respuestaFinal['JSONfACTURA'] = $jsonDetalles['listaFactura'];
 
             echo json_encode($respuestaFinal);
 

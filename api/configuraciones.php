@@ -3166,5 +3166,112 @@ class configuracion
         }
         echo json_encode($res);
     }
+
+    public function crearOperaciones($data) {
+        $idempresa = $this->verificar->verificarIDEMPRESAMD5($data['idmd5']);
+        $sql = "INSERT INTO operaciones_permisos (codigo, operacion, empresa, estado, idusuario) VALUES (?, ?, ?, 1, ?)";
+        $stmt = $this->cm->prepare($sql);
+        $stmt->bind_param("ssii", $data['codigo'], $data['operacion'], $idempresa, $data['idusuario']);
+        
+        if (!$stmt->execute()) {
+            throw new Exception("Error al insertar: " . $stmt->error);
+        }
+
+        $id = $this->cm->insert_id;
+        $stmt->close();
+        echo json_encode(["estado" => "exito", "message" => "Creado con éxito", "id" => $id]);
+    }
+
+    /**
+     * Listar todos los registros activos de una empresa
+     */
+    public function listarOperaciones($idmd5) {
+        $lista = [];
+        $idempresa = $this->verificar->verificarIDEMPRESAMD5($idmd5);
+        $usuarios = $this->rh->query("SELECT u.idusuario, u.nombre, c.cargo, t.nombre, t.apellido FROM usuario u 
+            LEFT JOIN trabajador t ON u.trabajador_idtrabajador=t.idtrabajador
+            LEFT JOIN cargos c ON t.cargos_idcargos=c.idcargos
+            WHERE u.idempresa='$idempresa'");
+
+        $usuarioInfo = [];
+        while ($usuario = $this->rh->fetch($usuarios)) {
+            $idusuario = isset($usuario[0]) ? $usuario[0] : "No se encontro el id usuario";
+            $usuarion = isset($usuario[1]) ? $usuario[1] : "No se encontro al usuario";
+            $cargo = isset($usuario[2]) ? $usuario[2] : "No se encontro el cargo";
+            $nombre = isset($usuario[3]) ? $usuario[3] : "No se encontro el nombre";
+            $apellido = isset($usuario[4]) ? $usuario[4] : "No se encontro el apellido";
+        
+            $usuarioInfo[$idusuario] = array(
+                "idusuario" => $idusuario,
+                "usuario" => $usuarion,
+                "cargo" => $cargo,
+                "nombre" => $nombre,
+                "apellido" => $apellido
+            );
+        }
+
+        $sql = "SELECT id_operacion, codigo, operacion, estado, idusuario,  MD5(idusuario) AS hash_usuario FROM operaciones_permisos WHERE empresa = ?";
+        $stmt = $this->cm->prepare($sql);
+        $stmt->bind_param("i", $idempresa);
+        $stmt->execute();
+        $result = $stmt->get_result();
+
+        // 6. Procesar los resultados MYSQLI_ASSOC para obtener un array asociativo  MYSQLI_NUM para obtener un array numérico
+        if ($result) {
+            while ($qwe = $result->fetch_array(MYSQLI_ASSOC)) {
+                $res = array(
+                    "id_operacion" => $qwe['id_operacion'], 
+                    "codigo" => $qwe['codigo'], 
+                    "operacion" => $qwe['operacion'], 
+                    "estado" => $qwe['estado'], 
+                    "idusuario" => $qwe['hash_usuario'],
+                    "usuario" => isset($usuarioInfo[$qwe['idusuario']]) ? array($usuarioInfo[$qwe['idusuario']]) : array("No existe")
+                   
+                );
+                array_push($lista, $res);
+            }
+        }
+        $stmt->close();
+        echo json_encode(["estado" => "exito", "data" => $lista]);    
+    }
+
+    
+
+    /**
+     * Actualizar registro
+     */
+    public function actualizarOperacion($data) {
+        $idempresa = $this->verificar->verificarIDEMPRESAMD5($data['idmd5']);
+        $sql = "UPDATE operaciones_permisos SET codigo = ?, operacion = ? WHERE id_operacion = ? AND empresa = ?";
+        $stmt = $this->cm->prepare($sql);
+        $stmt->bind_param("ssii", $data['codigo'], $data['operacion'], $data['id'], $idempresa);
+        
+        $stmt->execute();
+        $afectados = $stmt->affected_rows;
+        $stmt->close();
+        echo json_encode(["estado" => "exito", "data" => $afectados, "mensaje" => "Actualizado con éxito"]);    
+    }
+
+    /**
+     * Borrado lógico
+     */
+    public function eliminarOperacion($id) {
+        $sql = "DELETE FROM operaciones_permisos WHERE id_operacion = ?";
+        $stmt = $this->cm->prepare($sql);
+        $stmt->bind_param("i", $id);
+        $stmt->execute();
+        $afectados = $stmt->affected_rows;
+        $stmt->close();
+        echo json_encode(["estado" => "exito", "data" => $afectados, "mensaje" => "Eliminado con éxito"]);    
+    }
+    public function CambiarEstadoPermisosOperacionUsuario($id, $estado) {
+        $sql = "UPDATE operaciones_permisos SET estado = ? WHERE id_operacion = ?";
+        $stmt = $this->cm->prepare($sql);
+        $stmt->bind_param("ii", $estado, $id);
+        $stmt->execute();
+        $afectados = $stmt->affected_rows;
+        $stmt->close();
+        echo json_encode(["estado" => "exito", "data" => $afectados, "mensaje" => "Cambio exitoso"]);    
+    }
 }
 //encontrada

@@ -15,13 +15,9 @@ $input = file_get_contents("php://input");
 $data = json_decode($input, true);
 
 // Si es JSON, lo uso; si no, uso $_POST
-if (is_array($data) && isset($data['ver'])) {
-    $ver = $data['ver'];
-} elseif (isset($_POST['ver'])) {
-    $ver = $_POST['ver'];
-} else {
-    $ver = null;
-}
+$ver = $_POST['ver'] ?? $data['ver'] ?? null;
+$user_id = $_POST['user_id'] ?? $data['user_id'] ?? null;
+
 if ($ver == "registrarResponsable") {
     $controlador = new configuracion();
     $controlador->registroResponsable($_POST['usuario'], $_POST['idempresa']);
@@ -650,6 +646,32 @@ elseif ($ver == "crearCategoriaPrecio") {
 elseif ($ver == "editarCategoriaPrecioNuevo") {
     $controlador = new UseCategoriaPrecio();
     $controlador->editarCategoriaPrecio($data['id'],$data);
+}
+elseif ($ver == "editarCategoriaPrecioNuevo") {
+    $controlador = new UseCategoriaPrecio();
+    $controlador->editarCategoriaPrecio($data['id'],$data);
+}
+elseif ($ver == "crearOperaciones") {
+    $controlador = new configuracion();
+    $controlador->crearOperaciones($data);
+}
+elseif ($ver == "actualizarOperacion") {
+    $controlador = new configuracion();
+    $controlador->actualizarOperacion($data);
+}
+// ARCHIVO: endpoint.php
+elseif ($ver == "authPusher") {
+    ob_clean(); // Elimina cualquier espacio en blanco accidental
+    header('Content-Type: application/json');
+
+    $controlador = new SocketPusher();
+    $channel_name = $_POST['channel_name'] ?? null;
+    $socket_id = $_POST['socket_id'] ?? null;
+    $user_id = $_POST['user_id'] ?? null;
+
+    // IMPORTANTE: Solo un echo, y debe ser el que genera la librería de Pusher
+    echo $controlador->authPusher($channel_name, $socket_id, $user_id);
+    exit; 
 }
 
 
