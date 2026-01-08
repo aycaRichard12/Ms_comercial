@@ -264,7 +264,7 @@ class UseVEnta
                     //     $respuestaFinal = ["estado" => "error", "mensaje" => "La factura no pudo ser validada por el SIN.", "detalles" => $respuestaEmizor];
                     // }
                 } else {
-                    $respuestaFinal = ["estado" => "error", "mensaje" => "Error al emitir la factura.", "detalles" => $respuestaEmizor->errors ?? $respuestaEmizor, "jsonFactura" => $jsonDetalles['listaFactura']];
+                    $respuestaFinal = ["estado" => "error", "mensaje" => "Error al emitir la factura.", "Respuesa Emizor" => $respuestaEmizor->errors ?? $respuestaEmizor, "jsonFactura" => $jsonDetalles['listaFactura']];
                 }
             }
             
