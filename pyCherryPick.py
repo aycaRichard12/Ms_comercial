@@ -1,12 +1,17 @@
 import subprocess
 import tkinter as tk
 from tkinter import ttk, messagebox
+import json
+import os
+from datetime import datetime
 
 # ---------------- CONFIG ----------------
 REMOTE = "pasante"
 BRANCH = "main"
 DEFAULT_LIMIT = 5
 MAX_DIFF_CHARS = 50000 
+HISTORY_FILE = "cherry_pick_history.json"
+
 # --------------------------------------
 
 def run_git(cmd):
@@ -23,6 +28,28 @@ def run_git(cmd):
         return res.stdout, True
     except subprocess.CalledProcessError as e:
         return e.stderr, False
+def save_to_history(commit_hash, commit_msg):
+    """Guarda el registro del cherry-pick en un archivo JSON."""
+    new_entry = {
+        "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        "hash": commit_hash,
+        "message": commit_msg,
+        "remote": REMOTE,
+        "branch": BRANCH
+    }
+
+    history = []
+    if os.path.exists(HISTORY_FILE):
+        try:
+            with open(HISTORY_FILE, "r", encoding="utf-8") as f:
+                history = json.load(f)
+        except json.JSONDecodeError:
+            history = []
+
+    history.append(new_entry)
+
+    with open(HISTORY_FILE, "w", encoding="utf-8") as f:
+        json.dump(history, f, indent=4, ensure_ascii=False)
 
 def fetch():
     output, success = run_git(["git", "fetch", REMOTE])
@@ -89,7 +116,10 @@ def cherry_pick():
         return
 
     commit_line = commits_list.get(selection[0])
-    commit_hash = commit_line.split()[0]
+    parts = commit_line.split(maxsplit=1)
+    commit_hash = parts[0]
+    commit_msg = parts[1] if len(parts) > 1 else "Sin mensaje"
+
 
     if not messagebox.askyesno("Confirmar", f"¿Aplicar commit {commit_hash}?"):
         return
@@ -103,6 +133,7 @@ def cherry_pick():
             run_git(["git", "cherry-pick", "--abort"])
             messagebox.showinfo("Abortado", "Se ha cancelado el cherry-pick y limpiado el repositorio.")
     else:
+        save_to_history(commit_hash, commit_msg)
         messagebox.showinfo("Éxito", "Cherry-pick aplicado correctamente")
         load_commits()
 

@@ -923,6 +923,10 @@ elseif ($ver[0] == "eliminarOperacion") {
     $controlador = new configuracion();
     $controlador->eliminarOperacion($ver[1]); 
 }
+elseif ($ver[0] == "CambiarEstadoPermisosOperacionUsuario") {
+    $controlador = new configuracion();
+    $controlador->CambiarEstadoPermisosOperacionUsuario($ver[1], $ver[2]); 
+}
 
 if ($controlador === null) {
     // Acción por defecto si no se encuentra una ruta valida reportecotizacion cambiarestadodevolucion
