@@ -350,6 +350,10 @@ const routes = [
         path: '/tipokardex',
         component: () => import('src/pages/cotizacion/configuraciontipoKardexPage.vue'),
       },
+      {
+        path: '/autorizarOperaciones',
+        component: () => import('src/pages/config/autorizarPermisosPage.vue'),
+      },
     ],
   },
   {

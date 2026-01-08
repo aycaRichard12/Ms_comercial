@@ -1,0 +1,74 @@
+{
+  "direccionComprador": "Plaza Central, Avenida Santacoloma Local 2 Santiago,\u00a0Veraguas",
+  "ruex": null,
+  "nim": null,
+  "concentradoGranel": null,
+  "origen": null,
+  "puertoTransito": null,
+  "puertoDestino": "AEROPUERTO INTERNACIONAL TOCUMEN",
+  "codigoPais": 135,
+  "incoterm": "CIP",
+  "tipoCambioANB": null,
+  "numeroLote": null,
+  "fechaEmision": "2025-09-09T08:56:54.813",
+  "codigoMoneda": 2,
+  "montoTotalMoneda": 5584.7,
+  "montoTotal": 38869.51,
+  "montoTotalSujetoIva": 38869.51,
+  "numeroFactura": 7263,
+  "nombreRazonSocial": "GREEN PEARL CORPORATION",
+  "codigoTipoDocumentoIdentidad": 4,
+  "numeroDocumento": "50683840453",
+  "complemento": null,
+  "codigoCliente": "6509",
+  "tipoCambio": "6.96",
+  "codigoMetodoPago": 5,
+  "numeroTarjeta": null,
+  "codigoLeyenda": 2483,
+  "usuario": "EXPORTACION SEFO SAM",
+  "codigoDocumentoSector": null,
+  "codigoPuntoVenta": 0,
+  "montoDetalle": 4350,
+  "incotermDetalle": "AEROPUERTO INTERNACIONAL TOCUMEN",
+  "totalGastosNacionalesFob": 5584.7,
+  "totalGastosInternacionales": 0,
+  "numeroDescripcionPaquetesBultos": "10 BULTOS DE POLIPROPILENO 30 kg",
+  "informacionAdicional": "LOTE: 136",
+  "lugarDestino": "Veraguas",
+  "detalles": [
+    {
+      "codigoProducto": "EXP-LG-003",
+      "codigoActividadSin": "011000",
+      "descripcion": "Semilla de Desmodium heterocarpon var Maquenque",
+      "codigoProductoSin": "99100",
+      "cantidad": 300,
+      "precioUnitario": 14.5,
+      "subTotal": 4350,
+      "unidadMedida": 22,
+      "codigoNandina": "1209.29.00.00",
+      "montoDescuento": 0
+    }
+  ],
+  "costosGastosNacionales": [
+    {
+      "campo": "TR\u00c1MITES Y OTROS",
+      "valor": 120
+    },
+    {
+      "campo": "SEGURO INTERNACIONAL",
+      "valor": 120
+    },
+    {
+      "campo": "FLETE A\u00c9REO INTERNACIONAL",
+      "valor": 994.7
+    }
+  ],
+  "costosGastosInternacionales": [],
+  "emailCliente": null,
+  "cafc": null,
+  "codigoExcepcion": null,
+  "descuentoAdicional": 0,
+  "extras": {
+    "facturaTicket": "15c463e94a557b9152738f84d92b3b92fde5dbf5"
+  }
+}

@@ -42,7 +42,15 @@
         require_once "notaCreditoDebito.php";
         require_once "kardex.php";
         require_once "useCategoriaPrecio.php";
-
+        require_once "socketPusher.php";
+        require_once "configuraciones.php";
+        require_once "mantenimiento.php";
+        require_once "reportes.php";
+        require_once "dashboard.php";
+        require_once "configuracionInicial.php";
+        require_once "useCotizacion.php";
+        require_once "notificaciones.php";
+        require_once "arqueoPuntoVenta.php";
         if (($rutas[0] ?? '') === "detectar_intencion") {
             require_once "detectar_intencion.php";
             exit; // Evita seguir ejecutando el resto del index
@@ -51,6 +59,10 @@
 
         if ($primeraRuta === "out") {
             require_once "apisOut/index.php";
+            return;
+        }
+        if ($primeraRuta === "services") {
+            require_once "services/index.php";
             return;
         }
 
