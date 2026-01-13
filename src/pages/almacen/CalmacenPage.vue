@@ -31,7 +31,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onBeforeUnmount } from 'vue'
+import { onBeforeUnmount, onMounted, ref } from 'vue'
 import FormularioAlmacen from 'components/almacen/creacion/almacenForm.vue'
 import TablaAlmacen from 'components/almacen/creacion/almacenTable.vue'
 import { idempresa_md5 } from 'src/composables/FuncionesGenerales'

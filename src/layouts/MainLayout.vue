@@ -187,6 +187,9 @@ import { guiarInicio } from 'src/utils/guiasDriver'
 import ComandoVoz from './ComandoVoz.vue'
 //import { usePusher } from 'src/composables/usePusher'
 import { idusuario_md5 } from 'src/composables/FuncionesGenerales'
+import { useOperacionesPermitidas } from 'src/composables/useAutorizarOperaciones'
+
+const permisosStore = useOperacionesPermitidas()
 
 const idusuario = idusuario_md5()
 //let pusherActions = null
@@ -385,7 +388,7 @@ function llevarPrimeraPAgina(submenu) {
   }
 }
 
-onMounted(() => {
+onMounted(async () => {
   const loadData = (key, defaultValue = []) => {
     try {
       const data = localStorage.getItem(key)
@@ -424,6 +427,8 @@ onMounted(() => {
   //   }
   // }, 1000)
 
+  await permisosStore.cargarPermisos()
+  console.log('Permisos cargados en MainLayout.vue:', permisosStore.permisos)
   // const tempInitPusher = (id) => console.log('ID en modo local:', id)
 
   // const idusuario = idusuario_md5() // Verifica si esto falla solo

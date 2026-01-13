@@ -2297,14 +2297,42 @@ class ventas
     {
         $idempresa = $this->verificar->verificarIDEMPRESAMD5($idmd5);
         $lista = [];
-        $alma = $this->cm->query("select  ie.id_inv_externo, ie.fecha_control, c.nombre, s.nombre, ie.observaciones, a.nombre, ie.idsucursal, ie.foto, ie.id_almacen, ie.cliente_id_cliente, ie.estado from inv_externo ie
+        $alma = $this->cm->query("SELECT
+          ie.id_inv_externo, 
+          ie.fecha_control, 
+          c.nombre, 
+          s.nombre, 
+          ie.observaciones, 
+          a.nombre, 
+          ie.idsucursal, 
+          ie.foto, 
+          ie.id_almacen, 
+          ie.cliente_id_cliente, 
+          ie.estado,
+          ie.latitud,
+          ie.longitud
+        from inv_externo ie
         inner join sucursal s on ie.idsucursal=s.id_sucursal
         inner join cliente c on ie.cliente_id_cliente=c.id_cliente
         inner join almacen a on ie.id_almacen=a.id_almacen
         where c.idempresa='$idempresa'
         order by ie.id_inv_externo desc");
         while ($qwe = $this->cm->fetch($alma)) {
-            $res = array("id" => $qwe[0], "fecha" => $qwe[1], "nombre" => $qwe[2], "sucursal" => $qwe[3], "observaciones" => $qwe[4], "almacen" => $qwe[5], "idsucursal" => $qwe[6], "foto" => $qwe[7], "idalmacen" => $qwe[8], "idcliente" => $qwe[9], "estado" => $qwe[10]);
+            $res = array(
+                "id" => $qwe[0], 
+                "fecha" => $qwe[1],
+                 "nombre" => $qwe[2], 
+                 "sucursal" => $qwe[3], 
+                 "observaciones" => $qwe[4], 
+                 "almacen" => $qwe[5], 
+                 "idsucursal" => $qwe[6], 
+                 "foto" => $qwe[7], 
+                 "idalmacen" => $qwe[8], 
+                 "idcliente" => $qwe[9], 
+                 "estado" => $qwe[10],
+                 "latitud" => $qwe[11],
+                 "longitud" => $qwe[12],
+                );
             array_push($lista, $res);
         }
         echo json_encode($lista);
