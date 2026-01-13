@@ -185,11 +185,11 @@ import NotificacionLayout from './NotificacionLayout.vue'
 import { permisoNotificaciones } from 'src/composables/FuncionesG'
 import { guiarInicio } from 'src/utils/guiasDriver'
 import ComandoVoz from './ComandoVoz.vue'
-import { usePusher } from 'src/composables/usePusher'
+//import { usePusher } from 'src/composables/usePusher'
 import { idusuario_md5 } from 'src/composables/FuncionesGenerales'
 
 const idusuario = idusuario_md5()
-let pusherActions = null
+//let pusherActions = null
 const ocultarTabs = () => {
   tabsVisible.value = false
 }
@@ -416,13 +416,13 @@ onMounted(() => {
   })
   console.log(idusuario)
   //initPusher(idusuario)
-  pusherActions = usePusher()
-  setTimeout(() => {
-    console.log('Iniciando Pusher en segundo plano...')
-    if (pusherActions) {
-      pusherActions.initPusher(idusuario)
-    }
-  }, 1000)
+  // pusherActions = usePusher()
+  // setTimeout(() => {
+  //   console.log('Iniciando Pusher en segundo plano...')
+  //   if (pusherActions) {
+  //     pusherActions.initPusher(idusuario)
+  //   }
+  // }, 1000)
 
   // const tempInitPusher = (id) => console.log('ID en modo local:', id)
 
