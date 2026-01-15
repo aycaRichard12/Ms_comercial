@@ -351,6 +351,14 @@ const routes = [
         component: () => import('src/pages/cotizacion/configuraciontipoKardexPage.vue'),
       },
       {
+        path: '/reporteinventarioexterior',
+        component: () => import('src/pages/reportes/reporteInventarioExteriorPage.vue'),
+      },
+      {
+        path: '/actualizacionescomercial',
+        component: () => import('src/pages/config/actualizacionSistemaPage.vue'),
+      },
+      {
         path: '/autorizarOperaciones',
         component: () => import('src/pages/config/autorizarPermisosPage.vue'),
       },
