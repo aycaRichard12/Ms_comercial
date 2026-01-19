@@ -289,6 +289,11 @@ export const menurichard50 = [
             codigo: 'generartokensapis-03afdbd66e7929b125f8597834fa83a4',
             permiso: '1111',
           },
+          {
+            titulo: 'Actualizaciones',
+            codigo: 'actualizacionescomercial-f457c545a9ded88f18ecee47145a72c0',
+            permiso: '1111',
+          },
         ],
       },
       {
@@ -459,6 +464,11 @@ export const menurichard50 = [
           {
             titulo: 'Reporte Productos vendidos Global',
             codigo: 'reporteproductosvendidosglobal-03afdbd66e7929b125f8597834fa83a4',
+            permiso: '1111',
+          },
+          {
+            titulo: 'Reporte Inventario Exterior',
+            codigo: 'reporteinventarioexterior-f457c545a9ded88f18ecee47145a72c0',
             permiso: '1111',
           },
         ],
