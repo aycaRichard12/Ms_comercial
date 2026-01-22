@@ -10,6 +10,7 @@
         label="Agregar"
         no-caps
         @click="$emit('add')"
+        id="btn-categoria-precios"
       />
 
       <q-btn
@@ -35,35 +36,45 @@
         label="Vista Previa PDF"
         no-caps
         @click="imprimir"
+        id="btn-imprimir-categoria"
       />
     </div>
   </div>
 
   <div class="row justify-between q-gutter-md q-mt-md q-mb-md">
     <!-- Filtro de almacén -->
-    <q-select
-      v-model="filtroAlmacen"
-      :options="almacenes"
-      label="Seleccione un Almacén"
-      dense
-      outlined
-      map-options
-      class="min-w-[220px]"
-    />
+
+    <div class="col-auto">
+      <q-select
+        v-model="filtroAlmacen"
+        :options="almacenes"
+        label="Almacén"
+        dense
+        outlined
+        map-options
+        clearable
+        class="min-w-[200px]"
+        :hint="filtroAlmacen ? `Filtrando: ${filtroAlmacen.label}` : 'Todos los almacenes'"
+        style="width: 220px"
+      />
+    </div>
 
     <!-- Buscador -->
-    <q-input
-      v-model="search"
-      label="Buscar..."
-      dense
-      outlined
-      debounce="300"
-      class="bg-white min-w-[220px]"
-    >
-      <template v-slot:append>
-        <q-icon name="search" />
-      </template>
-    </q-input>
+
+    <div id="inputBuscarCategoriaPrecio">
+      <q-input
+        v-model="search"
+        label="Buscar..."
+        dense
+        outlined
+        debounce="300"
+        class="bg-white min-w-[220px]"
+      >
+        <template v-slot:append>
+          <q-icon name="search" />
+        </template>
+      </q-input>
+    </div>
   </div>
 
   <!-- Tabla -->
@@ -74,6 +85,7 @@
     :columns="columnas"
     row-key="id"
     :pagination="{ rowsPerPage: 5 }"
+    id="tableCategoriaPrecios"
   >
     <template v-slot:top-right> </template>
     <template v-slot:body-cell-estado="props">
@@ -92,14 +104,23 @@
           class="q-mr-sm"
           @click="$emit('edit-item', props.row)"
           flat
+          id="btnEditarCategoriaPrecio"
         />
-        <q-btn icon="delete" color="negative" dense @click="$emit('delete-item', props.row)" flat />
+        <q-btn
+          icon="delete"
+          color="negative"
+          dense
+          @click="$emit('delete-item', props.row)"
+          flat
+          id="btnEliminarCategoriaPrecio"
+        />
         <q-btn
           :icon="Number(props.row.estado) === 1 ? 'toggle_on' : 'toggle_off'"
           dense
           flat
           :color="Number(props.row.estado) === 1 ? 'green' : 'grey'"
           @click="$emit('toggle-status', props.row)"
+          id="btnToggleEstadoCategoriaPrecio"
         />
       </q-td>
     </template>

@@ -468,13 +468,28 @@ class compras
         }
 
         // Consulta info general del pedido, con joins para almacen y usuario
-        $pedido = $this->cm->query("
-            SELECT p.id_pedidos, p.fecha_pedido, p.autorizacion, p.observacion, p.codigo, 
-                p.almacen_id_almacen, p.estado, p.tipopedido, p.almacen_origen, 
-                p.usuario, p.nropedido, a.nombre as almacen
-            FROM pedidos p
-            LEFT JOIN almacen a ON p.almacen_id_almacen = a.id_almacen
-            WHERE p.id_pedidos = '$id'
+        
+        $pedido = $this->cm->query("SELECT 
+                        p.id_pedidos,
+                        p.fecha_pedido,
+                        p.autorizacion,
+                        p.observacion,
+                        p.codigo,
+                        p.almacen_id_almacen,
+                        ad.nombre AS almacen,
+                        p.almacen_origen as idalmacenorigen,
+                        ao.nombre AS almacen_origen,
+                        p.estado,
+                        p.tipopedido,
+                        p.usuario,
+                        p.nropedido
+                    FROM pedidos p
+                    LEFT JOIN almacen ad 
+                        ON p.almacen_id_almacen = ad.id_almacen
+                    LEFT JOIN almacen ao 
+                        ON p.almacen_origen = ao.id_almacen
+                    WHERE p.id_pedidos = '$id';
+
         ");
 
         $lista2 = [];
@@ -488,7 +503,8 @@ class compras
                 "idalmacen" => $q['almacen_id_almacen'],
                 "estado" => $q['estado'],
                 "tipopedido" => $q['tipopedido'],
-                "idalmacenorigen" => $q['almacen_origen'],
+                "idalmacenorigen" => $q['idalmacenorigen'],
+                "almacen_origen" => $q['almacen_origen'],
                 "idusuario" => $q['usuario'],
                 "nropedido" => $q['nropedido'],
                 "almacen" => $q['almacen'],
@@ -1685,5 +1701,234 @@ class compras
                 unlink($local_old_path); // Delete the old file
             }
         }
+    }
+
+    public function reporteProveedorCompras($idmd5, $fechainicio, $fechafin){
+        
+        $idempresa = $this->verificar->verificarIDEMPRESAMD5($idmd5);
+        $idalmacenes = $this->arrayIDalmacenEmpresa($idmd5);
+        $consulta = "SELECT 
+                        prv.codigo AS codigo_proveedor, 
+                        prv.nombre AS proveedor,
+                        i.id_ingreso,
+                        i.fecha_ingreso,
+                        i.nombre AS nombre_ingreso,
+                        i.codigo AS codigo_ingreso,
+                        i.autorizacion AS autorizacion_ingreso,
+                        i.proveedor_id_proveedor AS id_proveedor,
+                        i.pedidos_id_pedidos AS id_pedidos,
+                        i.estado AS estado_ingreso,
+                        i.nfactura,
+                        i.tipocompra,
+                        i.almacen_id_almacen,
+                        i.usuario,
+                        a.codigo AS codigo_almacen, 
+                        a.nombre AS almacen,
+                        COALESCE(
+                            SUM(
+                            COALESCE(di.precio_unitario, 0) * COALESCE(di.cantidad, 0)
+                            ), 
+                            0
+                        ) AS total_ingreso
+                    FROM proveedor prv
+                    LEFT JOIN ingreso i 
+                        ON i.proveedor_id_proveedor = prv.id_proveedor
+                    LEFT JOIN almacen a 
+                        ON a.id_almacen = i.almacen_id_almacen
+                    LEFT JOIN detalle_ingreso di 
+                        ON di.ingreso_id_ingreso = i.id_ingreso
+                    WHERE prv.id_empresa = ?
+                    AND DATE(i.fecha_ingreso) BETWEEN ? AND ?
+                    AND i.almacen_id_almacen IN ($idalmacenes)
+                    GROUP BY i.id_ingreso;";
+
+        $stmt = $this->cm->prepare($consulta);
+
+        if(!$stmt){
+            $res = array("estado" => "error", "mensaje" => "Error interno del servidor al preparar la consulta.");
+            echo json_encode($res);
+            return;
+        }
+
+        $stmt->bind_param("iss", $idempresa, $fechainicio, $fechafin);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $lista = [];
+        while ($qwe = $result->fetch_assoc()) {
+            $res = array(
+                "codigoProveedor" => $qwe['codigo_proveedor'],
+                "proveedor" => $qwe['proveedor'],
+                "idIngreso" => $qwe['id_ingreso'],
+                "fechaIngreso" => $qwe['fecha_ingreso'],
+                "nombreIngreso" => $qwe['nombre_ingreso'],
+                "codigoIngreso" => $qwe['codigo_ingreso'],
+                "autorizacion" => $qwe['autorizacion_ingreso'],
+                "idProveedor" => $qwe['id_proveedor'],
+                "idPedidos" => $qwe['id_pedidos'],
+                "estado" => $qwe['estado_ingreso'],
+                "nFactura" => $qwe['nfactura'],
+                "tipoCompra" => $qwe['tipocompra'],
+                "idalmacen" => $qwe['almacen_id_almacen'],
+                "usuario" => $qwe['usuario'],
+                "codigoAlmacen" => $qwe['codigo_almacen'],
+                "nombreAlmacen" => $qwe['almacen'],
+                "totalIngreso" => $qwe['total_ingreso']
+            );
+            array_push($lista, $res);
+        }
+         echo json_encode($lista);
+         $stmt->close();
+    }
+
+    public function arrayIDalmacen($idmd5)
+    {
+        $lista = array();
+        $idusuario = $this->verificar->verificarIDUSERMD5($idmd5);
+        $consulta = $this->cm->query("SELECT 
+        
+        ra.idresponsablealmacen, 
+        ra.responsable_id_responsable, 
+        ra.almacen_id_almacen, 
+        a.nombre , 
+        ra.fecha, 
+        MD5(r.id_usuario), 
+        MD5(ra.almacen_id_almacen),
+         a.idsucursal 
+         FROM responsablealmacen ra
+            LEFT JOIN responsable r on ra.responsable_id_responsable=r.id_responsable
+            LEFT JOIN almacen a on ra.almacen_id_almacen=a.id_almacen
+            WHERE r.id_usuario='$idusuario'");
+
+        while ($qwe = $this->cm->fetch($consulta)) {
+            $idalmacen = $qwe[2]; 
+            $lista[] = $idalmacen;
+        }
+        $resultado = implode(',', $lista);
+        return $resultado;
+    }
+    public function arrayIDalmacenEmpresa($idmd5)
+    {
+        $lista = array();
+        $idempresa = $this->verificar->verificarIDEMPRESAMD5($idmd5);
+        $consulta = $this->cm->query("SELECT id_almacen FROM almacen a WHERE a.idempresa = '$idempresa'");
+
+        while ($qwe = $this->cm->fetch($consulta)) {
+            $idalmacen = $qwe['id_almacen']; 
+            $lista[] = $idalmacen;
+        }
+        $resultado = implode(',', $lista);
+        return $resultado;
+    }
+
+    public function detalleCompra($id, $idmd5)
+    {
+        $idempresa = $this->verificar->verificarIDEMPRESAMD5($idmd5);
+        $lista = [];
+        $detallecompra = $this->cm->query("SELECT di.id_detalle_ingreso, 
+                                        pa.id_productos_almacen, 
+                                        p.nombre, 
+                                        p.descripcion, 
+                                        p.caracteristicas, 
+                                        di.cantidad, 
+                                        di.precio_unitario, 
+                                        p.codigo, 
+                                        p.codigosin, 
+                                        p.unidadsin, 
+                                        p.actividadsin
+                                    FROM detalle_ingreso di 
+                                    LEFT JOIN ingreso i on di.ingreso_id_ingreso=i.id_ingreso
+                                    LEFT JOIN productos_almacen pa on di.productos_almacen_id_productos_almacen=pa.id_productos_almacen
+                                    LEFT join productos p on pa.productos_id_productos=p.id_productos
+                                    where di.ingreso_id_ingreso = '$id'
+                                    order by p.nombre DESC");
+        while ($qwe = $this->cm->fetch($detallecompra)) {
+            $res = array(
+                "id" => $qwe['id_detalle_ingreso'],
+                "idproducto" => $qwe['id_productos_almacen'],
+                "producto" => $qwe['nombre'],
+                "descripcion" => $qwe['descripcion'], 
+                "caracteristica" => $qwe['caracteristicas'], 
+                "cantidad" => $qwe['cantidad'], 
+                "precio" => $qwe['precio_unitario'],
+                "codigo" => $qwe['codigo'],
+                "codigosin" => $qwe['codigosin'],
+                "unidadsin" => $qwe['unidadsin'],
+                "actividadsin" => $qwe['actividadsin'],
+                "subTotal" => floatval($qwe['cantidad']) * floatval($qwe['precio_unitario']),
+            );
+            array_push($lista, $res);
+        }
+
+        $usuarios = $this->rh->query("SELECT u.idusuario, u.nombre, c.cargo FROM usuario u 
+        LEFT JOIN trabajador t ON u.trabajador_idtrabajador=t.idtrabajador
+        LEFT JOIN cargos c ON t.cargos_idcargos=c.idcargos
+        WHERE u.idempresa='$idempresa'");
+
+        $usuarioInfo = [];
+        while ($usuario = $this->rh->fetch($usuarios)) {
+            $usuarioInfo[$usuario[0]] = array(
+                "idusuario" => $usuario[0],
+                "usuario" => $usuario[1],
+                "cargo" => $usuario[2]
+            );
+        }
+
+        $empresas = $this->em->query("SELECT * FROM organizacion WHERE idorganizacion='$idempresa'");
+
+        $empresaInfo = [];
+        while ($empresa = $this->em->fetch($empresas)) {
+            $empresaInfo[$empresa[0]] = array(
+                "id" => $empresa[0],
+                "nombre" => $empresa[1],
+                "celular" => $empresa[11],
+                "email" => $empresa[8],
+                "logo" => $empresa[13],
+                "direccion" => $empresa[12]
+            );
+        }
+        $lista2 = [];
+        $compra = $this->cm->query("SELECT 
+                                    i.id_ingreso, 
+                                    i.fecha_ingreso, 
+                                    i.nombre AS nombre_ingreso, 
+                                    i.codigo AS codigo_ingreso,  
+                                    i.autorizacion, 
+                                    i.estado,
+                                    i.nfactura, 
+                                    i.tipocompra, 
+                                    a.nombre AS almacen, 
+                                    i.usuario, 
+                                    prv.nombre AS nombre_proveedor,
+                                    prv.codigo AS codigo_proveedor,
+                                    i.almacen_id_almacen
+                                FROM ingreso i
+                                LEFT JOIN proveedor prv ON i.proveedor_id_proveedor= prv.id_proveedor
+                                LEFT JOIN almacen a ON a.id_almacen = i.almacen_id_almacen
+                                where i.id_ingreso= '$id';");
+        while ($qwe = $this->cm->fetch($compra)) {
+            $res = array(
+                "idIngreso" => $qwe['id_ingreso'],
+                "fechaIngreso" => $qwe['fecha_ingreso'],
+                "nombreIngreso" => $qwe['nombre_ingreso'],
+                "codigoIngreso" => $qwe['codigo_ingreso'],
+                "autorizacion" => $qwe['autorizacion'],
+                "estado" => $qwe['estado'],
+                "nfactura" => $qwe['nfactura'],
+                "tipocompra" => $qwe['tipocompra'], 
+                "almacen" => $qwe['almacen'], 
+                "idAlmacen" => $qwe['almacen_id_almacen'], 
+            
+                "proveedor" =>[
+                    "nombre" => $qwe['nombre_proveedor'],
+                    "codigo" => $qwe['codigo_proveedor']
+                ],
+                "detalle" => $lista, 
+                "usuario" => $usuarioInfo[$qwe['usuario']], 
+                "empresa" => $empresaInfo[$idempresa]
+            );
+            array_push($lista2, $res);
+        }
+
+        echo json_encode($lista2);
     }
 }

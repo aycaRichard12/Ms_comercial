@@ -274,6 +274,16 @@ export const menutest75 = [
             codigo: 'generartokensapis-f457c545a9ded88f18ecee47145a72c0',
             permiso: '1111',
           },
+          {
+            titulo: 'Actualizaciones',
+            codigo: 'actualizacionescomercial-f457c545a9ded88f18ecee47145a72c0',
+            permiso: '1111',
+          },
+          {
+            titulo: 'Permisos Usuarios',
+            codigo: 'permisosusuario-f457c545a9ded88f18ecee47145a72c0',
+            permiso: '1111',
+          },
         ],
       },
       {
@@ -439,6 +449,11 @@ export const menutest75 = [
           {
             titulo: 'Reporte Productos vendidos Global',
             codigo: 'reporteproductosvendidosglobal-f457c545a9ded88f18ecee47145a72c0',
+            permiso: '1111',
+          },
+          {
+            titulo: 'Reporte Inventario Exterior',
+            codigo: 'reporteinventarioexterior-f457c545a9ded88f18ecee47145a72c0',
             permiso: '1111',
           },
         ],

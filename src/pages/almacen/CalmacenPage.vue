@@ -201,9 +201,11 @@ const handleSubmit = async (data) => {
   }
   try {
     if (isEditing.value) {
+      console.log('datos para editar', formData)
       const response = await api.post(``, formData)
       console.log(response)
     } else {
+      console.log('datos para registrar', formData)
       const response = await api.post(``, formData)
       console.log(response)
     }

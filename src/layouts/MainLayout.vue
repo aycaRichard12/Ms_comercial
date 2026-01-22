@@ -19,13 +19,26 @@
           <q-btn icon="help_outline" color="blue" flat @click="IniciarGuia" />
 
           <notificacion-layout v-if="permitidoNotificaciones" />
+          <!-- <q-btn
+            flat
+            dense
+            icon="exit_to_app"
+            text-color="white"
+            label="Salir123"
+            @click="irdashboard"
+          /> -->
           <q-btn
             flat
             dense
             icon="exit_to_app"
             text-color="white"
             label="Salir"
-            @click="irdashboard"
+            @click="
+              () => {
+                LocalStorage.remove('puedeIniciarsesion')
+                $router.push('/login')
+              }
+            "
           />
         </q-toolbar-title>
       </q-toolbar>
@@ -187,18 +200,19 @@ import { guiarInicio } from 'src/utils/guiasDriver'
 import ComandoVoz from './ComandoVoz.vue'
 //import { usePusher } from 'src/composables/usePusher'
 import { idusuario_md5 } from 'src/composables/FuncionesGenerales'
+
 import { useOperacionesPermitidas } from 'src/composables/useAutorizarOperaciones'
 
-const permisosStore = useOperacionesPermitidas()
+import { LocalStorage } from 'quasar'
 
+const permisosStore = useOperacionesPermitidas()
 const idusuario = idusuario_md5()
-//let pusherActions = null
 const ocultarTabs = () => {
   tabsVisible.value = false
 }
-const irdashboard = () => {
-  window.location.href = '/app/dashboard'
-}
+// const irdashboard = () => {
+//   window.location.href = '/app/dashboard'
+// }
 const router = useRouter()
 const menuStore = useMenuStore()
 
@@ -296,6 +310,9 @@ const iconos = ref({
   gestioncompra: 'shopping_basket',
   ingresocredito: 'request_quote',
   gestioncampanas: 'campaign',
+  reporteinventarioexterior: 'report',
+  actualizacionescomercial: 'update',
+  permisosusuario: 'security',
 })
 
 const loadTabsForSubmenu = (submenuCodigo) => {

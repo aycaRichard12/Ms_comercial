@@ -927,6 +927,30 @@ elseif ($ver[0] == "CambiarEstadoPermisosOperacionUsuario") {
     $controlador = new configuracion();
     $controlador->CambiarEstadoPermisosOperacionUsuario($ver[1], $ver[2]); 
 }
+elseif ($ver[0] == "reporteinvexterno") {
+    $controlador = new reportes();
+    $controlador->reporteinvexterno($ver[1], $ver[2], $ver[3]); 
+}
+elseif ($ver[0] == "detalleInventarioExterior") {
+    $controlador = new reportes();
+    $controlador->detalleInventarioExterior($ver[1], $ver[2]); 
+}
+elseif ($ver[0] == "getalmacenes") {
+    $controlador = new reportes();
+    $controlador->getalmacenes($ver[1]); 
+}
+elseif ($ver[0] == "getIdUsuario") {
+    $controlador = new reportes();
+    $controlador->getIdUsuario($ver[1]); 
+}
+elseif ($ver[0] == "reporteProveedorCompras") {
+    $controlador = new compras();
+    $controlador->reporteProveedorCompras($ver[1], $ver[2], $ver[3]); 
+}
+elseif ($ver[0] == "detalleCompra") {
+    $controlador = new compras();
+    $controlador->detalleCompra($ver[1], $ver[2]); 
+}
 
 if ($controlador === null) {
     // Acción por defecto si no se encuentra una ruta valida reportecotizacion cambiarestadodevolucion
