@@ -97,6 +97,9 @@ class UseCotizacion
                     throw new Exception("Error al registrar anulación.");
                 }
 
+                $estadocobro = $this->cm->query("UPDATE estado_cobro SET estado='4' WHERE venta_id_venta='$idcotizacion'");
+
+
                 // C. Obtener Productos para Restock
                 $productos = $this->cm->query("SELECT 
                         dc.id_detalle_cotizacion,
@@ -108,7 +111,7 @@ class UseCotizacion
                         s.id_stock
                         from detalle_cotizacion dc 
                         inner join stock s on  dc.productos_almacen_id_productos_almacen = s.productos_almacen_id_productos_almacen
-                        where dc.cotizacion_id_cotizacion = '$idcotizacion'  and s.estado = 1");
+                        where dc.cotizacion_id_cotizacion = '$idcotizacion' and s.estado = 1");
                 
                 if (!$productos) {
                     throw new Exception("Error al obtener productos para reabastecimiento.");

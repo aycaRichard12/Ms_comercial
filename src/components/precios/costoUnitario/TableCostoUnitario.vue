@@ -1,96 +1,148 @@
 <template>
-  <div class="row flex justify-between">
-    <!-- Filtro por almacén -->
+  <q-card flat bordered class="shadow-2 rounded-borders">
+    <!-- Header Controls: Filters and Actions -->
+    <q-card-section class="q-pa-md">
+      <div class="row q-col-gutter-md items-center justify-between">
+        <!-- Filtro Almacén -->
+        <div class="col-12 col-sm-6 col-md-4" id="filtroAlmacenCostoUnitario">
+          <q-select
+            v-model="filtroAlmacen"
+            :options="almacenes"
+            label="Seleccionar Almacén"
+            dense
+            outlined
+            map-options
+            options-dense
+            emit-value
+            class="full-width"
+            id="almacen"
+            bg-color="white"
+          >
+            <template v-slot:prepend>
+              <q-icon name="store" color="primary" />
+            </template>
+          </q-select>
+        </div>
 
-    <div class="col-auto flex flex-col gap-3">
-      <div class="col-12 col-md-4">
-        <label for="almacen">Almacén</label>
-        <q-select
-          v-model="filtroAlmacen"
-          :options="almacenes"
-          id="almacen"
-          map-options
-          dense
-          outlined
-        />
+        <!-- Action Buttons -->
+        <div class="col-12 col-sm-6 col-md-8 row justify-end q-gutter-x-sm">
+          <q-btn
+            color="secondary"
+            id="reportedepreciosbase"
+            to="/reportedepreciosbase"
+            icon="assessment"
+            label="Reporte de Costos"
+            no-caps
+            unelevated
+          />
+
+          <q-btn
+            color="negative"
+            icon="picture_as_pdf"
+            label="Vista Previa PDF"
+            no-caps
+            @click="onPrintReport"
+            id="btnVistaPDF"
+            unelevated
+          />
+        </div>
       </div>
+    </q-card-section>
 
-      <q-btn
-        color="secondary"
-        class="btn-res q-mt-lg"
-        id="reportedepreciosbase"
-        to="/reportedepreciosbase"
-        icon="assessment"
-        label="Reporte de Costos"
-        no-caps
-      />
-    </div>
+    <q-separator />
 
-    <!-- Botón imprimir -->
+    <!-- Tabla de productos -->
+    <q-table
+      :rows="filtrados"
+      :columns="columnas"
+      row-key="id"
+      flat
+      bordered
+      :filter="filter"
+      :loading="loading"
+      v-model:pagination="pagination"
+      id="tableCostoUnitario"
+      dense
+      separator="cell"
+      no-data-label="No se encontraron resultados"
+      rows-per-page-label="Filas por página"
+    >
+      <template v-slot:top>
+        <div class="full-width row justify-between items-center q-py-xs">
+          <div class="text-h6 text-white q-ml-sm">Tabla con Costos Unitarios</div>
 
-    <q-btn outline="" color="info" @click="onPrintReport" class="btn-res q-mt-lg" dense>
-      <q-icon name="picture_as_pdf" class="icono" />
+          <!-- Search Input -->
+          <q-input
+            v-model="filter"
+            placeholder="Buscar costo unitario..."
+            dense
+            outlined
+            debounce="300"
+            id="buscar"
+            bg-color="grey-1"
+            class="q-ml-md"
+            style="min-width: 250px"
+          >
+            <template v-slot:append>
+              <q-icon name="search" color="primary" />
+            </template>
+          </q-input>
+        </div>
+      </template>
 
-      <span class="texto">Vista previa PDF</span>
-    </q-btn>
-  </div>
-  <div class="row flex justify-end">
-    <div class="">
-      <label for="buscar">Buscar...</label>
-      <q-input v-model="filter" dense outlined debounce="300" id="buscar">
-        <template v-slot:append>
-          <q-icon name="search" />
-        </template>
-      </q-input>
-    </div>
-  </div>
+      <!-- Botones de opciones -->
+      <template #body-cell-opciones="props">
+        <q-td :props="props" class="text-center" auto-width>
+          <q-btn
+            flat
+            round
+            dense
+            icon="edit"
+            color="primary"
+            @click="editarProducto(props.row)"
+            title="Editar producto"
+            id="btnEditarCostoUnitario"
+          >
+            <q-tooltip>Editar Costo</q-tooltip>
+          </q-btn>
+        </q-td>
+      </template>
 
-  <!-- Tabla de productos -->
-  <q-table
-    title="Costo Unitario"
-    :columns="columnas"
-    :rows="filtrados"
-    row-key="id"
-    flat
-    bordered
-    :filter="filter"
-    :loading="loading"
-    v-model:pagination="pagination"
-  >
-    <template v-slot:top-right> </template>
-    <!-- Botones de opciones -->
-    <template #body-cell-opciones="props">
-      <q-td :props="props" class="text-nowrap">
-        <q-btn
-          flat
-          dense
-          icon="edit"
-          color="primary"
-          @click="editarProducto(props.row)"
-          title="Editar producto"
-        />
-      </q-td>
-    </template>
-  </q-table>
-  <q-dialog v-model="mostrarModal" full-width full-height>
-    <q-card class="q-pa-md" style="height: 100%; max-width: 100%">
-      <q-card-section class="row items-center q-pb-none">
-        <div class="text-h6">Vista previa de PDF</div>
-        <q-space />
-        <q-btn flat round icon="close" @click="mostrarModal = false" />
-      </q-card-section>
+      <!-- Loading State -->
+      <template v-slot:loading>
+        <q-inner-loading showing color="primary" />
+      </template>
 
-      <q-separator />
+      <!-- No Data State: Customizing the default 'no-data' slot overrides no-data-label, but we can keep it consistent -->
+      <template v-slot:no-data>
+        <div class="full-width row flex-center text-grey-8 q-pa-md">
+          <q-icon size="2em" name="sentiment_dissatisfied" />
+          <span class="q-ml-sm">No se encontraron resultados</span>
+        </div>
+      </template>
+    </q-table>
 
-      <q-card-section class="q-pa-none" style="height: calc(100% - 60px)">
-        <iframe
-          v-if="pdfData"
-          :src="pdfData"
-          style="width: 100%; height: 100%; border: none"
-        ></iframe>
-      </q-card-section>
-    </q-card>
-  </q-dialog>
+    <!-- Modal PDF -->
+    <q-dialog
+      v-model="mostrarModal"
+      full-width
+      full-height
+      maximized
+      transition-show="slide-up"
+      transition-hide="slide-down"
+    >
+      <q-card class="column no-wrap">
+        <q-toolbar class="bg-primary text-white">
+          <q-toolbar-title>Vista Previa de Reporte</q-toolbar-title>
+          <q-btn flat round dense icon="close" v-close-popup />
+        </q-toolbar>
+
+        <q-card-section class="col q-pa-none">
+          <iframe v-if="pdfData" :src="pdfData" class="fit" style="border: none"></iframe>
+        </q-card-section>
+      </q-card>
+    </q-dialog>
+  </q-card>
 </template>
 
 <script setup>
@@ -132,6 +184,7 @@ const pagination = ref({ page: 1, rowsPerPage: 10 })
 // })
 
 // Columnas de la tabla
+// Columnas de la tabla
 const columnas = [
   {
     name: 'numero',
@@ -154,33 +207,49 @@ const columnas = [
 
 // Filtro combinado por búsqueda y almacén
 const filtrados = computed(() => {
-  console.log(props.rows)
-  console.log(filtroAlmacen.value)
-  const almacen = filtroAlmacen.value
+  const almacenId = filtroAlmacen.value
+  const searchTerm = filter.value ? filter.value.toLowerCase() : ''
+
+  console.log('🏪 Almacén seleccionado (ID):', almacenId)
+  if (searchTerm) console.log('🔍 Término de búsqueda:', searchTerm)
+
   const res = props.rows.filter((p) => {
-    console.log(filtroAlmacen.value)
-    const matchesAlmacen =
-      (!filtroAlmacen.value || Number(p.idalmacen) === Number(almacen.value)) &&
-      filtroAlmacen.value !== null
-    const matchesCodigo =
-      !filter.value ||
-      p.codigo.toLowerCase().includes(filter.value.toLowerCase()) ||
-      p.descripcion.toLowerCase().includes(filter.value.toLowerCase())
-    return matchesCodigo && matchesAlmacen
+    // Filtro por almacén - emit-value devuelve solo el ID
+    const matchesAlmacen = !almacenId || Number(p.idalmacen) === Number(almacenId)
+    if (!matchesAlmacen) return false
+
+    // Filtro de búsqueda con null safety
+    if (!searchTerm) return true
+
+    const codigo = (p.codigo || '').toString().toLowerCase()
+    const descripcion = (p.descripcion || '').toString().toLowerCase()
+    const unidad = (p.unidad || '').toString().toLowerCase()
+    const precio = (p.precio || '').toString().toLowerCase()
+
+    return (
+      codigo.includes(searchTerm) ||
+      descripcion.includes(searchTerm) ||
+      unidad.includes(searchTerm) ||
+      precio.includes(searchTerm)
+    )
   })
 
-  return res.map((row, index) => ({
+  console.log(`✅ Registros del almacén ${almacenId}:`, res.length)
+  const response = res.map((row, index) => ({
     ...row,
     numero: index + 1,
   }))
+  console.log(`✅ Registros con el almacen ${almacenId}:`, response)
+  return response
 })
 
 watch(
   () => props.almacenes,
   (nuevosAlmacenes) => {
     if (nuevosAlmacenes.length > 0 && !filtroAlmacen.value) {
-      console.log(nuevosAlmacenes)
-      filtroAlmacen.value = nuevosAlmacenes[0]
+      console.log('📦 Almacenes disponibles:', nuevosAlmacenes)
+      // emit-value requiere solo el ID, no el objeto completo
+      filtroAlmacen.value = nuevosAlmacenes[0].value
     }
   },
   { immediate: true },
@@ -189,10 +258,16 @@ watch(
 function editarProducto(id) {
   emit('edit', id)
 }
-// Función imprimir (puedes reemplazar con lógica real)
+// Función imprimir
 function onPrintReport() {
-  const almacen = filtroAlmacen.value
-  const doc = PDF_REPORTE_COSTO_UNITARIO_X_ALMACEN(filtrados.value, almacen.label)
+  const almacenId = filtroAlmacen.value
+  // Buscar el objeto almacén completo para obtener el label
+  const almacenObj = props.almacenes.find((a) => a.value === almacenId)
+  const almacenLabel = almacenObj ? almacenObj.label : 'Todos los Almacenes'
+
+  console.log('📊 Generando PDF para almacén:', almacenLabel)
+
+  const doc = PDF_REPORTE_COSTO_UNITARIO_X_ALMACEN(filtrados.value, almacenLabel)
   pdfData.value = doc.output('dataurlstring')
   mostrarModal.value = true
 }
