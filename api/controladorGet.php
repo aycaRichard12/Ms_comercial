@@ -951,6 +951,10 @@ elseif ($ver[0] == "detalleCompra") {
     $controlador = new compras();
     $controlador->detalleCompra($ver[1], $ver[2]); 
 }
+elseif ($ver[0] == "reporteProductoProveedoresCompras") {
+    $controlador = new compras();
+    $controlador->reporteProductoProveedoresCompras($ver[1], $ver[2], $ver[3]); 
+}
 
 if ($controlador === null) {
     // Acción por defecto si no se encuentra una ruta valida reportecotizacion cambiarestadodevolucion

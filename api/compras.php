@@ -1780,6 +1780,74 @@ class compras
          $stmt->close();
     }
 
+    public function reporteProductoProveedoresCompras($idproducto, $fechainicio, $fechafin){
+ 
+        $consulta = "SELECT 
+                        ROW_NUMBER() OVER (ORDER BY i.id_ingreso) AS indice, 
+                        i.fecha_ingreso AS fechaIngreso,
+                        i.id_ingreso AS idIngreso,
+                        prv.nombre AS proveedor, 
+                        prv.codigo AS codigoProveedor,
+                        i.nombre AS nombreIngreso,
+                        i.codigo AS codigoCompra,
+                        i.nfactura AS nFactura,
+                        i.pedidos_id_pedidos AS idPedido,
+                        i.estado AS estadoIngreso,
+                        i.autorizacion,
+                        i.tipocompra AS tipoCompra,
+                        i.almacen_id_almacen AS idAlmacen,
+                        a.nombre AS almacen,
+                        di.cantidad,
+                        di.precio_unitario AS precioUnitario,
+                        (di.cantidad*di.precio_unitario) AS total
+                    FROM detalle_ingreso di 
+                    LEFT JOIN ingreso i ON i.id_ingreso = di.ingreso_id_ingreso
+                    LEFT JOIN proveedor prv ON prv.id_proveedor = i.proveedor_id_proveedor
+                    LEFT JOIN almacen a ON a.id_almacen = i.almacen_id_almacen
+                    LEFT JOIN productos_almacen pra ON pra.id_productos_almacen = di.productos_almacen_id_productos_almacen
+                    LEFT JOIN productos pro ON pro.id_productos = pra.productos_id_productos
+                    WHERE pro.id_productos = ? AND DATE(i.fecha_ingreso) BETWEEN ? AND ?
+                    ORDER BY i.fecha_ingreso DESC, i.id_ingreso DESC;";
+
+        $stmt = $this->cm->prepare($consulta);
+
+        if(!$stmt){
+            $res = array("estado" => "error", "mensaje" => "Error interno del servidor al preparar la consulta.");
+            echo json_encode($res);
+            return;
+        }
+
+        $stmt->bind_param("iss", $idproducto, $fechainicio, $fechafin);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $lista = [];
+        while ($qwe = $result->fetch_assoc()) {
+            $res = array(
+                "indice" => $qwe['indice'],
+                "fechaIngreso" => $qwe['fechaIngreso'],
+                "idIngreso" => $qwe['idIngreso'],
+                "proveedor" => $qwe['proveedor'],
+                "codigoProveedor" => $qwe['codigoProveedor'],
+                "nombreIngreso" => $qwe['nombreIngreso'],
+                "codigoCompra" => $qwe['codigoCompra'],
+                "nFactura" => $qwe['nFactura'],
+                "idPedido" => $qwe['idPedido'],
+                "estadoIngreso" => $qwe['estadoIngreso'],
+                "autorizacion" => $qwe['autorizacion'],
+                "tipoCompra" => $qwe['tipoCompra'],
+                "idAlmacen" => $qwe['idAlmacen'],
+                "almacen" => $qwe['almacen'],
+                "cantidad" => $qwe['cantidad'],
+                "precioUnitario" => $qwe['precioUnitario'],
+                "total" => $qwe['total']
+            );
+            array_push($lista, $res);
+        }
+         echo json_encode($lista);
+         $stmt->close();
+    }
+
+
     public function arrayIDalmacen($idmd5)
     {
         $lista = array();
