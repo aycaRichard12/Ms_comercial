@@ -421,21 +421,30 @@ class compras
 
         // Obtener detalle de productos del pedido
         $lista = [];
-        $detalles = $this->cm->query("
-            SELECT dp.id_detalle_pedido, p.nombre, p.descripcion, dp.cantidad, dp.observacion
+        $detalles = $this->cm->query("SELECT 
+                dp.id_detalle_pedido, 
+                p.codigo,
+                p.nombre, 
+                p.descripcion, 
+                dp.cantidad, 
+                dp.observacion,
+                u.nombre AS unidad
             FROM detalles_pedidos dp
             LEFT JOIN productos_almacen pa ON dp.productos_almacen_id_productos_almacen = pa.id_productos_almacen
             LEFT JOIN productos p ON pa.productos_id_productos = p.id_productos
+            LEFT JOIN unidad u on p.unidad_id_unidad = u.id_unidad 
             WHERE dp.pedidos_id_pedidos = '$id'
             ORDER BY p.nombre DESC
         ");
         while ($row = $this->cm->fetch($detalles)) {
             $lista[] = [
-                "id" => $row[0],
-                "producto" => $row[1],
-                "descripcion" => $row[2],
-                "cantidad" => $row[3],
-                "observacion" => $row[4]
+                "id" => $row['id_detalle_pedido'],
+                "codigo" => $row['codigo'],
+                "producto" => $row['nombre'],
+                "descripcion" => $row['descripcion'],
+                "cantidad" => $row['cantidad'],
+                "observacion" => $row['observacion'],
+                "unidad" => $row['unidad']
             ];
         }
 
@@ -1902,13 +1911,15 @@ class compras
                                         p.codigo, 
                                         p.codigosin, 
                                         p.unidadsin, 
-                                        p.actividadsin
+                                        p.actividadsin,
+                                        u.nombre AS unidad
                                     FROM detalle_ingreso di 
                                     LEFT JOIN ingreso i on di.ingreso_id_ingreso=i.id_ingreso
                                     LEFT JOIN productos_almacen pa on di.productos_almacen_id_productos_almacen=pa.id_productos_almacen
                                     LEFT join productos p on pa.productos_id_productos=p.id_productos
+                                    LEFT JOIN unidad u on p.unidad_id_unidad = u.id_unidad 
                                     where di.ingreso_id_ingreso = '$id'
-                                    order by p.nombre DESC");
+                                    order by p.nombre DESC"); 
         while ($qwe = $this->cm->fetch($detallecompra)) {
             $res = array(
                 "id" => $qwe['id_detalle_ingreso'],
@@ -1918,6 +1929,7 @@ class compras
                 "caracteristica" => $qwe['caracteristicas'], 
                 "cantidad" => $qwe['cantidad'], 
                 "precio" => $qwe['precio_unitario'],
+                "unidad" => $qwe['unidad'],
                 "codigo" => $qwe['codigo'],
                 "codigosin" => $qwe['codigosin'],
                 "unidadsin" => $qwe['unidadsin'],
