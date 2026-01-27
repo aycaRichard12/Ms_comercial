@@ -2096,15 +2096,217 @@ class mantenimiento
         echo json_encode($res);
     }
 
-    public function cambiarestadopedido($id, $dato, $idmd5){
+
+
+
+    public function updateDescartarPedidoMovimiento($id, $dato){
+        $res="";
+        date_default_timezone_set('America/La_Paz');
+        $fecha = date("Y-m-d H:i:s");
+
+        $conmov = $this->cm->query("SELECT p.id_pedidos, p.almacen_id_almacen, p.observacion, p.almacen_origen FROM pedidos p WHERE p.id_pedidos = '$id'");
+        $mov = $this->cm->fetch($conmov);
+        if ($dato == 3) {
+            $registro = $this->cm->query("update pedidos SET estado='$dato' where id_pedidos='$id'");
+           
+            $res = $mov['observacion']. " - Pedido descartado correctamente ";
+        }
+        return $res;
+    }
+      public function updateConfirmarPedidoMovimiento($id, $dato){
+        $res="";
+        date_default_timezone_set('America/La_Paz');
+        $fecha = date("Y-m-d H:i:s");
+
+        $conmov = $this->cm->query("SELECT p.id_pedidos, p.almacen_id_almacen, p.observacion, p.almacen_origen FROM pedidos p WHERE p.id_pedidos = '$id'");
+        $mov = $this->cm->fetch($conmov);
+        if ($dato == 1) {
+            $registro = $this->cm->query("update pedidos SET estado='$dato' where id_pedidos='$id'");
+
+           
+            $res = $mov['observacion']. " - Pedido añadido correctamente ";
+        }
+        return ["res" => $res, "registro" => $registro]; ;
+    }
+
+    public function obtenerPedidoMovimiento($id){
+        $res="";
+        date_default_timezone_set('America/La_Paz');
+        $fecha = date("Y-m-d H:i:s");
+        $mov = null;
+        $conmov = $this->cm->query("SELECT p.id_pedidos, p.almacen_id_almacen, p.observacion, p.almacen_origen FROM pedidos p WHERE p.id_pedidos = '$id'");
+        if ($conmov !== null && $conmov->num_rows > 0) {
+            $mov = $this->cm->fetch($conmov);
+        } else {
+            
+            $mov = null;
+        }
+       
+        return $mov;
+    }
+    public function insertarMovimientoDesdePedido($mov, $idusuario){
+        $res="";
+        date_default_timezone_set('America/La_Paz');
+        $fecha = date("Y-m-d");
+        $nue = $this->cm->query("insert into movimiento(id_movimiento,fecha_movimiento,almacen_destino,autorizacion,descripcion,codigo,almacen_id_almacen,usuario)value(NULL,'$fecha','$mov[1]','2','$mov[2]','0','$mov[3]','$idusuario')");
+        $idmov = $this->cm->insert_id;
+        return $idmov;
+    }
+
+    public function obtenerDetallePedidoMovimiento($id){
+        $listaProductos = [];
+        $condet = $this->cm->query("SELECT 
+            dp.id_detalle_pedido, 
+            dp.cantidad, 
+            dp.observacion, 
+            dp.pedidos_id_pedidos, 
+            dp.productos_almacen_id_productos_almacen, 
+            pa.productos_id_productos, 
+            p.codigo, 
+            p.descripcion 
+        FROM detalles_pedidos dp
+        LEFT JOIN productos_almacen pa ON dp.productos_almacen_id_productos_almacen = pa.id_productos_almacen
+        LEFT JOIN productos p ON pa.productos_id_productos = p.id_productos
+        WHERE dp.pedidos_id_pedidos = '$id'");
+        if ($condet !== null && $condet->num_rows > 0) {
+            while($det = $this->cm->fetch($condet)) {
+                $datos = [
+                    "id_detalle_pedido" => $det[0], 
+                    "cantidad" => $det[1], 
+                    "observacion" => $det[2], 
+                    "pedidos_id_pedidos" => $det[3],
+                    "productos_almacen_id_productos_almacen" => $det[4], "productos_id_productos" => $det[5], 
+                    "codigo" => $det[6], 
+                    "descripcion" => $det[7]
+                ];
+                array_push($listaProductos, $datos);
+            }
+        }
+        return $listaProductos;
+    }
+
+    public function obtenerStockActual($idproducto, $idalmacen){
+        $stock = 0;
+        $condeto = $this->cm->query("SELECT 
+                                        pa.id_productos_almacen, 
+                                        s.id_stock, 
+                                        s.cantidad,  
+                                        p.codigo, 
+                                        p.descripcion 
+                                    FROM productos_almacen pa 
+                                    LEFT JOIN stock s ON pa.id_productos_almacen=s.productos_almacen_id_productos_almacen
+                                    LEFT JOIN productos p ON pa.productos_id_productos=p.id_productos
+                                    WHERE pa.productos_id_productos = '$idproducto' AND pa.almacen_id_almacen = '$idalmacen' AND s.estado = 1
+                                    ORDER BY s.id_stock DESC LIMIT 1");
+
+        if ($condeto !== null && $condeto->num_rows > 0) {
+            $deto = $this->cm->fetch($condeto);
+            $respuesta = [
+                    "idproductoalmacen"=>$deto[0],
+                    "idstock"=>$deto[1],
+                    "stock"=>$deto[2],
+                    "codigo"=>$deto[3],
+                    "descripcion"=>$deto[4]
+                ];
+        }
+        return $respuesta;
+    }
+
+    public function registrarDetalleMovimientoDesdePedido($detalleProductos, $idmov){
+        $res = "";
+        foreach ($detalleProductos as $det) {
+            $registro = $this->cm->query("insert into detalle_movimiento(id_detalle_movimiento, cantidad, movimiento_id_movimiento, productos_almacen_id_productos_almacen)value(NULL,'$det[cantidad]','$idmov','$det[productos_almacen_id_productos_almacen]')");
+            if ($registro === null) {
+                $res = "Error al registrar el detalle del movimiento para el producto con código: " . $det['codigo'];
+                break;
+            }
+        }
+        return $res;
+    }
+
+    public function cambiarestadopedidoOptimizado($ids, $dato, $idmd5) {
+        date_default_timezone_set('America/La_Paz');
+        $fecha = date("Y-m-d");
+        
+        // 1. Verificación de usuario
+        $idusuario = $this->verificar->verificarIDUSERMD5($idmd5);
+        if ($idusuario === "false") {
+            echo json_encode(["error" => "El id de usuario no existe"]);
+            return;
+        }
+
+        // 2. Caso: Descartar Pedidos (Dato 3)
+        if ($dato == 3) {
+            $mensajes = "";
+            foreach ($ids as $id) {
+                $mensajes .= $this->updateDescartarPedidoMovimiento($id, $dato);
+            }
+            echo json_encode(["estado" => 100, "detalles" => "Pedidos descartados: " . $mensajes]);
+            return;
+        }
+
+        // 3. Caso: Confirmar Pedidos (Dato 2)
+        $this->cm->begin_transaction();
+        try {
+            $respuestaFinal = [];
+
+            foreach ($ids as $id) {
+                // Obtener cabecera del pedido
+                $mov = $this->obtenerPedidoMovimiento($id);
+                if (!$mov) throw new Exception("Pedido $id no encontrado.");
+
+                // Actualizar estado a 1 (Confirmado)
+                $this->updateConfirmarPedidoMovimiento($id, $dato);
+
+                // Crear cabecera de movimiento
+                // $mov[1]=destino, $mov[2]=obs, $mov[3]=origen
+                $idmov = $this->insertarMovimientoDesdePedido($mov, $idusuario);
+
+                // Obtener detalles y procesar stock
+                $detalles = $this->obtenerDetallePedidoMovimiento($id);
+                $productosSinStock = [];
+
+                foreach ($detalles as $det) {
+                    $stockData = $this->obtenerStockActual($det['productos_id_productos'], $mov['almacen_origen']);
+
+                    if ($stockData && $stockData['stock'] >= $det['cantidad']) {
+                        // Registrar detalle movimiento
+                        $this->cm->query("INSERT INTO detalle_movimiento (cantidad, movimiento_id_movimiento, productos_almacen_id_productos_almacen) 
+                                        VALUES ('$det[cantidad]', '$idmov', '$det[productos_almacen_id_productos_almacen]')");
+                    } else {
+                        $productosSinStock[] = ["codigo" => $det['codigo'], "producto" => $det['descripcion']];
+                    }
+                }
+
+                $respuestaFinal[] = [
+                    "pedido_id" => $id,
+                    "movimiento_id" => $idmov,
+                    "sin_stock" => $productosSinStock
+                ];
+            }
+
+            $this->cm->commitTransaction();
+            echo json_encode(["estado" => 100, "data" => $respuestaFinal]);
+
+        } catch (Exception $e) {
+            $this->cm->rollbackTransaction();
+            echo json_encode(["estado" => 101, "error" => $e->getMessage()]);
+        }
+    }
+
+
+    public function cambiarestadopedido($ids, $dato, $idmd5){
         $res = "";
         $listaProductos = [];
         date_default_timezone_set('America/La_Paz');
         $fecha = date("Y-m-d");
-
+        
         if ($dato == 3) {
-            $registro = $this->cm->query("update pedidos SET estado='$dato' where id_pedidos='$id'");
-            echo json_encode(array("estado" => 100, "detalles" => "El pedido se descarto correctamente"));
+            foreach ($ids as $id){
+               $res += $this->updateDescartarPedidoMovimiento($id, $dato);
+            }
+            
+            echo json_encode(["estado" => 100, "detalles" => "Pedidos descartados correctamente: ". $res]);
             return;
         }
         $this->cm->begin_transaction();
@@ -2115,8 +2317,17 @@ class mantenimiento
         }
         $this->cm->begin_transaction();
 
+        
+        $registro = null;
+        if ($dato == 2) {
+            foreach ($ids as $id){
+               $res = $this->updateConfirmarPedidoMovimiento($id, $dato);
+            }
 
-        $registro = $this->cm->query("update pedidos SET estado='$dato' where id_pedidos='$id'");
+            $registro = $res['registro'];
+        }
+
+
         if($registro !== null) {
             $res = array("estado" => "", "movimiento" => "", "detalles" => array("estado" => "", "lista" => []));
             if ($this->cm->affected_rows > 0) {
