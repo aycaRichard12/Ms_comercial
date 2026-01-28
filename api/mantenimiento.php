@@ -2223,6 +2223,63 @@ class mantenimiento
         }
         return $res;
     }
+    public function unirTodoslosPedidos($ids){
+        $unPedido = null;
+
+        foreach ($ids as $id) {
+            $pedido = $this->obtenerPedidoMovimiento($id);
+
+            if ($pedido !== null) {
+
+                // Primer pedido: se usa como base
+                if ($unPedido === null) {
+                    $unPedido = $pedido;
+                } else {
+                    // Unir observaciones
+                    if (!empty($pedido['observacion'])) {
+                        $unPedido['observacion'] .= "; " . $pedido['observacion'];
+                        $unPedido[2] .= "; " . $pedido['observacion'];
+                    }
+                }
+            }
+        }
+
+        echo json_encode($unPedido);
+        return $unPedido;
+    }
+    
+        
+    public function unirTodoslosDetallesPedidos($ids){
+        $listaProductos = [];
+        foreach ($ids as $id) {
+            $detalles = $this->obtenerDetallePedidoMovimiento($id);
+            foreach ($detalles as $det) {
+                $existe = $this->verificarExistenciaArrayDetallePedido($det['productos_id_productos'], $listaProductos);
+                if ($existe !== false) {
+                    // Si el producto ya existe, sumar la cantidad
+                    $listaProductos[$existe]['cantidad'] += $det['cantidad'];
+                } else {
+                    // Si no existe, agregar el nuevo producto al array
+                    array_push($listaProductos, $det);
+                }
+
+                 
+
+            }
+        }
+        echo json_encode($listaProductos);
+        return $listaProductos;
+
+    }
+    public function verificarExistenciaArrayDetallePedido($idproducto, $listaProductos){
+        
+        foreach ($listaProductos as $index => $producto) {
+            if ($producto['productos_id_productos'] === $idproducto) {
+                return $index; // Retorna el índice si el producto ya existe
+            }
+        }
+        return false; // Retorna false si el producto no existe
+    }
 
     public function cambiarestadopedidoOptimizado($ids, $dato, $idmd5) {
         date_default_timezone_set('America/La_Paz');
@@ -2250,20 +2307,22 @@ class mantenimiento
         try {
             $respuestaFinal = [];
 
-            foreach ($ids as $id) {
+            
                 // Obtener cabecera del pedido
-                $mov = $this->obtenerPedidoMovimiento($id);
-                if (!$mov) throw new Exception("Pedido $id no encontrado.");
+                $mov = $this->unirTodoslosPedidos($ids);
+                if (!$mov) throw new Exception("Pedido $ids no encontrado.");
 
                 // Actualizar estado a 1 (Confirmado)
-                $this->updateConfirmarPedidoMovimiento($id, $dato);
+                foreach ($ids as $id){
+                    $this->updateConfirmarPedidoMovimiento($id, $dato);
+                }
 
                 // Crear cabecera de movimiento
                 // $mov[1]=destino, $mov[2]=obs, $mov[3]=origen
                 $idmov = $this->insertarMovimientoDesdePedido($mov, $idusuario);
 
                 // Obtener detalles y procesar stock
-                $detalles = $this->obtenerDetallePedidoMovimiento($id);
+                $detalles = $this->unirTodoslosDetallesPedidos($ids);
                 $productosSinStock = [];
 
                 foreach ($detalles as $det) {
@@ -2279,11 +2338,11 @@ class mantenimiento
                 }
 
                 $respuestaFinal[] = [
-                    "pedido_id" => $id,
+                    "pedido_id" => $ids,
                     "movimiento_id" => $idmov,
                     "sin_stock" => $productosSinStock
                 ];
-            }
+            
 
             $this->cm->commitTransaction();
             echo json_encode(["estado" => 100, "data" => $respuestaFinal]);
