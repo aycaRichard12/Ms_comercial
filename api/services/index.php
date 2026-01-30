@@ -12,6 +12,10 @@
     $uri = $_SERVER['REQUEST_URI'];
     $rutas = array_filter(explode("/",$uri));
     require_once "softExternoService.php";
+   
+    require_once __DIR__ . "/../../db/conexion.php";
+    require_once __DIR__ . "/../funciones.php";
+ 
     if($method == "GET"){
         
             require_once "controladorServiciosGet.php";

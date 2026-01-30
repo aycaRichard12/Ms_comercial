@@ -1,42 +1,24 @@
 <?php
 
-use BcMath\Number;
 
-/**
- * Clase para gestionar las operaciones de ventas, facturación y stock. idproductoalmacen id datosAdicionales
- */
 class SoftExternoService
 {
     // --- CONEXIONES Y CLASES AUXILIARES ---
     private $cm;
-    private $rh;
-    private $em;
+    
     private $conexion;
     private $verificar;
-    private $factura;
-    private $logger;
-    private $venta;
-    private $funcionesVenta;
-    private $token;
-    private $configuracion;
-    private $numceros;
+    
 
 
     public function __construct()
     {
         $this->conexion = new Conexion();
         $this->verificar = new Funciones();
-        $this->factura = new Facturacion();
-        $this->logger = new LogErrores();
-        $this->venta = new UseVEnta();
-        $this->funcionesVenta = new ventas();
-        $this->token = new ApiTokens();
-        $this->configuracion = new configuracion();
-        $this->numceros = 4;
+       
         // Asignación de conexiones a bases de datos
         $this->cm = $this->conexion->cm;
-        $this->rh = $this->conexion->rh;
-        $this->em = $this->conexion->em;
+        
         
     }
     public function crearServicio($data) {
@@ -64,16 +46,14 @@ class SoftExternoService
 
             // 3. Ejecución y respuesta
             if ($stmt->execute()) {
-                $idGenerado = $this->cm->getLastInsertId();
-                
+                $idGenerado = $this->cm->insert_id;
+
                 $respuesta = array(
                     "estado" => "success",
                     "mensaje" => "Software externo registrado correctamente",
                     "id" => $idGenerado
                 );
                 echo json_encode($respuesta);
-            } else {
-                throw new Exception("Error en la ejecución: " . $stmt->error);
             }
 
         } catch (Exception $e) {

@@ -146,7 +146,7 @@ if ($ver == "registrarResponsable") {
 }elseif ($ver == "registrarProducto") {
     try {
         $controlador = new mantenimiento();
-        $carpetaDestino = __DIR__ . "/../../cm/api/imagen/";
+        $carpetaDestino = __DIR__ . "/imagen/";
 
         if (!is_dir($carpetaDestino)) {
             mkdir($carpetaDestino, 0775, true);
@@ -195,7 +195,7 @@ if ($ver == "registrarResponsable") {
 } elseif ($ver == "editarProducto") {
     try {
         $controlador = new mantenimiento();
-        $carpetaDestino = __DIR__ . "/../../cm/api/imagen/";
+        $carpetaDestino = __DIR__ . "/imagen/";
 
         if (!is_dir($carpetaDestino)) {
             mkdir($carpetaDestino, 0775, true);

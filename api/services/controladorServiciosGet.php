@@ -17,13 +17,15 @@ if ($apiRoute === 'obtenerServicio') {
     $controlador->obtenerServicio($segments[2]);
 }
 
- 
-else {
+
+if ($apiRoute === null) {
+    // Acción por defecto si no se encuentra una ruta valida reportecotizacion cambiarestadodevolucion
     http_response_code(404);
     echo json_encode([
         "error" => "La ruta web '{$apiRoute}' no existe",
         "segments" => $segments
     ], JSON_UNESCAPED_UNICODE);
 }
+
 
 

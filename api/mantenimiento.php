@@ -1229,7 +1229,7 @@ class mantenimiento
             $registro=$this->cm->query("update productos SET nombre='$nombre',codigo='$codigo',descripcion='$descripcion',cod_barras='$codigobarras',imagen='$url',categorias_id_categorias='$categoria',medida_id_medida='$medida',estados_productos_id_estados_productos='$estadoproductos',unidad_id_unidad='$unidad',caracteristicas='$caracteristica', codigosin='$codigosin', actividadsin='$actividadsin', unidadsin='$unidadsin', codigonandina='$codigonandina' where id_productos='$idproducto'");
         }
         if($registro !== null){
-            $res=array("estado" => "exito", "mensaje" => "Actualización exitosa", "datos" => array("codigosin" => $codigosin, "actividadsin" => $actividadsin, "unidad" => $unidadsin));
+            $res=array("estado" => "exito", "mensaje" => "Actualización exitosa", "datos" => array("codigosin" => $codigosin, "actividadsin" => $actividadsin, "unidad" => $unidadsin, "url"=> $url));
         }else{
             $res=array("estado" => "error", "mensaje" => "Error al intentar actualizar. Por favor, inténtalo de nuevo");
         }
