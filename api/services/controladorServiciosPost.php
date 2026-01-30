@@ -5,7 +5,7 @@ $data = json_decode($input, true);
 
 // Obtener "ver" correctamente
 $ver = null;
-
+$controlador = null;
 if (is_array($data) && isset($data['ver'])) {
     $ver = $data['ver'];
 } elseif (isset($_POST['ver'])) {
@@ -24,13 +24,19 @@ if ($ver === "prueba") {
 
 if ($ver == "crearServicio") {
     $controlador = new SoftExternoService();
-    $controlador->obtenerServicio($data);
+    $controlador->crearServicio($data);
+    exit;
 }
 
-// Si no coincide ninguna acción
-http_response_code(404);
-echo json_encode([
-    "success" => false,
-    "message" => "La acción '$ver' no existe"
-], JSON_UNESCAPED_UNICODE);
-exit;
+
+if ($controlador === null) {
+    // Acción por defecto si no se encuentra una ruta válida producto sendEmail ConfiguracionInicial registroPrueba registrarConfiguracion
+    http_response_code(404);
+    echo json_encode([
+        "success" => false,
+        "message" => "La acción '$ver' no existe"
+    ], JSON_UNESCAPED_UNICODE);
+    exit;
+}
+
+

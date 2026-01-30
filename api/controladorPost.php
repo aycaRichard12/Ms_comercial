@@ -146,7 +146,7 @@ if ($ver == "registrarResponsable") {
 }elseif ($ver == "registrarProducto") {
     try {
         $controlador = new mantenimiento();
-        $carpetaDestino = __DIR__ . "/../../cm/api/imagen/";
+        $carpetaDestino = __DIR__ . "/imagen/";
 
         if (!is_dir($carpetaDestino)) {
             mkdir($carpetaDestino, 0775, true);
@@ -195,7 +195,7 @@ if ($ver == "registrarResponsable") {
 } elseif ($ver == "editarProducto") {
     try {
         $controlador = new mantenimiento();
-        $carpetaDestino = __DIR__ . "/../../cm/api/imagen/";
+        $carpetaDestino = __DIR__ . "/imagen/";
 
         if (!is_dir($carpetaDestino)) {
             mkdir($carpetaDestino, 0775, true);
@@ -658,6 +658,18 @@ elseif ($ver == "crearOperaciones") {
 elseif ($ver == "actualizarOperacion") {
     $controlador = new configuracion();
     $controlador->actualizarOperacion($data);
+}
+elseif ($ver == "unirTodoslosDetallesPedidos") {
+    $controlador = new mantenimiento();
+    $controlador->unirTodoslosDetallesPedidos($data['idsPedido']);
+}
+elseif ($ver == "unirTodoslosPedidos") {
+    $controlador = new mantenimiento();
+    $controlador->unirTodoslosPedidos($data['idsPedido']);
+}
+elseif ($ver == "cambiarestadopedidoOptimizado") {
+    $controlador = new mantenimiento();
+    $controlador->cambiarestadopedidoOptimizado($data['idsPedido'], $data['estado'], $data['idUsuarioMd5']);
 }
 // ARCHIVO: endpoint.php
 elseif ($ver == "authPusher") {

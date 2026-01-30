@@ -1,1 +1,335 @@
 
+la forma que estoy trabajando es esta estructura la cosa es que cuando importo     require_once "../../db/conexion.php";    require_once "../funciones.php"; en  el index de serices me funciona correctamente el todas las peticiones POST pero no las peticiones GET, pero al no importarlo las peticiones GET funcionan correctamente excepto las de POST por que ?
+
+
+aqui la estructura 
+cmv1
+	api
+		services
+            controladorServiciosGet.php
+            controladorServiciosPost.php
+			index.php
+		index.php
+	db
+		db.php
+		conexión.php
+
+api/index.php
+
+	<?php
+        // session_start();
+        header('Access-Control-Allow-Origin:*');
+        header("Access-Control-Allow-Headers: X-API-KEY, Origin, X-Requested-With, Content-Type, Accept, Access-Control-Request-Method");
+        header("Access-Control-Allow-Methods: GET, POST, OPTIONS, PUT, DELETE");
+
+        header("Content-Type: application/json; charset=UTF-8");
+        date_default_timezone_set("America/La_Paz");
+        
+        // $uri = strtok($_SERVER['REQUEST_URI'], '?');    
+        $uri=isset($_GET["ver"]) ? $_GET["ver"] : "";
+        if($uri) {
+            $uri = strtok($uri, '?');
+        } 
+
+        $rutas = array_filter(explode("/",$uri));
+        
+        $my_route = implode(",", $rutas); // string
+
+        // Manejar OPTIONS antes de cualquier lógica
+        if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+            header("HTTP/1.1 200 OK");
+            exit;
+        }
+
+
+        $method = $_SERVER['REQUEST_METHOD'];
+        if (isset($method)) {
+        
+        
+
+            require_once "../db/conexion.php";
+            require_once "funciones.php";
+            require_once "logErrores.php";
+            require_once 'vendor/autoload.php';
+            require_once "facturacion.php";
+            require_once "useVenta.php";
+            require_once "configuraciones.php";
+            require_once "ventas.php";
+            require_once "compras.php";
+            require_once "pagosCompra.php";
+            require_once "notaCreditoDebito.php";
+            require_once "kardex.php";
+            require_once "useCategoriaPrecio.php";
+            require_once "socketPusher.php";
+            require_once "configuraciones.php";
+            require_once "mantenimiento.php";
+            require_once "reportes.php";
+            require_once "dashboard.php";
+            require_once "configuracionInicial.php";
+            require_once "useCotizacion.php";
+            require_once "notificaciones.php";
+            require_once "arqueoPuntoVenta.php";
+            if (($rutas[0] ?? '') === "detectar_intencion") {
+                require_once "detectar_intencion.php";
+                exit; // Evita seguir ejecutando el resto del index
+            }
+            $primeraRuta = $rutas[0] ?? null;
+
+            if ($primeraRuta === "out") {
+                require_once "apisOut/index.php";
+                return;
+            }
+            if ($primeraRuta === "services") {
+                require_once "services/index.php";
+                return;
+            }
+
+            if ($method === "GET") {
+                require_once "controladorGet.php";
+                return;
+            }
+
+            if ($method === "POST") {
+                require_once "controladorPost.php";
+                return;
+            }
+
+            $archivoControl = __DIR__ . '/ultima_limpieza.txt';
+            $ahora = time();
+            if (!file_exists($archivoControl) || ($ahora - filemtime($archivoControl)) > 86400) {
+                file_put_contents($archivoControl, date("Y-m-d H:i:s"), LOCK_EX);
+                include_once(__DIR__ . '/limpiar_pdfs.php');
+            }
+            
+
+            $response = [
+                "message" => "La ruta no existe",
+                "route" => $rutas[0]
+            ];
+            echo json_encode($response, http_response_code(404));
+        } else {
+            $response = [
+                "status" => 400,
+                "message" => "No se pudo reconer el método de la petición"
+            ];
+            echo json_encode($response, http_response_code($response["status"]) | JSON_UNESCAPED_UNICODE);
+        }
+        //activo-fijo/encontrada
+    ?>
+
+api/services/index.php
+    <?php
+        ini_set('display_errors', 1);
+        ini_set('display_startup_errors', 1);
+        error_reporting(E_ALL);
+
+        header("Access-Control-Allow-Origin: *");
+        header("Access-Control-Allow-Headers: X-API-KEY, Origin, X-Requested-With, Content-Type, Accept, Access-Control-Request-Method");
+        header("Access-Control-Allow-Methods: GET, POST, OPTIONS, PUT, DELETE");
+        header("Content-Type: application/json; charset=UTF-8");
+
+        $method = $_SERVER['REQUEST_METHOD'];
+        $uri = $_SERVER['REQUEST_URI'];
+        $rutas = array_filter(explode("/",$uri));
+        require_once "softExternoService.php";
+        require_once "../../db/conexion.php";
+        require_once "../funciones.php";
+    
+        if($method == "GET"){
+            
+                require_once "controladorServiciosGet.php";
+                return;
+            
+        }
+
+        if($method == "POST"){
+            
+                require_once  "controladorServiciosPost.php";
+                return;
+            
+        }
+
+        $response = [
+            "status" => 404,
+            "message" => "la ruta '$uri' es incorrecta",
+            "method" => $method,
+            "rutas" => $rutas
+        ];
+        echo json_encode($response, http_response_code($response["status"]));
+    ?>
+    
+api/services/softExternoService.php
+
+    <?php
+
+
+        class SoftExternoService
+        {
+            // --- CONEXIONES Y CLASES AUXILIARES ---
+            private $cm;
+            
+            private $conexion;
+            private $verificar;
+            
+
+
+            public function __construct()
+            {
+                $this->conexion = new Conexion();
+                $this->verificar = new Funciones();
+            
+                // Asignación de conexiones a bases de datos
+                $this->cm = $this->conexion->cm;
+                
+                
+            }
+            public function crearServicio($data) {
+                header('Content-Type: application/json');
+                try {
+                    // 1. Validaciones básicas antes de insertar
+                    if (empty($data['nombre']) || empty($data['slug'])) {
+                        throw new Exception("El nombre y el slug son campos obligatorios.");
+                    }
+
+                    // 2. Preparar la consulta SQL
+                    $sql = "INSERT INTO soft_externo (nombre, slug, descripcion, documentacion, icono) 
+                            VALUES (?, ?, ?, ?, ?)";
+                    
+                    $stmt = $this->cm->prepare($sql);
+                    
+                    // Asignación de parámetros (s = string)
+                    $stmt->bind_param("sssss", 
+                        $data['nombre'], 
+                        $data['slug'], 
+                        $data['descripcion'], 
+                        $data['documentacion'], 
+                        $data['icono']
+                    );
+
+                    // 3. Ejecución y respuesta
+                    if ($stmt->execute()) {
+                        $idGenerado = $this->cm->insert_id;
+
+                        $respuesta = array(
+                            "estado" => "success",
+                            "mensaje" => "Software externo registrado correctamente",
+                            "id" => $idGenerado
+                        );
+                        echo json_encode($respuesta);
+                    }
+
+                } catch (Exception $e) {
+                    // Manejo de errores consistente con tus otros métodos
+                    $error = array(
+                        "estado" => "error", 
+                        "mensaje" => $e->getMessage()
+                    );
+                    echo json_encode($error);
+                }
+            }
+            public function listarServicios() {
+                try {
+                    $lista = [];
+                    // Consulta SQL clara y específica
+                    $sql = "SELECT id_soft_externo, nombre, slug, descripcion, documentacion, icono, estado FROM soft_externo WHERE estado = 1 ORDER BY id_soft_externo DESC";
+                    $res_query = $this->cm->query($sql);
+
+                    while ($row = $this->cm->fetch($res_query)) {
+                        // Mapeo manual para asegurar la estructura del JSON
+                        $item = array(
+                            "id"          => $row['id_soft_externo'],
+                            "nombre"      => $row['nombre'],
+                            "slug" => $row['slug'],
+                            "descripcion" => $row['descripcion'],
+                            "documentacion" => $row['documentacion'],
+                            "icono"      => $row['icono'],
+                            "estado"      => $row['estado']
+                        );
+
+                        array_push($lista, $item);
+                    }
+
+                    // Establecer cabecera para que el navegador entienda que es JSON
+                    header('Content-Type: application/json');
+                    echo json_encode($lista);
+
+                } catch (Exception $e) {
+                    // Manejo de errores consistente con tu ejemplo
+                    header('Content-Type: application/json');
+                    $error = array("estado" => "error", "mensaje" => $e->getMessage());
+                    echo json_encode($error);
+                }
+            }
+        }
+    
+
+
+
+Actúa como un experto en programación Visual Basic para Excel (VBA) y un pedagogo especializado en la enseñanza de programación a niños y principiantes.
+
+Tu misión es enseñar Visual Basic para Excel (VBA) desde cero, utilizando un lenguaje simple, ejemplos cotidianos y explicaciones paso a paso, como si estuvieras enseñando a un niño de 10 a 14 años que nunca ha programado.
+
+Sigue estas reglas pedagógicas:
+- Usa ejemplos de la vida real (juguetes, animales, videojuegos, escuela, familia).
+- Explica primero el “para qué sirve” antes del “cómo se escribe”.
+- No asumas conocimientos previos.
+- Usa analogías visuales y mentales.
+- Introduce los conceptos de forma progresiva.
+- Incluye ejercicios simples y luego retos.
+- Explica errores comunes y cómo evitarlos.
+- Refuerza el aprendizaje con preguntas cortas.
+
+Organiza el contenido en niveles:
+
+NIVEL 1: INTRODUCCIÓN A LA PROGRAMACIÓN
+- ¿Qué es programar?
+- ¿Qué es Visual Basic para Excel (VBA) y para qué se usa?
+- ¿Qué es una variable? (explicado como una caja)
+- Tipos de datos básicos (int, string, bool)
+- Cómo declarar variables en Visual Basic para Excel (VBA)
+- Ejercicios simples de variables
+
+NIVEL 2: OPERACIONES Y LÓGICA
+- Operaciones matemáticas
+- Comparaciones (>, <, ==)
+- Condicionales (if, else) usando ejemplos de decisiones diarias
+- Ejercicios con decisiones
+
+NIVEL 3: REPETICIONES
+- Bucles (for, while)
+- Explicados como repetir tareas (contar juguetes, vueltas)
+- Ejercicios con repeticiones
+
+NIVEL 4: FUNCIONES (MÉTODOS)
+- Qué es una función (como una receta)
+- Parámetros y retorno
+- Ejercicios prácticos
+
+NIVEL 5: INTRODUCCIÓN A POO
+- Qué es un objeto (ej: un perro, un auto)
+- Qué es una clase
+- Atributos y métodos
+- Crear clases en Visual Basic para Excel (VBA)
+- Instanciar objetos
+- Ejercicios prácticos con clases
+
+NIVEL 6: POO AVANZADA (BÁSICA)
+- Encapsulación (public, private)
+- Constructores
+- Herencia (ej: Animal → Perro)
+- Polimorfismo explicado de forma simple
+
+NIVEL 7: PROYECTOS
+- Proyecto 1: Sistema de estudiantes
+- Proyecto 2: Juego simple de consola
+- Proyecto 3: Simulador de tienda
+Cada proyecto debe explicarse paso a paso.
+
+Formato de respuesta:
+- Título claro
+- Explicación sencilla
+- Ejemplo en Visual Basic para Excel (VBA)
+- Ejercicio
+- Reto opcional
+
+Mantén un tono amigable, motivador y paciente.
