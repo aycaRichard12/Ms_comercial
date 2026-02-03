@@ -96,6 +96,7 @@ class SoftExternoService
             echo json_encode($lista);
 
         } catch (Exception $e) {
+
             // Manejo de errores consistente con tu ejemplo
             header('Content-Type: application/json');
             $error = array("estado" => "error", "mensaje" => $e->getMessage());
@@ -151,39 +152,104 @@ class SoftExternoService
     /**
      * Actualiza la información del software
      */
-    public function editar( $data) {
+    public function editarServicio($data) {
         $sql = "UPDATE soft_externo SET nombre=?, slug=?, descripcion=?, documentacion=?, icono=? WHERE id_soft_externo=?";
         $stmt = $this->cm->prepare($sql);
+        
+        // Verificamos si la preparación falló
+        if (!$stmt) {
+            echo json_encode(["estado" => "error", "mensaje" => "Error en SQL: " . $this->cm->error]);
+            return;
+        }
+
         $stmt->bind_param("sssssi", $data['nombre'], $data['slug'], $data['descripcion'], $data['documentacion'], $data['icono'], $data['id']);
-        return $stmt->execute();
+        
+        if ($stmt->execute()) {
+            // execute() devuelve true si la consulta corrió sin errores de sintaxis o conexión
+            echo json_encode([
+                "estado" => "exito",
+                "mensaje" => "Proceso completado",
+                "cambios" => $stmt->affected_rows > 0 ? "Datos actualizados" : "No hubo cambios en los valores"
+            ], JSON_UNESCAPED_UNICODE);
+        } else {
+            echo json_encode([
+                "estado" => "error",
+                "mensaje" => "Error al ejecutar la actualización"
+            ], JSON_UNESCAPED_UNICODE);
+        }
     }
 
     /**
      * Borrado lógico
      */
-    public function eliminar($id) {
+    public function eliminarServicio($id) {
         $sql = "UPDATE soft_externo SET estado = 0 WHERE id_soft_externo = ?";
         $stmt = $this->cm->prepare($sql);
         $stmt->bind_param("i", $id);
-        return $stmt->execute();
+        if ($stmt->execute()) {
+            echo json_encode([
+                "estado" => "exito",
+                "mensaje" => "Software eliminado lógicamente"
+            ], JSON_UNESCAPED_UNICODE);
+        } else {
+            echo json_encode([
+                "estado" => "error",
+                "mensaje" => "Error al eliminar el software"
+            ], JSON_UNESCAPED_UNICODE);
+        }
+    }
+    public function CambiarEstadoServicio($id, $nuevoEstado) {
+        $sql = "UPDATE soft_externo SET estado = ? WHERE id_soft_externo = ?";
+        $stmt = $this->cm->prepare($sql);
+        $stmt->bind_param("ii", $nuevoEstado, $id);
+        if ($stmt->execute()) {
+            echo json_encode([
+                "estado" => "exito",
+                "mensaje" => "Estado del software actualizado correctamente"
+            ], JSON_UNESCAPED_UNICODE);
+        } else {
+            echo json_encode([
+                "estado" => "error",
+                "mensaje" => "Error al actualizar el estado del software"
+            ], JSON_UNESCAPED_UNICODE);
+        }
     }
     
-    public function instalar($data) {
+    public function registrarCredencialesServicio($data) {
         $id_empresa = $this->verificar->verificarIDEMPRESAMD5($data['idmd5']);
 
-        // Validar que el JSON sea válido
-        if (!$this->is_json($data['credenciales'])) {
+        // Si Postman envía un objeto, $data['credenciales'] ya es un array.
+        // Lo convertimos a string para validarlo y guardarlo.
+        $credencialesRaw = is_array($data['credenciales']) 
+            ? json_encode($data['credenciales']) 
+            : $data['credenciales'];
+
+        // Ahora is_json recibirá un string y no dará error
+        if (!$this->is_json($credencialesRaw)) {
             throw new Exception("El formato de las credenciales debe ser un JSON válido.");
         }
 
-        $sql = "INSERT INTO empresa_soft_instalado (id_empresa, id_soft_externo, credenciales, activo) VALUES (?, ?, ?, 1)";
+        $sql = "INSERT INTO empresa_soft_instalado (id_empresa, id_soft_externo, credenciales, estado) VALUES (?, ?, ?, 1)";
         $stmt = $this->cm->prepare($sql);
-        $stmt->bind_param("iis", $id_empresa, $data['id_soft_externo'], $data['credenciales']);
+        
+        // Pasamos el string convertido
+        $stmt->bind_param("iis", $id_empresa, $data['id_soft_externo'], $credencialesRaw);
         
         if ($stmt->execute()) {
-            return $this->cm->getLastInsertId();
+            // Nota: Asegúrate de que getLastInsertId() exista en tu clase, 
+            // de lo contrario usa $this->cm->insert_id
+            $id= $this->cm->insert_id; 
+            echo json_encode([
+                "estado" => "exito",
+                "mensaje" => "Software credenciales registrados  correctamente",
+                "id" => $id
+            ], JSON_UNESCAPED_UNICODE);
+        } else {
+            echo json_encode([
+                "estado" => "error",
+                "mensaje" => "Error al registrar las credenciales"
+            ], JSON_UNESCAPED_UNICODE);
         }
-        throw new Exception("Error al instalar software.");
     }
 
     /**
@@ -196,6 +262,7 @@ class SoftExternoService
                 FROM empresa_soft_instalado esi
                 JOIN soft_externo se ON esi.id_soft_externo = se.id_soft_externo
                 WHERE esi.id_empresa = ?";
+
         $stmt = $this->cm->prepare($sql);
         $stmt->bind_param("i", $idempresa);
         $stmt->execute();
@@ -205,24 +272,76 @@ class SoftExternoService
             $row['credenciales'] = json_decode($row['credenciales']);
             $lista[] = $row;
         }
-        return $lista;
+        echo json_encode($lista, JSON_UNESCAPED_UNICODE);
     }
 
     /**
      * Actualiza credenciales o estado
      */
-    public function editarInstalacion( $data) {
-        if (isset($data['credenciales']) && !$this->is_json($data['credenciales'])) {
-            throw new Exception("JSON de credenciales inválido.");
+    public function editarCredencialesServicio( $data) {
+          $credencialesRaw = is_array($data['credenciales']) 
+            ? json_encode($data['credenciales']) 
+            : $data['credenciales'];
+
+        // Ahora is_json recibirá un string y no dará error
+        if (!$this->is_json($credencialesRaw)) {
+            throw new Exception("El formato de las credenciales debe ser un JSON válido.");
         }
 
-        $sql = "UPDATE empresa_soft_instalado SET credenciales = ?, activo = ? WHERE id_empresa_soft = ?";
+        $sql = "UPDATE empresa_soft_instalado SET credenciales = ? ,  id_soft_externo = ?  WHERE id_empresa_soft = ?";
         $stmt = $this->cm->prepare($sql);
-        $stmt->bind_param("sii", $data['credenciales'], $data['activo'], $data['id']);
-        return $stmt->execute();
+        $stmt->bind_param("sii", $credencialesRaw,$data['id_soft_externo'], $data['id']);
+        if ($stmt->execute()) {
+            echo json_encode([
+                "estado" => "exito",
+                "mensaje" => "Credenciales actualizadas correctamente"
+            ], JSON_UNESCAPED_UNICODE);
+        } else {
+            echo json_encode([
+                "estado" => "error",
+                "mensaje" => "Error al actualizar las credenciales"
+            ], JSON_UNESCAPED_UNICODE);
+        }
+    }
+
+    public function cambiarEstadoCredencialesServicio($id, $nuevoEstado) {
+        $sql = "UPDATE empresa_soft_instalado SET estado = ? WHERE id_empresa_soft = ?";
+        $stmt = $this->cm->prepare($sql);
+        $stmt->bind_param("ii", $nuevoEstado, $id);
+        if ($stmt->execute()) {
+            echo json_encode([
+                "estado" => "exito",
+                "mensaje" => "Estado de las credenciales actualizado correctamente"
+            ], JSON_UNESCAPED_UNICODE);
+        } else {
+            echo json_encode([
+                "estado" => "error",
+                "mensaje" => "Error al actualizar el estado de las credenciales"
+            ], JSON_UNESCAPED_UNICODE);
+        }
+    }
+
+    public function eliminarCredencialesServicio($id) {
+        $sql = "DELETE FROM empresa_soft_instalado WHERE id_empresa_soft = ?";
+        $stmt = $this->cm->prepare($sql);
+        $stmt->bind_param("i", $id);
+        if ($stmt->execute()) {
+            echo json_encode([
+                "estado" => "exito",
+                "mensaje" => "Credenciales eliminadas correctamente"
+            ], JSON_UNESCAPED_UNICODE);
+        } else {
+            echo json_encode([
+                "estado" => "error",
+                "mensaje" => "Error al eliminar las credenciales"
+            ], JSON_UNESCAPED_UNICODE);
+        }
     }
 
     private function is_json($string) {
+        if (is_array($string) || is_object($string)) return true; // Si ya está decodificado, es válido
+        if (!is_string($string)) return false;
+        
         json_decode($string);
         return (json_last_error() == JSON_ERROR_NONE);
     }

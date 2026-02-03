@@ -27,6 +27,10 @@ class ventas
     }
     public function importar_excel_cliente($file, $idmd5)
     {
+        // 1. Evitar que los Warnings de PHP ensucien la respuesta
+        error_reporting(0);
+        ini_set('display_errors', 0);
+
         $idempresa = $this->verificar->verificarIDEMPRESAMD5($idmd5);
 
         if (!$idempresa) {
@@ -35,74 +39,66 @@ class ventas
         }
 
         if (!file_exists($file)) {
-            echo json_encode(["estado" => "error", "mensaje" => "El archivo no se encontró en la ruta: " . $file]);
+            echo json_encode(["estado" => "error", "mensaje" => "Archivo no encontrado"]);
             return;
         }
 
-        $handle = fopen($file, "r"); // Abrir el archivo en modo lectura
+        $handle = fopen($file, "r");
         if ($handle === false) {
             echo json_encode(["estado" => "error", "mensaje" => "No se pudo abrir el archivo CSV"]);
             return;
         }
 
-        $clientes = []; // Guardará los clientes
         $contador = 0;
+        $procesados = 0;
+
+        // Capturamos cualquier echo accidental de registrocliente
+        ob_start(); 
 
         while (($data = fgetcsv($handle, 1000, ",")) !== false) {
-            if ($contador == 0) { // Ignorar la primera fila (encabezados)
-                $contador++;
-                continue;
-            }
+            if ($contador == 0) { $contador++; continue; }
 
-            // Asignar datos (asegúrate de que coincidan con las columnas de tu CSV)
-            $clientes[] = [
-                "nombre" => $data[0], // Nombre del cliente
-                "nombrecomercial" => $data[1], // Nombre comercial
-                "canalventa" => $data[2], // Canal de venta
-                "tipocliente" => $data[3], // Tipo de cliente
-                "tipodocumento" => $data[4], // Tipo de documento
-                "nrodocumento" => $data[5], // NIT o documento de identificación
-                "detalle" => $data[6], // Detalle adicional
-                "direccion" => $data[7], // Dirección
-                "telefono" => $data[8], // Teléfono
-                "movil" => $data[9], // Móvil
-                "email" => $data[10], // Correo electrónico
-                "web" => $data[11], // Página web
-                "pais" => $data[12], // País
-                "ciudad" => $data[13], // Ciudad
-                "zona" => $data[14], // Zona
-                "contacto" => $data[15], // Persona de contacto
+            // El operador ?? '' evita el error "Undefined array key" si el Excel tiene menos columnas
+            $c = [
+                "nombre"          => $data[0] ?? '',
+                "nombrecomercial" => $data[1] ?? '',
+                "canalventa"      => $data[2] ?? '',
+                "tipocliente"     => $data[3] ?? '',
+                "tipodocumento"   => $data[4] ?? '',
+                "nrodocumento"    => $data[5] ?? '',
+                "detalle"         => $data[6] ?? '',
+                "direccion"       => $data[7] ?? '',
+                "telefono"        => $data[8] ?? '',
+                "movil"           => $data[9] ?? '',
+                "email"           => $data[10] ?? '',
+                "web"             => $data[11] ?? '',
+                "pais"            => $data[12] ?? '',
+                "ciudad"          => $data[13] ?? '',
+                "zona"            => $data[14] ?? '',
+                "contacto"        => $data[15] ?? ''
             ];
+
+            $this->registrocliente(
+                $c["nombre"], $c["nombrecomercial"], $c["canalventa"], $c["tipocliente"],
+                $c["tipodocumento"], $c["nrodocumento"], $c["detalle"], $c["direccion"],
+                $c["telefono"], $c["movil"], $c["email"], $c["web"],
+                $c["pais"], $c["ciudad"], $c["zona"], $c["contacto"], 
+                $idmd5
+            );
+
+            $procesados++;
             $contador++;
         }
 
-        fclose($handle); // Cerrar archivo
+        fclose($handle);
+        ob_end_clean(); // Limpiamos la basura del buffer
 
-        // Ahora recorremos los clientes y los registramos en la base de datos
-        foreach ($clientes as $cliente) {
-            $this->registrocliente(
-                $cliente["nombre"],
-                $cliente["nombrecomercial"],
-                $cliente["canalventa"],
-                $cliente["tipocliente"],
-                $cliente["tipodocumento"],
-                $cliente["nrodocumento"],
-                $cliente["detalle"],
-                $cliente["direccion"],
-                $cliente["telefono"],
-                $cliente["movil"],
-                $cliente["email"],
-                $cliente["web"],
-                $cliente["pais"],
-                $cliente["ciudad"],
-                $cliente["zona"],
-                $cliente["contacto"],
-                $idmd5
-            );
-        }
-        echo json_encode(["estado" => "exito", "mensaje" => "Clientes importados correctamente"]);
+        echo json_encode([
+            "estado" => "exito", 
+            "mensaje" => "Importación completada",
+            "total" => $procesados
+        ]);
     }
-
     public function obtenerEmailCliente($id)
     {
         $consulta = $this->cm->query("SELECT email FROM cliente WHERE id_cliente = '$id'");

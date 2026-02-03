@@ -91,6 +91,83 @@ class compras
     
         echo json_encode(["estado" => "exito", "mensaje" => "Proveedores importados correctamente"]);
     }
+    public function importar_excel_proveedor2($file, $idmd5)
+    {
+        // 1. Desactivar salida de errores para no romper el JSON
+        error_reporting(0);
+        ini_set('display_errors', 0);
+
+        $idempresa = $this->verificar->verificarIDEMPRESAMD5($idmd5);
+
+        if (!$idempresa) {
+            echo json_encode(["estado" => "error", "mensaje" => "ID de empresa inválido"]);
+            return;
+        }
+
+        if (!file_exists($file)) {
+            echo json_encode(["estado" => "error", "mensaje" => "Archivo no encontrado"]);
+            return;
+        }
+
+        $handle = fopen($file, "r");
+        if ($handle === false) {
+            echo json_encode(["estado" => "error", "mensaje" => "No se pudo abrir el archivo"]);
+            return;
+        }
+
+        $importados = 0;
+        $omitidos = 0;
+        $contador = 0;
+
+        // Usar un buffer para capturar posibles echos accidentales de la función registroproveedor
+        ob_start(); 
+
+        while (($data = fgetcsv($handle, 1000, ",")) !== false) {
+            if ($contador == 0) { $contador++; continue; }
+
+            // VALIDACIÓN DE COLUMNAS: Usamos el operador null coalescing (??) 
+            // para evitar el "Undefined array key" si el Excel viene incompleto.
+            $prov = [
+                "nombre"    => $data[0] ?? '',
+                "codigo"    => $data[1] ?? '',
+                "nit"       => $data[2] ?? '',
+                "detalle"   => $data[3] ?? '',
+                "direccion" => $data[4] ?? '',
+                "telefono"  => $data[5] ?? '',
+                "movil"     => $data[6] ?? '',
+                "email"     => $data[7] ?? '',
+                "web"       => $data[8] ?? '',
+                "pais"      => $data[9] ?? '',
+                "ciudad"    => $data[10] ?? '',
+                "zona"      => $data[11] ?? '',
+                "contacto"  => $data[12] ?? '',
+            ];
+
+            // Llamar al registro. 
+            // NOTA: Si registroproveedor ya hace echos, ob_start los atrapará.
+            $this->registroproveedor(
+                $prov["nombre"], $prov["codigo"], $prov["nit"], $prov["detalle"],
+                $prov["direccion"], $prov["telefono"], $prov["movil"], $prov["email"],
+                $prov["web"], $prov["pais"], $prov["ciudad"], $prov["zona"],
+                $prov["contacto"], $idmd5
+            );
+            
+            $importados++;
+            $contador++;
+        }
+
+        fclose($handle);
+        
+        // Limpiar cualquier eco basura que haya quedado en el buffer
+        ob_end_clean(); 
+
+        // ENVIAR UNA SOLA RESPUESTA FINAL
+        echo json_encode([
+            "estado" => "exito", 
+            "mensaje" => "Proceso finalizado. Total filas: " . ($contador - 1),
+            "detalles" => "Se procesaron $importados registros."
+        ]);
+    }
     
     public function listarProveedores($idmd5)
     {
