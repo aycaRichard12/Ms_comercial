@@ -1,0 +1,215 @@
+
+
+tengo este error en el frontend para hacer registros desde services con el POST Access to XMLHttpRequest at 'https://vivasoft.link/app/cmv1/api/services/' from origin 'http://localhost:9000' has been blocked by CORS policy: Response to preflight request doesn't pass access control check: It does not have HTTP ok status.
+axios.js:29  Error en la API: Network Error
+(anonymous) @ axios.js:29
+Promise.then
+_request @ Axios.js:196
+request @ Axios.js:40
+httpMethod @ Axios.js:226
+wrap @ bind.js:5
+submitForm @ serviciosPage.vue:289
+callWithErrorHandling @ runtime-core.esm-bundler.js:199
+callWithAsyncErrorHandling @ runtime-core.esm-bundler.js:206
+emit @ runtime-core.esm-bundler.js:6386
+(anonymous) @ runtime-core.esm-bundler.js:8099
+(anonymous) @ quasar.client.js:15506
+Promise.then
+submit @ quasar.client.js:15503
+callWithErrorHandling @ runtime-core.esm-bundler.js:199
+callWithAsyncErrorHandling @ runtime-core.esm-bundler.js:206
+invoker @ runtime-dom.esm-bundler.js:729
+serviciosPage.vue:304  Error al guardar servicio: AxiosError {message: 'Network Error', name: 'AxiosError', code: 'ERR_NETWORK', config: {…}, request: XMLHttpRequest, …}code: "ERR_NETWORK"config: {transitional: {…}, adapter: Array(3), transformRequest: Array(1), transformResponse: Array(1), timeout: 10000, …}message: "Network Error"name: "AxiosError"request: XMLHttpRequest {onreadystatechange: null, readyState: 4, timeout: 10000, withCredentials: false, upload: XMLHttpRequestUpload, …}stack: "AxiosError: Network Error\n    at XMLHttpRequest.handleError (http://localhost:9000/app/cmv1/node_modules/.q-cache/dev-spa/vite-spa/deps/axios.js?v=2dc57b40:1580:14)\n    at Axios.request (http://localhost:9000/app/cmv1/node_modules/.q-cache/dev-spa/vite-spa/deps/axios.js?v=2dc57b40:2108:41)\n    at async submitForm (http://localhost:9000/app/cmv1/src/pages/General/serviciosPage.vue:119:22)"[[Prototype]]: Error
+submitForm @ serviciosPage.vue:304
+await in submitForm
+callWithErrorHandling @ runtime-core.esm-bundler.js:199
+callWithAsyncErrorHandling @ runtime-core.esm-bundler.js:206
+emit @ runtime-core.esm-bundler.js:6386
+(anonymous) @ runtime-core.esm-bundler.js:8099
+(anonymous) @ quasar.client.js:15506
+Promise.then
+submit @ quasar.client.js:15503
+callWithErrorHandling @ runtime-core.esm-bundler.js:199
+callWithAsyncErrorHandling @ runtime-core.esm-bundler.js:206
+invoker @ runtime-dom.esm-bundler.js:729
+serviciosPage.vue:289   POST https://vivasoft.link/app/cmv1/api/services/ net::ERR_FAILED
+dispatchXhrRequest @ xhr.js:195
+xhr @ xhr.js:15
+dispatchRequest @ dispatchRequest.js:51
+_request @ Axios.js:187
+request @ Axios.js:40
+httpMethod @ Axios.js:226
+wrap @ bind.js:5
+submitForm @ serviciosPage.vue:289
+callWithErrorHandling @ runtime-core.esm-bundler.js:199
+callWithAsyncErrorHandling @ runtime-core.esm-bundler.js:206
+emit @ runtime-core.esm-bundler.js:6386
+(anonymous) @ runtime-core.esm-bundler.js:8099
+(anonymous) @ quasar.client.js:15506
+Promise.then
+submit @ quasar.client.js:15503
+callWithErrorHandling @ runtime-core.esm-bundler.js:199
+callWithAsyncErrorHandling @ runtime-core.esm-bundler.js:206
+invoker @ runtime-dom.esm-bundler.js:729
+
+
+aqui la estructura 
+cmv1
+	api
+		services
+            controladorServiciosGet.php
+            controladorServiciosPost.php
+			index.php
+		index.php
+	db
+		db.php
+		conexión.php
+
+api/index.php
+
+	<?php
+        // session_start();
+        header('Access-Control-Allow-Origin:*');
+        header("Access-Control-Allow-Headers: X-API-KEY, Origin, X-Requested-With, Content-Type, Accept, Access-Control-Request-Method");
+        header("Access-Control-Allow-Methods: GET, POST, OPTIONS, PUT, DELETE");
+
+        header("Content-Type: application/json; charset=UTF-8");
+        date_default_timezone_set("America/La_Paz");
+        
+        // $uri = strtok($_SERVER['REQUEST_URI'], '?');    
+        $uri=isset($_GET["ver"]) ? $_GET["ver"] : "";
+        if($uri) {
+            $uri = strtok($uri, '?');
+        } 
+
+        $rutas = array_filter(explode("/",$uri));
+        
+        $my_route = implode(",", $rutas); // string
+
+        // Manejar OPTIONS antes de cualquier lógica
+        if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+            header("HTTP/1.1 200 OK");
+            exit;
+        }
+
+
+        $method = $_SERVER['REQUEST_METHOD'];
+        if (isset($method)) {
+        
+        
+
+            require_once "../db/conexion.php";
+            require_once "funciones.php";
+            require_once "logErrores.php";
+            require_once 'vendor/autoload.php';
+            require_once "facturacion.php";
+            require_once "useVenta.php";
+            require_once "configuraciones.php";
+            require_once "ventas.php";
+            require_once "compras.php";
+            require_once "pagosCompra.php";
+            require_once "notaCreditoDebito.php";
+            require_once "kardex.php";
+            require_once "useCategoriaPrecio.php";
+            require_once "socketPusher.php";
+            require_once "configuraciones.php";
+            require_once "mantenimiento.php";
+            require_once "reportes.php";
+            require_once "dashboard.php";
+            require_once "configuracionInicial.php";
+            require_once "useCotizacion.php";
+            require_once "notificaciones.php";
+            require_once "arqueoPuntoVenta.php";
+            if (($rutas[0] ?? '') === "detectar_intencion") {
+                require_once "detectar_intencion.php";
+                exit; // Evita seguir ejecutando el resto del index
+            }
+            $primeraRuta = $rutas[0] ?? null;
+
+            if ($primeraRuta === "out") {
+                require_once "apisOut/index.php";
+                return;
+            }
+            if ($primeraRuta === "services") {
+                require_once "services/index.php";
+                return;
+            }
+
+            if ($method === "GET") {
+                require_once "controladorGet.php";
+                return;
+            }
+
+            if ($method === "POST") {
+                require_once "controladorPost.php";
+                return;
+            }
+
+            $archivoControl = __DIR__ . '/ultima_limpieza.txt';
+            $ahora = time();
+            if (!file_exists($archivoControl) || ($ahora - filemtime($archivoControl)) > 86400) {
+                file_put_contents($archivoControl, date("Y-m-d H:i:s"), LOCK_EX);
+                include_once(__DIR__ . '/limpiar_pdfs.php');
+            }
+            
+
+            $response = [
+                "message" => "La ruta no existe",
+                "route" => $rutas[0]
+            ];
+            echo json_encode($response, http_response_code(404));
+        } else {
+            $response = [
+                "status" => 400,
+                "message" => "No se pudo reconer el método de la petición"
+            ];
+            echo json_encode($response, http_response_code($response["status"]) | JSON_UNESCAPED_UNICODE);
+        }
+        //activo-fijo/encontrada
+    ?>
+
+api/services/index.php
+    <?php
+    ini_set('display_errors', 1);
+    ini_set('display_startup_errors', 1);
+    error_reporting(E_ALL);
+
+    header("Access-Control-Allow-Origin: *");
+    header("Access-Control-Allow-Headers: X-API-KEY, Origin, X-Requested-With, Content-Type, Accept, Access-Control-Request-Method, Authorization");
+    header("Access-Control-Allow-Methods: GET, POST, OPTIONS, PUT, DELETE");
+    header("Content-Type: application/json; charset=UTF-8");
+
+    $method = $_SERVER['REQUEST_METHOD'];
+    $uri = $_SERVER['REQUEST_URI'];
+    $rutas = array_filter(explode("/",$uri));
+    require_once "softExternoService.php";
+   
+    require_once __DIR__ . "/../../db/conexion.php";
+    require_once __DIR__ . "/../funciones.php";
+ 
+    if($method == "GET"){
+        
+            require_once "controladorServiciosGet.php";
+            return;
+        
+    }
+
+    if($method == "POST"){
+        
+            require_once  "controladorServiciosPost.php";
+            return;
+        
+    }
+
+    $response = [
+        "status" => 404,
+        "message" => "la ruta '$uri' es incorrecta",
+        "method" => $method,
+        "rutas" => $rutas
+    ];
+    echo json_encode($response, http_response_code($response["status"]));
+?>
+   
+
+
+  

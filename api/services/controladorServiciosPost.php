@@ -27,8 +27,26 @@ if ($ver == "crearServicio") {
     $controlador->crearServicio($data);
     exit;
 }
-
-
+if ($ver == "editarServicio") {
+    $controlador = new SoftExternoService();
+    $controlador->editarServicio($data);
+    exit;
+}
+if ($ver == "registrarCredencialesServicio") {
+    $controlador = new SoftExternoService();
+    $controlador->registrarCredencialesServicio($data);
+    exit;
+}
+if ($ver == "editarCredencialesServicio") {
+    $controlador = new SoftExternoService();
+    $controlador->editarCredencialesServicio($data);
+    exit;
+}
+if ($ver == "enviarNotificacion") {
+    $controlador = new SoftwarePusher();
+    $controlador->enviarNotificacionUsuario($data);
+    exit;
+}
 if ($controlador === null) {
     // Acción por defecto si no se encuentra una ruta válida producto sendEmail ConfiguracionInicial registroPrueba registrarConfiguracion
     http_response_code(404);
@@ -38,5 +56,6 @@ if ($controlador === null) {
     ], JSON_UNESCAPED_UNICODE);
     exit;
 }
+
 
 

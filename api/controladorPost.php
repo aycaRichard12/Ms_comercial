@@ -510,7 +510,7 @@ elseif ($ver == "editarCliente") {
         $idempresa = $_POST['idempresa'] ?? null;
         
         if ($idempresa) {
-            $controlador->importar_excel_proveedor($archivo, $idempresa);
+            $controlador->importar_excel_proveedor2($archivo, $idempresa);
         } else {
             echo json_encode(["estado" => "error", "mensaje" => "ID de empresa no proporcionado."]);
         }
