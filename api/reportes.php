@@ -303,7 +303,22 @@ class reportes
         WHERE p.almacen_id_almacen in ($arrayid) and p.fecha_pedido between '$fechai' and '$fechaf' 
         ORDER BY p.fecha_pedido ASC");
         while ($qwe = $this->cm->fetch($rep)) {
-            $res = array("id" => $qwe[0], "fecha" => $qwe[1], "autorizacion" => $qwe[2], "observacion" => $qwe[3], "codigo" => $qwe[4], "idalmacen" => $qwe[5], "almacen" => $qwe[6], "estado" => $qwe[7], "tipopedido" => $qwe[8], "idalmacenorigen" => $qwe[9], "almacenorigen" => $qwe[10], "idusuario" => $qwe[11], "nropedido" => $qwe[12]);
+            $res = array(
+                "id" => $qwe[0], 
+                "fecha" => $qwe[1], 
+                "autorizacion" => $qwe[2], 
+                "observacion" => $qwe[3], 
+                "codigo" => $qwe[4], 
+                "idalmacen" => $qwe[5], 
+                "almacen" => $qwe[6], 
+                "estado" => $qwe[7], 
+                "tipopedido" => $qwe[8], 
+                "idalmacenorigen" => $qwe[9], 
+                "almacenorigen" => $qwe[10], 
+                "idusuario" => $qwe[11], 
+                "nropedido" => $qwe[12],
+                "idusuariomd5" => md5($qwe[11])
+                );
             array_push($lista, $res);
         }
         echo json_encode($lista);
