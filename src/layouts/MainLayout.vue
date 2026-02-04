@@ -34,10 +34,11 @@
             text-color="white"
             label="Salir"
             @click="
-              () => {
-                LocalStorage.remove('puedeIniciarsesion')
-                $router.push('/login')
-              }
+              // () => {
+              //   LocalStorage.remove('puedeIniciarsesion')
+              //   $router.push('/login')
+              // }
+              irdashboard
             "
           />
         </q-toolbar-title>
@@ -220,9 +221,9 @@ const notificacionDialogRef = ref(null)
 const ocultarTabs = () => {
   tabsVisible.value = false
 }
-// const irdashboard = () => {
-//   window.location.href = '/app/dashboard'
-// }
+const irdashboard = () => {
+  window.location.href = '/app/dashboard'
+}
 const router = useRouter()
 const menuStore = useMenuStore()
 
