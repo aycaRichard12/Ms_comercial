@@ -137,7 +137,15 @@ class configuracion
             group by r.id_responsable
             order by r.id_responsable desc");
             while ($qwe = $this->cm->fetch($consulta)) {
-                $res = array("id" => $qwe[0], "idusuario" => $qwe[1], "fecha" => $qwe[2], "almacenes" => $qwe[3], "usuario" => isset($usuarioInfo[$qwe[1]]) ? array($usuarioInfo[$qwe[1]]) : array("No existe"));
+                $res = array(
+                        "id" => $qwe[0], 
+                        "idusuario" => $qwe[1], 
+                        "fecha" => $qwe[2], 
+                        "almacenes" => $qwe[3], 
+                        "usuario" => isset($usuarioInfo[$qwe[1]]) ? array($usuarioInfo[$qwe[1]]) : [],
+                        "idusuarioMD5" => md5($qwe[1])
+
+                    );
                 array_push($lista, $res);
             }
             echo json_encode($lista);

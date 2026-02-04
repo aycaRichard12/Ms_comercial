@@ -595,7 +595,7 @@ class compras
                 "nropedido" => $q['nropedido'],
                 "almacen" => $q['almacen'],
                 "detalle" => $lista,
-                "usuarios" => array($usuarioInfo[$q['usuario']]),
+                "usuarios" => isset($usuarioInfo[$q['usuario']]) ? array([$usuarioInfo[$q['usuario']]]): [],
                 "empresa" => $empresaInfo[$idempresa] ?? []
             ];
             $lista2[] = $res;

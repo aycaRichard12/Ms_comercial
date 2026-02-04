@@ -6,7 +6,7 @@ import os
 from datetime import datetime
 
 # ---------------- CONFIG ----------------
-REMOTE = "repoBdevelop"
+REMOTE = "pasante"
 BRANCH = "main"
 DEFAULT_LIMIT = 5
 MAX_DIFF_CHARS = 50000 
