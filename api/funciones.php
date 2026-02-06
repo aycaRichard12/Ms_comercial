@@ -12,7 +12,22 @@ class Funciones
         $this->rh = $this->conexion->rh;
         $this->cm = $this->conexion->cm;
     }
+    public function almacenesEmpresa($idmd5)
+    {
+        $lista = array();
+        $idempresa = $this->verificarIDEMPRESAMD5($idmd5);
+        $consulta = $this->cm->query("SELECT 
+         a.id_almacen 
+         FROM  almacen a 
+        WHERE a.idempresa='$idempresa'");
 
+        while ($qwe = $this->cm->fetch($consulta)) {
+            $idalmacen = $qwe[0]; 
+            $lista[] = $idalmacen;
+        }
+        $resultado = implode(',', $lista);
+        return $resultado;
+    }
     public function verificarIDUSERMD5($idMd5)
     {
         $consulta = $this->rh->query("select idusuario from usuario WHERE MD5(idusuario) = '$idMd5'");

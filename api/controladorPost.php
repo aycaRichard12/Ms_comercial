@@ -10,6 +10,7 @@ require_once "useVenta.php";
 require_once "useCotizacion.php";
 require_once "arqueoPuntoVenta.php";
 require_once "pagosCompra.php";
+require_once "permisos_venta_sin_stock.php";
 
 $input = file_get_contents("php://input");
 $data = json_decode($input, true);
@@ -670,6 +671,19 @@ elseif ($ver == "unirTodoslosPedidos") {
 elseif ($ver == "cambiarestadopedidoOptimizado") {
     $controlador = new mantenimiento();
     $controlador->cambiarestadopedidoOptimizado($data['idsPedido'], $data['estado'], $data['idUsuarioMd5']);
+}
+if ($ver == "crearSolicitudPermiso") {
+    $controlador = new PermisosVentaSinStock();
+    echo $controlador->crearSolicitudPermiso($data);
+
+} elseif ($ver == "aprobarRechazarSolicitud") {
+    $controlador = new PermisosVentaSinStock();
+    echo $controlador->aprobarRechazarSolicitud($data);
+
+} elseif ($ver == "consumirPermiso") {
+    $controlador = new PermisosVentaSinStock();
+    echo $controlador->consumirPermiso($data);
+
 }
 // ARCHIVO: endpoint.php
 elseif ($ver == "authPusher") {
