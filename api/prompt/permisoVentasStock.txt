@@ -1,0 +1,353 @@
+Actúa como un arquitecto de software senior y desarrollador backend experto.
+
+Quiero que construyas un backend siguiendo EXACTAMENTE las especificaciones que te doy.
+No inventes tecnologías ni estructuras distintas.
+
+────────────────────────────────────
+📌 TECNOLOGÍA DEL BACKEND
+────────────────────────────────────
+Lenguaje: <<< PHP >>>
+Framework (si aplica): <<<  Ninguno >>>
+
+────────────────────────────────────
+📌 CONEXIÓN A BASE DE DATOS
+────────────────────────────────────
+Motor: MySQL 8
+Tipo de conexión: <<<  mysqli, Orientado a objetos >>>
+Patrón de acceso a datos: <<<  DAO  >>>
+
+Ejemplo de conexión que DEBES respetar:
+<<<
+/db
+    conexion.php
+        <?php
+            require_once "bd.php";
+
+            class Conexion extends BDyofinanciero {
+                public $rh;
+                public $em;
+                public $ad;
+                public $cm;
+                public $endPoint;
+                
+                public function __construct() {
+                    try {
+                        $this->em = new BDyofinanciero("u3359", "@Rrhh", "u3359");
+                        $this->ad = new BDyofinanciero("u3359","@#123","u3359");
+                        $this->cm=new BDyofinanciero("Rrhh","@#2025","u3359");
+                        $this->rh = new BDyofinanciero("Rrhh","@#234","u3359");
+                        $this->endPoint = array(
+                            1 => "https://sinfel.emizor.com",
+                            2 => "https://fel.emizor.com",
+                            3 => "https://mistersofts.com",
+                        );
+                    } catch (Exception $e) {
+                        echo "Error al conectar con la base de datos: " . $e->getMessage();
+                    }
+                }
+            }
+            ?>
+    bd.php
+        <?php
+
+            class BDyofinanciero extends mysqli {
+                
+                public function __construct($user, $pass, $db) {
+                    parent::__construct('localhost', $user, $pass, $db);
+                    $this->connect_errno ? die("<center><h3>No se encontraron datos</h3></center>") : $x = "HK";
+                    $this->query("SET NAMES 'utf8';");
+                    $this->query("SET CHARACTER SET utf8;");
+                    $this->query("SET SESSION collation_connection = 'utf8_unicode_ci';");
+                }
+
+                public function fetch($y) {
+                    return mysqli_fetch_array($y);	
+                }
+
+                public function rows($y) {
+                    return mysqli_num_rows($y);
+                }
+
+                public function all($y) {
+                    return mysqli_fetch_all($y);
+                }
+
+                public function getLastInsertId() {
+                    return $this->insert_id;
+                }
+
+                // Obtener el número de filas afectadas
+                public function affectedRows() {
+                    return $this->affected_rows;
+                }
+
+                // Iniciar una transacción
+                public function beginTransaction() {
+                    $this->autocommit(false);
+                }
+
+                // Confirmar la transacción
+                public function commitTransaction() {
+                    parent::commit();
+                    $this->autocommit(true);
+                }
+
+                // Revertir la transacción
+                public function rollbackTransaction() {
+                    parent::rollback();
+                    $this->autocommit(true);
+                }
+            }
+            ?>
+
+>>>
+
+────────────────────────────────────
+📌 ESTRUCTURA DE CARPETAS OBLIGATORIA
+────────────────────────────────────
+La estructura del proyecto debe ser EXACTAMENTE esta:
+
+<<<
+/api
+    permisos_venta_sin_stock.php
+    controladorPost.php
+    controladorGet.php
+    index.php
+/db
+    bd.php
+    conexión.php
+
+
+>>>
+
+No cambies nombres ni niveles.
+
+────────────────────────────────────
+📌 MODELO DE NEGOCIO
+────────────────────────────────────
+El sistema es de ventas y debe incluir el módulo:
+
+"Permisos para vender sin stock por almacén"
+
+Reglas obligatorias:
+- El permiso es por ALMACÉN, no por producto
+- El permiso es por USUARIO
+- Un permiso permite UNA SOLA VENTA
+- El permiso tiene fecha de inicio y fin
+- El permiso se consume al vender
+- Sin permiso válido no se puede vender
+- Todo debe quedar auditado
+
+────────────────────────────────────
+📌 ESTRUCTURA DE BASE DE DATOS
+────────────────────────────────────
+Usa EXACTAMENTE estas tablas y campos.
+NO modifiques nombres ni tipos.
+
+<<<
+CREATE TABLE solicitudes_permiso_almacen (
+    id_solicitud INT AUTO_INCREMENT PRIMARY KEY,
+    id_usuario INT NOT NULL,
+    id_almacen INT NOT NULL,
+    motivo TEXT NOT NULL,
+    fecha_solicitud DATETIME NOT NULL,
+    estado ENUM('PENDIENTE', 'APROBADO', 'RECHAZADO') DEFAULT 'PENDIENTE',
+    id_admin INT NULL,
+    fecha_respuesta DATETIME NULL,
+    observacion_admin TEXT NULL
+);
+
+CREATE TABLE permisos_venta_sin_stock_almacen (
+    id_permiso INT AUTO_INCREMENT PRIMARY KEY,
+
+    id_solicitud INT NOT NULL,
+    id_usuario INT NOT NULL,
+    id_almacen INT NOT NULL,
+
+    fecha_inicio DATETIME NOT NULL,
+    fecha_fin DATETIME NOT NULL,
+
+    usado int DEFAULT 2,
+    fecha_uso DATETIME NULL,
+
+    CONSTRAINT fk_permiso_solicitud_almacen
+        FOREIGN KEY (id_solicitud)
+        REFERENCES solicitudes_permiso_almacen(id_solicitud)
+);
+
+El campo `usado` funciona así:
+1 = usado
+2 = No usado
+>>>
+────────────────────────────────────
+📌 ACLARACIONES IMPORTANTES
+────────────────────────────────────
+- El backend NO es REST.
+- Las acciones se controlan mediante el parámetro `ver`.
+- No se deben crear rutas REST ni usar JSON API estándar.
+- El patrón DAO debe respetarse dentro de los archivos en /api.
+- El campo `usado` representa:
+  0 = permiso no usado
+  1 = permiso usado
+- La tabla ventas ya existe; solo se valida y consume el permiso antes de vender.
+
+
+────────────────────────────────────
+📌 ENDPOINTS O FUNCIONALIDADES ESPERADAS
+────────────────────────────────────
+Debes implementar al menos:
+
+- Crear solicitud de permiso
+- Aprobar / rechazar solicitud
+- Generar permiso
+- Validar permiso antes de vender
+- Registrar venta con consumo de permiso
+- Listar permisos activos, usados y vencidos
+
+────────────────────────────────────
+📌 VALIDACIONES OBLIGATORIAS
+────────────────────────────────────
+- No permitir reutilizar un permiso
+- Validar fechas de vigencia
+- Validar usuario y almacén
+- Manejo de errores claros (HTTP o excepciones)
+- Transacciones para evitar ventas duplicadas
+
+────────────────────────────────────
+📌 FORMATO DE RESPUESTA
+────────────────────────────────────
+- Entregar código completo y funcional
+- Separar por archivos según la estructura
+- Explicar brevemente cada archivo
+- No omitir pasos importantes
+- Usar buenas prácticas
+- Código listo para pruebas
+
+OBJETIVO FINAL:
+Poder levantar el backend, conectar a MySQL y probar el flujo completo
+de permisos y ventas sin stock.
+
+
+ejemplo:
+
+/pagosCompra.php
+    <?php
+    class PagosCompra
+    {
+        // --- CONEXIONES Y CLASES AUXILIARES ---
+        private $cm;
+        private $rh;
+        private $em;
+        private $conexion;
+        private $verificar;
+        private $factura;
+        private $logger;
+        private $venta;
+        private $funcionesVenta;
+        private $token;
+        private $configuracion;
+        private $numceros;
+
+        public function __construct()
+        {
+            $this->conexion = new Conexion();
+            $this->verificar = new Funciones();
+            $this->factura = new Facturacion();
+            $this->logger = new LogErrores();
+            $this->venta = new UseVEnta();
+            $this->funcionesVenta = new ventas();
+            $this->configuracion = new configuracion();
+            $this->numceros = 4;
+            // Asignación de conexiones a bases de datos
+            $this->cm = $this->conexion->cm;
+            $this->rh = null; // Simulado
+            $this->em = null; // Simulado
+        }
+
+        public function registrarCompraCredito($data){
+            echo $this->crearPago($data['compra_id'],$data['monto_total'],$data['nro_cuotas'],$data['fecha_inicio'],$data['pago_cada_ciertos_dias']);
+        }
+
+        public function obtenerPagoPorId($compra_id)
+        {
+            $sql = "SELECT * FROM pagos WHERE compra_id = ?";
+            try {
+                $stmt = $this->cm->prepare($sql);
+                $stmt->bind_param("i", $compra_id);
+                $stmt->execute();
+                $result = $stmt->get_result();
+                if ($result->num_rows > 0) {
+                    return json_encode($result->fetch_assoc());
+                }
+                return json_encode(["estado" => "info", "mensaje" => "Pago no encontrado."]);
+            } catch (Exception $e) {
+                // $this->logger->log($e->getMessage());
+                return json_encode(["estado" => "error", "mensaje" => $e->getMessage()]);
+            }
+        }
+    }
+/controladorPost.php
+    <?php
+    require_once 'vendor/autoload.php';
+    require_once "configuraciones.php";
+    require_once "configuracionInicial.php";
+    require_once "mantenimiento.php";
+    require_once "compras.php";
+    require_once "ventas.php";
+    require_once "sendIvoiceEmail.php";
+    require_once "useVenta.php";
+    require_once "useCotizacion.php";
+    require_once "arqueoPuntoVenta.php";
+    require_once "pagosCompra.php";
+
+    $input = file_get_contents("php://input");
+    $data = json_decode($input, true);
+
+    // Si es JSON, lo uso; si no, uso $_POST
+    $ver = $_POST['ver'] ?? $data['ver'] ?? null;
+    $user_id = $_POST['user_id'] ?? $data['user_id'] ?? null;
+
+    if ($ver == "registrarResponsable") {
+        $controlador = new configuracion();
+        $controlador->registroResponsable($_POST['usuario'], $_POST['idempresa']);
+    } elseif ($ver == "registrarResponsablealmacen") {
+        $controlador = new configuracion();
+        $controlador->registroResponsablealmacen($_POST['idresponsable'], $_POST['almacen']);
+    }
+    elseif ($ver == "AutorizacionCierre") {
+        $controlador = new ArqueoPuntoVenta(); 
+        $controlador->AutorizacionCierre($data);
+    
+        
+    }
+    elseif ($ver == "registrarCompraCredito") {
+        $controlador = new PagosCompra(); 
+        $controlador->registrarCompraCredito($data);
+    }
+/controladorGet.php 
+    <?php
+    require_once "configuraciones.php";
+    require_once "mantenimiento.php";
+    require_once "compras.php";
+    require_once "ventas.php";
+    require_once "facturacion.php";
+    require_once "reportes.php";
+    require_once "dashboard.php";
+    require_once "configuracionInicial.php";
+    require_once "useCotizacion.php";
+    require_once "useVenta.php";
+    require_once "notificaciones.php";
+    require_once "arqueoPuntoVenta.php";
+    require_once "funciones.php";
+    require_once "pagosCompra.php";
+    $ver = explode("/", $_GET['ver']);
+
+    $controlador = null;  //Facturacion
+    if ($ver[0] == "datosusuario") {
+        $controlador = new Funciones();
+        $controlador->obtenerDatosUsuario($ver[1], $ver[2]);
+    }
+    elseif($ver[0]== "obtenerPagoPorId"){
+        $controlador = new PagosCompra();
+        $controlador->obtenerPagoPorId($ver[1]); 
+    }

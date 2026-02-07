@@ -756,7 +756,20 @@ class compras
             echo json_encode(array("error" => "El id de empresa no existe"));
             return;
         }
-        $consulta = $this->cm->query("select i.id_ingreso,pr.nombre ,i.nombre as lote,i.codigo,i.nfactura,i.fecha_ingreso,i.autorizacion, i.estado, i.pedidos_id_pedidos,i.almacen_id_almacen,i.tipocompra, i.proveedor_id_proveedor, (SELECT SUM(di2.precio_unitario * di2.cantidad) FROM detalle_ingreso di2 WHERE di2.ingreso_id_ingreso = i.id_ingreso) as total
+        $consulta = $this->cm->query("SELECT 
+        i.id_ingreso,
+        pr.nombre ,
+        i.nombre as lote,i.codigo,
+        i.nfactura,
+        i.fecha_ingreso,
+        i.autorizacion,
+         i.estado, 
+         i.pedidos_id_pedidos,
+         i.almacen_id_almacen,
+         i.tipocompra, 
+         i.proveedor_id_proveedor, 
+         (SELECT SUM(di2.precio_unitario * di2.cantidad) FROM detalle_ingreso di2 WHERE di2.ingreso_id_ingreso = i.id_ingreso) as total,
+         i.usuario
         from ingreso as i
         left join proveedor pr on i.proveedor_id_proveedor=pr.id_proveedor
         where pr.id_empresa='$idempresa'
@@ -775,6 +788,7 @@ class compras
                 "idalmacen"=>$qwe["almacen_id_almacen"],
                 "tipocompra"=>$qwe["tipocompra"],
                 "idproveedor"=>$qwe["proveedor_id_proveedor"], 
+                "idusuario_md5"=>md5($qwe["usuario"]), 
                 "total" => $qwe["total"]);
             array_push($lista, $res);
         }

@@ -13,6 +13,8 @@ require_once "notificaciones.php";
 require_once "arqueoPuntoVenta.php";
 require_once "funciones.php";
 require_once "pagosCompra.php";
+require_once "permisos_venta_sin_stock.php";
+
 $ver = explode("/", $_GET['ver']);
 
 $controlador = null;  //Facturacion
@@ -954,6 +956,54 @@ elseif ($ver[0] == "detalleCompra") {
 elseif ($ver[0] == "reporteProductoProveedoresCompras") {
     $controlador = new compras();
     $controlador->reporteProductoProveedoresCompras($ver[1], $ver[2], $ver[3]); 
+}
+if ($ver[0] == "validarPermisoDisponible") {
+    // GET /api/controladorGet.php?ver=validarPermisoDisponible/ID_USUARIO/ID_ALMACEN
+    $controlador = new PermisosVentaSinStock();
+    $data = [
+        'id_usuario' => $ver[1] ?? null,
+        'id_almacen' => $ver[2] ?? null
+    ];
+    echo $controlador->validarPermisoDisponible($data);
+
+} elseif ($ver[0] == "listarPermisosActivos") {
+    // GET /api/controladorGet.php?ver=listarPermisosActivos/ID_USUARIO/ID_ALMACEN (opcionales)
+    $controlador = new PermisosVentaSinStock();
+    $data = [
+        'id_empresa_md5' => $ver[1] ?? null,
+        'id_usuario' => $ver[2] ?? null,
+        'id_almacen' => $ver[3] ?? null
+    ];
+    echo $controlador->listarPermisosActivos($data);
+
+} elseif ($ver[0] == "listarPermisosUsados") {
+    $controlador = new PermisosVentaSinStock();
+    $data = [
+        'id_empresa_md5' => $ver[1] ?? null,
+        'id_usuario' => $ver[2] ?? null,
+        'id_almacen' => $ver[3] ?? null
+    ];
+    echo $controlador->listarPermisosUsados($data);
+
+} elseif ($ver[0] == "listarPermisosVencidos") {
+    $controlador = new PermisosVentaSinStock();
+    $data = [
+        'id_empresa_md5' => $ver[1] ?? null,
+        'id_usuario' => $ver[2] ?? null,
+        'id_almacen' => $ver[3] ?? null
+    ];
+    echo $controlador->listarPermisosVencidos($data);
+
+} elseif ($ver[0] == "listarSolicitudes") {
+    // GET /api/controladorGet.php?ver=listarSolicitudes/ESTADO/ID_USUARIO (opcionales)
+    $controlador = new PermisosVentaSinStock();
+    $data = [
+        'id_empresa_md5' => $ver[1] ?? null,
+        'estado' => $ver[2] ?? null,
+        'id_usuario' => $ver[3] ?? null
+    ];
+    echo $controlador->listarSolicitudes($data);
+
 }
 
 if ($controlador === null) {

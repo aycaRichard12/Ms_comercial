@@ -77,6 +77,22 @@ class reportes
             "almacenes" => $resultado
         ]);
     }
+    public function almacenesEmpresa($idmd5)
+    {
+        $lista = array();
+        $idempresa = $this->verificar->verificarIDEMPRESAMD5($idmd5);
+        $consulta = $this->cm->query("SELECT 
+         a.id_almacen 
+         FROM  almacen a 
+        WHERE a.idempresa='$idempresa'");
+
+        while ($qwe = $this->cm->fetch($consulta)) {
+            $idalmacen = $qwe[0]; 
+            $lista[] = $idalmacen;
+        }
+        $resultado = implode(',', $lista);
+        return $resultado;
+    }
     public function getIdUsuario($idmd5)
     {
         $lista = array();
