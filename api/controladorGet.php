@@ -970,24 +970,27 @@ if ($ver[0] == "validarPermisoDisponible") {
     // GET /api/controladorGet.php?ver=listarPermisosActivos/ID_USUARIO/ID_ALMACEN (opcionales)
     $controlador = new PermisosVentaSinStock();
     $data = [
-        'id_usuario' => $ver[1] ?? null,
-        'id_almacen' => $ver[2] ?? null
+        'id_empresa_md5' => $ver[1] ?? null,
+        'id_usuario' => $ver[2] ?? null,
+        'id_almacen' => $ver[3] ?? null
     ];
     echo $controlador->listarPermisosActivos($data);
 
 } elseif ($ver[0] == "listarPermisosUsados") {
     $controlador = new PermisosVentaSinStock();
     $data = [
-        'id_usuario' => $ver[1] ?? null,
-        'id_almacen' => $ver[2] ?? null
+        'id_empresa_md5' => $ver[1] ?? null,
+        'id_usuario' => $ver[2] ?? null,
+        'id_almacen' => $ver[3] ?? null
     ];
     echo $controlador->listarPermisosUsados($data);
 
 } elseif ($ver[0] == "listarPermisosVencidos") {
     $controlador = new PermisosVentaSinStock();
     $data = [
-        'id_usuario' => $ver[1] ?? null,
-        'id_almacen' => $ver[2] ?? null
+        'id_empresa_md5' => $ver[1] ?? null,
+        'id_usuario' => $ver[2] ?? null,
+        'id_almacen' => $ver[3] ?? null
     ];
     echo $controlador->listarPermisosVencidos($data);
 

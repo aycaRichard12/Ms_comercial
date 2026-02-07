@@ -381,6 +381,8 @@ class PermisosVentaSinStock
     {
         $id_usuario = $data['id_usuario'] ?? null;
         $id_almacen = $data['id_almacen'] ?? null;
+        $id_empresa_md5 = $data['id_empresa_md5'] ?? null;
+        $almacenes = $this->verificar->almacenesEmpresa($id_empresa_md5);
 
         $sql = "SELECT p.*, s.motivo 
                 FROM permisos_venta_sin_stock_almacen p
@@ -393,6 +395,9 @@ class PermisosVentaSinStock
 
         if ($id_almacen) {
             $sql .= " AND p.id_almacen = " . intval($id_almacen);
+        }
+        if (!empty($almacenes)) {
+            $sql .= " AND p.id_almacen IN ($almacenes)";
         }
 
         $sql .= " ORDER BY p.fecha_uso DESC";
@@ -425,6 +430,8 @@ class PermisosVentaSinStock
     {
         $id_usuario = $data['id_usuario'] ?? null;
         $id_almacen = $data['id_almacen'] ?? null;
+        $id_empresa_md5 = $data['id_empresa_md5'] ?? null;
+        $almacenes = $this->verificar->almacenesEmpresa($id_empresa_md5);
 
         $sql = "SELECT p.*, s.motivo 
                 FROM permisos_venta_sin_stock_almacen p
@@ -438,6 +445,9 @@ class PermisosVentaSinStock
 
         if ($id_almacen) {
             $sql .= " AND p.id_almacen = " . intval($id_almacen);
+        }
+        if (!empty($almacenes)) {
+            $sql .= " AND p.id_almacen IN ($almacenes)";
         }
 
         $sql .= " ORDER BY p.fecha_fin DESC";
