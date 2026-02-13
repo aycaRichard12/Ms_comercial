@@ -439,6 +439,47 @@ class reportes
         }
         echo json_encode($lista);
     }
+     public function reporteventasTodos($idmd5)
+    {   $arrayid = $this->arrayIDalmacen($idmd5);
+        $lista = [];
+        $rep = $this->cm->query("SELECT 
+        v.id_venta, 
+        v.fecha_venta, 
+        concat(c.nombre, ' - ' , c.nombrecomercial) AS nombre, 
+        v.tipo_venta, 
+        v.tipo_pago, 
+        v.monto_total, 
+        v.nfactura, 
+        v.descuento, 
+        pa.almacen_id_almacen, 
+        v.cliente_id_cliente1, 
+        d.tipo_divisa, 
+        s.nombre, 
+        v.estado, 
+        vf.shortLink, 
+        vf.urlSin, 
+        v.idcanal, 
+        cv.canal, 
+        v.idsucursal, 
+        alm.nombre as nombrealmacen
+        FROM venta v 
+        LEFT JOIN cliente c ON v.cliente_id_cliente1=c.id_cliente
+        LEFT JOIN detalle_venta dv ON v.id_venta=dv.venta_id_venta
+        LEFT JOIN sucursal s ON v.idsucursal=s.id_sucursal
+        LEFT JOIN productos_almacen pa ON dv.productos_almacen_id_productos_almacen=pa.id_productos_almacen
+        LEFT JOIN divisas d ON v.divisas_id_divisas=d.id_divisas
+        LEFT JOIN canalventa cv ON v.idcanal=cv.idcanalventa
+        LEFT JOIN ventas_facturadas vf ON v.id_venta=vf.venta_id_venta
+        LEFT JOIN almacen alm ON alm.id_almacen = pa.almacen_id_almacen
+        WHERE pa.almacen_id_almacen IN ($arrayid)  
+        GROUP BY v.id_venta
+        ORDER BY v.id_venta ASC, v.fecha_venta ASC");
+        while ($qwe = $this->cm->fetch($rep)) {
+            $res = array("idventa" => $qwe[0], "fecha" => $qwe[1], "cliente" => $qwe[2], "tipoventa" => $qwe[3], "tipopago" => $qwe[4], "ventatotal" => $qwe[5], "nfactura" => $qwe[6], "descuento" => $qwe[7], "idalmacen" => $qwe[8], "idcliente" => $qwe[9], "divisa" => $qwe[10], "sucursal" => $qwe[11], "estado" => $qwe[12], "shortlink" => $qwe[13], "urlsin" => $qwe[14], "idcanal" => $qwe[15], "canal" => $qwe[16], "idsucursal" => $qwe[17], "almacen" => $qwe[18]);
+            array_push($lista, $res);
+        }
+        echo json_encode($lista);
+    }
 
     public function reportecotizacion($idmd5, $fechai, $fechaf)
     {   $arrayid = $this->arrayIDalmacen($idmd5);

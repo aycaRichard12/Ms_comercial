@@ -144,7 +144,7 @@ if ($ver == "registrarResponsable") {
 } elseif ($ver == "crearPuntoVentaFacturacion") {
     $controlador = new mantenimiento();
     $controlador->crarPuntoVentaFactura(json_decode($_POST['puntoventaJSON'], true), $_POST['codigosucursal'], $_POST['token'], $_POST['tipof'], $_POST['id'], $_POST['tipo']);
-}elseif ($ver == "registrarProducto") {
+}elseif ($ver == "registrarProducto"){
     try {
         $controlador = new mantenimiento();
         $carpetaDestino = __DIR__ . "/imagen/";
@@ -253,7 +253,28 @@ if ($ver == "registrarResponsable") {
 } elseif ($ver == "registrocategoriacampaña") {
     $controlador = new mantenimiento();
     $controlador->registrocategoriaprecio($_POST['idcategoriaprecio'], $_POST['idcampaña'], $_POST['idempresa']);
-} elseif ($ver == "registrarProveedor") {
+} 
+elseif ($ver == "registrarpreciocampaña") {
+    $controlador = new mantenimiento();
+    $controlador->registrarPrecioCampaña(
+        $_POST['idproducto'],
+        $_POST['precio'],
+        $_POST['idcampana'],
+        $_POST['idusuario']
+    );
+}
+elseif ($ver == "editarPreciocampana") {
+    $controlador = new mantenimiento();
+    $controlador->editarPreciocampaña(
+        $data['id_detalle_campanas'],
+        $data['idproducto'],
+        $data['precio'],
+        $data['idcategoriacampaña'],
+        
+    );
+}
+
+elseif ($ver == "registrarProveedor") {
     $controlador = new compras();
     $controlador->registroproveedor($_POST['nombre'], $_POST['codigo'], $_POST['nit'], $_POST['detalle'], $_POST['direccion'], $_POST['telefono'], $_POST['movil'], $_POST['email'], $_POST['web'], $_POST['pais'], $_POST['ciudad'], $_POST['zona'], $_POST['contacto'], $_POST['idempresa']);
 } elseif ($ver == "editarProveedor") {

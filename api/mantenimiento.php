@@ -2551,6 +2551,17 @@ class mantenimiento
         echo json_encode($lista);
     }
 
+    public function registrarPrecioCampaña($idproducto, $precio, $idcampaña, $idusuario){
+        $res="";
+        $registro=$this->cm->query("insert into detalle_campañas(productos_almacen_id_productos_almacen, precio,categorias_campañas_id_categorias_campañas ) values(null,'$idproducto','$precio','$idcampaña')");
+        if($registro !== null){
+            $res=array("estado" => "exito", "mensaje" => "Registro exitoso");
+        }else{
+            $res=array("estado" => "error", "mensaje" => "Error al intentar registrar. Por favor, inténtalo de nuevo");
+        }
+        echo json_encode($res);
+    }
+    
     public function registrocategoriaprecio($idcategoriaprecio,$idcampaña,$idmd5){
         $idempresa = $this->verificar->verificarIDEMPRESAMD5($idmd5);
         $res="";
@@ -2601,6 +2612,17 @@ class mantenimiento
             array_push($lista, $res);
         }
         echo json_encode($lista);
+    }
+    public function eliminarPreciocampana($id){
+        $res="";
+        $registro=$this->cm->query("delete from detalle_campañas where id_detalle_campañas='$id'");
+        if($registro !== null){
+            $res=array("estado" => "exito", "mensaje" => "Eliminacion exitosa");
+        }else{
+            $res=array("estado" => "error", "mensaje" => "Error al intentar eliminar. Por favor, inténtalo de nuevo");
+        }
+        echo json_encode($res);  
+        
     }
 
     public function editarPreciocampaña($id,$idproductoalmacen,$precio,$idcategoriacampaña){

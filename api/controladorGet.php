@@ -359,10 +359,16 @@ elseif ($ver[0] == "listaResponsableAlmacenReportes") {
 } elseif ($ver[0] == "listapreciocampaña") {
     $controlador = new mantenimiento();
     $controlador->listaPreciocampaña($ver[1]);
-} elseif ($ver[0] == "listaProveedor") {
+}  
+ elseif ($ver[0] == "eliminarpreciocampana") {
+    $controlador = new mantenimiento();
+    $controlador->eliminarPreciocampana($ver[1]);
+} 
+elseif ($ver[0] == "listaProveedor") {
     $controlador = new compras();
     $controlador->listarProveedores($ver[1]);
-} elseif ($ver[0] == "eliminarProveedor") {
+} 
+elseif ($ver[0] == "eliminarProveedor") {
     $controlador = new compras();
     $controlador->eliminarproveedor($ver[1]);
 } elseif ($ver[0] == "verificarExistenciaProveedor") {
@@ -611,10 +617,16 @@ elseif ($ver[0] == "listaPuntoVentaFacturaCotizacion") {
 } elseif ($ver[0] == "reporterobo") {
     $controlador = new reportes();
     $controlador->reporterobos($ver[1], $ver[2], $ver[3]);
-} elseif ($ver[0] == "reporteventas") {
+} 
+elseif ($ver[0] == "reporteventas") {
     $controlador = new reportes();
     $controlador->reporteventas($ver[1], $ver[2], $ver[3]);
-} elseif ($ver[0] == "reportecotizacion") {
+} 
+elseif ($ver[0] == "reporteventasTodos") {
+    $controlador = new reportes();
+    $controlador->reporteventasTodos($ver[1]);
+} 
+elseif ($ver[0] == "reportecotizacion") {
     $controlador = new reportes();
     $controlador->reportecotizacion($ver[1], $ver[2], $ver[3]);
 } 
@@ -971,7 +983,7 @@ if ($ver[0] == "validarPermisoDisponible") {
     $controlador = new PermisosVentaSinStock();
     $data = [
         'id_empresa_md5' => $ver[1] ?? null,
-        'id_usuario' => $ver[2] ?? null,
+        'id_usuario_md5' => $ver[2] ?? null,
         'id_almacen' => $ver[3] ?? null
     ];
     echo $controlador->listarPermisosActivos($data);
@@ -980,7 +992,7 @@ if ($ver[0] == "validarPermisoDisponible") {
     $controlador = new PermisosVentaSinStock();
     $data = [
         'id_empresa_md5' => $ver[1] ?? null,
-        'id_usuario' => $ver[2] ?? null,
+        'id_usuario_md5' => $ver[2] ?? null,
         'id_almacen' => $ver[3] ?? null
     ];
     echo $controlador->listarPermisosUsados($data);
@@ -989,7 +1001,7 @@ if ($ver[0] == "validarPermisoDisponible") {
     $controlador = new PermisosVentaSinStock();
     $data = [
         'id_empresa_md5' => $ver[1] ?? null,
-        'id_usuario' => $ver[2] ?? null,
+        'id_usuario_md5' => $ver[2] ?? null,
         'id_almacen' => $ver[3] ?? null
     ];
     echo $controlador->listarPermisosVencidos($data);
@@ -999,8 +1011,9 @@ if ($ver[0] == "validarPermisoDisponible") {
     $controlador = new PermisosVentaSinStock();
     $data = [
         'id_empresa_md5' => $ver[1] ?? null,
-        'estado' => $ver[2] ?? null,
-        'id_usuario' => $ver[3] ?? null
+        'estado' => $ver[3] ?? null,
+        'id_usuario_md5' => $ver[2] ?? null
+
     ];
     echo $controlador->listarSolicitudes($data);
 
