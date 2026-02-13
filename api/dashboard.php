@@ -579,9 +579,7 @@ class Dashboard
     }
 
     public function fechas_venta_cliente($idmd5_e, $idmd5_u){
-        ini_set('display_errors', 1);
-        ini_set('display_startup_errors', 1);
-        error_reporting(E_ALL);
+        
         $lista = [];
         $idempresa = $this->verificar->verificarIDEMPRESAMD5($idmd5_e);
         $idusuario = $this->verificar->verificarIDUSERMD5($idmd5_u);

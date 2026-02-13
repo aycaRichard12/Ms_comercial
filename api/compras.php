@@ -2094,7 +2094,7 @@ class compras
                     "codigo" => $qwe['codigo_proveedor']
                 ],
                 "detalle" => $lista, 
-                "usuario" => $usuarioInfo[$qwe['usuario']], 
+                "usuario" =>  $qwe['usuario'] ? $usuarioInfo[$qwe['usuario']] : null, 
                 "empresa" => $empresaInfo[$idempresa]
             );
             array_push($lista2, $res);

@@ -31,10 +31,12 @@ yarn-error.log*
 
 # local .env files
 .env.local*
-api/vendor/ 
+api/vendor/
 api/vendor/
 .env
 pyCherryPick.py
 cherry_pick_history.json
 reporte_avance.xlsx
 pygenrarreporte.py
+pySubirDistAlServidor.py
+pyLimpiarCarpetaAssets.py

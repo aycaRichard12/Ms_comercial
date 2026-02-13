@@ -6,11 +6,14 @@ class PermisosVentaSinStock
     private $cm;
     private $conexion;
     private $verificar;
+        private $rh;
+
     public function __construct()
     {
         $this->conexion = new Conexion();
         $this->cm = $this->conexion->cm;
         $this->verificar = new Funciones();
+        $this->rh = $this->conexion->rh;
     }
 
     /**
@@ -20,7 +23,8 @@ class PermisosVentaSinStock
     {
         $idmd5_usuario = $data['idusuario_md5'] ?? null;
         $id_usuario = $this->verificar->verificarIDUSERMD5($idmd5_usuario);
-        $id_admin = $data['id_admin'] ?? null;
+        $id_admin = $this->verificar->verificarIDUSERMD5($data['id_admin_md5'] ?? null);
+        
         $id_almacen = $data['id_almacen'] ?? null;
         $motivo = $data['motivo'] ?? null;
 
@@ -295,8 +299,6 @@ class PermisosVentaSinStock
                     "mensaje" => "No hay permiso válido disponible para consumir",
                     "usuario" => $id_usuario,
                     "almacen" => $id_almacen,
-                    "sql" => $sql,
-                    "fecha" => $fechaBolivia
                 ]);
             }
 
@@ -334,21 +336,53 @@ class PermisosVentaSinStock
      */
     public function listarPermisosActivos($data)
     {
-        $id_usuario = $data['id_usuario'] ?? null;
-        $id_almacen = $data['id_almacen'] ?? null;
+        date_default_timezone_set('America/La_Paz');
+        $fechaBolivia = date('Y-m-d H:i:s');
 
-        $sql = "SELECT p.*, s.motivo 
+        $id_usuario_md5 = $data['id_usuario_md5'] ?? null;
+        $id_usuario = null;
+        $tmp = null;
+        if (!empty($id_usuario_md5)) {
+            $tmp = $this->verificar->verificarIDUSERMD5($id_usuario_md5);
+            if ($tmp != 0) {
+                $id_usuario = intval($tmp);
+            }
+        } 
+        $id_almacen = $data['id_almacen'] ?? null;
+        $id_empresa_md5 = $data['id_empresa_md5'] ?? null;
+        $idempresa = $this->verificar->verificarIDEMPRESAMD5($id_empresa_md5);
+        $almacenes = $this->verificar->almacenesEmpresa($id_empresa_md5);
+
+        $usuarios = $this->rh->query("SELECT u.idusuario, u.nombre, c.cargo FROM usuario u 
+        LEFT JOIN trabajador t ON u.trabajador_idtrabajador=t.idtrabajador
+        LEFT JOIN cargos c ON t.cargos_idcargos=c.idcargos
+        WHERE u.idempresa='$idempresa'");
+
+        $usuarioInfo = [];
+        while ($usuario = $this->rh->fetch($usuarios)) {
+            $usuarioInfo[$usuario[0]] = array(
+                "idusuario" => $usuario[0],
+                "usuario" => $usuario[1],
+                "cargo" => $usuario[2]
+            );
+        }
+
+        $sql = "SELECT p.*, s.motivo, a.nombre as almacen
                 FROM permisos_venta_sin_stock_almacen p
                 INNER JOIN solicitudes_permiso_almacen s ON p.id_solicitud = s.id_solicitud
+                left JOIN almacen a ON a.id_almacen = p.id_almacen
                 WHERE p.usado = 2 
-                  AND NOW() BETWEEN p.fecha_inicio AND p.fecha_fin";
-
-        if ($id_usuario) {
-            $sql .= " AND p.id_usuario = " . intval($id_usuario);
+                  AND '$fechaBolivia' BETWEEN p.fecha_inicio AND p.fecha_fin";
+ 
+        if ($id_usuario !== null) {
+            $sql .= " AND p.id_usuario = $id_usuario";
         }
 
         if ($id_almacen) {
             $sql .= " AND p.id_almacen = " . intval($id_almacen);
+        }
+        if (!empty($almacenes)) {
+            $sql .= " AND p.id_almacen IN ($almacenes)";
         }
 
         $sql .= " ORDER BY p.fecha_inicio DESC";
@@ -358,13 +392,20 @@ class PermisosVentaSinStock
             $permisos = [];
 
             while ($row = $result->fetch_assoc()) {
+                if (isset($usuarioInfo[$row['id_usuario']])) {
+                    $row['usuario'] = $usuarioInfo[$row['id_usuario']];
+                } else {
+                    $row['usuario'] = [];
+                }
                 $permisos[] = $row;
             }
 
             return json_encode([
                 "estado" => "success",
                 "permisos_activos" => $permisos,
-                "total" => count($permisos)
+                "total" => count($permisos),
+                "data_recibida" => $data,
+                "sql" => $sql
             ]);
         } catch (Exception $e) {
             return json_encode([
@@ -379,7 +420,15 @@ class PermisosVentaSinStock
      */
     public function listarPermisosUsados($data)
     {
-        $id_usuario = $data['id_usuario'] ?? null;
+        $id_usuario_md5 = $data['id_usuario_md5'] ?? null;
+        $id_usuario = null;
+        $tmp = null;
+        if (!empty($id_usuario_md5)) {
+            $tmp = $this->verificar->verificarIDUSERMD5($id_usuario_md5);
+            if ($tmp != 0) {
+                $id_usuario = intval($tmp);
+            }
+        }
         $id_almacen = $data['id_almacen'] ?? null;
         $id_empresa_md5 = $data['id_empresa_md5'] ?? null;
         $almacenes = $this->verificar->almacenesEmpresa($id_empresa_md5);
@@ -389,8 +438,8 @@ class PermisosVentaSinStock
                 INNER JOIN solicitudes_permiso_almacen s ON p.id_solicitud = s.id_solicitud
                 WHERE p.usado = 1";
 
-        if ($id_usuario) {
-            $sql .= " AND p.id_usuario = " . intval($id_usuario);
+        if ($id_usuario !== null) {
+            $sql .= " AND p.id_usuario = $id_usuario";
         }
 
         if ($id_almacen) {
@@ -413,7 +462,8 @@ class PermisosVentaSinStock
             return json_encode([
                 "estado" => "success",
                 "permisos_usados" => $permisos,
-                "total" => count($permisos)
+                "total" => count($permisos),
+                "qr" => $sql
             ]);
         } catch (Exception $e) {
             return json_encode([
@@ -428,7 +478,14 @@ class PermisosVentaSinStock
      */
     public function listarPermisosVencidos($data)
     {
-        $id_usuario = $data['id_usuario'] ?? null;
+        $id_usuario = null;
+        $tmp = null;
+        if (!empty($id_usuario_md5)) {
+            $tmp = $this->verificar->verificarIDUSERMD5($id_usuario_md5);
+            if ($tmp != 0) {
+                $id_usuario = intval($tmp);
+            }
+        }
         $id_almacen = $data['id_almacen'] ?? null;
         $id_empresa_md5 = $data['id_empresa_md5'] ?? null;
         $almacenes = $this->verificar->almacenesEmpresa($id_empresa_md5);
@@ -439,8 +496,8 @@ class PermisosVentaSinStock
                 WHERE p.usado = 2 
                   AND NOW() > p.fecha_fin";
 
-        if ($id_usuario) {
-            $sql .= " AND p.id_usuario = " . intval($id_usuario);
+        if ($id_usuario !== null) {
+            $sql .= " AND p.id_usuario = $id_usuario";
         }
 
         if ($id_almacen) {
@@ -479,41 +536,77 @@ class PermisosVentaSinStock
     public function listarSolicitudes($data)
     {
         $estado = $data['estado'] ?? null; // Opcional: filtrar por estado
-        $id_usuario = $data['id_usuario'] ?? null;
+        $id_usuario_md5 = $data['id_usuario_md5'] ?? null;
+        $id_usuario = null;
+        $tmp = null;
+        if (!empty($id_usuario_md5)) {
+            $tmp = $this->verificar->verificarIDUSERMD5($id_usuario_md5);
+            if ($tmp != 0) {
+                $id_usuario = intval($tmp);
+            }
+        } 
         $id_empresa_md5 = $data['id_empresa_md5'] ?? null;
+        $idempresa = $this->verificar->verificarIDEMPRESAMD5($id_empresa_md5);
         $almacenes = $this->verificar->almacenesEmpresa($id_empresa_md5);
-        $sql = "SELECT * FROM solicitudes_permiso_almacen WHERE 1=1";
+
+
+        $usuarios = $this->rh->query("SELECT u.idusuario, u.nombre, c.cargo FROM usuario u 
+        LEFT JOIN trabajador t ON u.trabajador_idtrabajador=t.idtrabajador
+        LEFT JOIN cargos c ON t.cargos_idcargos=c.idcargos
+        WHERE u.idempresa='$idempresa'");
+
+        $usuarioInfo = [];
+        while ($usuario = $this->rh->fetch($usuarios)) {
+            $usuarioInfo[$usuario[0]] = array(
+                "idusuario" => $usuario[0],
+                "usuario" => $usuario[1],
+                "cargo" => $usuario[2]
+            );
+        }
+
+
+
+        $sql = "SELECT spa.*, a.nombre as almacen FROM solicitudes_permiso_almacen spa LEFT JOIN almacen a ON a.id_almacen = spa.id_almacen  WHERE spa.id_solicitud IS NOT NULL";
 
         if ($estado) {
-            $sql .= " AND estado = '" . $this->cm->real_escape_string($estado) . "'";
+            $sql .= " AND spa.estado = '" . $this->cm->real_escape_string($estado) . "'";
         }
 
-        if ($id_usuario) {
-            $sql .= " AND id_usuario = " . intval($id_usuario);
+        if ($id_usuario !== null) {
+            $sql .= " AND spa.id_usuario = $id_usuario";
         }
         if (!empty($almacenes)) {
-            $sql .= " AND id_almacen IN ($almacenes)";
+            $sql .= " AND spa.id_almacen IN ($almacenes)";
         }
 
-        $sql .= " ORDER BY fecha_solicitud DESC";
+        $sql .= "ORDER BY spa.fecha_solicitud DESC";
 
         try {
             $result = $this->cm->query($sql);
             $solicitudes = [];
 
             while ($row = $result->fetch_assoc()) {
+                $row['usuario'] = $usuarioInfo[$row['id_usuario']] ?? null;
+                $row['id_usuario_md5'] = md5($row['id_usuario']);
                 $solicitudes[] = $row;
+                
             }
 
             return json_encode([
                 "estado" => "success",
                 "solicitudes" => $solicitudes,
-                "total" => count($solicitudes)
+                "total" => count($solicitudes),
+                "sql" => $sql,
+                "id_usuario" => $id_usuario,
+                "data_recibida" => $data,
+                "tmp_verificacion" => $tmp,
+                "id_usuario_md5_vacio" => empty($id_usuario_md5)
             ]);
         } catch (Exception $e) {
             return json_encode([
                 "estado" => "error",
-                "mensaje" => "Error al listar solicitudes: " . $e->getMessage()
+                "mensaje" => "Error al listar solicitudes: " . $e->getMessage(),
+                "sql" => $sql
             ]);
         }
     }
