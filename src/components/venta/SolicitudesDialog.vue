@@ -204,6 +204,7 @@ async function handleEnviar() {
       asunto: formData.value.asunto,
       mensaje: formData.value.mensaje,
       datos_adicionales: {
+        nombre_usuario_notificacion: nombreUsuario,
         url_de_envio: 'autorizarventassinstock',
       },
     })
